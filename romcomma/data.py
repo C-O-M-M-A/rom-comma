@@ -243,7 +243,7 @@ class Store:
 
     def fold_dir(self, k: int) -> Path:
         if 0 <= k < self.K:
-            return self.dir / "fold_{k:d}".format(k=k)
+            return self.dir / "fold.{k:d}".format(k=k)
         else:
             raise IndexError("Requested fold {k:d} of a {K:d}-fold data.Store".format(k=k, K=self.K))
 
@@ -519,3 +519,13 @@ class Fold(Store):
                                    train=[index for index, indicator in zip(indices, indicators) if k != indicator],
                                    test=[index for index, indicator in zip(indices, indicators) if k == indicator])
         return K
+
+@staticmethod
+def _rename(dir_: Path):
+    for p in dir_.iterdir():
+        if p.is_dir():
+            _rename(p)
+            split_name = p.name.split("_")
+            if split_name[0] == "fold":
+                p.rename(p.parent / (split_name[0] + "." + split_name[1]))
+

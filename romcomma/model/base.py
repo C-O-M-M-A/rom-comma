@@ -568,7 +568,9 @@ class Sobol(Model):
 
     Parameters = namedtuple("Parameters", ['m_max', 'Theta', 'D', 'S', 'S1'])
     PARAMETER_DEFAULTS = Parameters(*(DataFrame(),) * 5)
+
     NAME = "sobol"
+    OPTIMIZER_OPTIONS = {'gtol': 1.0E-12}
 
     @property
     def gb(self):

@@ -1,0 +1,31 @@
+{
+        "csv_parameters": {
+                "sep": ",",
+                "header": [
+                        0,
+                        1
+                ],
+                "index_col": 0
+        },
+        "standard": "none",
+        "data": {
+                "X_heading": "Input",
+                "Y_heading": "Output",
+                "N": 52,
+                "M": 5,
+                "L": 1
+        },
+        "K": 50,
+        "shuffled before folding": true,
+        "origin": {
+                "csv": "X:\\comma_group1\\Rom\\dat\\Wang\\PCC Data V2\\Final.Reduced.ROM\\split.7\\fold_0\\__data__.csv",
+                "csv_parameters": {
+                        "sep": ",",
+                        "header": [
+                                0,
+                                1
+                        ],
+                        "index_col": 0
+                }
+        }
+}
