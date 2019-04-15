@@ -520,12 +520,11 @@ class Fold(Store):
                                    test=[index for index, indicator in zip(indices, indicators) if k == indicator])
         return K
 
-@staticmethod
-def _rename(dir_: Path):
-    for p in dir_.iterdir():
-        if p.is_dir():
-            _rename(p)
-            split_name = p.name.split("_")
-            if split_name[0] == "fold":
-                p.rename(p.parent / (split_name[0] + "." + split_name[1]))
-
+    @staticmethod
+    def _rename(dir_: Path):
+        for p in dir_.iterdir():
+            if p.is_dir():
+                Fold._rename(p)
+                split_name = p.name.split("_")
+                if split_name[0] == "fold":
+                    p.rename(p.parent / (split_name[0] + "." + split_name[1]))
