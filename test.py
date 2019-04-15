@@ -72,3 +72,4 @@ if __name__ == '__main__':
     print("input\n", test_input(), "\n")
     print("predictive mean\n", mean_prediction, "\n")
     print("predictive std\n", std_prediction, "\n")
+    print("INSTALLATION TEST SUCCEEDED!!!")

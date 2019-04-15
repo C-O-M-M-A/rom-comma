@@ -41,9 +41,9 @@
 
     **gbs**: Function to instantiate, optimize and test GaussianBundles on a store.
 
-    **ROM_fold**: Service routine to instantiate a Reduced Order Model on a Fold.                               # Missing some args
+    **ROM_fold**: Service routine to instantiate a Reduced Order Model on a Fold.
 
-    **ROM_store**: Service routine to instantiate a Reduced Order Model across the Folds of a store.            # Missing some args
+    **ROM_store**: Service routine to instantiate a Reduced Order Model across the Folds of a store.
 
     **collect**: Service routine to instantiate the collection of new parameters.
 
