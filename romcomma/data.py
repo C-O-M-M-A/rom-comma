@@ -31,10 +31,9 @@
 """ Encapsulates data storage structures.
 
 Contents:
-    :Frame: class.
-    :Store: class.
-    :Store.Standard: class.
-    :Fold(Store): class.
+    **Frame**: The class that encapsulates a dataframe which is backed by a CSV file.
+    **Store**: The class that specifies the directory containing the global dataset to be analyzed.
+    **Fold(Store)**: class. The class that specifies the directory containing the datasets for modelling and for testing.
 """
 from romcomma.typing_ import Cls, Callable, PathLike, ZeroOrMoreInts, List, Tuple, Union
 from copy import deepcopy
@@ -75,7 +74,6 @@ class Frame:
             raise FileNotFoundError("Cannot write an empty frame.")
         self.df.to_csv(self._csv, sep=Frame.CSV_PARAMETERS['sep'], index=True)
 
-    # noinspection PyDefaultArgument
     def __init__(self, csv: PathLike = Path(), df: DataFrame = DataFrame(),
                  csv_parameters: dict = CSV_PARAMETERS):
         """ Initialize data.Frame.
@@ -107,8 +105,7 @@ class Store:
     """
 
     class Standard:
-        # noinspection SpellCheckingInspection
-        """ Encapsulates Specifications for standardizing data as ``classmethods``."""
+        """ Encapsulates specifications for standardizing data as ``classmethods``."""
 
         Specification = Callable[[DataFrame], DataFrame]
 
@@ -145,66 +142,79 @@ class Store:
 
     @property
     def dir(self) -> Path:
+        """ The function that defines the directory resulting in a path."""
         return self._dir
 
     @property
     def data_csv(self) -> Path:
+        """ The function that defines the directory to the data file."""
         return self._dir / "__data__.csv"
 
     @property
     def data(self) -> Frame:
+        """ The function that defines the frame consisting of the data file."""
         self._data = Frame(self.data_csv) if self._data is None else self._data
         return self._data
 
     @property
     def meta_json(self) -> Path:
+        """ The function that defines the __meta__.json file."""
         return self._dir / "__meta__.json"
 
     @property
     def meta(self) -> dict:
+        """ The function that defines the dict for meta."""
         return self._meta
 
     @property
     def N(self) -> int:
+        """ The function that returns the number of datapoints in the data file."""
         return self._meta['data']['N']
 
     @property
     def M(self) -> int:
+        """ The function that returns the number of inputs in the data file."""
         return self._meta['data']['M']
 
     @property
     def L(self) -> int:
+        """ The function that returns the number of outputs in the data file"""
         return self._meta['data']['L']
 
     @property
     def K(self) -> int:
+        """ The function that returns the number of folds."""
         return self._meta['K']
 
     def _read_meta_json(self) -> dict:
-        # noinspection PyTypeChecker
+        """ The function that opens and reads the meta_json object."""
         with open(self.meta_json, mode='r') as file:
             return json.load(file)
 
     def _write_meta_json(self):
-        # noinspection PyTypeChecker
+        """ The function that writes the meta object as a json file."""
         with open(self.meta_json, mode='w') as file:
             json.dump(self._meta, file, indent=8)
 
     @property
     def standard_csv(self) -> Path:
+        """ The function that returns the paths for the standardised CSV data file."""
         return self._dir / "__standard__.csv" if self.standardized else Path()
 
     @property
     def pre_standard_data_csv(self) -> Path:
+        """ The function that returns the paths for the pre-standardised CSV data file."""
         return self._dir / "__pre-standard_data__.csv"
 
     @property
     def standard(self) -> Frame:
+        """ The function that encapsulates the Frame for the standard parameters."""
         self._standard = Frame(self.standard_csv) if self._standard is None else self._standard
         return self._standard
 
     @property
     def standardized(self) -> bool:
+        """ The function that returns True or False whether the data is standardized."""
         return self._meta['standard'] != Store.Standard.none.__name__
 
     def create_standardized_frame(self, csv: PathLike, df: DataFrame) -> Frame:
@@ -242,13 +252,27 @@ class Store:
         return self._standard
 
     def fold_dir(self, k: int) -> Path:
+        """ Returns the path containing each fold between 0 and K.
+
+        Args:
+            k: The fold which the function is creating the path for.
+        Raises:
+            IndexError: if k is not between or equal to 0 and K.
+        """
         if 0 <= k < self.K:
             return self.dir / "fold.{k:d}".format(k=k)
         else:
             raise IndexError("Requested fold {k:d} of a {K:d}-fold data.Store".format(k=k, K=self.K))
 
-    # noinspection PyPep8Naming
     def _K_folds_update(self, K: int, shuffled_before_folding: bool):
+        """ The function that updates and writes the meta fold file.
+
+        Args:
+            K: The total number of folds.
+            shuffled_before_folding: True or False, whether the data should be shuffled before folding.
+        Returns:
+            A meta json file containing the parameters for folding the data file.
+        """
         self._meta.update({'K': K,
                            'shuffled before folding': shuffled_before_folding})
         self._write_meta_json()
@@ -280,6 +304,7 @@ class Store:
         self._data.write()
 
     def split(self):
+        """ A function that instantiates the splitting of a dataframe to L splits, returning L amounts of new Frame's."""
         for l in range(self.L):
             destination = ((self.dir.parent / "split.{0:d}".format(l)) / self.dir.name if self.__class__ == Fold
                            else self.dir / "split.{0:d}".format(l))
@@ -287,17 +312,17 @@ class Store:
                 destination.mkdir(mode=0o777, parents=True, exist_ok=False)
             indices = append(range(self.M), self.M + l)
             data = self.data.df.take(indices, axis=1, is_copy=True)
-            data = Frame(destination / self.data_csv.name, data)
+            Frame(destination / self.data_csv.name, data)
             meta = deepcopy(self._meta)
             meta['data']['L'] = 1
             with open(destination / self.meta_json.name, mode='w') as file:
                 json.dump(meta, file, indent=8)
             if self.standardized:
                 standard = self.standard.df.take(indices, axis=1, is_copy=True)
-                standard = Frame(destination / self.standard_csv.name, standard)
+                Frame(destination / self.standard_csv.name, standard)
             if self.__class__ == Fold:
                 test = self._test.df.take(indices, axis=1, is_copy=True)
-                test = Frame(destination / self.test_csv.name, test)
+                Frame(destination / self.test_csv.name, test)
             else:
                 for k in range(self.K):
                     fold = Fold(self, k)
@@ -305,9 +330,11 @@ class Store:
 
     @property
     def splits(self) -> List[Path]:
+        """ A function to define a list of paths for each split."""
         return list(self.dir.glob("split.[0-9]*"))
 
     class InitMode(IntEnum):
+        """ A function to create enumerated constants that are also subclasses of int. It replaces the instances with an appropriate value"""
         READ_META_ONLY = auto()
         READ = auto()
         CREATE_AND_OVERWRITE = auto()
