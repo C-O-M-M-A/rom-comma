@@ -1,32 +1,23 @@
 # BSD 3-Clause License
 #
-# Copyright (c) 2019, Robert A. Milton
+# Copyright (c) 2019-2021, Robert A. Milton
 # All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
+# * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 #
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
+# * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
 #
-# * Neither the name of the copyright holder nor the names of its
-#   contributors may be used to endorse or promote products derived from
+# * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from
 #   this software without specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ A suite of functions designed to test screening (order reduction) with high-dimensional distributions.
 
@@ -36,29 +27,21 @@ Each function signature follows the format:
 |
 ``def function_(X: MatrixLike, **kwargs)``
 
-:X: The function argument, in the form of an ``NxM`` design Matrix.
-:**kwargs: Function-specific parameters, normally fixed.
+    :X: The function argument, in the form of an ``NxM`` design Matrix.
+    :**kwargs: Function-specific parameters, normally fixed.
 
 Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 
 |
-Contents:
-    :ishigami: function.
-    :sobol_g: function.
-    :CallableWithParameters: type(``Tuple[Callable[..., NP.Vector], Dict[str, Numeric]]``).
-    :callable_with_parameters: function.
-    :sample: function. Umbrella for generating samples.
 """
 
 from numpy import atleast_2d, arange, prod, sin, einsum, full, concatenate, ndarray, array, eye
 from pandas import DataFrame, MultiIndex
 from romcomma.distribution import SampleDesign, Multivariate
-from romcomma.typing_ import NP, Callable, Dict, Numeric, Tuple, Sequence, NamedTuple, PathLike
+from romcomma.typing_ import NP, Callable, Dict, Numeric, Sequence, NamedTuple, PathLike
 from romcomma import data
-from json import load
 
 
-# noinspection PyPep8Naming
 def ishigami(X: NP.MatrixLike, a: float = 7.0, b: float = 0.1) -> NP.Vector:
     """ The Ishigami function as described in https://www.sfu.ca/~ssurjano/ishigami.html.
 
@@ -74,10 +57,9 @@ def ishigami(X: NP.MatrixLike, a: float = 7.0, b: float = 0.1) -> NP.Vector:
     elif 2 == X.shape[1]:
         return sin(X[:, [0]]) + a * sin(X[:, [1]]) ** 2
     else:
-        return (1 + b * X[:,[2]] ** 4) * sin(X[:, [0]]) + a * sin(X[:, [1]]) ** 2
+        return (1 + b * X[:, [2]] ** 4) * sin(X[:, [0]]) + a * sin(X[:, [1]]) ** 2
 
 
-# noinspection PyPep8Naming
 def sobol_g(X: NP.MatrixLike, m_very_important: int = 0, m_important: int = 0, m_unimportant: int = 0,
             a_i_very_important: int = 0, a_i_important: int = 1, a_i_unimportant: int = 9) -> NP.Vector:
     """ The Sobol' G function as described in https://www.sfu.ca/~ssurjano/gfunc.html.
@@ -104,7 +86,6 @@ def sobol_g(X: NP.MatrixLike, m_very_important: int = 0, m_important: int = 0, m
     """
     X = atleast_2d(X)
 
-    # noinspection PyPep8Naming
     def _calculate_a_i_times_2(M: int):
         """ Inner function to calculate a_i_times_2_inner."""
         a_i_times_2_inner = arange(0, M)  # Firstly, assume all a_i_ take the default value i/2
@@ -151,8 +132,12 @@ def linear_matrix_from_meta(store: data.Store) -> NP.Matrix:
     else:
         return eye(store.meta['data']['M'], dtype=float)
 
-CallableWithParameters = NamedTuple('CallableWithParameters', [('function', Callable[..., NP.Vector]), ('parameters', Dict[str, Numeric])])
-""" A NamedTuple for use with function.sample(...). Encapsulates a function and its parameters."""
+
+class CallableWithParameters(NamedTuple):
+    """ A NamedTuple for use with function.sample(...). Encapsulates a function and its parameters."""
+    function: Callable[..., NP.Vector]
+    parameters: Dict[str, Numeric]
+
 
 def callable_with_parameters(function_: Callable[..., NP.Vector]) -> CallableWithParameters:
     """ Construct a suitable CallableWithParameters for ``function_``.
@@ -170,10 +155,10 @@ def callable_with_parameters(function_: Callable[..., NP.Vector]) -> CallableWit
         parameters_ = {'matrix': None}
     else:
         parameters_ = {}
+    # noinspection PyTypeChecker
     return CallableWithParameters(function_, parameters_)
 
 
-# noinspection PyPep8Naming
 def sample(store_dir: PathLike, N: int, X_distribution: Multivariate, X_sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE,
            CDF_scale: NP.ArrayLike = None, CDF_loc: NP.ArrayLike = None, pre_function_with_parameters: CallableWithParameters = None,
            functions_with_parameters: Sequence[CallableWithParameters] = None,
@@ -181,6 +166,7 @@ def sample(store_dir: PathLike, N: int, X_distribution: Multivariate, X_sample_d
     """ Apply ``function_`` to ``N`` datapoints from ``X_distribution`` then add noise.
 
     Args:
+        store_dir: The location of the Store to be created for the results.
         N: The number of sample points.
         X_distribution: The M-dimensional Multivariate distribution from which X is drawn.
         X_sample_design: SampleDesign.LATIN_HYPERCUBE or SampleDesign.RANDOM_VARIATE.
@@ -245,51 +231,45 @@ def sample(store_dir: PathLike, N: int, X_distribution: Multivariate, X_sample_d
                     function_list = ["X[{i:d}]".format(i=i) for i in range(X.shape[1])]
                     Y = X.copy()
             else:
-                function_list = [(pre_function_with_parameters.function.__name__ + "(X; " +
-                                  ", ".join("{key}={val}".format(key=key, val=val)
-                                            for (key, val) in pre_function_with_parameters.parameters.items()) + ")[{i:d}]".format(i=i)) for i in range(X.shape[1])]
+                function_list = [(pre_function_with_parameters.function.__name__ + "(X; "
+                                  + ", ".join("{key}={val}".format(key=key, val=val) for (key, val) in pre_function_with_parameters.parameters.items())
+                                  + ")[{i:d}]".format(i=i)) for i in range(X.shape[1])]
                 Y = pre_function_with_parameters.function(X, **pre_function_with_parameters.parameters)
         else:
             if pre_function_with_parameters is None:
                 function_list = ["{s:f} CDF(X[{i:d}]) - {l:f}".format(s=CDF_scale[0, i], l=CDF_loc[0, i], i=i) for i in range(X.shape[1])]
                 Y = CDF_scale * X_distribution.cdf(X) - CDF_loc
             else:
-                function_list = [("{f}({s} * CDF(X) - {l}; ".format(f=pre_function_with_parameters.function.__name__ ,
-                                                                      s=CDF_scale.tolist(), l=CDF_loc.tolist())
+                function_list = [("{f}({s} * CDF(X) - {l}; ".format(f=pre_function_with_parameters.function.__name__, s=CDF_scale.tolist(), l=CDF_loc.tolist())
                                   + ", ".join("{key}={val}".format(key=key, val=val.tolist() if isinstance(val, ndarray) else val)
-                                              for (key, val) in pre_function_with_parameters.parameters.items()) + ")[{i:d}]".format(i=i))
-                                 for i in range(X.shape[1])]
+                                              for (key, val) in pre_function_with_parameters.parameters.items()) + ")[{i:d}]".format(i=i)) for i in
+                                 range(X.shape[1])]
                 Y = CDF_scale * X_distribution.cdf(pre_function_with_parameters.function(X, **pre_function_with_parameters.parameters)) - CDF_loc
     else:
         if CDF_scale is None:
             if pre_function_with_parameters is None:
                 function_list = [(f.function.__name__ + "(X; " + ", ".join("{key}={val}".format(key=key, val=val)
-                                                                          for (key, val) in f.parameters.items()) + ")")
-                                 for f in functions_with_parameters]
+                                                                           for (key, val) in f.parameters.items()) + ")") for f in functions_with_parameters]
                 Y = concatenate([f.function(X, **f.parameters) for f in functions_with_parameters], axis=1)
             else:
                 function_list = [("{fn}({g}(X; ".format(fn=f.function.__name__, g=pre_function_with_parameters.function.__name__) +
                                   ", ".join("{key}={val}".format(key=key, val=val.tolist() if isinstance(val, ndarray) else val)
-                                            for (key, val) in pre_function_with_parameters.parameters.items()) + ")")
-                                 for f in functions_with_parameters]
+                                            for (key, val) in pre_function_with_parameters.parameters.items()) + ")") for f in functions_with_parameters]
                 Y = concatenate([f.function(pre_function_with_parameters.function(X, **pre_function_with_parameters.parameters), **f.parameters)
-                            for f in functions_with_parameters], axis=1)
+                                 for f in functions_with_parameters], axis=1)
         else:
             if pre_function_with_parameters is None:
                 function_list = [(f.function.__name__ + "({s} * CDF(X) - {l}; ".format(s=CDF_scale.tolist(), l=CDF_loc.tolist()) +
-                                  ", ".join("{key}={val}".format(key=key, val=val) for (key, val) in f.parameters.items()) + ")")
-                                 for f in functions_with_parameters]
+                                  ", ".join("{key}={val}".format(key=key, val=val)
+                                            for (key, val) in f.parameters.items()) + ")") for f in functions_with_parameters]
                 Y = concatenate([f.function(CDF_scale * X_distribution.cdf(X) - CDF_loc, **f.parameters) for f in functions_with_parameters], axis=1)
             else:
-                function_list = [("{fn}({g}({s} * CDF(X) - {l}; "
-                                  .format(fn=f.function.__name__, g=pre_function_with_parameters.function.__name__,
-                                          s=CDF_scale.tolist(), l=CDF_loc.tolist())
-                                  + ", ".join("{key}={val}".format(key=key, val=val.tolist() if isinstance(val, ndarray) else val)
-                                  for (key, val) in pre_function_with_parameters.parameters.items()) + ")") for f in functions_with_parameters]
-                Y = concatenate([f.function(CDF_scale *
-                                            X_distribution.cdf(pre_function_with_parameters.function(X, **pre_function_with_parameters.parameters))
-                                            - CDF_loc, **f.parameters)
-                            for f in functions_with_parameters], axis=1)
+                function_list = [("{fn}({g}({s} * CDF(X) - {l}; ".format(fn=f.function.__name__, g=pre_function_with_parameters.function.__name__,
+                                                                         s=CDF_scale.tolist(), l=CDF_loc.tolist()) +
+                                  ", ".join("{key}={val}".format(key=key, val=val.tolist() if isinstance(val, ndarray) else val)
+                                            for (key, val) in pre_function_with_parameters.parameters.items()) + ")") for f in functions_with_parameters]
+                Y = concatenate([f.function(CDF_scale * X_distribution.cdf(pre_function_with_parameters.function(X, **pre_function_with_parameters.parameters))
+                                            - CDF_loc, **f.parameters) for f in functions_with_parameters], axis=1)
     if noise_distribution is None:
         df, meta = _incorporated(columns, function_list)
         return data.Store.from_df(dir_=store_dir, df=df, meta=meta)

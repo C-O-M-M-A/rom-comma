@@ -1,52 +1,30 @@
 # BSD 3-Clause License
 #
-# Copyright (c) 2019, Robert A. Milton
+# Copyright (c) 2019-2021, Robert A. Milton
 # All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
+# * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 #
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
+# * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
 #
-# * Neither the name of the copyright holder nor the names of its
-#   contributors may be used to endorse or promote products derived from
+# * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from
 #   this software without specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains basic probability distributions, with a view to sampling.
-
-**Contents**:
-    **SampleDesign** enum expressing the sample design to use.
-
-    **Univariate** class encapsulating a univariate, fully parametrized (SciPy frozen) continuous distribution.
-
-    **Multivariate** container class.
-
-    **Multivariate.Base** abstract interface.
-
-    **Multivariate.Independent(Multivariate.Base)** class encapsulating a multivariate distribution composed of independent marginals.
-
-    **Multivariate.Normal(Multivariate.Base)** class encapsulating a multivariate normal distribution.
-"""
+""" Contains basic probability distributions, with a view to sampling."""
 
 from romcomma.typing_ import Any, Optional, Union, NP, Sequence, Tuple
 from scipy import linalg, stats
-from pyDOE import lhs as pydoe_lhs
+# noinspection PyPep8Naming
+from pyDOE2 import lhs as pyDOE_lhs
 from numpy import zeros, atleast_2d
 from enum import Enum, auto
 from abc import ABC, abstractmethod
@@ -64,8 +42,7 @@ class Univariate:
     SuperFamily = stats.rv_continuous
     """ The SciPy (super) family of continuous, univariate distributions."""
 
-    Family = {_class.__name__[:-4]: _class for
-              _class in SuperFamily.__subclasses__() if _class.__name__[-4:] == "_gen"}
+    Family = {_class.__name__[:-4]: _class for _class in SuperFamily.__subclasses__() if _class.__name__[-4:] == "_gen"}
     """ The romcomma dictionary of univariate distribution classes."""
     family = {name: Fam() for name, Fam in Family.items()}
     """ The romcomma dictionary of unparametrized univariate distribution objects."""
@@ -100,8 +77,7 @@ class Univariate:
 
     @property
     def unparametrized(self) -> SuperFamily:
-        """ A **new** instance of the unparametrized distribution.
-        An existing unparametrized instance is always available through Univariate.family[name].
+        """ A **new** instance of the unparametrized distribution. An existing unparametrized instance is always available through Univariate.family[name].
         """
         return Univariate.Family[self._name]()
 
@@ -124,11 +100,10 @@ class Univariate:
         return self.parametrized.rvs(size=[N, M])
 
     def __init__(self, name: str = "uniform", **kwargs: Any):
-        """ Construct a Univariate distibution.
+        """ Construct a Univariate distribution.
 
         Args:
-            name: The name of the underlying Unparametrized distribution, e.g. "uniform" or "norm".
-                Univariate.names() lists the admissible names.
+            name: The name of the underlying Unparametrized distribution, e.g. "uniform" or "norm". Univariate.names() lists the admissible names.
             **kwargs: The parameters passed directly to the Univariate.Family[name] (class) constructor.
                 Univariate.parameters(name) supplies the kwargs Dict required.
         """
@@ -141,11 +116,11 @@ class Multivariate:
     """ Container class for multivariate distributions."""
     # noinspection PyPep8Naming,PyPep8Naming
     class Base(ABC):
-        """ Absatract interface. """
+        """ Abstract interface. """
 
         @property
         def M(self) -> int:
-            """ The dimesionality of the multivariate."""
+            """ The dimensionality of the multivariate."""
             return self._M
 
         @property
@@ -204,7 +179,7 @@ class Multivariate:
             """
             if N < 1:
                 raise ValueError("N = {N:d} < 1".format(N=N))
-            _lhs = pydoe_lhs(self._M, N, criterion, iterations)
+            _lhs = pyDOE_lhs(self._M, N, criterion, iterations)
             if len(self._marginals) > 1:
                 for i in range(self._M):
                     _lhs[:, i] = self._marginals[i].parametrized.ppf(_lhs[:, i])

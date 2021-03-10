@@ -1,45 +1,26 @@
 # BSD 3-Clause License
 #
-# Copyright (c) 2019, Robert A. Milton
+# Copyright (c) 2019-2021, Robert A. Milton
 # All rights reserved.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
+# * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 #
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
+# * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
 #
-# * Neither the name of the copyright holder nor the names of its
-#   contributors may be used to endorse or promote products derived from
+# * Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from
 #   this software without specific prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Encapsulates data storage structures.
+""" Encapsulates data storage structures."""
 
-Contents:
-    **Frame** class encapsulating a pandas DataFrame backed by a CSV file.
-    
-    **Store** class container for datasets. 
-    A Store is defined as a dir containing a ``__data__.csv`` file and a ``__meta__.json`` file.
-    
-    **Store.Standard** class encapsulating specifications for standardizing data.
-
-    **Fold(Store)** class container for datasets, models and tests.
-"""
 from romcomma.typing_ import Callable, PathLike, ZeroOrMoreInts, List, Tuple, Union, Dict
 from copy import deepcopy
 from itertools import chain
@@ -58,9 +39,7 @@ class Frame:
         df: The pandas DataFrame.
     """
 
-    DEFAULT_CSV_KWARGS = {'sep': ',',
-                      'header': [0, 1],
-                      'index_col': 0, }
+    DEFAULT_CSV_KWARGS = {'sep': ',', 'header': [0, 1], 'index_col': 0, }
 
     @property
     def csv(self) -> Path:
@@ -71,11 +50,6 @@ class Frame:
     def is_empty(self) -> bool:
         """ Defines the empty Frame as that having an empty Path."""
         return 0 == len(self._csv.parts)
-
-    @property
-    def shape(self) -> Tuple:
-        """ The shape of the DataFrame."""
-        return self.df.shape
 
     def write(self):
         """ Write to csv, according to Frame.DEFAULT_CSV_KWARGS.
@@ -91,9 +65,8 @@ class Frame:
         """ Initialize Frame.
 
         Args:
-            csv: The csv file. Required.
-            df: The initial data. If this is empty, it is read from csv, otherwise it overwrites
-                (or creates) csv.
+            csv: The csv file.
+            df: The initial data. If this is empty, it is read from csv, otherwise it overwrites (or creates) csv.
         Keyword Args:
             kwargs: Updates Frame.DEFAULT_CSV_KWARGS for csv reading as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
@@ -113,7 +86,6 @@ class Frame:
             self.write()
 
 
-# noinspection PyDefaultArgument
 class Store:
     """ A ``store`` object is defined as a ``store.dir`` containing a ``store.data_csv`` file and a ``store.meta_json`` file.
 
@@ -134,13 +106,13 @@ class Store:
         Specification = Callable[[DataFrame], DataFrame]
 
         @staticmethod
-        def _mean(df: DataFrame) -> Series:
+        def __mean(df: DataFrame) -> Series:
             mean = df.mean()
             mean.name = 'mean'
             return mean
 
         @staticmethod
-        def _stack_as_rows(top: Series, bottom: Series):
+        def __stack_as_rows(top: Series, bottom: Series):
             return concat([top, bottom], axis=1).T
 
         # noinspection PyUnusedLocal
@@ -164,7 +136,7 @@ class Store:
             """
             scale = df.max() - df.min()
             scale.name = 'range'
-            result = cls._stack_as_rows(cls._mean(df), scale)
+            result = cls.__stack_as_rows(cls.__mean(df), scale)
             return result
 
         @classmethod
@@ -175,9 +147,9 @@ class Store:
                     df: The data to be standardized.
                 Returns: The mean and std (unbiased standard deviation) of data.
             """
-            scale = df.std()    # pandas std is unbiased (n-1) denominator.
+            scale = df.std()  # pandas std is unbiased (n-1) denominator.
             scale.name = 'std'
-            return cls._stack_as_rows(cls._mean(df), scale)
+            return cls.__stack_as_rows(cls.__mean(df), scale)
 
     class InitMode(IntEnum):
         READ_META_ONLY = auto()
@@ -189,22 +161,22 @@ class Store:
     @property
     def dir(self) -> Path:
         """ The Store directory."""
-        return self._dir
+        return self.__dir
 
     @property
     def data_csv(self) -> Path:
         """ The Store data file."""
-        return self._dir / "__data__.csv"
+        return self.__dir / "__data__.csv"
 
     @property
     def meta_json(self) -> Path:
         """ The Store metadata file."""
-        return self._dir / "__meta__.json"
+        return self.__dir / "__meta__.json"
 
     @property
     def standard_csv(self) -> Path:
         """ The Store standardization file."""
-        return self._dir / "__standard__.csv" if self.is_standardized else Path()
+        return self.__dir / "__standard__.csv" if self.is_standardized else Path()
 
     @property
     def data(self) -> Frame:
@@ -243,13 +215,11 @@ class Store:
         self._standard = Frame(self.standard_csv) if self._standard is None else self._standard
         return self._standard
 
-    def _read_meta_json(self) -> dict:
-        # noinspection PyTypeChecker
+    def __read_meta_json(self) -> dict:
         with open(self.meta_json, mode='r') as file:
             return json.load(file)
 
-    def _write_meta_json(self):
-        # noinspection PyTypeChecker
+    def __write_meta_json(self):
         with open(self.meta_json, mode='w') as file:
             json.dump(self._meta, file, indent=8)
 
@@ -261,8 +231,8 @@ class Store:
         """ Overwrite ``df`` with its standardized version, saving to csv.
 
         Args:
-            df: The data to standardize.
             csv: Locates the return Frame.
+            df: The data to standardize.
         Returns: A Frame written to csv containing df, standardized.
         """
         if self.is_standardized:
@@ -279,7 +249,7 @@ class Store:
         Returns: self.standard.
         """
         self._meta['standard'] = standard.__name__
-        self._write_meta_json()
+        self.__write_meta_json()
         self._standard = Frame(self.standard_csv, standard(self.data.df))
         if self.is_standardized:
             self._data = self.create_standardized_frame(self.data_csv, self._data.df)
@@ -299,9 +269,8 @@ class Store:
 
     def _K_folds_update(self, K: int, shuffled_before_folding: bool):
         self._meta.update({'K': K, 'shuffled before folding': shuffled_before_folding})
-        self._write_meta_json()
+        self.__write_meta_json()
 
-    # noinspection PyUnresolvedReferences,PyUnresolvedReferences
     def split(self):
         """ Split this Store into L Splits by output. Each Split l is just a Store (whose L=1) containing the lth output only."""
         for l in range(self.L):
@@ -320,6 +289,7 @@ class Store:
                 standard = self.standard.df.take(indices, axis=1, is_copy=True)
                 Frame(destination / self.standard_csv.name, standard)
             if self.__class__ == Fold:
+                # noinspection PyUnresolvedReferences
                 test = self._test.df.take(indices, axis=1, is_copy=True)
                 Frame(destination / self.test_csv.name, test)
             else:
@@ -336,9 +306,9 @@ class Store:
         """ Update __meta__"""
         self._meta.update({'data': {'X_heading': self._data.df.columns.values[0][0],
                                     'Y_heading': self._data.df.columns.values[-1][0]}})
-        self._meta['data'].update({'N': self.data.shape[0], 'M': self.X.shape[1],
+        self._meta['data'].update({'N': self.data.df.shape[0], 'M': self.X.shape[1],
                                    'L': self.Y.shape[1]})
-        self._write_meta_json()
+        self.__write_meta_json()
 
     @property
     def X(self) -> DataFrame:
@@ -357,16 +327,17 @@ class Store:
             dir_: The location (directory) of the Store.
             init_mode: The mode to initialize with, variations on READ (an existing Store) and CREATE (a new one).
         """
-        self._dir = Path(dir_)
+        self.__dir = Path(dir_)
         self._data = None
         self._standard = None
         if init_mode <= Store.InitMode.READ:
-            self._meta = self._read_meta_json()
+            self._meta = self.__read_meta_json()
             if init_mode is Store.InitMode.READ:
                 self._data = Frame(self.data_csv)
         else:
-            self._dir.mkdir(mode=0o777, parents=True, exist_ok=True)
+            self.__dir.mkdir(mode=0o777, parents=True, exist_ok=True)
 
+    # noinspection PyDefaultArgument
     @classmethod
     def from_df(cls, dir_: PathLike, df: DataFrame, meta: Dict = DEFAULT_META) -> 'Store':
         """ Create a Store from a DataFrame.
@@ -386,6 +357,7 @@ class Store:
 
     DEFAULT_ORIGIN_CSV_KWARGS = {'skiprows': None, 'index_col': None}
 
+    # noinspection PyDefaultArgument
     @classmethod
     def from_csv(cls, dir_: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> 'Store':
         """ Create a Store from a csv file.
@@ -411,6 +383,8 @@ class Store:
 class Fold(Store):
     """ A Fold is defined as a dir containing a ``__data__.csv``, a ``__meta__.json`` file and a ``__test__.csv`` file.
     A Fold is a Store equipped with a test DataFrame backed by ``__test__.csv``.
+
+    Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
     """
 
     def set_test_data(self, df: DataFrame):
@@ -424,7 +398,7 @@ class Fold(Store):
     @property
     def test_csv(self) -> Path:
         """ The test data file. Must be identical in format to the self.data_csv file."""
-        return self._dir / "__test__.csv"
+        return self.dir / "__test__.csv"
 
     @property
     def test(self) -> Frame:
@@ -438,7 +412,7 @@ class Fold(Store):
 
     @property
     def test_X(self) -> DataFrame:
-        """ The test input X, as an (NTest,M) design Matrix with column headings."""
+        """ The test input X, as an (N,M) design Matrix with column headings."""
         return self._test.df[self._meta['data']['X_heading']].iloc[:, :self._M]
 
     @property
@@ -490,21 +464,18 @@ class Fold(Store):
         """
         N = len(parent.data.df.index)
         assert 1 <= K <= N, "K={K:d} does not lie between 1 and N=len(self.data.df.index)={N:d} inclusive".format(K=K, N=N)
-
         for k in range(K, parent.K):
             parent.fold_dir(k).mkdir(mode=0o777, parents=False, exist_ok=True)
             parent.fold_dir(k).rmdir()
         parent._K_folds_update(K, shuffled_before_folding)
-
         indices = list(range(N))
         if shuffled_before_folding:
             shuffle(indices)
 
         # noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
-        def _fold_from_indices(_k: int, train: List[int], test: List[int]):
+        def __fold_from_indices(_k: int, train: List[int], test: List[int]):
             assert len(train) > 0
-            meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.dir), 'k': _k,
-                                    'K': parent.K}}
+            meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.dir), 'k': _k, 'K': parent.K}}
             fold = Store.from_df(parent.fold_dir(_k), parent.data.df.iloc[train], meta)
             fold.standardize(standard)
             fold.__class__ = cls
@@ -518,7 +489,7 @@ class Fold(Store):
                 fold._test = fold.create_standardized_frame(fold.test_csv, parent.data.df.iloc[test])
 
         # noinspection PyUnusedLocal
-        def _indicators():
+        def __indicators():
             K_blocks = [list(range(K)) for i in range(int(N / K))]
             K_blocks.append(list(range(N % K)))
             for K_range in K_blocks:
@@ -526,23 +497,11 @@ class Fold(Store):
             return list(chain(*K_blocks))
 
         if 1 == K:
-            _fold_from_indices(_k=0, train=indices, test=[])
+            __fold_from_indices(_k=0, train=indices, test=[])
         else:
-            indicators = _indicators()
+            indicators = __indicators()
             for k in range(K):
-                _fold_from_indices(_k=k,
-                                   train=[index for index, indicator in zip(indices, indicators) if k != indicator],
-                                   test=[index for index, indicator in zip(indices, indicators) if k == indicator])
+                __fold_from_indices(_k=k,
+                                    train=[index for index, indicator in zip(indices, indicators) if k != indicator],
+                                    test=[index for index, indicator in zip(indices, indicators) if k == indicator])
         return K
-
-    @staticmethod
-    def _rename(dir_: Path):
-        """ A function that renames any directories called fold_# to fold.#.
-        This method is only included for backward compatibility, and is not intended for general use.
-        """
-        for p in dir_.iterdir():
-            if p.is_dir():
-                Fold._rename(p)
-                split_name = p.name.split("_")
-                if split_name[0] == "fold":
-                    p.rename(p.parent / (split_name[0] + "." + split_name[1]))
