@@ -173,9 +173,9 @@ class Store:
 
                 Args:
                     df: The data to be standardized.
-                Returns: The mean and std (standard deviation) of data.
+                Returns: The mean and std (unbiased standard deviation) of data.
             """
-            scale = df.std()
+            scale = df.std()    # pandas std is unbiased (n-1) denominator.
             scale.name = 'std'
             return cls._stack_as_rows(cls._mean(df), scale)
 

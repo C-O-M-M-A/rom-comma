@@ -44,7 +44,7 @@ from pathlib import Path
 from scipy.stats import ortho_group
 
 EFFECTIVELY_ZERO = 1.0E-64
-BASE_PATH = Path('X:\\comma_group1\\Rom\\dat\\SoftwareTest\\1.0')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\0.0')
 
 
 def scalar_function_of_normal(store_name: str, N: int, M: int, X_std: float, noise_std: float, CDF_scale: NP.Array=None, CDF_loc: NP.Array=None,
@@ -92,7 +92,7 @@ def run_gps(name, test_fuction: str, N: int, noise_std: float, random: bool, M: 
                                       pre_function_with_parameters=pre_function_with_parameters,
                                       function_with_parameters=function_with_parameters)
     savetxt(store.dir / "InverseRotation.csv", transpose(lin_trans))
-    data.Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=data.Store.Standard.none,
+    data.Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=data.Store.Standard.mean_and_std,
                            replace_empty_test_with_data_=True)
     model.run.GPs(module=model.run.Module.GPY_, name=name, store=store, M=-1, parameters=parameters, optimize=True, test=True, sobol=False,
                   optimizer_options=gp_optimizer_options, make_ard=False)
@@ -155,7 +155,7 @@ def playtest(name, test_fuction: str, N: int, noise_std: float, random: bool, M:
 
 
 if __name__ == '__main__':
-    for N in (800, ):
-        for noise_std in (0.00001, ):
+    for N in (800, 1600, 3200, 6400, 12800):
+        for noise_std in (0.01, ):
             for random in (False, ):
-                run_gps("initial", "sin.1", N, noise_std, random, M=5)
+                run_gps("initial", "sin.1", N, noise_std, random, M=1)
