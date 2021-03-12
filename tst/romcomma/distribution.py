@@ -44,7 +44,7 @@
     **Multivariate.Normal(Multivariate.Base)** class encapsulating a multivariate normal distribution.
 """
 
-from romcomma.typing_ import Any, Optional, Union, NP, Sequence, Tuple
+from ROMCOMMA.tst.romcomma.typing_ import Any, Optional, Union, NP, Sequence, Tuple
 from scipy import linalg, stats
 from pyDOE import lhs as pydoe_lhs
 from numpy import zeros, atleast_2d
