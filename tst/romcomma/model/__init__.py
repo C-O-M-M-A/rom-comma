@@ -28,7 +28,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import romcomma.model.base
-import romcomma.model.gpy_
-import romcomma.model.scipy_
-import romcomma.model.run
+import ROMCOMMA.tst.romcomma.model.base
+import ROMCOMMA.tst.romcomma.model.gpy_
+import ROMCOMMA.tst.romcomma.model.scipy_
+import ROMCOMMA.tst.romcomma.model.run
+
+
+def base():
+    return None
