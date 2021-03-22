@@ -23,18 +23,6 @@
 
 Because implementation may involve parallelization, these classes should only contain pre-processing and post-processing.
 
-**Contents**:
-    **Model(ABC)** abstract base class to handle parameters generically, and provide a consistent interface to optimization.
-
-    **Kernel(Model)** abstract interface class.
-
-    **GP(Model)** abstract interface class for a Gaussian process.
-
-    **Sobol(Model)** abstract interface class, to calculate and optimize Sobol Indices.
-
-    **Sobol.SemiNorm** defines a semi-norm and its derivative for use by Sobol.
-
-    **ROM(Model)** abstract interface class to a Reduced Order Model.
 """
 
 import shutil
@@ -53,11 +41,9 @@ from romcomma.typing_ import PathLike, Optional, NamedTuple, NP, Tuple, Type, Ca
 from copy import deepcopy
 from romcomma import distribution
 
-EFFECTIVELY_ZERO = 1.0E-64
-
 
 class Model(ABC):
-    """ Abstract base class for any model. This base class implements the generic file storage and parameter handling.
+    """ Abstract base class for any model. This base class implements generic file storage and parameter handling.
     The latter is dealt with by each subclass overriding the ``Model.Parameters`` type with its own ``NamedTuple``
     defining the parameter set it takes.
 
@@ -71,21 +57,33 @@ class Model(ABC):
 
     """ Required overrides."""
 
-    MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
-    Parameters = NamedTuple("Parameters", [("OVERRIDE_THIS", NP.Matrix)])
+    class Parameters(NamedTuple):
+        OVERRIDE_THIS: NP.Matrix
     DEFAULT_PARAMETERS = "OVERRIDE_THIS"
     DEFAULT_OPTIMIZER_OPTIONS = {"OVERRIDE": "THIS"}
+    MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
 
     """ End of required overrides."""
 
     @staticmethod
-    def rmdir(_dir: Union[str, Path], ignore_errors: bool = True):
-        # noinspection PyTypeChecker
-        shutil.rmtree(_dir, ignore_errors=ignore_errors)
+    def rmdir(dir_: Union[str, Path], ignore_errors: bool = True):
+        """ Remove a directory tree, using shutil.
+
+        Args:
+            dir_: Root of the tree to remove.
+            ignore_errors: Boolean.
+        """
+        shutil.rmtree(dir_, ignore_errors=ignore_errors)
 
     @staticmethod
     def copy(src_dir: Union[str, Path], dst_dir: Union[str, Path], ignore_errors: bool = True):
-        # noinspection PyTypeChecker
+        """ Copy a directory tree, using shutil.
+
+        Args:
+            src_dir: Source root of the tree to copy.
+            dst_dir: Destination root.
+            ignore_errors: Boolean
+        """
         shutil.rmtree(dst_dir, ignore_errors=ignore_errors)
         shutil.copytree(src=src_dir, dst=dst_dir)
 
@@ -106,6 +104,7 @@ class Model(ABC):
 
     @parameters.setter
     def parameters(self, value: Parameters):
+        """ Sets or gets the model parameters, as a NamedTuple of Matrices."""
         self._parameters = value
         self.calculate()
 
@@ -121,8 +120,7 @@ class Model(ABC):
             AssertionError: if not self.with_frames.
         """
         assert self.with_frames
-        self._parameters = self.Parameters(*(Frame(self._parameters_csv[i], **self.CSV_PARAMETERS).df.values
-                                             for i, p in enumerate(self.DEFAULT_PARAMETERS)))
+        self._parameters = self.Parameters(*(Frame(self._parameters_csv[i], **self.CSV_PARAMETERS).df.values for i, p in enumerate(self.DEFAULT_PARAMETERS)))
 
     def write_parameters(self, parameters: Parameters) -> Parameters:
         """ Write model.parameters to their csv files.
@@ -155,16 +153,17 @@ class Model(ABC):
     @abstractmethod
     def calculate(self):
         """ Calculate the Model. Do not call super().calculate, this interface only contains suggestions for implementation."""
+        return
         self._test = None   # Remember to reset any test results.
 
-    # noinspection PyUnusedLocal
     @abstractmethod
     def optimize(self, **kwargs):
         """ Optimize the model parameters. Do not call super().optimize, this interface only contains suggestions for implementation.
 
         Args:
-            kwrgsA Dict of implementation-dependent optimizer options.
+            kwargs: Dict of implementation-dependent optimizer options.
         """
+        return
         if kwargs is None:
             kwargs = self._read_optimizer_options() if self.optimizer_options_json.exists() else self.DEFAULT_OPTIMIZER_OPTIONS
         # OPTIMIZE!!!!!
@@ -184,7 +183,6 @@ class Model(ABC):
         Raises:
             AssertionError: If not (dir_ or parameters).
         """
-
         self._dir = Path(dir_)
         self._parameters_csv = self.Parameters(*((self._dir / field).with_suffix(".csv") for field in self.DEFAULT_PARAMETERS._fields))
         if parameters is None:
@@ -197,17 +195,22 @@ class Model(ABC):
 
 # noinspection PyPep8Naming
 class Kernel(Model):
-    """ Abstract interface to a Kernel. Essentially this is the code contract with the _GaussianProcess and GaussianBundle interfaces.
-    The kernel takes two input design matrices ``X0`` and ``X1``. If these are populated then ``not kernel.with_frames``, for efficiency.
+    """ Abstract interface to a Kernel. Essentially this is the code contract with the GP interface.
+
+    The kernel takes two input design matrices ``X0`` and ``X1``.
+
+    If these are populated then ``not kernel.with_frames``, for efficiency.
     In this case, ``kernel.parameters.lengthscale.shape[1] &gt= kernel.M = X0.shape[1] = X1.shape[1]``.
+
     If ``X0 is None is X1`` then ``kernel.with_frames`` and the kernel is used purely for recording parameters.
     """
 
     """ Required overrides."""
 
-    MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
-    Parameters = NamedTuple("Parameters", [("OVERRIDE_THIS", NP.Matrix)])
+    class Parameters(NamedTuple):
+        OVERRIDE_THIS: NP.Matrix
     DEFAULT_PARAMETERS = "OVERRIDE_THIS"
+    MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
 
     """ End of required overrides."""
 

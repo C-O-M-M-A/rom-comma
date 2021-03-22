@@ -19,8 +19,10 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import romcomma.data
-import romcomma.distribution
-import romcomma.function
-import romcomma.typing_
-import romcomma.model
+from romcomma import data
+from romcomma import distribution
+from romcomma import function
+from romcomma import typing_
+from romcomma import model
+
+EFFECTIVELY_ZERO = 1.0E-64

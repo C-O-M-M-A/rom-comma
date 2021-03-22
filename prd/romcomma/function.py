@@ -35,11 +35,12 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 |
 """
 
-from numpy import atleast_2d, arange, prod, sin, einsum, full, concatenate, ndarray, array, eye
+from numpy import atleast_2d, arange, prod, sin, einsum, zeros, concatenate, ndarray, array, eye
 from pandas import DataFrame, MultiIndex
 from romcomma.distribution import SampleDesign, Multivariate
-from romcomma.typing_ import NP, Callable, Dict, Numeric, Sequence, NamedTuple, PathLike
-from romcomma import data
+from romcomma.typing_ import NP, Callable, Dict, Numeric, Sequence, Any, PathLike, TypeVar, Generic
+from romcomma.data import Store
+from romcomma import EFFECTIVELY_ZERO
 
 
 def ishigami(X: NP.MatrixLike, a: float = 7.0, b: float = 0.1) -> NP.Vector:
@@ -86,7 +87,7 @@ def sobol_g(X: NP.MatrixLike, m_very_important: int = 0, m_important: int = 0, m
     """
     X = atleast_2d(X)
 
-    def _calculate_a_i_times_2(M: int):
+    def __calculate_a_i_times_2(M: int):
         """ Inner function to calculate a_i_times_2_inner."""
         a_i_times_2_inner = arange(0, M)  # Firstly, assume all a_i_ take the default value i/2
         #
@@ -101,12 +102,12 @@ def sobol_g(X: NP.MatrixLike, m_very_important: int = 0, m_important: int = 0, m
             a_i_times_2_inner[m_unimportant: M] = 198
         return a_i_times_2_inner
 
-    a_i_times_2 = _calculate_a_i_times_2(X.shape[1])
+    a_i_times_2 = __calculate_a_i_times_2(X.shape[1])
     factors = (abs(8 * X - 4) + a_i_times_2) / (a_i_times_2 + 2)
     return prod(factors, axis=1, keepdims=True)
 
 
-def linear(X: NP.MatrixLike, matrix: NP.Matrix):
+def linear(X: NP.MatrixLike, matrix: NP.Matrix) -> NP.Matrix:
     """ Transform X by a square linear transformation matrix
 
     Args:
@@ -117,15 +118,15 @@ def linear(X: NP.MatrixLike, matrix: NP.Matrix):
     return einsum('NO,MO -> NM', X, matrix, dtype=float)
 
 
-def linear_matrix_from_meta(store: data.Store) -> NP.Matrix:
-    """ Read linear transformation matrix used as pre_function_with_parameters in function.sample from the resulting __meta__.json
+def linear_matrix_from_meta(store: Store) -> NP.Matrix:
+    """ Read linear transformation matrix used as input_transform in function.sample from the resulting __meta__.json
     Args:
         store: The data.Store
 
     Returns: The transformation matrix found, or the identity.
 
     """
-    function_with_parameters = store.meta['origin']['functions_with_parameters'][0].split("; matrix=")
+    function_with_parameters = store.meta['origin']['functions'][0].split('; matrix=')
     if len(function_with_parameters) > 1:
         function_with_parameters = eval(function_with_parameters[-1][:-1])
         return array(function_with_parameters)
@@ -133,150 +134,148 @@ def linear_matrix_from_meta(store: data.Store) -> NP.Matrix:
         return eye(store.meta['data']['M'], dtype=float)
 
 
-class CallableWithParameters(NamedTuple):
-    """ A NamedTuple for use with function.sample(...). Encapsulates a function and its parameters."""
-    function: Callable[..., NP.Vector]
-    parameters: Dict[str, Numeric]
+class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
+    """ A class for use with function.sample(...). Encapsulates a function and its parameters."""
+
+    @classmethod
+    def default(cls, function_: Callable[..., NP.VectorOrMatrix]) -> 'FunctionWithParameters':
+        """ Construct a default FunctionWithParameters for ``function_``.
+
+        Args:
+            function_: The Callable of interest.
+        Returns: A FunctionWithParameters pairing function_ with a Dict of its default parameters. If function_ is not recognized, parameters is left empty.
+        """
+        if function_.__name__ == 'ishigami':
+            parameters_ = {'a': 7.0, 'b': 0.1}
+        elif function_.__name__ == 'sobol_g':
+            parameters_ = {'m_very_important': 0, 'm_important': 0, 'm_unimportant': 0, 'a_i_very_important': 0, 'a_i_important': 1, 'a_i_unimportant': 9}
+        elif function_.__name__ == 'linear':
+            parameters_ = {'matrix': None}
+        else:
+            parameters_ = {}
+        return cls(function_, parameters_)
+
+    @classmethod
+    def from_meta(cls, meta: Dict[str, Any]) -> 'FunctionWithParameters':
+        """ Construct a FunctionWithParameters from metadata.
+
+        Args:
+            meta: A ``dict`` produced by ``functionWithParameters.meta``.
+        Returns: The FunctionWithParameters described by ``meta``.
+        """
+        _function = globals()[meta['function']]
+        _parameters = {key: (array(val) if isinstance(val, list) else val) for key, val in meta['parameters']}
+        return cls(_function, _parameters)
+
+    @property
+    def function(self) -> Callable[..., NP.VectorOrMatrix]:
+        return self._function
+
+    @property
+    def parameters(self) -> Dict[str, Numeric]:
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, value: Dict[str, Numeric]):
+        self._parameters = value
+
+    @property
+    def meta(self) -> Dict[str, Any]:
+        parameters_meta = {key: (val.tolist() if isinstance(val, ndarray) else val) for key, val in self._parameters}
+        return {'function': self._function.__name__, 'parameters': parameters_meta}
+
+    def __init__(self, function_: Callable[..., NP.VectorOrMatrix], parameters_: Dict[str, Numeric]):
+        """ Construct function_ with parameters_.
+
+        Args:
+            function_:
+            parameters_:
+        """
+        self._function = function_
+        self._parameters = parameters_
 
 
-def callable_with_parameters(function_: Callable[..., NP.Vector]) -> CallableWithParameters:
-    """ Construct a suitable CallableWithParameters for ``function_``.
-
-    Args:
-        function_: The Callable of interest.
-    Returns: A Tuple pairing function_ with a Dict of its default parameters.
-        If function_ is not recognized, the Dict is left empty.
-    """
-    if function_.__name__ == "ishigami":
-        parameters_ = {'a': 7.0, 'b': 0.1}
-    elif function_.__name__ == "sobol_g":
-        parameters_ = {'m_very_important': 0, 'm_important': 0, 'm_unimportant': 0, 'a_i_very_important': 0, 'a_i_important': 1, 'a_i_unimportant': 9}
-    elif function_.__name__ == "linear":
-        parameters_ = {'matrix': None}
-    else:
-        parameters_ = {}
-    # noinspection PyTypeChecker
-    return CallableWithParameters(function_, parameters_)
-
-
-def sample(store_dir: PathLike, N: int, X_distribution: Multivariate, X_sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE,
-           CDF_scale: NP.ArrayLike = None, CDF_loc: NP.ArrayLike = None, pre_function_with_parameters: CallableWithParameters = None,
-           functions_with_parameters: Sequence[CallableWithParameters] = None,
-           noise_distribution: Multivariate = None, noise_sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE) -> data.Store:
-    """ Apply ``function_`` to ``N`` datapoints from ``X_distribution`` then add noise.
+def sample(store_dir: PathLike, N: int, X_distribution: Multivariate.Base, X_sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE,
+           CDF_scale: NP.CovectorLike = None, CDF_loc: NP.CovectorLike = None,
+           input_transform: FunctionWithParameters[NP.Matrix] = None, functions: Sequence[FunctionWithParameters[NP.Vector]] = None,
+           noise_distribution: Multivariate.Base = None, noise_sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE) -> Store:
+    """ Apply ``functions`` to ``N`` datapoints from ``input_transform(cdf(X_distribution))`` then add noise.
+        If CDF_Scale is None, the raw input X is used as the argument to input_transform.
+        If input_transform is None the identity function is used instead. If functions is None, the identity function is used instead.
 
     Args:
         store_dir: The location of the Store to be created for the results.
         N: The number of sample points.
         X_distribution: The M-dimensional Multivariate distribution from which X is drawn.
         X_sample_design: SampleDesign.LATIN_HYPERCUBE or SampleDesign.RANDOM_VARIATE.
-        CDF_scale: An NP.ArrayLike of scalings for CDFs. If None, CDFs are not used, else X is transformed into CDF_scale * CDF(X) - CDF_loc
-        CDF_loc: An NP.ArrayLike of offsets to subtract from scaled CDFs.
-        pre_function_with_parameters: A NamedTuple consisting of a function(Callable) and its parameters(Dict).
-            This function which transforms the (N,M) design Matrix produced according to X_distribution, X_sample_design and CDF_scale
-            to another (N,M) design matrix. Use this to combine inputs, to generate dependencies for example.
-        functions_with_parameters: A list of NamedTuples, each consisting of a function(Callable) and its parameters(Dict).
-            If None the identity function on X is assumed.
+        CDF_scale: An NP.CovectorLike of scalings for CDFs. If None, CDFs are not used, else X is transformed into CDF_scale * CDF(X) - CDF_loc
+        CDF_loc: An NP.CovectorLike of offsets to subtract from scaled CDFs.
+        input_transform: This FunctionWithParameters transforms the (N,M) design Matrix produced according to X_distribution, X_sample_design
+            and CDF_scale, CDF_loc to another (N,M) design matrix. Use this to combine inputs, to generate dependencies for example.
+            Note that this function must be of full rank -- it must not reduce M. If None the identity function is assumed.
+        functions: A list of FunctionWithParameters, each consisting of a function(Callable) and its parameters(Dict).
+            If None the identity function is assumed.
         noise_distribution: The Multivariate. distribution from which output noise is drawn, and added to the result of function_.
         noise_sample_design: SampleDesign.LATIN_HYPERCUBE or SampleDesign.RANDOM_VARIATE.
-    Returns: data.Store.from_df(store_dir, df, meta). The calling arguments are encapsulated in meta, the result X: f(X) + noise in df.
-    If functions_with_parameters is None  and pre_function_with_parameters is None then df represents X: X + noise.
-    If noise_distribution is also None then df represents the sample X alone.
+    Returns: data.Store.from_df(store_dir, df, meta). The calling arguments are encapsulated in meta, df consists of X and
+        Y = functions(input_transform(CDF_scale * CDF(X) - CDF_loc)) + noise.
 
     Raises:
         IndexError: If noise.M is incommensurate with other arguments.
     """
-
-    """ Validate arguments."""
-    if not isinstance(X_distribution, Multivariate.Base):
-        raise TypeError("type(X_distribution) is {t:s} when it must derive from Multivariate.Base."
-                        .format(t=str(type(X_distribution))))
-    if CDF_scale is not None:
-        if not isinstance(X_distribution, Multivariate.Independent):
-            raise TypeError("Can only CDFScale a distribution derived from Multivariate.Independent, not {t:s}.".format(t=str(type(X_distribution))))
-        else:
-            CDF_scale = atleast_2d(CDF_scale)
-            if CDF_scale.shape == (1, 1):
-                CDF_scale = full((1, X_distribution.M), CDF_scale[0, 0], dtype=float)
-            if CDF_scale.shape not in ((1, X_distribution.M), (N, X_distribution.M)):
-                raise IndexError("CDF_scale.shape={c}, X.shape={x}".format(c=CDF_scale.shape, x=(N, X_distribution.M)))
-            CDF_loc = atleast_2d(0.0) if CDF_loc is None else atleast_2d(CDF_loc)
-            if CDF_loc.shape == (1, 1):
-                CDF_loc = full((1, X_distribution.M), CDF_loc[0, 0], dtype=float)
-            if CDF_loc.shape not in ((1, X_distribution.M), (N, X_distribution.M)):
-                raise IndexError("CDF_loc.shape={c}, X.shape={x}".format(c=CDF_loc.shape, x=(N, X_distribution.M)))
-    if isinstance(functions_with_parameters, CallableWithParameters):
-        functions_with_parameters = [functions_with_parameters]
-    if noise_distribution is not None and not isinstance(noise_distribution, Multivariate.Base):
-        raise TypeError("type(noise_distribution) is {t:s} when it must derive from Multivariate.Base.".format(t=str(type(noise_distribution))))
-
     X = X_distribution.sample(N, X_sample_design)
-    columns = [("X", "[{i:d}]".format(i=i)) for i in range(X.shape[1])]
-    meta = {'origin': {"N": N, "X_distribution": X_distribution.parameters, "CDF_scale": atleast_2d(CDF_scale).tolist(),
-                       "CDF_loc": atleast_2d(CDF_loc).tolist(), "X_sample_design": str(X_sample_design), "functions_with_parameters": None,
-                       "noise_distribution": None, "noise_sample_design": str(noise_sample_design)}}
+    meta = {'origin': {'N': N, 'X_distribution': X_distribution.parameters, 'X_sample_design': str(X_sample_design),
+                       'CDF_scale': atleast_2d(CDF_scale).tolist(), 'CDF_loc': atleast_2d(CDF_loc).tolist(),
+                       'input_transform': None if input_transform is None else input_transform.meta,
+                       'functions': None if functions is None else [f.meta for f in functions],
+                       'noise_distribution': None, 'noise_sample_design': str(noise_sample_design)}}
 
-    def _incorporated(_columns: list, _function_list: list):
-        # noinspection PyTypeChecker
-        meta['origin']["functions_with_parameters"] = _function_list
-        _columns += list(zip(("Y",) * len(_function_list), _function_list))
-        return DataFrame(concatenate((X, Y), axis=1), columns=MultiIndex.from_tuples(_columns), dtype=float), meta
+    def __CDF_representation() -> NP.Matrix:
+        return X.copy() if CDF_scale is None else CDF_scale * X_distribution.cdf(X) - CDF_loc
 
-    if functions_with_parameters is None:
-        if CDF_scale is None:
-            if pre_function_with_parameters is None:
-                if noise_distribution is None:
-                    return data.Store.from_df(dir_=store_dir, df=DataFrame(X, columns=MultiIndex.from_tuples(columns), dtype=float), meta=meta)
-                else:
-                    function_list = ["X[{i:d}]".format(i=i) for i in range(X.shape[1])]
-                    Y = X.copy()
-            else:
-                function_list = [(pre_function_with_parameters.function.__name__ + "(X; "
-                                  + ", ".join("{key}={val}".format(key=key, val=val) for (key, val) in pre_function_with_parameters.parameters.items())
-                                  + ")[{i:d}]".format(i=i)) for i in range(X.shape[1])]
-                Y = pre_function_with_parameters.function(X, **pre_function_with_parameters.parameters)
-        else:
-            if pre_function_with_parameters is None:
-                function_list = ["{s:f} CDF(X[{i:d}]) - {l:f}".format(s=CDF_scale[0, i], l=CDF_loc[0, i], i=i) for i in range(X.shape[1])]
-                Y = CDF_scale * X_distribution.cdf(X) - CDF_loc
-            else:
-                function_list = [("{f}({s} * CDF(X) - {l}; ".format(f=pre_function_with_parameters.function.__name__, s=CDF_scale.tolist(), l=CDF_loc.tolist())
-                                  + ", ".join("{key}={val}".format(key=key, val=val.tolist() if isinstance(val, ndarray) else val)
-                                              for (key, val) in pre_function_with_parameters.parameters.items()) + ")[{i:d}]".format(i=i)) for i in
-                                 range(X.shape[1])]
-                Y = CDF_scale * X_distribution.cdf(pre_function_with_parameters.function(X, **pre_function_with_parameters.parameters)) - CDF_loc
-    else:
-        if CDF_scale is None:
-            if pre_function_with_parameters is None:
-                function_list = [(f.function.__name__ + "(X; " + ", ".join("{key}={val}".format(key=key, val=val)
-                                                                           for (key, val) in f.parameters.items()) + ")") for f in functions_with_parameters]
-                Y = concatenate([f.function(X, **f.parameters) for f in functions_with_parameters], axis=1)
-            else:
-                function_list = [("{fn}({g}(X; ".format(fn=f.function.__name__, g=pre_function_with_parameters.function.__name__) +
-                                  ", ".join("{key}={val}".format(key=key, val=val.tolist() if isinstance(val, ndarray) else val)
-                                            for (key, val) in pre_function_with_parameters.parameters.items()) + ")") for f in functions_with_parameters]
-                Y = concatenate([f.function(pre_function_with_parameters.function(X, **pre_function_with_parameters.parameters), **f.parameters)
-                                 for f in functions_with_parameters], axis=1)
-        else:
-            if pre_function_with_parameters is None:
-                function_list = [(f.function.__name__ + "({s} * CDF(X) - {l}; ".format(s=CDF_scale.tolist(), l=CDF_loc.tolist()) +
-                                  ", ".join("{key}={val}".format(key=key, val=val)
-                                            for (key, val) in f.parameters.items()) + ")") for f in functions_with_parameters]
-                Y = concatenate([f.function(CDF_scale * X_distribution.cdf(X) - CDF_loc, **f.parameters) for f in functions_with_parameters], axis=1)
-            else:
-                function_list = [("{fn}({g}({s} * CDF(X) - {l}; ".format(fn=f.function.__name__, g=pre_function_with_parameters.function.__name__,
-                                                                         s=CDF_scale.tolist(), l=CDF_loc.tolist()) +
-                                  ", ".join("{key}={val}".format(key=key, val=val.tolist() if isinstance(val, ndarray) else val)
-                                            for (key, val) in pre_function_with_parameters.parameters.items()) + ")") for f in functions_with_parameters]
-                Y = concatenate([f.function(CDF_scale * X_distribution.cdf(pre_function_with_parameters.function(X, **pre_function_with_parameters.parameters))
-                                            - CDF_loc, **f.parameters) for f in functions_with_parameters], axis=1)
-    if noise_distribution is None:
-        df, meta = _incorporated(columns, function_list)
-        return data.Store.from_df(dir_=store_dir, df=df, meta=meta)
-    if noise_distribution.M != Y.shape[1]:
-        raise IndexError("noise.M = {n_m:d} != {l:d} = L = dimension output."
-                         .format(n_m=noise_distribution.M, l=Y.shape[1]))
-    Y += noise_distribution.sample(N, noise_sample_design)
-    meta['origin']["noise_distribution"] = noise_distribution.parameters
-    df, meta = _incorporated(columns, function_list)
-    return data.Store.from_df(dir_=store_dir, df=df, meta=meta)
+    def __input_transform_representation(Y: NP.Matrix) -> NP.Matrix:
+        return Y if input_transform is None else input_transform.function(Y, **input_transform.parameters)
+
+    def __functions_representation(Y: NP.Matrix) -> NP.Matrix:
+        return Y if functions is None else concatenate([f.function(Y, **f.parameters) for f in functions], axis=1)
+
+    Y = __functions_representation(__input_transform_representation(__CDF_representation()))
+    if noise_distribution is not None:
+        if noise_distribution.M != Y.shape[1]:
+            raise IndexError(f'noise.M = {noise_distribution.M:d} != {Y.shape[1]:d} = L = dimension output.')
+        Y += noise_distribution.sample(N, noise_sample_design)
+        meta['origin']['noise_distribution'] = noise_distribution.parameters
+    columns = [('X', f'[{i:d}]') for i in range(X.shape[1])] + [('Y', f'Y{i:d}') for i in range(Y.shape[1])]
+    df = DataFrame(concatenate((X, Y), axis=1), columns=MultiIndex.from_tuples(columns), dtype=float)
+    return Store.from_df(dir_=store_dir, df=df, meta=meta)
+
+
+def functions_of_normal(store_dir: str, N: int, M: int, CDF_scale: NP.CovectorLike = None, CDF_loc: NP.CovectorLike = None,
+                        input_transform: FunctionWithParameters[NP.Matrix] = None, functions: Sequence[FunctionWithParameters[NP.Vector]] = None,
+                        noise_std: NP.CovectorLike = 0.0) -> Store:
+    """ Apply ``functions`` to ``N`` datapoints from ``input_transform(cdf(Multivariate.Normal(mean=zeros(M), covariance=eye(M))))`` then add noise.
+        If CDF_Scale is None, the raw input X is used as the argument to input_transform.
+        If input_transform is None the identity function is used instead. If functions is None, the identity function is used instead.
+
+    Args:
+        store_dir: The location of the Store to be created for the results.
+        N: The number of sample points.
+        M: The number of input dimensions for the (N,M) design matrix.
+        CDF_scale: An NP.CovectorLike of scalings for CDFs. If None, CDFs are not used, else X is transformed into CDF_scale * CDF(X) - CDF_loc
+        CDF_loc: An NP.CovectorLike of offsets to subtract from scaled CDFs.
+        input_transform: This FunctionWithParameters transforms the (N,M) design Matrix produced according to X_distribution, X_sample_design
+            and CDF_scale, CDF_loc to another (N,M) design matrix. Use this to combine inputs, to generate dependencies for example.
+            Note that this function must be of full rank -- it must not reduce M. If None the identity function is assumed.
+        functions: A list of FunctionWithParameters, each consisting of a function(Callable) and its parameters(Dict).
+            If None the identity function is assumed.
+        noise_std: An NP.CovectorLike to construct noise_distribution=Multivariate.Normal(mean=zeros(L), covariance=noise_std ** 2 * eye(L))
+
+    Returns: data.Store.from_df(store_dir, df, meta). The calling arguments are encapsulated in meta, df consists of X and
+        Y = functions(input_transform(CDF_scale * CDF(X) - CDF_loc)) + noise.
+    """
+    X_distribution = Multivariate.Normal(mean=zeros(M, dtype=float), covariance=eye(M, dtype=float))
+    L = M if functions is None else len(functions)
+    noise_distribution = (Multivariate.Normal(mean=zeros(L, dtype=float), covariance=noise_std ** 2 * eye(L, dtype=float))
+                          if noise_std > EFFECTIVELY_ZERO else None)
+    return sample(store_dir=store_dir, N=N, X_distribution=X_distribution, X_sample_design=SampleDesign.LATIN_HYPERCUBE, CDF_scale=CDF_scale, CDF_loc=CDF_loc,
+                  input_transform=input_transform, functions=functions, noise_distribution=noise_distribution, noise_sample_design=SampleDesign.LATIN_HYPERCUBE)

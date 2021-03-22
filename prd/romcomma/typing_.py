@@ -50,3 +50,4 @@ class NP:
     MatrixLike = Union[VectorLike, Sequence[VectorLike]]
     CovectorLike = MatrixLike
     ArrayLike = TensorLike = Union[MatrixLike, Sequence[MatrixLike], Sequence[Sequence[MatrixLike]]]
+    VectorOrMatrix = TypeVar('VectorOrMatrix', Vector, Matrix)

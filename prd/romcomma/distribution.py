@@ -21,7 +21,7 @@
 
 """ Contains basic probability distributions, with a view to sampling."""
 
-from romcomma.typing_ import Any, Optional, Union, NP, Sequence, Tuple
+from romcomma.typing_ import Any, Optional, Union, NP, Sequence, Tuple, List, Dict, Type
 from scipy import linalg, stats
 # noinspection PyPep8Naming
 from pyDOE2 import lhs as pyDOE_lhs
@@ -39,14 +39,14 @@ class SampleDesign(Enum):
 class Univariate:
     """ A univariate, fully parametrized (SciPy frozen) continuous distribution."""
 
-    SuperFamily = stats.rv_continuous
+    SuperFamily: Type[stats.rv_continuous] = stats.rv_continuous
     """ The SciPy (super) family of continuous, univariate distributions."""
 
-    Family = {_class.__name__[:-4]: _class for _class in SuperFamily.__subclasses__() if _class.__name__[-4:] == "_gen"}
+    Family: Dict[str, Type[stats.rv_continuous]] = {_class.__name__[:-4]: _class for _class in SuperFamily.__subclasses__() if _class.__name__[-4:] == '_gen'}
     """ The romcomma dictionary of univariate distribution classes."""
-    family = {name: Fam() for name, Fam in Family.items()}
+    family: Dict[str, stats.rv_continuous] = {name: Fam() for name, Fam in Family.items()}
     """ The romcomma dictionary of unparametrized univariate distribution objects."""
-    names = Family.keys()
+    names: List[str] = Family.keys()
     """ The romcomma list of unparametrized univariate distributions."""
 
     @classmethod
@@ -58,7 +58,7 @@ class Univariate:
         Returns: A Dict of parameters and their default values.
         """
         keys = cls.family[name].shapes.split(',') if cls.family[name].shapes else []
-        return {**{'name': name, "loc": 0, "scale": 1}, **{_key: None for _key in keys}}
+        return {**{'name': name, 'loc': 0, 'scale': 1}, **{_key: None for _key in keys}}
 
     @property
     def name(self) -> str:
@@ -94,12 +94,12 @@ class Univariate:
             ValueError: If M &lt 1.
         """
         if N < 1:
-            raise ValueError("N == {N:d} < 1".format(N=N))
+            raise ValueError(f'N == {N:d} < 1')
         if M < 1:
-            raise ValueError("M == {M:d} < 1".format(M=M))
+            raise ValueError(f'M == {M:d} < 1')
         return self.parametrized.rvs(size=[N, M])
 
-    def __init__(self, name: str = "uniform", **kwargs: Any):
+    def __init__(self, name: str = 'uniform', **kwargs: Any):
         """ Construct a Univariate distribution.
 
         Args:
@@ -140,6 +140,18 @@ class Multivariate:
             """
 
         @abstractmethod
+        def cdf(self, X: NP.Matrix) -> NP.Matrix:
+            """ Calculate cumulative distribution function (CDF) of this Multivariate.
+
+            Args:
+                X: NxM Matrix of values.
+            Returns:  MxN Matrix of CDF(values)
+
+            Raises:
+                ValueError: If len(X.shape) != 2 or X.shape[1] != self.M.
+            """
+
+        @abstractmethod
         def __init__(self):
             """ This is actually inaccessible, but serves as an abstract declaration."""
             self._M = 0
@@ -154,14 +166,14 @@ class Multivariate:
             The Tuple is singleton if all marginals are identical (iid). Otherwise the Tuple length is equal to M, comprising one univariate 
             marginal per X-dimension.
             """
-            return self._marginals if self._marginals else tuple([Univariate(name="uniform", loc=0, scale=1)])
+            return self._marginals if self._marginals else tuple([Univariate(name='uniform', loc=0, scale=1)])
 
         @property
         def parameters(self) -> dict:
             """ The parameters of this multivariate distribution, as a Dict containing ``M`` and ``marginals`` which is a list of parameter 
             Dicts for each marginal distribution in turn."""
             marginals = [marginal.parameters for marginal in self.marginals]
-            return {"M": self._M, "marginals": marginals}
+            return {'M': self._M, 'marginals': marginals}
 
         def lhs(self, N: int, criterion: Optional[str] = None, iterations: Optional[int] = None) -> NP.Matrix:
             """ Sample latin hypercube noise from this Multivariate.Independent.
@@ -178,7 +190,7 @@ class Multivariate:
                 ValueError: If N &lt 1.
             """
             if N < 1:
-                raise ValueError("N = {N:d} < 1".format(N=N))
+                raise ValueError(f'N = {N:d} < 1')
             _lhs = pyDOE_lhs(self._M, N, criterion, iterations)
             if len(self._marginals) > 1:
                 for i in range(self._M):
@@ -199,7 +211,7 @@ class Multivariate:
                 ValueError: If N &lt 1.
             """
             if N < 1:
-                raise ValueError("N == {N:d} < 1".format(N=N))
+                raise ValueError(f'N == {N:d} < 1')
             if len(self._marginals) > 1:
                 result = zeros([N, self.M])
                 for i in range(self._M):
@@ -209,7 +221,7 @@ class Multivariate:
                 if len(self._marginals) == 1:
                     return self._marginals[0].rvs(N, self.M)
                 else:
-                    return Univariate(name="uniform", loc=0, scale=1).rvs(N, self.M)
+                    return Univariate(name='uniform', loc=0, scale=1).rvs(N, self.M)
 
         def cdf(self, X: NP.Matrix) -> NP.Matrix:
             """ Calculate cumulative distribution function (CDF) of this Multivariate.Independent.
@@ -222,7 +234,7 @@ class Multivariate:
                 ValueError: If len(X.shape) != 2 or X.shape[1] != self.M.
             """
             if len(X.shape) != 2 or X.shape[1] != self.M:
-                raise ValueError("X.shape = {s} when M ={M:d}".format(s=X.shape, M=self.M))
+                raise ValueError(f'X.shape = {X.shape} when M ={self.M:d}')
             N = X.shape[0]
             if len(self._marginals) > 1:
                 result = zeros([N, self.M])
@@ -233,7 +245,7 @@ class Multivariate:
                 if len(self._marginals) == 1:
                     return self._marginals[0].parametrized.cdf(X)
                 else:
-                    return Univariate(name="uniform", loc=0, scale=1).parametrized.cdf(X)
+                    return Univariate(name='uniform', loc=0, scale=1).parametrized.cdf(X)
 
         def sample(self, N: int, sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE) -> NP.Matrix:
             """ Sample random noise from this Multivariate.Independent.
@@ -263,7 +275,7 @@ class Multivariate:
             """
             if not marginals:
                 if M < 1:
-                    raise TypeError("Neither M nor marginals were provided.")
+                    raise TypeError('Neither M nor marginals were provided.')
                 else:
                     self._M = M
                     self._marginals = tuple()
@@ -274,7 +286,7 @@ class Multivariate:
                 else:
                     self._M = M
                     if 1 < len(self.marginals) != self._M:
-                        raise ValueError("M does not match len(marginals).")
+                        raise ValueError('M does not match len(marginals).')
 
     # noinspection PyPep8Naming
     class Normal(Base):
@@ -309,7 +321,7 @@ class Multivariate:
         def parameters(self) -> dict:
             """ The parameters of this multivariate distribution, as a Dict containing ``M`` and ``marginals`` which is a list of parameter 
             Dicts for each marginal distribution in turn."""
-            return {"M": self._M, "name": "Multivariate.Normal", "mean": self._mean.tolist(), "covariance": self._covariance.tolist()}
+            return {'M': self._M, 'name': 'Multivariate.Normal', 'mean': self._mean.tolist(), 'covariance': self._covariance.tolist()}
 
         def sample(self, N: int, sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE) -> NP.Matrix:
             """ Sample random noise from this Multivariate.Independent.
@@ -322,6 +334,20 @@ class Multivariate:
             iid_standard_normal_sample = self._iid_standard_normal.sample(N, sample_design)
             return self.mean + iid_standard_normal_sample @ self.cholesky
 
+        def cdf(self, X: NP.Matrix) -> NP.Matrix:
+            """ Calculate cumulative distribution function (CDF) of this Multivariate.Normal.
+
+            Args:
+                X: NxM Matrix of values.
+            Returns:  MxN Matrix of CDF(values)
+
+            Raises:
+                ValueError: If len(X.shape) != 2 or X.shape[1] != self.M.
+            """
+            if len(X.shape) != 2 or X.shape[1] != self.M:
+                raise ValueError(f'X.shape = {X.shape} when M ={self.M:d}')
+            return self._parametrized.cdf(X)
+
         # noinspection PyMissingConstructor
         def __init__(self, mean: NP.Covector, covariance: NP.MatrixLike):
             """ Construct a Multivariate.Normal distribution
@@ -332,11 +358,12 @@ class Multivariate:
             """
             self._mean = atleast_2d(mean)
             if not (1 == self._mean.shape[0] <= self._mean.shape[1]):
-                raise TypeError("Mean is not CovectorLike.")
+                raise TypeError('Mean is not CovectorLike.')
             self._M = self._mean.shape[1]
             self._covariance = atleast_2d(covariance)
             if not (self._M == self._covariance.shape[0] == self._covariance.shape[1]):
-                raise TypeError("Covariance is not MatrixLike.")
+                raise TypeError('Covariance is not MatrixLike.')
             self._cholesky = None
             self._eigen = None
-            self._iid_standard_normal = Multivariate.Independent(self._M, Univariate("norm", loc=0, scale=1))
+            self._iid_standard_normal = Multivariate.Independent(self._M, Univariate('norm', loc=0, scale=1))
+            self._parametrized = stats.multivariate_normal(mean.flatten(), covariance)

@@ -19,13 +19,7 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Run this module first thing, to test your installation of romcomma.
-
-**Contents**:
-    **predict**: Prediction using a GaussianBundle.
-
-    **test_input**: A rudimentary test input, for installation testing.
-"""
+""" Run this module first thing, to test your installation of romcomma. """
 
 from romcomma import distribution, function, data, model
 from romcomma.typing_ import NP
@@ -34,45 +28,30 @@ from pandas import MultiIndex, DataFrame, concat
 from pathlib import Path
 from scipy.stats import ortho_group
 
-EFFECTIVELY_ZERO = 1.0E-64
 BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\0.0')
 
 
-def scalar_function_of_normal(store_name: str, N: int, M: int, X_std: float, noise_std: float, CDF_scale: NP.Array=None, CDF_loc: NP.Array=None,
-                        pre_function_with_parameters: function.CallableWithParameters = None,
-                       function_with_parameters: function.CallableWithParameters = None) -> data.Store:
-    X_marginal = distribution.Univariate('norm', loc=0, scale=X_std)
-    X_dist = distribution.Multivariate.Independent(M=M, marginals=X_marginal)
-    noise_dist = (distribution.Multivariate.Normal(mean=zeros(1, dtype=float), covariance=noise_std ** 2 * eye(1, dtype=float))
-                  if noise_std > EFFECTIVELY_ZERO else None)
-    return function.sample(store_dir=store_name, N=N, X_distribution=X_dist,
-                               X_sample_design=distribution.SampleDesign.LATIN_HYPERCUBE, CDF_scale=CDF_scale,
-                               CDF_loc=CDF_loc, pre_function_with_parameters=pre_function_with_parameters,
-                               functions_with_parameters=function_with_parameters,
-                               noise_distribution=noise_dist, noise_sample_design=distribution.SampleDesign.LATIN_HYPERCUBE)
-
-
-def run_gps(name, test_fuction: str, N: int, noise_std: float, random: bool, M: int = 5, K: int = 2):
+def run_gps(name, test_function: str, N: int, noise_std: float, random: bool, M: int = 5, K: int = 2):
     gp_optimizer_options = {'optimizer': 'bfgs', 'max_iters': 5000, 'gtol': 1E-16}
     kernel_parameters = model.gpy_.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5**(M/5), dtype=float))
     parameters = model.gpy_.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
     CDF_scale = 2 * pi
     CDF_loc = pi
-    if test_fuction == 'sin.1':
-        function_with_parameters = function.CallableWithParameters(function.ishigami, parameters={'a': 0.0, 'b': 0.0})
-    elif test_fuction == 'sin.2':
-        function_with_parameters = function.CallableWithParameters(function.ishigami, parameters={'a': 2.0, 'b': 0.0})
-    elif test_fuction == 'ishigami':
+    if test_function == 'sin.1':
+        function_with_parameters = function.FunctionWithParameters(function.ishigami, parameters={'a': 0.0, 'b': 0.0})
+    elif test_function == 'sin.2':
+        function_with_parameters = function.FunctionWithParameters(function.ishigami, parameters={'a': 2.0, 'b': 0.0})
+    elif test_function == 'ishigami':
         function_with_parameters = function.callable_with_parameters(function.ishigami)
     else:
         CDF_scale = 1.0
         CDF_loc = 0.0
-        function_with_parameters = function.CallableWithParameters(function.sobol_g,
+        function_with_parameters = function.FunctionWithParameters(function.sobol_g,
                                                                    parameters={'m_very_important': 2, 'm_important': 3, 'm_unimportant': 4})
-    store_name = test_fuction + '.{0:d}.{1:.3f}.{2:d}'.format(M, noise_std, N)
+    store_name = f'{test_function}.{M:d}.{noise_std:.3f}.{N:d}'
     if random:
         lin_trans = ortho_group.rvs(M)
-        pre_function_with_parameters = function.CallableWithParameters(function=function.linear, parameters={'matrix': lin_trans})
+        pre_function_with_parameters = function.FunctionWithParameters(function=function.linear, parameters={'matrix': lin_trans})
         store_name += '.random'
     else:
         lin_trans = eye(M)
@@ -82,7 +61,7 @@ def run_gps(name, test_fuction: str, N: int, noise_std: float, random: bool, M: 
     store = scalar_function_of_normal(store_name=store_name, N=N, M=M, X_std=1.0, noise_std=noise_std, CDF_scale=CDF_scale, CDF_loc=CDF_loc,
                                       pre_function_with_parameters=pre_function_with_parameters,
                                       function_with_parameters=function_with_parameters)
-    savetxt(store.dir / "InverseRotation.csv", transpose(lin_trans))
+    savetxt(store.dir / 'InverseRotation.csv', transpose(lin_trans))
     data.Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=data.Store.Standard.mean_and_std,
                            replace_empty_test_with_data_=True)
     model.run.GPs(module=model.run.Module.GPY_, name=name, store=store, M=-1, parameters=parameters, optimize=True, test=True, sobol=False,
@@ -91,27 +70,27 @@ def run_gps(name, test_fuction: str, N: int, noise_std: float, random: bool, M: 
                   optimizer_options=gp_optimizer_options, make_ard=True)
 
 
-def playtest(name, test_fuction: str, N: int, noise_std: float, random: bool, M: int = 5, K: int = 2):
+def playtest(name, test_function: str, N: int, noise_std: float, random: bool, M: int = 5, K: int = 2):
     # gp_optimizer_options = {'optimizer': 'bfgs', 'max_iters': 5000, 'gtol': 1E-16}
     # kernel_parameters = model.gpy_.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5**(M/5), dtype=float))
     # parameters = model.gpy_.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
     CDF_scale = 2 * pi
     CDF_loc = pi
-    if test_fuction == 'sin.1':
-        function_with_parameters = function.CallableWithParameters(function.ishigami, parameters={'a': 0.0, 'b': 0.0})
-    elif test_fuction == 'sin.2':
-        function_with_parameters = function.CallableWithParameters(function.ishigami, parameters={'a': 2.0, 'b': 0.0})
-    elif test_fuction == 'ishigami':
+    if test_function == 'sin.1':
+        function_with_parameters = function.FunctionWithParameters(function.ishigami, parameters={'a': 0.0, 'b': 0.0})
+    elif test_function == 'sin.2':
+        function_with_parameters = function.FunctionWithParameters(function.ishigami, parameters={'a': 2.0, 'b': 0.0})
+    elif test_function == 'ishigami':
         function_with_parameters = function.callable_with_parameters(function.ishigami)
     else:
         CDF_scale = 1.0
         CDF_loc = 0.0
-        function_with_parameters = function.CallableWithParameters(function.sobol_g,
+        function_with_parameters = function.FunctionWithParameters(function.sobol_g,
                                                                    parameters={'m_very_important': 2, 'm_important': 3, 'm_unimportant': 4})
-    store_name = test_fuction + '.{0:d}.{1:.3f}.{2:d}'.format(M, noise_std, N)
+    store_name = test_function + '.{0:d}.{1:.3f}.{2:d}'.format(M, noise_std, N)
     if random:
         lin_trans = ortho_group.rvs(M)
-        pre_function_with_parameters = function.CallableWithParameters(function=function.linear, parameters={'matrix': lin_trans})
+        pre_function_with_parameters = function.FunctionWithParameters(function=function.linear, parameters={'matrix': lin_trans})
         store_name += '.random'
     else:
         lin_trans = eye(M)

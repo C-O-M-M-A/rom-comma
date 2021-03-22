@@ -57,7 +57,7 @@ class Frame:
         Raises:
             AssertionError: If self.is_empty.
         """
-        assert not self.is_empty, "Cannot write when frame.is_empty."
+        assert not self.is_empty, 'Cannot write when frame.is_empty.'
         self.df.to_csv(self._csv, sep=Frame.DEFAULT_CSV_KWARGS['sep'], index=True)
 
     # noinspection PyDefaultArgument
@@ -77,7 +77,7 @@ class Frame:
         """
         self._csv = Path(csv)
         if self.is_empty:
-            assert df.empty, "csv is an empty path, but df is not an empty DataFrame."
+            assert df.empty, 'csv is an empty path, but df is not an empty DataFrame.'
             self.df = df
         elif df.empty:
             self.df = read_csv(self._csv, **{**Frame.DEFAULT_CSV_KWARGS, **kwargs})
@@ -166,17 +166,17 @@ class Store:
     @property
     def data_csv(self) -> Path:
         """ The Store data file."""
-        return self.__dir / "__data__.csv"
+        return self.__dir / '__data__.csv'
 
     @property
     def meta_json(self) -> Path:
         """ The Store metadata file."""
-        return self.__dir / "__meta__.json"
+        return self.__dir / '__meta__.json'
 
     @property
     def standard_csv(self) -> Path:
         """ The Store standardization file."""
-        return self.__dir / "__standard__.csv" if self.is_standardized else Path()
+        return self.__dir / '__standard__.csv' if self.is_standardized else Path()
 
     @property
     def data(self) -> Frame:
@@ -264,8 +264,8 @@ class Store:
         Raises:
             AssertionError: if k is not in range(K).
         """
-        assert 0 <= k < self.K, "Requested fold {k:d} of a {K:d}-fold data.Store".format(k=k, K=self.K)
-        return self.dir / "fold.{k:d}".format(k=k)
+        assert 0 <= k < self.K, f'Requested fold {k:d} of a {self.K:d}-fold data.Store'
+        return self.dir / f'fold.{k:d}'
 
     def _K_folds_update(self, K: int, shuffled_before_folding: bool):
         self._meta.update({'K': K, 'shuffled before folding': shuffled_before_folding})
@@ -274,8 +274,8 @@ class Store:
     def split(self):
         """ Split this Store into L Splits by output. Each Split l is just a Store (whose L=1) containing the lth output only."""
         for l in range(self.L):
-            destination = ((self.dir.parent / "split.{0:d}".format(l)) / self.dir.name if self.__class__ == Fold
-                           else self.dir / "split.{0:d}".format(l))
+            destination = ((self.dir.parent / f'split.{l:d}') / self.dir.name if self.__class__ == Fold
+                           else self.dir / f'split.{l:d}')
             if not destination.exists():
                 destination.mkdir(mode=0o777, parents=True, exist_ok=False)
             indices = append(range(self.M), self.M + l)
@@ -300,7 +300,7 @@ class Store:
     @property
     def splits(self) -> List[Tuple[int, Path]]:
         """ Lists the index and path of every Split in this Store."""
-        return [(int(split_dir.suffix[1:]), split_dir) for split_dir in self.dir.glob("split.[0-9]*")]
+        return [(int(split_dir.suffix[1:]), split_dir) for split_dir in self.dir.glob('split.[0-9]*')]
 
     def meta_data_update(self):
         """ Update __meta__"""
@@ -398,7 +398,7 @@ class Fold(Store):
     @property
     def test_csv(self) -> Path:
         """ The test data file. Must be identical in format to the self.data_csv file."""
-        return self.dir / "__test__.csv"
+        return self.dir / '__test__.csv'
 
     @property
     def test(self) -> Frame:
@@ -438,13 +438,12 @@ class Fold(Store):
         """
         if not isinstance(parent, Store):
             parent = Store(parent, Store.InitMode.READ_META_ONLY)
-        assert 0 <= k < parent.K, \
-            "Fold k={k:d} is out of bounds 0 <= k < K = {K:d} in data.Store({parent_dir:s}".format(k=k, K=parent.K, parent_dir=str(parent.dir))
+        assert 0 <= k < parent.K, f'Fold k={k:d} is out of bounds 0 <= k < K = {self.K:d} in data.Store({parent.dir:s}'
         super().__init__(parent.fold_dir(k))
         self._M = M if 0 < M < super().M else super().M
         self._test = Frame(self.test_csv)
 
-    DEFAULT_META = {'parent_dir': "", 'k': -1, 'K': -1}
+    DEFAULT_META = {'parent_dir': '', 'k': -1, 'K': -1}
 
     @classmethod
     def into_K_folds(cls, parent: Store, K: int, shuffled_before_folding: bool = True,
@@ -463,7 +462,7 @@ class Fold(Store):
             AssertionError: Unless 1 &lt= K &lt= N.
         """
         N = len(parent.data.df.index)
-        assert 1 <= K <= N, "K={K:d} does not lie between 1 and N=len(self.data.df.index)={N:d} inclusive".format(K=K, N=N)
+        assert 1 <= K <= N, f'K={K:d} does not lie between 1 and N={N:d} inclusive.'
         for k in range(K, parent.K):
             parent.fold_dir(k).mkdir(mode=0o777, parents=False, exist_ok=True)
             parent.fold_dir(k).rmdir()
