@@ -27,7 +27,7 @@ Each function signature follows the format:
 |
 ``def function_(X: MatrixLike, **kwargs)``
 
-    :X: The function argument, in the form of an ``NxM`` design Matrix.
+    :X: The function argument, in the form of an ``(N,M)`` design Matrix.
     :**kwargs: Function-specific parameters, normally fixed.
 
 Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
@@ -35,10 +35,10 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 |
 """
 
-from numpy import atleast_2d, arange, prod, sin, einsum, zeros, concatenate, ndarray, array, eye
+from numpy import atleast_2d, arange, prod, sin, einsum, concatenate, ndarray, array, eye, pi
 from pandas import DataFrame, MultiIndex
-from romcomma.distribution import SampleDesign, Multivariate
-from romcomma.typing_ import NP, Callable, Dict, Numeric, Sequence, Any, PathLike, TypeVar, Generic
+from romcomma.distribution import SampleDesign, Multivariate, Univariate
+from romcomma.typing_ import NP, Callable, Dict, Numeric, Sequence, Any, PathLike, Generic, Tuple
 from romcomma.data import Store
 from romcomma import EFFECTIVELY_ZERO
 
@@ -47,7 +47,7 @@ def ishigami(X: NP.MatrixLike, a: float = 7.0, b: float = 0.1) -> NP.Vector:
     """ The Ishigami function as described in https://www.sfu.ca/~ssurjano/ishigami.html.
 
     Args:
-        X: The function argument, an NxM design Matrix. The standard distribution for each factor is ~U(-NP.pi, NP.pi).
+        X: The function argument, an (N,M) design Matrix. The standard distribution for each factor is ~U(-NP.pi, NP.pi).
         a: Parameter, normally equals 7.
         b: Parameter, normally equals 0.1 or 0.05.
     Returns: The (N,1) Vector ishigami(X).
@@ -66,7 +66,7 @@ def sobol_g(X: NP.MatrixLike, m_very_important: int = 0, m_important: int = 0, m
     """ The Sobol' G function as described in https://www.sfu.ca/~ssurjano/gfunc.html.
 
     Args:
-        X: The function argument, an NxM design Matrix.
+        X: The function argument, an (N,M) design Matrix.
 
             The standard distribution for each factor is ~U(0, 1).
         m_very_important: Parameter, the number of better than important factors.
@@ -138,22 +138,30 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
     """ A class for use with function.sample(...). Encapsulates a function and its parameters."""
 
     @classmethod
-    def default(cls, function_: Callable[..., NP.VectorOrMatrix]) -> 'FunctionWithParameters':
+    def default(cls, function_names: Sequence[str]) -> Tuple[NP.CovectorLike, NP.CovectorLike, Tuple['FunctionWithParameters', ...]]:
         """ Construct a default FunctionWithParameters for ``function_``.
 
         Args:
-            function_: The Callable of interest.
-        Returns: A FunctionWithParameters pairing function_ with a Dict of its default parameters. If function_ is not recognized, parameters is left empty.
+            function_names: A Sequence of names of a Callable[..., NP.VectorOrMatrix].
+        Returns: CDF_loc, CDF_scale and a tuple of default FunctionWithParameters.
+
+        Raises:
+            KeyError: If one of the function_names is not recognized.
+            ValueError: Unless (CDF_loc, CDF_scale) is the same for every function named.
         """
-        if function_.__name__ == 'ishigami':
-            parameters_ = {'a': 7.0, 'b': 0.1}
-        elif function_.__name__ == 'sobol_g':
-            parameters_ = {'m_very_important': 0, 'm_important': 0, 'm_unimportant': 0, 'a_i_very_important': 0, 'a_i_important': 1, 'a_i_unimportant': 9}
-        elif function_.__name__ == 'linear':
-            parameters_ = {'matrix': None}
-        else:
-            parameters_ = {}
-        return cls(function_, parameters_)
+
+        function_names = (function_names,) if isinstance(function_names, str) else function_names
+        defaults = {
+            'sin.1': (pi, 2 * pi, (ishigami, {'a': 0.0, 'b': 0.0})),
+            'sin.2': (pi, 2 * pi, (ishigami, {'a': 2.0, 'b': 0.0})),
+            'ishigami': (pi, 2 * pi, (ishigami, {'a': 7.0, 'b': 0.1})),
+            'sobol_g': (0.0, 1.0, (sobol_g, {'m_very_important': 0, 'm_important': 0, 'm_unimportant': 0,
+                                             'a_i_very_important': 0, 'a_i_important': 1, 'a_i_unimportant': 9})),
+            'sobol_g_234': (0.0, 1.0, (sobol_g, {'m_very_important': 2, 'm_important': 3, 'm_unimportant': 4})),
+            'linear': (0.0, 1.0, (linear, {'matrix': None}))
+        }
+        CDF_loc, CDF_scale, functions_with_parameters = zip(*(defaults[function_name] for function_name in function_names))
+        return CDF_loc, CDF_scale, tuple((FunctionWithParameters(*fwp) for fwp in functions_with_parameters))
 
     @classmethod
     def from_meta(cls, meta: Dict[str, Any]) -> 'FunctionWithParameters':
@@ -181,7 +189,7 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
 
     @property
     def meta(self) -> Dict[str, Any]:
-        parameters_meta = {key: (val.tolist() if isinstance(val, ndarray) else val) for key, val in self._parameters}
+        parameters_meta = {key: (val.tolist() if isinstance(val, ndarray) else val) for key, val in self._parameters.items()}
         return {'function': self._function.__name__, 'parameters': parameters_meta}
 
     def __init__(self, function_: Callable[..., NP.VectorOrMatrix], parameters_: Dict[str, Numeric]):
@@ -195,12 +203,12 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
         self._parameters = parameters_
 
 
-def sample(store_dir: PathLike, N: int, X_distribution: Multivariate.Base, X_sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE,
-           CDF_scale: NP.CovectorLike = None, CDF_loc: NP.CovectorLike = None,
+def sample(store_dir: PathLike, N: int, X_distribution: Multivariate.Independent, X_sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE,
+           CDF_loc: NP.CovectorLike = None, CDF_scale: NP.CovectorLike = None,
            input_transform: FunctionWithParameters[NP.Matrix] = None, functions: Sequence[FunctionWithParameters[NP.Vector]] = None,
            noise_distribution: Multivariate.Base = None, noise_sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE) -> Store:
     """ Apply ``functions`` to ``N`` datapoints from ``input_transform(cdf(X_distribution))`` then add noise.
-        If CDF_Scale is None, the raw input X is used as the argument to input_transform.
+        If CDF_loc is None or CDF_scale is None, the raw input X is used as the argument to input_transform.
         If input_transform is None the identity function is used instead. If functions is None, the identity function is used instead.
 
     Args:
@@ -208,8 +216,9 @@ def sample(store_dir: PathLike, N: int, X_distribution: Multivariate.Base, X_sam
         N: The number of sample points.
         X_distribution: The M-dimensional Multivariate distribution from which X is drawn.
         X_sample_design: SampleDesign.LATIN_HYPERCUBE or SampleDesign.RANDOM_VARIATE.
-        CDF_scale: An NP.CovectorLike of scalings for CDFs. If None, CDFs are not used, else X is transformed into CDF_scale * CDF(X) - CDF_loc
         CDF_loc: An NP.CovectorLike of offsets to subtract from scaled CDFs.
+            If None, CDFs are not used, else X is transformed into CDF_scale * CDF(X) - CDF_loc.
+        CDF_scale: An NP.CovectorLike of scalings for CDFs. If None, CDFs are not used, else X is transformed into CDF_scale * CDF(X) - CDF_loc.
         input_transform: This FunctionWithParameters transforms the (N,M) design Matrix produced according to X_distribution, X_sample_design
             and CDF_scale, CDF_loc to another (N,M) design matrix. Use this to combine inputs, to generate dependencies for example.
             Note that this function must be of full rank -- it must not reduce M. If None the identity function is assumed.
@@ -231,13 +240,13 @@ def sample(store_dir: PathLike, N: int, X_distribution: Multivariate.Base, X_sam
                        'noise_distribution': None, 'noise_sample_design': str(noise_sample_design)}}
 
     def __CDF_representation() -> NP.Matrix:
-        return X.copy() if CDF_scale is None else CDF_scale * X_distribution.cdf(X) - CDF_loc
+        return X.copy() if (CDF_loc is None or CDF_scale is None) else CDF_scale * X_distribution.cdf(X) - CDF_loc
 
-    def __input_transform_representation(Y: NP.Matrix) -> NP.Matrix:
-        return Y if input_transform is None else input_transform.function(Y, **input_transform.parameters)
+    def __input_transform_representation(X_: NP.Matrix) -> NP.Matrix:
+        return X_ if input_transform is None else input_transform.function(X_, **input_transform.parameters)
 
-    def __functions_representation(Y: NP.Matrix) -> NP.Matrix:
-        return Y if functions is None else concatenate([f.function(Y, **f.parameters) for f in functions], axis=1)
+    def __functions_representation(X_: NP.Matrix) -> NP.Matrix:
+        return X_ if functions is None else concatenate([f.function(X_, **f.parameters) for f in functions], axis=1)
 
     Y = __functions_representation(__input_transform_representation(__CDF_representation()))
     if noise_distribution is not None:
@@ -245,24 +254,25 @@ def sample(store_dir: PathLike, N: int, X_distribution: Multivariate.Base, X_sam
             raise IndexError(f'noise.M = {noise_distribution.M:d} != {Y.shape[1]:d} = L = dimension output.')
         Y += noise_distribution.sample(N, noise_sample_design)
         meta['origin']['noise_distribution'] = noise_distribution.parameters
-    columns = [('X', f'[{i:d}]') for i in range(X.shape[1])] + [('Y', f'Y{i:d}') for i in range(Y.shape[1])]
+    columns = [('X', f'X[{i:d}]') for i in range(X.shape[1])] + [('Y', f'Y[{i:d}]') for i in range(Y.shape[1])]
     df = DataFrame(concatenate((X, Y), axis=1), columns=MultiIndex.from_tuples(columns), dtype=float)
     return Store.from_df(dir_=store_dir, df=df, meta=meta)
 
 
-def functions_of_normal(store_dir: str, N: int, M: int, CDF_scale: NP.CovectorLike = None, CDF_loc: NP.CovectorLike = None,
+def functions_of_normal(store_dir: str, N: int, M: int, CDF_loc: NP.CovectorLike = None, CDF_scale: NP.CovectorLike = None,
                         input_transform: FunctionWithParameters[NP.Matrix] = None, functions: Sequence[FunctionWithParameters[NP.Vector]] = None,
                         noise_std: NP.CovectorLike = 0.0) -> Store:
     """ Apply ``functions`` to ``N`` datapoints from ``input_transform(cdf(Multivariate.Normal(mean=zeros(M), covariance=eye(M))))`` then add noise.
-        If CDF_Scale is None, the raw input X is used as the argument to input_transform.
+        If CDF_loc is None or CDF_scale is None, the raw input X is used as the argument to input_transform.
         If input_transform is None the identity function is used instead. If functions is None, the identity function is used instead.
 
     Args:
         store_dir: The location of the Store to be created for the results.
         N: The number of sample points.
         M: The number of input dimensions for the (N,M) design matrix.
-        CDF_scale: An NP.CovectorLike of scalings for CDFs. If None, CDFs are not used, else X is transformed into CDF_scale * CDF(X) - CDF_loc
         CDF_loc: An NP.CovectorLike of offsets to subtract from scaled CDFs.
+            If None, CDFs are not used, else X is transformed into CDF_scale * CDF(X) - CDF_loc
+        CDF_scale: An NP.CovectorLike of scalings for CDFs. If None, CDFs are not used, else X is transformed into CDF_scale * CDF(X) - CDF_loc.
         input_transform: This FunctionWithParameters transforms the (N,M) design Matrix produced according to X_distribution, X_sample_design
             and CDF_scale, CDF_loc to another (N,M) design matrix. Use this to combine inputs, to generate dependencies for example.
             Note that this function must be of full rank -- it must not reduce M. If None the identity function is assumed.
@@ -273,9 +283,8 @@ def functions_of_normal(store_dir: str, N: int, M: int, CDF_scale: NP.CovectorLi
     Returns: data.Store.from_df(store_dir, df, meta). The calling arguments are encapsulated in meta, df consists of X and
         Y = functions(input_transform(CDF_scale * CDF(X) - CDF_loc)) + noise.
     """
-    X_distribution = Multivariate.Normal(mean=zeros(M, dtype=float), covariance=eye(M, dtype=float))
+    X_distribution = Multivariate.Independent(M, Univariate('norm', loc=0, scale=1))
     L = M if functions is None else len(functions)
-    noise_distribution = (Multivariate.Normal(mean=zeros(L, dtype=float), covariance=noise_std ** 2 * eye(L, dtype=float))
-                          if noise_std > EFFECTIVELY_ZERO else None)
-    return sample(store_dir=store_dir, N=N, X_distribution=X_distribution, X_sample_design=SampleDesign.LATIN_HYPERCUBE, CDF_scale=CDF_scale, CDF_loc=CDF_loc,
+    noise_distribution = Multivariate.Independent(L, Univariate('norm', loc=0, scale=noise_std)) if noise_std > EFFECTIVELY_ZERO else None
+    return sample(store_dir=store_dir, N=N, X_distribution=X_distribution, X_sample_design=SampleDesign.LATIN_HYPERCUBE, CDF_loc=CDF_loc, CDF_scale=CDF_scale,
                   input_transform=input_transform, functions=functions, noise_distribution=noise_distribution, noise_sample_design=SampleDesign.LATIN_HYPERCUBE)

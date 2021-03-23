@@ -77,7 +77,7 @@ class Kernel:
 
             Args:
                 X0: An N0xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
-                X1: An N1xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+                X1: An (N1,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
                 dir_: The kernel file location. If and only if this is empty, kernel.with_frames=False
                 parameters: The kernel parameters. If None these are read from dir_.
 
@@ -253,7 +253,7 @@ class _GaussianProcess:
         """ Predicts the response to input x.
 
         Args:
-            x: An ``NxM`` Design (feature) Matrix.
+            x: An ``(N,M)`` Design (feature) Matrix.
             Y_instead_of_F: True to include noise in the result.
         Returns: The distribution of y or f, as a (mean Vector, covariance Matrix) Tuple.
         """
@@ -333,7 +333,7 @@ class _GaussianProcess:
         """ Construct a _GaussianProcess.
 
         Args:
-            X: An ``NxM`` Design (feature) Matrix.
+            X: An ``(N,M)`` Design (feature) Matrix.
             Y: An ``NxL`` Response (label) Matrix.
             kernel_per_f: If True, the _kernel depends on output dimension (l) as well as input dimension (m).
             kernel: The Kernel Type, derived from Kernel, or an existing _kernel of this type.

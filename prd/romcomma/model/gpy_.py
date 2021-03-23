@@ -88,7 +88,7 @@ class Kernel:
 
             Args:
                 X0: An N0xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
-                X1: An N1xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+                X1: An (N1,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
                 dir_: The kernel file location. If and only if this is empty, kernel.with_frames=False
                 parameters: The kernel parameters. If None these are read from dir_.
 

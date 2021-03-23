@@ -87,7 +87,7 @@ class Univariate:
         Args:
             N: The number of rows returned.
             M: The number of columns returned.
-        Returns: An NxM Matrix of random noise sampled from the underlying distribution.Univariate.
+        Returns: An (N,M) Matrix of random noise sampled from the underlying distribution.Univariate.
 
         Raises:
             ValueError: If N &lt 1.
@@ -144,8 +144,8 @@ class Multivariate:
             """ Calculate cumulative distribution function (CDF) of this Multivariate.
 
             Args:
-                X: NxM Matrix of values.
-            Returns:  MxN Matrix of CDF(values)
+                X: (N,M) Matrix of values.
+            Returns: (N,M) Matrix of CDF(values)
 
             Raises:
                 ValueError: If len(X.shape) != 2 or X.shape[1] != self.M.
@@ -227,8 +227,8 @@ class Multivariate:
             """ Calculate cumulative distribution function (CDF) of this Multivariate.Independent.
 
             Args:
-                X: NxM Matrix of values.
-            Returns:  MxN Matrix of CDF(values)
+                X: (N,M) Matrix of values.
+            Returns: (N,M) Matrix of CDF(values)
 
             Raises:
                 ValueError: If len(X.shape) != 2 or X.shape[1] != self.M.
@@ -338,8 +338,8 @@ class Multivariate:
             """ Calculate cumulative distribution function (CDF) of this Multivariate.Normal.
 
             Args:
-                X: NxM Matrix of values.
-            Returns:  MxN Matrix of CDF(values)
+                X: (N,M) Matrix of values.
+            Returns:  (N,M) Matrix of CDF(values)
 
             Raises:
                 ValueError: If len(X.shape) != 2 or X.shape[1] != self.M.

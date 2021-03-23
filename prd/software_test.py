@@ -21,111 +21,45 @@
 
 """ Run this module first thing, to test your installation of romcomma. """
 
-from romcomma import distribution, function, data, model
-from romcomma.typing_ import NP
-from numpy import zeros, eye, pi, full, atleast_2d, savetxt, transpose, einsum, loadtxt, array
-from pandas import MultiIndex, DataFrame, concat
+from romcomma import model
+from romcomma.data import Fold, Store
+from romcomma.function import FunctionWithParameters, functions_of_normal, linear
+from numpy import eye, savetxt, transpose, full
 from pathlib import Path
 from scipy.stats import ortho_group
 
 BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\0.0')
 
 
-def run_gps(name, test_function: str, N: int, noise_std: float, random: bool, M: int = 5, K: int = 2):
-    gp_optimizer_options = {'optimizer': 'bfgs', 'max_iters': 5000, 'gtol': 1E-16}
-    kernel_parameters = model.gpy_.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5**(M/5), dtype=float))
-    parameters = model.gpy_.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
-    CDF_scale = 2 * pi
-    CDF_loc = pi
-    if test_function == 'sin.1':
-        function_with_parameters = function.FunctionWithParameters(function.ishigami, parameters={'a': 0.0, 'b': 0.0})
-    elif test_function == 'sin.2':
-        function_with_parameters = function.FunctionWithParameters(function.ishigami, parameters={'a': 2.0, 'b': 0.0})
-    elif test_function == 'ishigami':
-        function_with_parameters = function.callable_with_parameters(function.ishigami)
-    else:
-        CDF_scale = 1.0
-        CDF_loc = 0.0
-        function_with_parameters = function.FunctionWithParameters(function.sobol_g,
-                                                                   parameters={'m_very_important': 2, 'm_important': 3, 'm_unimportant': 4})
-    store_name = f'{test_function}.{M:d}.{noise_std:.3f}.{N:d}'
+# noinspection PyShadowingNames
+def run_gps(name, function_name: str, N: int, noise_std: float, random: bool, M: int = 5, K: int = 2):
+    store_dir = f'{function_name}.{M:d}.{noise_std:.3f}.{N:d}'
     if random:
         lin_trans = ortho_group.rvs(M)
-        pre_function_with_parameters = function.FunctionWithParameters(function=function.linear, parameters={'matrix': lin_trans})
-        store_name += '.random'
+        input_transform = FunctionWithParameters(function_=linear, parameters_={'matrix': lin_trans})
+        store_dir += '.random'
     else:
         lin_trans = eye(M)
-        pre_function_with_parameters = None
-        store_name += '.rom'
-    store_name = BASE_PATH / store_name
-    store = scalar_function_of_normal(store_name=store_name, N=N, M=M, X_std=1.0, noise_std=noise_std, CDF_scale=CDF_scale, CDF_loc=CDF_loc,
-                                      pre_function_with_parameters=pre_function_with_parameters,
-                                      function_with_parameters=function_with_parameters)
+        input_transform = None
+        store_dir += '.rom'
+    store_dir = BASE_PATH / store_dir
+    CDF_loc, CDF_scale, functions = FunctionWithParameters.default(function_name)
+    store = functions_of_normal(store_dir=store_dir, N=N, M=M, CDF_loc=CDF_loc, CDF_scale=CDF_scale,
+                                input_transform=input_transform, functions=functions, noise_std=noise_std)
     savetxt(store.dir / 'InverseRotation.csv', transpose(lin_trans))
-    data.Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=data.Store.Standard.mean_and_std,
-                           replace_empty_test_with_data_=True)
-    model.run.GPs(module=model.run.Module.GPY_, name=name, store=store, M=-1, parameters=parameters, optimize=True, test=True, sobol=False,
-                  optimizer_options=gp_optimizer_options, make_ard=False)
-    model.run.GPs(module=model.run.Module.GPY_, name=name, store=store, M=-1, parameters=None, optimize=True, test=True, sobol=True,
-                  optimizer_options=gp_optimizer_options, make_ard=True)
-
-
-def playtest(name, test_function: str, N: int, noise_std: float, random: bool, M: int = 5, K: int = 2):
-    # gp_optimizer_options = {'optimizer': 'bfgs', 'max_iters': 5000, 'gtol': 1E-16}
-    # kernel_parameters = model.gpy_.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5**(M/5), dtype=float))
-    # parameters = model.gpy_.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
-    CDF_scale = 2 * pi
-    CDF_loc = pi
-    if test_function == 'sin.1':
-        function_with_parameters = function.FunctionWithParameters(function.ishigami, parameters={'a': 0.0, 'b': 0.0})
-    elif test_function == 'sin.2':
-        function_with_parameters = function.FunctionWithParameters(function.ishigami, parameters={'a': 2.0, 'b': 0.0})
-    elif test_function == 'ishigami':
-        function_with_parameters = function.callable_with_parameters(function.ishigami)
-    else:
-        CDF_scale = 1.0
-        CDF_loc = 0.0
-        function_with_parameters = function.FunctionWithParameters(function.sobol_g,
-                                                                   parameters={'m_very_important': 2, 'm_important': 3, 'm_unimportant': 4})
-    store_name = test_function + '.{0:d}.{1:.3f}.{2:d}'.format(M, noise_std, N)
-    if random:
-        lin_trans = ortho_group.rvs(M)
-        pre_function_with_parameters = function.FunctionWithParameters(function=function.linear, parameters={'matrix': lin_trans})
-        store_name += '.random'
-    else:
-        lin_trans = eye(M)
-        pre_function_with_parameters = None
-        store_name += '.rom'
-    store_name = BASE_PATH / store_name
-    store = scalar_function_of_normal(store_name=store_name, N=N, M=M, X_std=1.0, noise_std=noise_std, CDF_scale=CDF_scale, CDF_loc=CDF_loc,
-                                      pre_function_with_parameters=pre_function_with_parameters,
-                                      function_with_parameters=function_with_parameters)
-    column_headings = store.data.df.columns
-    bummer = column_headings.levels[1].to_numpy()
-    reorder = array([1,0,4,3,2])
-    bummer[:reorder.shape[0]] = bummer[reorder]
-    column_headings = column_headings.reindex(bummer, level=1)
-    store.data.df.reindex(columns=column_headings[0], copy=False)
-    Y = store.Y
-    # column_headings = MultiIndex.from_product(((self._gp.fold.meta['data']['X_heading'],), ("u{:d}".format(i) for i in range(self.Mu))))
-    # X = DataFrame(einsum('MK, NK -> NM', self.Theta_old, self._gp.X, optimize=True, dtype=float, order=self.MEMORY_LAYOUT),
-    #               columns=column_headings, index=self._gp.fold.X.index)
-    # test_X = DataFrame(einsum('MK, NK -> NM', self.Theta_old, self._gp.fold.test_X, optimize=True, dtype=float, order=self.MEMORY_LAYOUT),
-    #                    columns=column_headings, index=self._gp.fold.test_X.index)
-    # self._gp.fold.data.df = concat((X, self._gp.fold.data.df[[self._gp.fold.meta['data']['Y_heading']]].copy(deep=True)), axis='columns')
-    # self._gp.fold.data.write()
-
-    # savetxt(store.dir / "InverseRotation.csv", transpose(lin_trans))
-    # data.Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=data.Store.Standard.mean_and_std,
-    #                        replace_empty_test_with_data_=True)
-    # model.run.GPs(module=model.run.Module.GPY_, name=name, store=store, M=-1, parameters=parameters, optimize=True, test=True, sobol=True,
-    #               optimizer_options=gp_optimizer_options)
+    Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
+    gp_optimizer_options = {'optimizer': 'bfgs', 'max_iters': 5000, 'gtol': 1E-16}
+    kernel_parameters = model.gpy_.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5 ** (M / 5), dtype=float))
+    # noinspection PyProtectedMember
+    gp_parameters = model.gpy_.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
+    # model.run.GPs(module=model.run.Module.GPY_, name=name, store=store, M=-1, parameters=gp_parameters, optimize=True, test=True, sobol=False,
+    #               optimizer_options=gp_optimizer_options, make_ard=False)
     # model.run.GPs(module=model.run.Module.GPY_, name=name, store=store, M=-1, parameters=None, optimize=True, test=True, sobol=True,
     #               optimizer_options=gp_optimizer_options, make_ard=True)
 
 
 if __name__ == '__main__':
-    for N in (800, ):
-        for noise_std in (0.01, ):
-            for random in (False, ):
-                run_gps("initial", "sin.1", N, noise_std, random, M=1)
+    for N in (800,):
+        for noise_std in (0,):
+            for random in (False,):
+                run_gps('initial', 'sin.1', N, noise_std, random, M=1)
