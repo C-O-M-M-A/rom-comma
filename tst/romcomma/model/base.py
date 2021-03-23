@@ -57,11 +57,11 @@ from pandas import DataFrame, MultiIndex, concat
 from scipy import optimize
 from scipy.linalg import cho_factor, cho_solve, qr
 import json
-from romcomma.data import Frame, Fold
-from romcomma.typing_ import PathLike, Optional, NamedTuple, NP, Tuple, Type, Callable, Union, Any, List, Dict
+from ROMCOMMA.tst.romcomma.data import Frame, Fold
+from ROMCOMMA.tst.romcomma.typing_ import PathLike, Optional, NamedTuple, NP, Tuple, Type, Callable, Union, Any, List, Dict
 from copy import deepcopy
-from romcomma import distribution
-from romcomma import model
+from ROMCOMMA.tst.romcomma import distribution
+from ROMCOMMA.tst.romcomma import model
 
 EFFECTIVELY_ZERO = 1.0E-64
 

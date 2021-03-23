@@ -43,9 +43,9 @@ Contents:
     **Rom(base.Rom)** class which optimizes Sobol Indices.
 """
 
-from romcomma.typing_ import Optional, NP, PathLike, NamedTuple, Tuple, Callable, Union, Type, Dict
-from romcomma.data import Fold
-from romcomma.model import base
+from ROMCOMMA.tst.romcomma.typing_ import Optional, NP, PathLike, NamedTuple, Tuple, Callable, Union, Type, Dict
+from ROMCOMMA.tst.romcomma.data import Fold
+from ROMCOMMA.tst.romcomma.model import base
 from numpy import atleast_2d, einsum, reshape, exp, divide, zeros, trace, log, pi, eye, ravel, concatenate, array, meshgrid, random
 from numpy.linalg import slogdet
 from scipy.linalg import cho_factor, cho_solve
