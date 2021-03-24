@@ -2,5 +2,5 @@ numpy
 scipy
 pandas
 matplotlib
-GPy
-pyDOE
+gpflow
+pyDOE2
