@@ -43,7 +43,7 @@ def run_gps(name, function_name: str, N: int, noise_std: float, random: bool, M:
         input_transform = None
         store_dir += '.rom'
     store_dir = BASE_PATH / store_dir
-    CDF_loc, CDF_scale, functions = FunctionWithParameters.default(function_name)
+    CDF_loc, CDF_scale, functions = FunctionWithParameters.DEFAULT(function_name)
     store = functions_of_normal(store_dir=store_dir, N=N, M=M, CDF_loc=CDF_loc, CDF_scale=CDF_scale,
                                 input_transform=input_transform, functions=functions, noise_std=noise_std)
     savetxt(store.dir / 'InverseRotation.csv', transpose(lin_trans))

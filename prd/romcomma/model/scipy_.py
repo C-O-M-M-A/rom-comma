@@ -76,14 +76,10 @@ class Kernel:
             """ Construct a Kernel.
 
             Args:
-                X0: An N0xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+                X0: An (N0,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
                 X1: An (N1,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
                 dir_: The kernel file location. If and only if this is empty, kernel.with_frames=False
                 parameters: The kernel parameters. If None these are read from dir_.
-
-            Raises:
-                AssertionError: If X0 and X1 have differing numbers of columns.
-                AssertionError: If self.parameters.lengthscale is incompatible with self.M.
             """
             super().__init__(X0, X1, dir_, parameters)
             self._is_rbf = (self.parameters.lengthscale.shape[1] == 1)
@@ -333,8 +329,8 @@ class _GaussianProcess:
         """ Construct a _GaussianProcess.
 
         Args:
-            X: An ``(N,M)`` Design (feature) Matrix.
-            Y: An ``NxL`` Response (label) Matrix.
+            X: An (N,M) Design (feature) Matrix.
+            Y: An (N,L) Response (label) Matrix.
             kernel_per_f: If True, the _kernel depends on output dimension (l) as well as input dimension (m).
             kernel: The Kernel Type, derived from Kernel, or an existing _kernel of this type.
             kernel_parameters: The parameters with which to initialize the _kernel (optional)

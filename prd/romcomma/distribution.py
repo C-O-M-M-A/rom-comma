@@ -21,7 +21,7 @@
 
 """ Contains basic probability distributions, with a view to sampling."""
 
-from romcomma.typing_ import Any, Optional, Union, NP, Sequence, Tuple, List, Dict, Type
+from romcomma.typing_ import Any, Optional, Union, NP, Sequence, Tuple, Dict, Type, ClassVar
 from scipy import linalg, stats
 # noinspection PyPep8Naming
 from pyDOE2 import lhs as pyDOE_lhs
@@ -39,16 +39,23 @@ class SampleDesign(Enum):
 class Univariate:
     """ A univariate, fully parametrized (SciPy frozen) continuous distribution."""
 
-    SuperFamily: Type[stats.rv_continuous] = stats.rv_continuous
-    """ The SciPy (super) family of continuous, univariate distributions."""
+    SUPER_FAMILY: ClassVar[Type[stats.rv_continuous]] = stats.rv_continuous     # The SciPy (super) family of continuous, univariate distributions
 
-    Family: Dict[str, Type[stats.rv_continuous]] = {_class.__name__[:-4]: _class for _class in SuperFamily.__subclasses__() if _class.__name__[-4:] == '_gen'}
-    """ The romcomma dictionary of univariate distribution classes."""
-    family: Dict[str, stats.rv_continuous] = {name: Fam() for name, Fam in Family.items()}
-    """ The romcomma dictionary of unparametrized univariate distribution objects."""
-    names: List[str] = Family.keys()
-    """ The romcomma list of unparametrized univariate distributions."""
+    @staticmethod
+    def CLASS_FAMILY() -> Dict[str, Type[stats.rv_continuous]]:
+        """ The romcomma dictionary of univariate distribution classes."""
+        return {_class.__name__[:-4]: _class for _class in Univariate.SUPER_FAMILY.__subclasses__() if _class.__name__[-4:] == '_gen'}
 
+    @staticmethod
+    def OBJECT_FAMILY() -> Dict[str, stats.rv_continuous]:
+        """ The romcomma dictionary of unparametrized univariate distribution objects."""
+        return {name_: Fam() for name_, Fam in Univariate.CLASS_FAMILY().items()}
+
+    @staticmethod
+    def NAME_FAMILY() -> Tuple[str]:
+        """ The romcomma list of unparametrized univariate distributions."""
+        return tuple(Univariate.CLASS_FAMILY().keys())
+    
     @classmethod
     def parameter_defaults(cls, name: str) -> dict:
         """ List the default values for the parameters of the named distribution.
@@ -57,7 +64,7 @@ class Univariate:
             name: The name of the univariate distribution to interrogate.
         Returns: A Dict of parameters and their default values.
         """
-        keys = cls.family[name].shapes.split(',') if cls.family[name].shapes else []
+        keys = cls.OBJECT_FAMILY()[name].shapes.split(',') if cls.OBJECT_FAMILY()[name].shapes else []
         return {**{'name': name, 'loc': 0, 'scale': 1}, **{_key: None for _key in keys}}
 
     @property
@@ -71,15 +78,15 @@ class Univariate:
         return self._parameters
 
     @property
-    def parametrized(self) -> SuperFamily:
+    def parametrized(self) -> SUPER_FAMILY:
         """ The SciPy parametrized univariate distribution."""
         return self._parametrized
 
     @property
-    def unparametrized(self) -> SuperFamily:
+    def unparametrized(self) -> SUPER_FAMILY:
         """ A **new** instance of the unparametrized distribution. An existing unparametrized instance is always available through Univariate.family[name].
         """
-        return Univariate.Family[self._name]()
+        return Univariate.CLASS_FAMILY()[self._name]()
 
     def rvs(self, N: int, M: int) -> NP.Vector:
         """ Random variate sample from this distribution.Univariate.
@@ -104,7 +111,7 @@ class Univariate:
 
         Args:
             name: The name of the underlying Unparametrized distribution, e.g. "uniform" or "norm". Univariate.names() lists the admissible names.
-            **kwargs: The parameters passed directly to the Univariate.Family[name] (class) constructor.
+            **kwargs: The parameters passed directly to the Univariate.Family()[name] (class) constructor.
                 Univariate.parameters(name) supplies the kwargs Dict required.
         """
         self._name = name

@@ -59,9 +59,9 @@ class Model(ABC):
 
     class Parameters(NamedTuple):
         OVERRIDE_THIS: NP.Matrix
-    DEFAULT_PARAMETERS = "OVERRIDE_THIS"
-    DEFAULT_OPTIMIZER_OPTIONS = {"OVERRIDE": "THIS"}
-    MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
+    DEFAULT_PARAMETERS: Parameters = "OVERRIDE_THIS"
+    DEFAULT_OPTIMIZER_OPTIONS: Dict[str, Any] = {"OVERRIDE": "THIS"}
+    MEMORY_LAYOUT: str = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
 
     """ End of required overrides."""
 
@@ -114,11 +114,7 @@ class Model(ABC):
         return self._parameters_csv
 
     def read_parameters(self):
-        """ Read model.parameters from their csv files.
-
-        Raises:
-            AssertionError: if not self.with_frames.
-        """
+        """ Read model.parameters from their csv files."""
         assert self.with_frames
         self._parameters = self.Parameters(*(Frame(self._parameters_csv[i], **self.CSV_PARAMETERS).df.values for i, p in enumerate(self.DEFAULT_PARAMETERS)))
 
@@ -128,9 +124,6 @@ class Model(ABC):
         Args:
             parameters: The NamedTuple to be the new value for self.parameters.
         Returns: The NamedTuple written to csv. Essentially self.parameters, but with Frames in place of Matrices.
-
-        Raises:
-            AssertionError: if not self.with_frames.
         """
         assert self.with_frames
         self._parameters = self.Parameters(*(atleast_2d(p) for p in parameters))
@@ -179,9 +172,6 @@ class Model(ABC):
             dir_: The model file location. If and only if this is empty, then model.with_frames = False.
             parameters: The model.parameters, an Optional NamedTuple of NP.Matrices.
                 If None then model.parameters are read from dir_, otherwise they are written to dir_, provided model.with_frames.
-
-        Raises:
-            AssertionError: If not (dir_ or parameters).
         """
         self._dir = Path(dir_)
         self._parameters_csv = self.Parameters(*((self._dir / field).with_suffix(".csv") for field in self.DEFAULT_PARAMETERS._fields))
@@ -290,13 +280,10 @@ class Kernel(Model):
         """ Construct a Kernel.
 
         Args:
-            X0: An N0xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+            X0: An (N0,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
             X1: An (N1,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
             dir_: The kernel file location.
             parameters: The kernel parameters. If None these are read from dir_.
-
-        Raises:
-            AssertionError: If X0 and X1 have differing numbers of columns.
         """
         super().__init__(dir_, parameters)
         self._matrix = None
@@ -347,18 +334,8 @@ class GP(Model):
         return self._fold
 
     @property
-    def test_results_csv(self) -> Path:
+    def test_csv(self) -> Path:
         return self._dir / "__test__.csv"
-
-    @property
-    def X(self) -> NP.Matrix:
-        """ The input X, as an (N,M) design Matrix."""
-        return self._X
-
-    @property
-    def Y(self) -> NP.Vector:
-        """ The output Y, as an (N,1) NP.Vector."""
-        return self._Y
 
     @property
     def N(self) -> int:
@@ -374,6 +351,16 @@ class GP(Model):
     def L(self) -> int:
         """ The number of output columns."""
         return self._L
+
+    @property
+    def X(self) -> NP.Matrix:
+        """ The input X, as an (N,M) design Matrix."""
+        return self._X
+
+    @property
+    def Y(self) -> NP.Vector:
+        """ The output Y, as an (N,L) NP.Matrix."""
+        return self._Y
 
     @property
     @abstractmethod
@@ -411,7 +398,7 @@ class GP(Model):
         Returns: The test results as a Frame backed by GP.test_result_csv.
         """
         if self._test is None:
-            self._test = Frame(self.test_results_csv, self._fold.test.df)
+            self._test = Frame(self.test_csv, self._fold.test.df)
             Y_heading = self._fold.meta['data']['Y_heading']
             result = self.predict(self._fold.test_X.values)
             predictive_mean = (self._test.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Mean"}, level=0))
@@ -842,9 +829,6 @@ class Sobol(Model):
     #             This is tantamount to taking Theta = I (the identity matrix).
     #         xi_len: The length of each xi (row) Array.
     #     Returns: An (N_explore, xi_len) Matrix where 1 &le N_explore &le max(N_explore,1).
-    #
-    #     Raises:
-    #         AssertionError: if xi_len <= 0.
     #     """
     #     assert self._xi_len > 0
     #     if N_explore <= 1:

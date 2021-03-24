@@ -137,8 +137,8 @@ def linear_matrix_from_meta(store: Store) -> NP.Matrix:
 class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
     """ A class for use with function.sample(...). Encapsulates a function and its parameters."""
 
-    @classmethod
-    def default(cls, function_names: Sequence[str]) -> Tuple[NP.CovectorLike, NP.CovectorLike, Tuple['FunctionWithParameters', ...]]:
+    @staticmethod
+    def DEFAULT(function_names: Sequence[str]) -> Tuple[NP.CovectorLike, NP.CovectorLike, Tuple['FunctionWithParameters', ...]]:
         """ Construct a default FunctionWithParameters for ``function_``.
 
         Args:
@@ -149,8 +149,6 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
             KeyError: If one of the function_names is not recognized.
             ValueError: Unless (CDF_loc, CDF_scale) is the same for every function named.
         """
-
-        function_names = (function_names,) if isinstance(function_names, str) else function_names
         defaults = {
             'sin.1': (pi, 2 * pi, (ishigami, {'a': 0.0, 'b': 0.0})),
             'sin.2': (pi, 2 * pi, (ishigami, {'a': 2.0, 'b': 0.0})),
@@ -160,6 +158,7 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
             'sobol_g_234': (0.0, 1.0, (sobol_g, {'m_very_important': 2, 'm_important': 3, 'm_unimportant': 4})),
             'linear': (0.0, 1.0, (linear, {'matrix': None}))
         }
+        function_names = (function_names,) if isinstance(function_names, str) else function_names
         CDF_loc, CDF_scale, functions_with_parameters = zip(*(defaults[function_name] for function_name in function_names))
         return CDF_loc, CDF_scale, tuple((FunctionWithParameters(*fwp) for fwp in functions_with_parameters))
 

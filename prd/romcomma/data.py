@@ -52,11 +52,7 @@ class Frame:
         return 0 == len(self._csv.parts)
 
     def write(self):
-        """ Write to csv, according to Frame.DEFAULT_CSV_KWARGS.
-
-        Raises:
-            AssertionError: If self.is_empty.
-        """
+        """ Write to csv, according to Frame.DEFAULT_CSV_KWARGS."""
         assert not self.is_empty, 'Cannot write when frame.is_empty.'
         self.df.to_csv(self._csv, sep=Frame.DEFAULT_CSV_KWARGS['sep'], index=True)
 
@@ -71,9 +67,6 @@ class Frame:
             kwargs: Updates Frame.DEFAULT_CSV_KWARGS for csv reading as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
                 This is not relevant to writing, which just uses Frame.DEFAULT_CSV_KWARGS.
-
-        Raises:
-            AssertionError: If csv and df are both empty.
         """
         self._csv = Path(csv)
         if self.is_empty:
@@ -260,11 +253,7 @@ class Store:
 
         Args:
             k: The fold which the function is creating the path for.
-
-        Raises:
-            AssertionError: if k is not in range(K).
         """
-        assert 0 <= k < self.K, f'Requested fold {k:d} of a {self.K:d}-fold data.Store'
         return self.dir / f'fold.{k:d}'
 
     def _K_folds_update(self, K: int, shuffled_before_folding: bool):
@@ -432,9 +421,6 @@ class Fold(Store):
             parent: The parent Store, or its dir.
             k: The index of the Fold within parent.
             M: The number of input columns used. If not 0 &lt M &lt self.M, all columns are used.
-
-        Raises:
-            AssertionError: Unless 0 &lt= k &lt parent.K
         """
         if not isinstance(parent, Store):
             parent = Store(parent, Store.InitMode.READ_META_ONLY)
@@ -459,10 +445,11 @@ class Fold(Store):
             replace_empty_test_with_data_: Whether to replace an empty test file with the training data when K==1.
 
         Raises:
-            AssertionError: Unless 1 &lt= K &lt= N.
+            ValueError: Unless 1 &lt= K &lt= N.
         """
         N = len(parent.data.df.index)
-        assert 1 <= K <= N, f'K={K:d} does not lie between 1 and N={N:d} inclusive.'
+        if not (1 <= K <= N):
+            raise ValueError(f'K={K:d} does not lie between 1 and N={N:d} inclusive.')
         for k in range(K, parent.K):
             parent.fold_dir(k).mkdir(mode=0o777, parents=False, exist_ok=True)
             parent.fold_dir(k).rmdir()
