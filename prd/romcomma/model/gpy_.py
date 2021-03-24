@@ -19,20 +19,7 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" GPy implementation of model.base.
-
-Contents:
-**Contents**:
-    **Kernel.ExponentialQuadratic(base.Kernel)** class of exponential quadratic kernels.
-
-    **_GaussianProcess(base._GaussianProcess)** class of gaussian processes.
-
-    **GaussianBundle(base.GaussianBundle)** class for a collection of GaussianProcesses.
-
-    **Sobol(base.Sobol)** class which calculates Sobol Indices.
-
-    **Rom(base.Rom)** class which optimizes Sobol Indices.
-"""
+""" GPy implementation of model.base."""
 
 from romcomma.typing_ import Optional, NP, PathLike, NamedTuple, Tuple, Dict, Union, Callable
 from romcomma.data import Fold
@@ -42,10 +29,11 @@ import GPy
 import shutil
 from enum import IntEnum, auto
 
+
+# noinspection PyPep8Naming,PyPep8Naming
 class Kernel:
     """ This is just a container for Kernel classes. Put all new Kernel classes in here."""
 
-    # noinspection PyPep8Naming,PyPep8Naming
     class ExponentialQuadratic(base.Kernel):
         """ Implements the exponential quadratic kernel for use with romcomma.gpy_."""
 
@@ -171,16 +159,16 @@ class GP(base.GP):
         self._test = None
 
     @property
-    def inv_prior_Y_Y(self) -> NP.Matrix:
+    def Kinv_Y(self) -> NP.Matrix:
         """ The (N,L) Matrix (K(X,X) + e I)^(-1) Y."""
         return atleast_2d(self._gpy.posterior.woodbury_vector).reshape((self._N, self._L))
 
-    def _check_inv_prior_Y_Y(self, x: NP.Matrix, Y_instead_of_F: bool = True) -> NP.Vector:
+    def _check_Kinv_Y(self, x: NP.Matrix, Y_instead_of_F: bool = True) -> NP.Vector:
         """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance)."""
         kern = self._gpy.kern.K(x, self.X)
-        inv_prior_Y_Y = self.inv_prior_Y_Y
+        __Kinv_Y = self.Kinv_Y
         result = self._gpy.predict(x, include_likelihood=Y_instead_of_F)[0]
-        result -= einsum('in, nj -> ij', kern, inv_prior_Y_Y)
+        result -= einsum('in, nj -> ij', kern, __Kinv_Y)
         return result
 
     def _validate_parameters(self):

@@ -38,7 +38,6 @@ class Frame:
     Attributes:
         df: The pandas DataFrame.
     """
-
     DEFAULT_CSV_KWARGS = {'sep': ',', 'header': [0, 1], 'index_col': 0, }
 
     @property

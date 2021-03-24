@@ -55,15 +55,11 @@ class Model(ABC):
 
     CSV_PARAMETERS = {'header': [0]}
 
-    """ Required overrides."""
-
     class Parameters(NamedTuple):
         OVERRIDE_THIS: NP.Matrix
     DEFAULT_PARAMETERS: Parameters = "OVERRIDE_THIS"
     DEFAULT_OPTIMIZER_OPTIONS: Dict[str, Any] = {"OVERRIDE": "THIS"}
     MEMORY_LAYOUT: str = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
-
-    """ End of required overrides."""
 
     @staticmethod
     def rmdir(dir_: Union[str, Path], ignore_errors: bool = True):
@@ -363,14 +359,14 @@ class GP(Model):
         return self._Y
 
     @property
-    @abstractmethod
-    def log_likelihood(self) -> float:
-        """ The log marginal likelihood of the training data given the GP parameters."""
-
-    @property
     def kernel(self) -> Kernel:
         """ The GP Kernel. """
         return self._kernel
+
+    @property
+    @abstractmethod
+    def log_likelihood(self) -> float:
+        """ The log marginal likelihood of the training data given the GP parameters."""
 
     @abstractmethod
     def optimize(self, options: Dict = DEFAULT_OPTIMIZER_OPTIONS):
@@ -417,29 +413,13 @@ class GP(Model):
 
     @property
     @abstractmethod
-    def inv_prior_Y_Y(self) -> NP.Matrix:
+    def Kinv_Y(self) -> NP.Matrix:
         """ The (N,L) Matrix (f K(X,X) + e I)^(-1) Y."""
 
     @property
-    def Yt(self) -> NP.Matrix:
-        """ An (L, N) Matrix, known in the literature as Y_tilde. """
-        return einsum('LK, NK -> LN', self.parameters.f, self.inv_prior_Y_Y, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-
-    @property
-    def posterior_Y(self) -> Tuple[NP.Vector, NP.Matrix]:
-        """ The posterior distribution of Y as a (mean Vector, covariance Matrix) Tuple."""
-
-    @property
-    def posterior_F(self) -> Tuple[NP.Vector, NP.Matrix]:
-        """ The posterior distribution of f as a (mean Vector, covariance Matrix) Tuple."""
-
-    @property
-    def f_derivative(self) -> NP.Matrix:
-        """ The derivative d(log_likelihood)/df as a Matrix of the same shape as parameters.f. """
-
-    @property
-    def e_derivative(self) -> NP.Matrix:
-        """ The derivative d(log_likelihood)/de as a Matrix of the same shape as parameters.e. """
+    def f_Kinv_Y(self) -> NP.Matrix:
+        """ An (L,N) Matrix, known in the literature as Y_tilde. """
+        return einsum('LK, NK -> LN', self.parameters.f, self.f_Kinv_Y, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
 
     # noinspection PyUnresolvedReferences
     def _validate_parameters(self):
