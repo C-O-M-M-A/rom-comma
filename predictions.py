@@ -58,6 +58,11 @@ def make_predictions(input_source: str, store_name: str, is_split: bool = True, 
     for K_range in K_blocks:
         shuffle(K_range)
     indicators = list(chain(*K_blocks))
+    for k in range(K):
+        train = [index for index, indicator in zip(indices, indicators) if k != indicator]
+        test = [index for index, indicator in zip(indices, indicators) if k == indicator]
+        assert len(train) > 0
+        
 
     """
     indicators = _indicators()
