@@ -18,9 +18,9 @@ import pandas as pd
 from shutil import rmtree, copytree
 from pathlib import Path
 from random import shuffle
-import ROMCOMMA.tst.romcomma.model as model
-from ROMCOMMA.tst.romcomma.data import Store, Fold, Frame
-from ROMCOMMA.tst.romcomma.typing_ import NP, Union, Tuple, Sequence, List
+import romcomma.model as model
+from romcomma.data import Store, Fold, Frame
+from romcomma.typing_ import NP, Union, Tuple, Sequence, List
 
 
 def make_predictions(input_source: str, store_name: str, is_split: bool = True, is_standardized: bool = False, shuffle_before_folding: bool = True):
@@ -62,7 +62,7 @@ def make_predictions(input_source: str, store_name: str, is_split: bool = True, 
         train = [index for index, indicator in zip(indices, indicators) if k != indicator]
         test = [index for index, indicator in zip(indices, indicators) if k == indicator]
         assert len(train) > 0
-        
+
 
     """
     indicators = _indicators()
