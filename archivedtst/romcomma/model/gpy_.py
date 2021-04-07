@@ -28,7 +28,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" SciPy implementation of model.base.
+""" GPy implementation of model.base.
 
 Contents:
 **Contents**:
@@ -43,14 +43,14 @@ Contents:
     **Rom(base.Rom)** class which optimizes Sobol Indices.
 """
 
-from ROMCOMMA.tst.romcomma.typing_ import Optional, NP, PathLike, NamedTuple, Tuple, Callable, Union, Type, Dict
-from ROMCOMMA.tst.romcomma.data import Fold
-from ROMCOMMA.tst.romcomma.model import base
-from numpy import atleast_2d, einsum, reshape, exp, divide, zeros, trace, log, pi, eye, ravel, concatenate, array, meshgrid, random
-from numpy.linalg import slogdet
-from scipy.linalg import cho_factor, cho_solve
+from ROMCOMMA.archivedtst.romcomma.typing_ import Optional, NP, PathLike, NamedTuple, Tuple, Dict, Union, Callable
+from ROMCOMMA.archivedtst.romcomma.data import Fold
+from ROMCOMMA.archivedtst.romcomma.model import base
+from numpy import atleast_2d, atleast_3d, transpose, zeros, einsum, sqrt, array, full, arange
+import GPy
 import shutil
 from enum import IntEnum, auto
+import numpy as np
 
 
 class Kernel:
@@ -58,11 +58,14 @@ class Kernel:
 
     # noinspection PyPep8Naming,PyPep8Naming
     class ExponentialQuadratic(base.Kernel):
-        """ Implements the exponential quadratic kernel for use with romcomma.scipy_."""
+        """ Implements the exponential quadratic kernel for use with romcomma.gpy_.
+
+        def __init__(self, input_dim, variance=1., lengthscale=None, ARD=False, active_dims=None, name='rbf', useGPU=False, inv_l=False):
+            super(RBF, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name, useGPU=useGPU)"""
 
         """ Required overrides."""
 
-        MEMORY_LAYOUT = 'F'
+        MEMORY_LAYOUT = 'C'
         Parameters = NamedTuple("Parameters", [("lengthscale", NP.Matrix)])
         """
             **lengthscale** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscale.
@@ -71,15 +74,28 @@ class Kernel:
 
         """ End of required overrides."""
 
-        def calculate(self):
-            """ Calculate the (N0,N1) kernel Matrix K(X0,X1), and store it in self._matrix."""
-            super().calculate()
+        @property
+        def is_rbf(self) -> bool:
+            """ Returns True if kernel is RBF, False if it is ARD. """
+            return self._is_rbf
+
+        def make_ard(self, M):
             if self._is_rbf:
-                self._matrix = self._parameters.lengthscale[0, 0] * self._DX
-            else:
-                self._matrix = einsum("m, nom -> no", self._parameters.lengthscale[0, :self._M], self._DX, dtype=float,
-                                      order=self.MEMORY_LAYOUT, optimize=True)
-            self._matrix = exp(divide(self._matrix, -2))
+                self.write_parameters(self.parameters._replace(lengthscale=full((1, M), self.parameters.lengthscale)))
+                self._is_rbf = False
+
+        def gpy(self, f: float) -> GPy.kern.RBF:
+            """ Returns the GPy version of this kernel."""
+            return GPy.kern.RBF(self._M, f, self._parameters.lengthscale[0, 0], False) if self._is_rbf \
+                else GPy.kern.RBF(self._M, f, self._parameters.lengthscale[0, :self._M], True)
+
+        def calculate(self):
+            """ This function is an interface requirement which does nothing."""
+
+        @property
+        def matrix(self) -> NP.Matrix:
+            """ NOT FOR PUBLIC USE."""
+            return super().matrix
 
         def __init__(self, X0: Optional[NP.Matrix], X1: Optional[NP.Matrix], dir_: PathLike = "", parameters: Optional[Parameters] = None):
             """ Construct a Kernel.
@@ -96,15 +112,206 @@ class Kernel:
             """
             super().__init__(X0, X1, dir_, parameters)
             self._is_rbf = (self.parameters.lengthscale.shape[1] == 1)
-            if not self.with_frames:
-                assert (self._is_rbf or self._parameters.lengthscale.shape[1] >= self._M), \
-                    "This ARD kernel has {0:d} lengthscale parameters when M={1:d}.".format(self._parameters.lengthscale.shape[1], self._M)
-                self._DX = (reshape(self._X0, (self._N0, 1, self._M), order=self.MEMORY_LAYOUT) -
-                            reshape(self._X1, (1, self._N1, self._M), order=self.MEMORY_LAYOUT))
-                if self._is_rbf:
-                    self._DX = einsum("nom, nom -> no", self._DX, self._DX, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-                else:
-                    self._DX = einsum("nom, nom -> nom", self._DX, self._DX, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
+            assert self.with_frames or (self._is_rbf or self._parameters.lengthscale.shape[1] >= self._M), \
+                "This ARD kernel has {0:d} lengthscale parameters when M={1:d}.".format(self._parameters.lengthscale.shape[1], self._M)
+
+    class RationalQuadratic(base.Kernel):
+        """ Implements the exponential quadratic kernel for use with romcomma.gpy_.
+
+                def __init__(self, input_dim, variance=1., lengthscale=None, ARD=False, active_dims=None, name='rbf', useGPU=False, inv_l=False):
+                    super(RBF, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name, useGPU=useGPU)
+
+                def __init__(self, input_dim, variance=1., lengthscale=None, power=2., ARD=False, active_dims=None, name='RatQuad'):
+                    super(RatQuad, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name)"""
+
+        """ Required overrides."""
+
+        MEMORY_LAYOUT = 'C'
+        Parameters = NamedTuple("Parameters", [("lengthscale", NP.Matrix), ("power", int)])
+        """
+        
+            **lengthscale** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscale.
+            **power** -- a (1,1) int or float, often coded as alpha.
+        """
+        DEFAULT_PARAMETERS = Parameters(lengthscale=atleast_2d(0.2), power=1)
+
+        """ End of required overrides."""
+
+        @property
+        def is_rbf(self) -> bool:
+            """ Returns True if kernel is RBF, False if it is ARD. """
+            return self._is_rbf
+
+        def make_ard(self, M):
+            if self._is_rbf:
+                self.write_parameters(self.parameters._replace(lengthscale=full((1, M), self.parameters.lengthscale)))
+                self._is_rbf = False
+
+        def gpy(self, f: float) -> GPy.kern.RatQuad:
+            """ Returns the GPy version of this kernel."""
+            return GPy.kern.RatQuad(input_dim=self._M, variance=f, lengthscale=self._parameters.lengthscale[0, 0], ARD=False) if self._is_rbf \
+                else GPy.kern.RatQuad(input_dim=self._M, variance=f, lengthscale=self._parameters.lengthscale[0, :self._M], ARD=True)
+
+        def calculate(self):
+            """ This function is an interface requirement which does nothing."""
+
+        @property
+        def matrix(self) -> NP.Matrix:
+            """ NOT FOR PUBLIC USE."""
+            return super().matrix
+
+        def __init__(self, X0: Optional[NP.Matrix], X1: Optional[NP.Matrix], dir_: PathLike = "", parameters: Optional[Parameters] = None):
+            """ Construct a Kernel.
+
+            Args:
+                X0: An N0xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+                X1: An N1xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+                dir_: The kernel file location. If and only if this is empty, kernel.with_frames=False
+                parameters: The kernel parameters. If None these are read from dir_.
+
+            Raises:
+                AssertionError: If X0 and X1 have differing numbers of columns.
+                AssertionError: If self.parameters.lengthscale is incompatible with self.M.
+            """
+            super().__init__(X0, X1, dir_, parameters)
+            self._is_rbf = (self.parameters.lengthscale.shape[1] == 1)
+            assert self.with_frames or (self._is_rbf or self._parameters.lengthscale.shape[1] >= self._M), \
+                "This ARD kernel has {0:d} lengthscale parameters when M={1:d}.".format(self._parameters.lengthscale.shape[1], self._M)
+
+    class ExponentialKronecker(base.Kernel):
+        """ Implements the exponential kronecker kernel for use with romcomma.gpy_.
+
+        def __init__(self, input_dim, variance=1., lengthscale=None, ARD=False, active_dims=None, name='rbf', useGPU=False, inv_l=False):
+            super(RBF, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name, useGPU=useGPU)
+
+            def __init__(self, input_dim, variance=1., lengthscale=None, ARD=False, active_dims=None, name='ekf'):
+        super(EKF, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name)"""
+
+        """ Required overrides."""
+
+        MEMORY_LAYOUT = 'C'
+        Parameters = NamedTuple("Parameters", [("lengthscale", NP.Matrix)])
+        """
+            **lengthscale** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscale.
+        """
+        DEFAULT_PARAMETERS = Parameters(lengthscale=atleast_2d(0.2))
+
+        """ End of required overrides."""
+
+        @property
+        def is_rbf(self) -> bool:
+            """ Returns True if kernel is RBF, False if it is ARD. """
+            return self._is_rbf
+
+        def make_ard(self, M):
+            if self._is_rbf:
+                self.write_parameters(self.parameters._replace(lengthscale=full((1, M), self.parameters.lengthscale)))
+                self._is_rbf = False
+
+        def gpy(self, f: float) -> GPy.kern.EKF:
+            """ Returns the GPy version of this kernel."""
+            return GPy.kern.EKF(self._M, f, self._parameters.lengthscale[0, 0], False) if self._is_rbf \
+                else GPy.kern.EKF(self._M, f, self._parameters.lengthscale[0, :self._M], True)
+
+        def calculate(self):
+            """ This function is an interface requirement which does nothing."""
+
+        @property
+        def matrix(self) -> NP.Matrix:
+            """ NOT FOR PUBLIC USE."""
+            return super().matrix
+
+        def __init__(self, X0: Optional[NP.Matrix], X1: Optional[NP.Matrix], dir_: PathLike = "", parameters: Optional[Parameters] = None):
+            """ Construct a Kernel.
+
+            Args:
+                X0: An N0xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+                X1: An N1xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+                dir_: The kernel file location. If and only if this is empty, kernel.with_frames=False
+                parameters: The kernel parameters. If None these are read from dir_.
+
+            Raises:
+                AssertionError: If X0 and X1 have differing numbers of columns.
+                AssertionError: If self.parameters.lengthscale is incompatible with self.M.
+            """
+            super().__init__(X0, X1, dir_, parameters)
+            self._is_rbf = (self.parameters.lengthscale.shape[1] == 1)
+            assert self.with_frames or (self._is_rbf or self._parameters.lengthscale.shape[1] >= self._M), \
+                "This ARD kernel has {0:d} lengthscale parameters when M={1:d}.".format(self._parameters.lengthscale.shape[1], self._M)
+
+    class RBFAndEKF(base.Kernel):
+        """ Implements both the exponential quadratic and the exponential kronecker kernel for use with romcomma.gpy_.
+        To do this it uses the active_dims variable.
+        Learn how to use the active_dims!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        def __init__(self, input_dim, variance=1., lengthscale=None, ARD=False, active_dims=None, name='rbf', useGPU=False, inv_l=False):
+            super(RBF, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name, useGPU=useGPU)
+
+            def __init__(self, input_dim, variance=1., lengthscale=None, ARD=False, active_dims=None, name='ekf'):
+        super(EKF, self).__init__(input_dim, variance, lengthscale, ARD, active_dims, name)"""
+
+        """ Required overrides."""
+
+        MEMORY_LAYOUT = 'C'
+        Parameters = NamedTuple("Parameters", [("lengthscale", NP.Matrix)])
+        """
+            **lengthscale** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscale.
+        """
+        DEFAULT_PARAMETERS = Parameters(lengthscale=atleast_2d(0.2))
+
+        """ End of required overrides."""
+
+        @property
+        def is_rbf(self) -> bool:
+            """ Returns True if kernel is RBF, False if it is ARD. """
+            return self._is_rbf
+
+        def make_ard(self, M):
+            if self._is_rbf:
+                self.write_parameters(self.parameters._replace(lengthscale=full((1, M), self.parameters.lengthscale)))
+                self._is_rbf = False
+
+        def gpy(self, f: float) -> GPy.kern.RBF and GPy.kern.EKF:
+            """ Returns the GPy version of this kernel.
+            cat_in_from - the input variable number that categoricial variables begin from where 0 is the first variable
+            I need to implement this cat_in_from properly. For now I've just put 1 in. Can see that the:
+             input_diim = 1 because for each kernel just one input is being used
+             lengthscale is shortened to just first column :1 and last column 1:self._M"""
+            return GPy.kern.RBF(input_dim=3, variance=f, lengthscale=self._parameters.lengthscale[0, 0],
+                                ARD=False, active_dims=arange(3)) \
+                   + GPy.kern.EKF(input_dim=(self._M - 3), variance=f, lengthscale=self._parameters.lengthscale[0, 0],
+                                  ARD=False, active_dims=arange(3, self._M)) if self._is_rbf \
+                else GPy.kern.RBF(input_dim=3, variance=f, lengthscale=self._parameters.lengthscale[0, :3],
+                                  ARD=True, active_dims=arange(3)) \
+                     + GPy.kern.EKF(input_dim=(self._M - 3), variance=f, lengthscale=self._parameters.lengthscale[0, 3:self._M],
+                                    ARD=True, active_dims=arange(3, self._M))
+            # + GPy.kern.EKF(1, f, self._parameters.lengthscale[0, 0], False, active_dims=arange(5, self._M)) if self._is_rbf
+            # \+ GPy.kern.EKF(1, f, self._parameters.lengthscale[0, 5:self._M], True, active_dims=arange(5, self._M))
+
+        def calculate(self):
+            """ This function is an interface requirement which does nothing."""
+
+        @property
+        def matrix(self) -> NP.Matrix:
+            """ NOT FOR PUBLIC USE."""
+            return super().matrix
+
+        def __init__(self, X0: Optional[NP.Matrix], X1: Optional[NP.Matrix], dir_: PathLike = "", parameters: Optional[Parameters] = None):
+            """ Construct a Kernel.
+
+            Args:
+                X0: An N0xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+                X1: An N1xM Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
+                dir_: The kernel file location. If and only if this is empty, kernel.with_frames=False
+                parameters: The kernel parameters. If None these are read from dir_.
+
+            Raises:
+                AssertionError: If X0 and X1 have differing numbers of columns.
+                AssertionError: If self.parameters.lengthscale is incompatible with self.M.
+            """
+            super().__init__(X0, X1, dir_, parameters)
+            self._is_rbf = (self.parameters.lengthscale.shape[1] == 1)
+            assert self.with_frames or (self._is_rbf or self._parameters.lengthscale.shape[1] >= self._M), \
+                "This ARD kernel has {0:d} lengthscale parameters when M={1:d}.".format(self._parameters.lengthscale.shape[1], self._M)
 
 
 # noinspection PyPep8Naming
@@ -113,7 +320,7 @@ class GP(base.GP):
 
     """ Required overrides."""
 
-    MEMORY_LAYOUT = 'F'
+    MEMORY_LAYOUT = 'C'
 
     Parameters = NamedTuple("Parameters", [('kernel', NP.Matrix), ('e_floor', NP.Matrix), ('f', NP.Matrix), ('e', NP.Matrix),
                                            ('log_likelihood', NP.Matrix)])
@@ -142,6 +349,7 @@ class GP(base.GP):
     @property
     def log_likelihood(self) -> float:
         """ The log marginal likelihood of the training data given the GP parameters."""
+        return -abs(self._gpy.log_likelihood())
 
     def calculate(self):
         """ Fit the GP to the training data. """
@@ -153,8 +361,10 @@ class GP(base.GP):
         Args:
             X: An (N,M) design Matrix of inputs.
             Y_instead_of_F: True to include noise e in the result covariance.
-        Returns: The distribution of Y or f, as a triplet (mean (N, L) Matrix, std (N, L) Matrix, covariance (N, L, L) Tensor3).
+        Returns: The distribution of Y or f, as a triplet (mean (N, L) Matrix, std (N, L) Matrix), covariance (N, L, L) Tensor3.
         """
+        result = self._gpy.predict(X, include_likelihood=Y_instead_of_F)
+        return result[0], sqrt(result[1]), transpose(atleast_3d(result[1]), [1, 2, 0])
 
     def optimize(self, **kwargs):
         """ Optimize the GP hyper-parameters.
@@ -164,30 +374,52 @@ class GP(base.GP):
         """
         if kwargs is None:
             kwargs = self._read_optimizer_options() if self.optimizer_options_json.exists() else self.DEFAULT_OPTIMIZER_OPTIONS
-        # OPTIMIZE!!!!!
+        self._gpy.optimize(**kwargs)
+        if self._gpy.Gaussian_noise.variance[0][0] < self.parameters.e_floor[0, 0]:
+            self._gpy.Gaussian_noise.variance = self.parameters.e_floor[0, 0]
+            self._gpy.Gaussian_noise.variance.fix()
+            self._gpy.optimize(**kwargs)
+        """ Update and record GP and kernel parameters, using Model.write_parameters(new_parameters)."""
         self._write_optimizer_options(kwargs)
-        self.write_parameters(parameters=self.DEFAULT_PARAMETERS)   # Remember to write optimization results.
-        self._test = None   # Remember to reset any test results.
+        if isinstance(self._kernel, Kernel.ExponentialQuadratic):
+            self.write_parameters(self._parameters._replace(f=array(self._gpy.rbf.variance), e=array(self._gpy.Gaussian_noise.variance),
+                                                            log_likelihood=self.log_likelihood))
+            self._kernel.write_parameters(self._kernel.parameters._replace(lengthscale=array(self._gpy.rbf.lengthscale)))
+        elif isinstance(self._kernel, Kernel.RationalQuadratic):
+            self.write_parameters(self._parameters._replace(f=array(self._gpy.RatQuad.variance), e=array(self._gpy.Gaussian_noise.variance),
+                                                            log_likelihood=self.log_likelihood))
+            self._kernel.write_parameters(self._kernel.parameters._replace(lengthscale=array(self._gpy.RatQuad.lengthscale),
+                                                                           power=array(self._gpy.RatQuad.power)))
+        elif isinstance(self._kernel, Kernel.ExponentialKronecker):
+            self.write_parameters(self._parameters._replace(f=array(self._gpy.ekf.variance), e=array(self._gpy.Gaussian_noise.variance),
+                                                            log_likelihood=self.log_likelihood))
+            self._kernel.write_parameters(self._kernel.parameters._replace(lengthscale=array(self._gpy.ekf.lengthscale)))
+        elif isinstance(self._kernel, Kernel.RBFAndEKF):
+            self.write_parameters(self._parameters._replace(f=array([self._gpy.sum.rbf.variance[0, 0], self._gpy.sum.ekf.variance[0, 0]])
+                                                            , e=array(self._gpy.Gaussian_noise.variance), log_likelihood=self.log_likelihood))
+            len_joint = np.concatenate([self._gpy.sum.rbf.lengthscale, self._gpy.sum.ekf.lengthscale])
+            self._kernel.write_parameters(self._kernel.parameters._replace(lengthscale=len_joint))
+            # self.write_parameters(self._parameters._replace(f=array([self._gpy.sum.rbf.variance[0, 0], self._gpy.sum.ekf.variance[0, 0]]),
+            #                                                 e=array(self._gpy.Gaussian_noise.variance),
+            #                                                 log_likelihood=self.log_likelihood))
+            # len_joint = np.concatenate([self._gpy.sum.rbf.lengthscale, self._gpy.sum.ekf.lengthscale])
+            # self._kernel.write_parameters(self._kernel.parameters._replace(lengthscale=array(len_joint)))
+        else:
+            print("The kernel chosen has not had the code written to have all it's parameters optimised.")
+        self._test = None
 
     @property
     def inv_prior_Y_Y(self) -> NP.Matrix:
-        """ The (N,L) Matrix (f K(X,X) + e I)^(-1) Y."""
+        """ The (N,L) Matrix (K(X,X) + e I)^(-1) Y."""
+        return atleast_2d(self._gpy.posterior.woodbury_vector).reshape((self._N, self._L))
 
-    @property
-    def posterior_Y(self) -> Tuple[NP.Vector, NP.Matrix]:
-        """ The posterior distribution of Y as a (mean Vector, covariance Matrix) Tuple."""
-
-    @property
-    def posterior_F(self) -> Tuple[NP.Vector, NP.Matrix]:
-        """ The posterior distribution of f as a (mean Vector, covariance Matrix) Tuple."""
-
-    @property
-    def f_derivative(self) -> NP.Matrix:
-        """ The derivative d(log_likelihood)/df as a Matrix of the same shape as parameters.f. """
-
-    @property
-    def e_derivative(self) -> NP.Matrix:
-        """ The derivative d(log_likelihood)/de as a Matrix of the same shape as parameters.e. """
+    def _check_inv_prior_Y_Y(self, x: NP.Matrix, Y_instead_of_F: bool = True) -> NP.Vector:
+        """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance)."""
+        kern = self._gpy.kern.K(x, self.X)
+        inv_prior_Y_Y = self.inv_prior_Y_Y
+        result = self._gpy.predict(x, include_likelihood=Y_instead_of_F)[0]
+        result -= einsum('in, nj -> ij', kern, inv_prior_Y_Y)
+        return result
 
     def _validate_parameters(self):
         """ Generic and specific validation.
@@ -198,6 +430,8 @@ class GP(base.GP):
             IndexError: (specific) unless parameters.f.shape == parameters.e == (1,1).
         """
         super()._validate_parameters()
+        if self.parameters.f.shape[0] != 1:
+            raise IndexError("GPy will only accept (1,1) parameters.f and parameters.e, not ({0:d},{0:d})".format(self.parameters.f.shape[0]))
 
     def __init__(self, fold: Fold, name: str, parameters: Optional[base.GP.Parameters] = None):
         """ GP Constructor. Calls Model.__Init__ to setup parameters, then checks dimensions.
@@ -208,162 +442,7 @@ class GP(base.GP):
             parameters: The model parameters. If None these are read from fold/name, otherwise they are written to fold/name.
         """
         super().__init__(fold, name, parameters)
-
-
-# noinspection PyPep8Naming
-class _GaussianProcess:
-    """ Pure abstract interface to a Gaussian Process. This assumes a minimal
-
-    ``Parameters = namedtuple("Parameters", ['anisotropy', 'f', 'e'])``
-
-    which must be overridden if derived classes need to incorporate extra parameters.
-    """
-
-    MEMORY_LAYOUT = 'F'
-
-    Parameters = NamedTuple("Parameters", [('f', NP.Matrix), ('e', NP.Matrix)])
-
-    @property
-    def f_derivative(self) -> NP.Matrix:
-        result = zeros((self._L, self._L), dtype=float, order=self.MEMORY_LAYOUT)
-        kernel_matrix = self.kernel.tensor4.reshape((self._N, self._N, self.kernel.L, self.kernel.L), dtype=float, order=self.MEMORY_LAYOUT)
-        if self.kernel.L == 1:
-            for l in range(self._L):
-                result[l, l] = einsum("ij, ji -> ",
-                                      self._derivative_factor[l * self._N:(l + 1) * self._N, l * self._N:(l + 1) * self._N],
-                                      kernel_matrix, dtype=float, order=self.MEMORY_LAYOUT, optimize=True) / 2
-                for k in range(l + 1, self._L):
-                    result[l, k] = einsum("ij, ji -> ",
-                                          self._derivative_factor[k * self._N:(k + 1) * self._N, l * self._N:(l + 1) * self._N],
-                                          kernel_matrix, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-        else:
-            for l in range(self._L):
-                result[l, l] = einsum("ij, ji -> ",
-                                      self._derivative_factor[l * self._N:(l + 1) * self._N, l * self._N:(l + 1) * self._N],
-                                      kernel_matrix[l * self._N:(l + 1) * self._N, l * self._N:(l + 1) * self._N],
-                                      dtype=float, order=self.MEMORY_LAYOUT, optimize=True) / 2
-                for k in range(l + 1, self._L):
-                    result[l, k] = einsum("ij, ji -> ",
-                                          self._derivative_factor[k * self._N:(k + 1) * self._N, l * self._N:(l + 1) * self._N],
-                                          kernel_matrix[l * self._N:(l + 1) * self._N, k * self._N:(k + 1) * self._N],
-                                          dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-        return result
-
-    @property
-    def e_derivative(self) -> NP.Matrix:
-        result = zeros((self._L, self._L), dtype=float, order=self.MEMORY_LAYOUT)
-        for l in range(self._L):
-            result[l, l] = trace(self._derivative_factor[l * self._N:(l + 1) * self._N, l * self._N:(l + 1) * self._N]) / 2
-            for k in range(l + 1, self._L):
-                result[l, k] = trace(self._derivative_factor[k * self._N:(k + 1) * self._N, l * self._N:(l + 1) * self._N])
-        return result
-
-    def predict(self, x: NP.Matrix, Y_instead_of_F: bool=True) -> Tuple[NP.Vector, NP.Matrix]:
-        """ Predicts the response to input x.
-
-        Args:
-            x: An ``NxM`` Design (feature) Matrix.
-            Y_instead_of_F: True to include noise in the result.
-        Returns: The distribution of y or f, as a (mean Vector, covariance Matrix) Tuple.
-        """
-        n = x.shape[0]
-        variance = self.KernelType(x, x, self.kernel.L)
-        covariance = self.KernelType(self.kernel.X0, x, self.kernel.L)
-        variance.parameters = self.kernel.parameters
-        covariance.parameters = self.kernel.parameters
-        if self.kernel.L == 1:
-            variance = einsum("kl, noij -> nokl", self._parameters.f, variance.tensor4, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-            covariance = einsum("kl, noij -> nkol", self._parameters.f, covariance.tensor4, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-        else:
-            variance = einsum("kl, nokl -> nokl", self._parameters.f, variance.tensor4, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-            covariance = einsum("kl, nokl -> nkol", self._parameters.f, covariance.tensor4, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-        if Y_instead_of_F:
-            for k in range(self._L):
-                for l in range(self._L):
-                    variance[:, :, k, l] += self._parameters.e[k, l]
-        variance = einsum("nokl -> nkol", variance, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-        variance.shape = (n * self._L, n * self._L)
-        covariance.shape = (self._N * self._L, n * self._L)
-        return (einsum("ij, il -> jl", covariance, self._inv_prior_Y_y, dtype=float, order=self.MEMORY_LAYOUT, optimize=True),
-                variance - einsum("jk, ji, il -> kl", covariance, self._prior_Y_inv, covariance,
-                                  dtype=float, order=self.MEMORY_LAYOUT, optimize=True),)
-
-    @property
-    def log_marginal_likelihood(self) -> float:
-        return -(self._N * self._L * log(2 * pi) - slogdet(self._prior_Y)[-1] +
-                 einsum("il, ik -> lk", self._Y, self._inv_prior_Y_y, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)[0, 0]) / 2
-
-    @property
-    def posterior_Y(self) -> Tuple[NP.Vector, NP.Matrix]:
-        return (einsum("ij, il -> jl", self._prior_F, self._inv_prior_Y_y, dtype=float, order=self.MEMORY_LAYOUT, optimize=True),
-                self._prior_Y - einsum("jk, ji, il -> kl", self._prior_F, self._prior_Y_inv, self._prior_F,
-                                       dtype=float, order=self.MEMORY_LAYOUT, optimize=True),)
-
-    @property
-    def posterior_F(self) -> Tuple[NP.Vector, NP.Matrix]:
-        return (einsum("ij, il -> jl", self._prior_F, self._inv_prior_Y_y, dtype=float, order=self.MEMORY_LAYOUT, optimize=True),
-                self._prior_F - einsum("jk, ji, il -> kl", self._prior_F, self._prior_Y_inv, self._prior_F,
-                                       dtype=float, order=self.MEMORY_LAYOUT, optimize=True),)
-
-    def calculate(self):
-        self._prior_F.shape = self._prior_Y.shape = self.tensor_shape
-        if self.kernel.L == 1:
-            self._prior_F[:] = einsum("kl, noij -> nkol", self._parameters.f, self.kernel.tensor4,
-                                      dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-        else:
-            self._prior_F[:] = einsum("kl, nokl -> nkol", self._parameters.f, self.kernel.tensor4,
-                                      dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-        self._prior_Y[:] = einsum("no, kl -> nkol", self._eye_minor, self._parameters.e,
-                                  dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-        self._prior_Y[:] += self._prior_F
-        self._prior_F.shape = self._prior_Y.shape = self.matrix_shape
-        (prior_Y_cho, lower) = cho_factor(self._prior_Y, lower=False, overwrite_a=False, check_finite=False)
-        self._prior_Y_inv[:] = cho_solve((prior_Y_cho, lower), self._eye, overwrite_b=False, check_finite=False)
-        self._inv_prior_Y_y[:] = einsum("ij, il -> jl", self._prior_Y_inv, self._Y,
-                                        dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-        self._derivative_factor[:] = einsum("il, jl -> ij", self._inv_prior_Y_y, self._inv_prior_Y_y,
-                                            dtype=float, order=self.MEMORY_LAYOUT, optimize=True) + self._prior_Y_inv
-
-    @property
-    def tensor_shape(self) -> Tuple[int, int, int, int]:
-        return self._N, self._L, self._N, self._L,
-
-    @property
-    def matrix_shape(self) -> Tuple[int, int]:
-        return self._N * self._L, self._N * self._L,
-
-    @property
-    def vector_shape(self) -> Tuple[int, int]:
-        return self._N * self._L, 1,
-
-    # noinspection PyUnusedLocal
-    def __init__(self, X: NP.Matrix, Y: NP.Matrix, kernel_per_f: bool, kernel: Union[Type[base.Kernel], base.Kernel],
-                 kernel_parameters: base.Kernel.Parameters = None):
-        """ Construct a _GaussianProcess.
-
-        Args:
-            X: An ``NxM`` Design (feature) Matrix.
-            Y: An ``NxL`` Response (label) Matrix.
-            kernel_per_f: If True, the _kernel depends on output dimension (l) as well as input dimension (m).
-            kernel: The Kernel Type, derived from Kernel, or an existing _kernel of this type.
-            kernel_parameters: The parameters with which to initialize the _kernel (optional)
-        """
-        self._N, self._L = Y.shape
-        if isinstance(kernel, base.Kernel):
-            self.kernel = kernel
-        else:
-            self.kernel = kernel(X, X, self._L) if kernel_per_f else kernel(X, X, 1)
-        if kernel_parameters is not None:
-            self.kernel.parameters = kernel_parameters
-        self._Y = Y.reshape(self.vector_shape, order=self.MEMORY_LAYOUT)
-        self._prior_F = zeros(self.tensor_shape, dtype=float, order=self.MEMORY_LAYOUT)
-        self._prior_Y = zeros(self.tensor_shape, dtype=float, order=self.MEMORY_LAYOUT)
-        self._prior_Y_inv = zeros(self.matrix_shape, dtype=float, order=self.MEMORY_LAYOUT)
-        self._inv_prior_Y_y = zeros(self.vector_shape, dtype=float, order=self.MEMORY_LAYOUT)
-        self._derivative_factor = zeros(self.matrix_shape, dtype=float, order=self.MEMORY_LAYOUT)
-        self._eye = eye(*self.matrix_shape, dtype=float, order=self.MEMORY_LAYOUT)
-        self._eye_minor = eye(self._N, dtype=float, order=self.MEMORY_LAYOUT)
-        self._parameters = None
+        self._gpy = GPy.models.GPRegression(self.X, self.Y, self._kernel.gpy(self.parameters.f), noise_var=self.parameters.e)
 
 
 # noinspection PyPep8Naming
@@ -375,7 +454,7 @@ class Sobol(base.Sobol):
 
     """ Required overrides."""
 
-    MEMORY_LAYOUT = 'F'
+    MEMORY_LAYOUT = 'C'
 
     Parameters = NamedTuple("Parameters", [('Mu', NP.Matrix), ('Theta', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix)])
     """ 
@@ -519,7 +598,7 @@ class ROM(base.ROM):
         CURRENT_WITH_GUESSED_LENGTHSCALE = auto()
         RBF = auto()
 
-    MEMORY_LAYOUT = 'F'
+    MEMORY_LAYOUT = 'C'
 
     Parameters = NamedTuple("Parameters", [('Mu', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix),
                                            ('lengthscale', NP.Matrix), ('log_likelihood', NP.Matrix)])
@@ -567,13 +646,12 @@ class ROM(base.ROM):
 
         Returns: The constructed ROM object
         """
-        optimization_count = [optimized.name.count(cls.OPTIMIZED_GB_EXT) for optimized in fold.dir.glob("name" + cls.OPTIMIZED_GB_EXT + "*")]
+        optimization_count = [optimized.name.count(cls.OPTIMIZED_GB_EXT) for optimized in fold.dir.glob(name + cls.OPTIMIZED_GB_EXT + "*")]
         source_gp_name = name + cls.OPTIMIZED_GB_EXT * max(optimization_count)
         destination_gp_name = source_gp_name + suffix
         return cls(name=name,
                    sobol=Sobol.from_GP(fold, source_gp_name, destination_gp_name, Mu=Mu, read_parameters=True),
                    optimizer_options=None, rbf_parameters=rbf_parameters)
-
 
     @classmethod
     def from_GP(cls, fold: Fold, name: str, source_gp_name: str, optimizer_options: Dict, Mu: int = -1,
@@ -597,4 +675,3 @@ class ROM(base.ROM):
     REDUCED_FOLD_EXT = ".reduced"
 
     """ End of required overrides."""
-

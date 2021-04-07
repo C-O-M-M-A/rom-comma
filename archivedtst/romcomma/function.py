@@ -52,9 +52,9 @@ Contents:
 
 from numpy import atleast_2d, arange, prod, sin, einsum, full, concatenate, ndarray, array, eye
 from pandas import DataFrame, MultiIndex
-from romcomma.distribution import SampleDesign, Multivariate
-from romcomma.typing_ import NP, Callable, Dict, Numeric, Tuple, Sequence, NamedTuple, PathLike
-from romcomma import data
+from .distribution import SampleDesign, Multivariate
+from .typing_ import NP, Callable, Dict, Numeric, Tuple, Sequence, NamedTuple, PathLike
+from . import data
 from json import load
 
 
