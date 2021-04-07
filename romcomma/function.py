@@ -37,10 +37,10 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 
 from numpy import atleast_2d, arange, prod, sin, einsum, concatenate, ndarray, array, eye, pi
 from pandas import DataFrame, MultiIndex
-from romcomma.distribution import SampleDesign, Multivariate, Univariate
-from romcomma.typing_ import NP, Callable, Dict, Numeric, Sequence, Any, PathLike, Generic, Tuple
-from romcomma.data import Store
-from romcomma import EFFECTIVELY_ZERO
+from .distribution import SampleDesign, Multivariate, Univariate
+from .typing_ import NP, Callable, Dict, Numeric, Sequence, Any, PathLike, Generic, Tuple
+from .data import Store
+from . import EFFECTIVELY_ZERO
 
 
 def ishigami(X: NP.MatrixLike, a: float = 7.0, b: float = 0.1) -> NP.Vector:
