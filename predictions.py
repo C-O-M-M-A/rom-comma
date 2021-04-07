@@ -18,9 +18,10 @@ import pandas as pd
 from shutil import rmtree, copytree
 from pathlib import Path
 from random import shuffle
-import romcomma.model as model
-from romcomma.data import Store, Fold, Frame
-from romcomma.typing_ import NP, Union, Tuple, Sequence, List
+from itertools import chain
+from .data import Store, Fold, Frame
+import .model as model
+from .typing_ import NP, Union, Tuple, Sequence, List
 
 
 def make_predictions(input_source: str, store_name: str, is_split: bool = True, is_standardized: bool = False, shuffle_before_folding: bool = True):
@@ -48,9 +49,9 @@ def make_predictions(input_source: str, store_name: str, is_split: bool = True, 
         stand_inputs_df = pd.DataFrame(stand_inputs)
     K = store.K
     N = len(stand_inputs_df.index)
-    assert 1 <= K <= N, "K={K:d} does not lie between 1 and N=len(stand_inputs_df.index)={N:d} inclusive".format(K=K, N=N)
+    # assert 1 <= K <= N, "K={K:d} does not lie between 1 and N=len(stand_inputs_df.index)={N:d} inclusive".format(K=K, N=N)
     indices = list(range(N))
-    # looks like I need to follow and use Fold.indicators and Fold.fold_from_indices but these are inner functions so I shall have to write the code myself.
+    # looks like I need to follow the inner functions Fold.indicators and Fold.fold_from_indices.
     if shuffle_before_folding:
         shuffle(indices)
     K_blocks = [list(range(K)) for i in range(int(N / K))]
@@ -62,8 +63,6 @@ def make_predictions(input_source: str, store_name: str, is_split: bool = True, 
         train = [index for index, indicator in zip(indices, indicators) if k != indicator]
         test = [index for index, indicator in zip(indices, indicators) if k == indicator]
         assert len(train) > 0
-
-
     """
     indicators = _indicators()
     for k in range(K):
@@ -85,9 +84,8 @@ def make_predictions(input_source: str, store_name: str, is_split: bool = True, 
                                        DataFrame(data=NaN, index=[-1], columns=parent.data.df.columns))
             else:
                 fold._test = fold.create_standardized_frame(fold.test_csv, parent.data.df.iloc[test])"""
-
-
     return
+
 
 if __name__ == '__main__':
     BASE_PATH = Path("Z:\\comma_group1\\Rom\\dat\\AaronsTraining\\Veysel-Copy")
