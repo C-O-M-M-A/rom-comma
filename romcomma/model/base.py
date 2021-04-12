@@ -36,10 +36,10 @@ from pandas import DataFrame, MultiIndex, concat
 from scipy import optimize
 from scipy.linalg import cho_factor, cho_solve, qr
 import json
-from ..data import Frame, Fold
-from ..typing_ import PathLike, Optional, NamedTuple, NP, Tuple, Type, Callable, Union, Any, List, Dict
+from romcomma.data import Frame, Fold
+from romcomma.typing_ import PathLike, Optional, NamedTuple, NP, Tuple, Type, Callable, Union, Any, List, Dict
 from copy import deepcopy
-from .. import distribution
+from romcomma import distribution
 
 
 class Model(ABC):

@@ -21,7 +21,7 @@
 
 """ Encapsulates data storage structures."""
 
-from .typing_ import Callable, PathLike, ZeroOrMoreInts, List, Tuple, Union, Dict
+from romcomma.typing_ import Callable, PathLike, ZeroOrMoreInts, List, Tuple, Union, Dict
 from copy import deepcopy
 from itertools import chain
 from random import shuffle

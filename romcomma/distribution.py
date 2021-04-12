@@ -21,7 +21,7 @@
 
 """ Contains basic probability distributions, with a view to sampling."""
 
-from .typing_ import Any, Optional, Union, NP, Sequence, Tuple, Dict, Type, ClassVar
+from romcomma.typing_ import Any, Optional, Union, NP, Sequence, Tuple, Dict, Type, ClassVar
 from scipy import linalg, stats
 # noinspection PyPep8Naming
 from pyDOE2 import lhs as pyDOE_lhs

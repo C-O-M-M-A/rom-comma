@@ -21,9 +21,9 @@
 
 """ GPy implementation of model.base."""
 
-from ..typing_ import Optional, NP, PathLike, NamedTuple, Tuple, Dict, Union, Callable
-from ..data import Fold
-from . import base
+from romcomma.typing_ import Optional, NP, PathLike, NamedTuple, Tuple, Dict, Union, Callable
+from romcomma.data import Fold
+from romcomma.model import base
 from numpy import atleast_2d, atleast_3d, transpose, zeros, einsum, sqrt, array, full
 import GPy
 import shutil
