@@ -19,9 +19,9 @@ from shutil import rmtree, copytree
 from pathlib import Path
 from random import shuffle
 from itertools import chain
-from .data import Store, Fold, Frame
-import .model as model
-from .typing_ import NP, Union, Tuple, Sequence, List
+from romcomma.data import Store, Fold, Frame
+import romcomma.model as model
+from romcomma.typing_ import NP, Union, Tuple, Sequence, List
 
 
 def make_predictions(input_source: str, store_name: str, is_split: bool = True, is_standardized: bool = False, shuffle_before_folding: bool = True):
@@ -59,6 +59,8 @@ def make_predictions(input_source: str, store_name: str, is_split: bool = True, 
     for K_range in K_blocks:
         shuffle(K_range)
     indicators = list(chain(*K_blocks))
+    stand_inputs_df['indicators'] = indicators
+    # I've added indicators as a column to the df, now can i copy each indicator into it's corresponding fold repository?
     for k in range(K):
         train = [index for index, indicator in zip(indices, indicators) if k != indicator]
         test = [index for index, indicator in zip(indices, indicators) if k == indicator]
