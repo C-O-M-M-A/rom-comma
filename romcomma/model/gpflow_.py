@@ -19,13 +19,16 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" GPy implementation of model.base."""
+""" gpflow implementation of model.base."""
 
 from romcomma.typing_ import Optional, NP, PathLike, NamedTuple, Tuple, Dict, Union, Callable
 from romcomma.data import Fold
 from romcomma.model import base
 from numpy import atleast_2d, atleast_3d, transpose, zeros, einsum, sqrt, array, full
-import GPy
+import gpflow as gpf
+import tensorflow as tf
+import tensorflow_probability as tfp
+from tensorflow_probability import bijectors
 import shutil
 from enum import IntEnum, auto
 
@@ -58,10 +61,10 @@ class Kernel:
                 self.write_parameters(self.parameters._replace(lengthscale=full((1, M), self.parameters.lengthscale)))
                 self._is_rbf = False
 
-        def gpy(self, f: float) -> GPy.kern.RBF:
-            """ Returns the GPy version of this kernel."""
-            return GPy.kern.RBF(self._M, f, self._parameters.lengthscale[0, 0], False) if self._is_rbf \
-                else GPy.kern.RBF(self._M, f, self._parameters.lengthscale[0, :self._M], True)
+        def gpflow(self, f: float) -> gpf.kernels.RBF:
+            """ Returns the gpflow version of this kernel."""
+            return gpf.kernels.RBF(variance=f, lengthscales=self._parameters.lengthscale[0, 0], ard=False) if self._is_rbf \
+                else gpf.kernels.RBF(variance=f, lengthscales=self._parameters.lengthscale[0, :self._M], ard=True)
 
         def calculate(self):
             """ This function is an interface requirement which does nothing."""
@@ -121,7 +124,7 @@ class GP(base.GP):
     @property
     def log_likelihood(self) -> float:
         """ The log marginal likelihood of the training data given the GP parameters."""
-        return -abs(self._gpy.log_likelihood())
+        return -abs(self._gpflow.log_likelihood())
 
     def calculate(self):
         """ Fit the GP to the training data. """
@@ -135,7 +138,7 @@ class GP(base.GP):
             Y_instead_of_F: True to include noise e in the result covariance.
         Returns: The distribution of Y or f, as a triplet (mean (N, L) Matrix, std (N, L) Matrix), covariance (N, L, L) Tensor3.
         """
-        result = self._gpy.predict(X, include_likelihood=Y_instead_of_F)
+        result = self._gpflow.predict(X, include_likelihood=Y_instead_of_F)
         return result[0], sqrt(result[1]), transpose(atleast_3d(result[1]), [1, 2, 0])
 
     def optimize(self, **kwargs):
@@ -146,29 +149,25 @@ class GP(base.GP):
         """
         if kwargs is None:
             kwargs = self._read_optimizer_options() if self.optimizer_options_json.exists() else self.DEFAULT_OPTIMIZER_OPTIONS
-        self._gpy.optimize(**kwargs)
-        if self._gpy.Gaussian_noise.variance[0][0] < self.parameters.e_floor[0, 0]:
-            self._gpy.Gaussian_noise.variance = self.parameters.e_floor[0, 0]
-            self._gpy.Gaussian_noise.variance.fix()
-            self._gpy.optimize(**kwargs)
+        self._gpflow.optimize(**kwargs)
         """ Update and record GP and kernel parameters, using Model.write_parameters(new_parameters)."""
         self._write_optimizer_options(kwargs)
-        self.write_parameters(self._parameters._replace(f=array(self._gpy.rbf.variance), e=array(self._gpy.Gaussian_noise.variance),
+        self.write_parameters(self._parameters._replace(f=array(self._gpflow.kernel.variance), e=array(self._gpflow.likelihood.variance),
                                                         log_likelihood=self.log_likelihood))
-        self._kernel.write_parameters(self._kernel.parameters._replace(lengthscale=array(self._gpy.rbf.lengthscale)))
+        self._kernel.write_parameters(self._kernel.parameters._replace(lengthscale=array(self._gpflow.rbf.lengthscale)))
         self._test = None
 
     @property
     def Kinv_Y(self) -> NP.Matrix:
         """ The (N,L) Matrix (K(X,X) + e I)^(-1) Y."""
-        return atleast_2d(self._gpy.posterior.woodbury_vector).reshape((self._N, self._L))
+        return atleast_2d(self._gpflow.posterior.woodbury_vector).reshape((self._N, self._L))
 
     def _check_Kinv_Y(self, x: NP.Matrix, Y_instead_of_F: bool = True) -> NP.Vector:
         """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance)."""
-        kern = self._gpy.kern.K(x, self.X)
+        kernel = self._gpflow.kernels.K(x, self.X)
         __Kinv_Y = self.Kinv_Y
-        result = self._gpy.predict(x, include_likelihood=Y_instead_of_F)[0]
-        result -= einsum('in, nj -> ij', kern, __Kinv_Y)
+        result = self._gpflow.predict(x, include_likelihood=Y_instead_of_F)[0]
+        result -= einsum('in, nj -> ij', kernel, __Kinv_Y)
         return result
 
     def _validate_parameters(self):
@@ -181,7 +180,7 @@ class GP(base.GP):
         """
         super()._validate_parameters()
         if self.parameters.f.shape[0] != 1:
-            raise IndexError("GPy will only accept (1,1) parameters.f and parameters.e, not ({0:d},{0:d})".format(self.parameters.f.shape[0]))
+            raise IndexError("gpflow will only accept (1,1) parameters.f and parameters.e, not ({0:d},{0:d})".format(self.parameters.f.shape[0]))
 
     def __init__(self, fold: Fold, name: str, parameters: Optional[base.GP.Parameters] = None):
         """ GP Constructor. Calls Model.__Init__ to setup parameters, then checks dimensions.
@@ -192,7 +191,10 @@ class GP(base.GP):
             parameters: The model parameters. If None these are read from fold/name, otherwise they are written to fold/name.
         """
         super().__init__(fold, name, parameters)
-        self._gpy = GPy.models.GPRegression(self.X, self.Y, self._kernel.gpy(self.parameters.f), noise_var=self.parameters.e)
+        e = gpf.Parameter(value=self.parameters.e, transform=tfp.bijectors.Chain([tfp.bijectors.Shift(self.parameters.e_floor), tfp.bijectors.Softplus()]),
+                          trainable=True)
+        self._gpflow = gpf.models.GPR(data=(self.X, self.Y), kernel=self._kernel.gpf(self.parameters.f),
+                                         mean_function=None, noise_variance=e)
 
 
 # noinspection PyPep8Naming

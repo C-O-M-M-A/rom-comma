@@ -2,59 +2,34 @@
 name = "rom-comma"
 version = "1.0.0"
 description = "Reduced Order Modelling software, implementing Global Sensitivity Analysis of Gaussian Processes."
-authors = [
-    "Robert Milton <r.a.milton@sheffield.ac.uk>"
-    "Aaron Yeardley<asyeardley1@sheffield.ac.uk>"
-]
-license = "MIT"
+authors = ["Robert Milton <r.a.milton@sheffield.ac.uk>", "Aaron Yeardley<asyeardley1@sheffield.ac.uk>"]
+license = "BSD 3-Clause"
+
 readme = "README.md"
+homepage = "https://github.com/C-O-M-M-A/rom-comma"
+repository = "https://github.com/C-O-M-M-A/rom-comma"
+documentation = "https://github.com/C-O-M-M-A/rom-comma"
+
+keywords = ["Reduced Order Modelling", "Global Sensitivity Analysis", "Gaussian Process", "Sobol Index", "Screening"]
+
+classifiers = ["Topic :: Scientific/Engineering :: Artificial Intelligence",
+                "Intended Audience :: Science/Research", "Development Status :: 3 - Alpha"]
+
 python = ">=3.9"
-homepage = "https://github.com/MartinThoma/infer_pyproject"
-repository = "https://github.com/MartinThoma/infer_pyproject"
-documentation = "https://github.com/MartinThoma/infer_pyproject"
 
-keywords = ["packaging", "dependency", "infer", "pyproject.toml"]
-
-classifiers = [
-    "Topic :: Software Development"
-]
-
-# Requirements
 [dependencies]
-Click = "^7.0"
-
-[dev-dependencies]
-black = { version = "^18.3-alpha.0", python = "^3.6" }
-
-[scripts]
-poetry = "infer_pyproject.cli:main"
+numpy = ">"
 
 [build-system]
 requires = [
-    "setuptools >= 35.0.2",
-    "setuptools_scm >= 2.0.0, <3"
+    "setuptools >= 56.0.0",
+    "pip >= 21.0.1",
+    "pandas >= 1.2.4",
+    "numpy >= 1.20.2",
+    "scipy >= 1.6.2",
+    "tensorflow >= 2.5.0",
+    "tensorflow-probability >= 0.12.2",
+    "gpflow >= 2.1.5",
+    "pyDOE2 >= 1.3.0"
 ]
 build-backend = "setuptools.build_meta"
-
-[tool.black]
-line-length = 88
-target_version = ['py36']
-include = '\.pyi?$'
-exclude = '''
-
-(
-  /(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-  )/
-  | foo.py           # also separately exclude a file named foo.py in
-                     # the root of the project
-)

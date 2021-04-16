@@ -46,14 +46,13 @@ from numpy import atleast_1d, atleast_2d, full, broadcast_to, transpose
 from pandas import concat
 from enum import Enum
 from pathlib import Path
-from romcomma.model import gpy_, scipy_
+from romcomma.model import gpflow_
 import time
 
 
 class Module(Enum):
     """ Enumerate implementations of model.base. Each implementation is a module."""
-    GPY_ = gpy_
-    SCIPY_ = scipy_
+    GPFLOW_ = gpflow_
 
 
 def GPs(module: Module, name: str, store: Store, M: Union[int, List[int]], parameters: Optional[base.GP.Parameters],

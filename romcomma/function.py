@@ -258,7 +258,7 @@ def sample(store_dir: PathLike, N: int, X_distribution: Multivariate.Independent
     return Store.from_df(dir_=store_dir, df=df, meta=meta)
 
 
-def functions_of_normal(store_dir: str, N: int, M: int, CDF_loc: NP.CovectorLike = None, CDF_scale: NP.CovectorLike = None,
+def functions_of_normal(store_dir: PathLike, N: int, M: int, CDF_loc: NP.CovectorLike = None, CDF_scale: NP.CovectorLike = None,
                         input_transform: FunctionWithParameters[NP.Matrix] = None, functions: Sequence[FunctionWithParameters[NP.Vector]] = None,
                         noise_std: NP.CovectorLike = 0.0) -> Store:
     """ Apply ``functions`` to ``N`` datapoints from ``input_transform(cdf(Multivariate.Normal(mean=zeros(M), covariance=eye(M))))`` then add noise.

@@ -49,13 +49,13 @@ def run_gps(name, function_name: str, N: int, noise_std: float, random: bool, M:
     savetxt(store.dir / 'InverseRotation.csv', transpose(lin_trans))
     Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
     gp_optimizer_options = {'optimizer': 'bfgs', 'max_iters': 5000, 'gtol': 1E-16}
-    kernel_parameters = model.gpy_.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5 ** (M / 5), dtype=float))
+    kernel_parameters = model.gpflow_.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5 ** (M / 5), dtype=float))
     # noinspection PyProtectedMember
-    gp_parameters = model.gpy_.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
-    model.run.GPs(module=model.run.Module.GPY_, name=name, store=store, M=-1, parameters=gp_parameters, optimize=True, test=True, sobol=False,
-                  optimizer_options=gp_optimizer_options, make_ard=False)
-    model.run.GPs(module=model.run.Module.GPY_, name=name, store=store, M=-1, parameters=None, optimize=True, test=True, sobol=False,
-                  optimizer_options=gp_optimizer_options, make_ard=True)
+    gp_parameters = model.gpflow_.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
+    # model.run.GPs(module=model.run.Module.GPFLOW_, name=name, store=store, M=-1, parameters=gp_parameters, optimize=True, test=True, sobol=False,
+    #               optimizer_options=gp_optimizer_options, make_ard=False)
+    # model.run.GPs(module=model.run.Module.GPFLOW_, name=name, store=store, M=-1, parameters=None, optimize=True, test=True, sobol=False,
+    #               optimizer_options=gp_optimizer_options, make_ard=True)
 
 
 if __name__ == '__main__':

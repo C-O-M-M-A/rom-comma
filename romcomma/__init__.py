@@ -21,8 +21,4 @@
 
 EFFECTIVELY_ZERO = 1.0E-64
 
-from romcomma import data
-from romcomma import distribution
-from romcomma import function
-from romcomma import typing_
-from romcomma import model
+from romcomma import typing_, distribution, data, function, model
