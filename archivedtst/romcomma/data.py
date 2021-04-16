@@ -40,7 +40,7 @@ Contents:
 
     **Fold(Store)** class container for datasets, models and tests.
 """
-from ROMCOMMA.tst.romcomma.typing_ import Callable, PathLike, ZeroOrMoreInts, List, Tuple, Union, Dict
+from ROMCOMMA.archivedtst.romcomma.typing_ import Callable, PathLike, ZeroOrMoreInts, List, Tuple, Union, Dict
 from copy import deepcopy
 from itertools import chain
 from random import shuffle

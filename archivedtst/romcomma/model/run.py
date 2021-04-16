@@ -48,14 +48,14 @@
     **collect_tests** function to instantiate the collection of test results.
 """
 
-from ROMCOMMA.tst.romcomma.typing_ import NP, Optional, Sequence, Union, List, Dict
-from ROMCOMMA.tst.romcomma.data import Store, Fold, Frame
-from ROMCOMMA.tst.romcomma.model import base
+from ROMCOMMA.archivedtst.romcomma.typing_ import NP, Optional, Sequence, Union, List, Dict
+from ROMCOMMA.archivedtst.romcomma.data import Store, Fold, Frame
+from ROMCOMMA.archivedtst.romcomma.model import base
 from numpy import atleast_1d, atleast_2d, full, broadcast_to, transpose
 from pandas import concat
 from enum import Enum
 from pathlib import Path
-from ROMCOMMA.tst.romcomma.model import gpy_, scipy_
+from ROMCOMMA.archivedtst.romcomma.model import gpy_, scipy_
 import time
 
 

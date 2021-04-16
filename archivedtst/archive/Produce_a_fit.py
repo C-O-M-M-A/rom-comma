@@ -19,9 +19,9 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from ROMCOMMA.tst.romcomma.data import Store, Fold, Frame
-import ROMCOMMA.tst.romcomma.model as model
-from ROMCOMMA.tst.romcomma.typing_ import NP, Union, Tuple
+from ROMCOMMA.archivedtst.romcomma.data import Store, Fold, Frame
+import ROMCOMMA.archivedtst.romcomma.model as model
+from ROMCOMMA.archivedtst.romcomma.typing_ import NP, Union, Tuple
 from shutil import rmtree, copytree
 from pyDOE import lhs
 from scipy.stats.distributions import norm
