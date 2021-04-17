@@ -35,12 +35,15 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 |
 """
 
-from numpy import atleast_2d, arange, prod, sin, einsum, concatenate, ndarray, array, eye, pi
+from __future__ import annotations
+
+from numpy import atleast_2d, arange, prod, sin, einsum, concatenate, ndarray, array, pi
 from pandas import DataFrame, MultiIndex
+
+from romcomma import EFFECTIVELY_ZERO
+from romcomma.data import Store
 from romcomma.distribution import SampleDesign, Multivariate, Univariate
 from romcomma.typing_ import NP, Callable, Dict, Numeric, Sequence, Any, PathLike, Generic, Tuple
-from romcomma.data import Store
-from romcomma import EFFECTIVELY_ZERO
 
 
 def ishigami(X: NP.MatrixLike, a: float = 7.0, b: float = 0.1) -> NP.Vector:
@@ -107,64 +110,69 @@ def sobol_g(X: NP.MatrixLike, m_very_important: int = 0, m_important: int = 0, m
     return prod(factors, axis=1, keepdims=True)
 
 
-def linear(X: NP.MatrixLike, matrix: NP.Matrix) -> NP.Matrix:
-    """ Transform X by a square linear transformation matrix
+class Matrix:
+    """ Encapsulates a matrix representing a linear transformation."""
 
-    Args:
-        X: An (N,M) design Matrix
-        matrix: An (M,M) linear transformation matrix.
-    Returns: An (N,M) design matrix given by the matrix product of X with matrix transpose.
-    """
-    return einsum('NO,MO -> NM', X, matrix, dtype=float)
+    @staticmethod
+    def multiply(X: NP.MatrixLike, matrix: NP.Matrix = None) -> NP.Matrix:
+        """ Transform X by a square linear transformation matrix
 
+        Args:
+            X: An (N,M) design Matrix
+            matrix: An (M,M) linear transformation matrix.
+        Returns: An (N,M) design matrix given by the matrix product of X with matrix transpose.
+        """
+        return X if matrix is None else einsum('NO,MO -> NM', X, matrix, dtype=float)
 
-def linear_matrix_from_meta(store: Store) -> NP.Matrix:
-    """ Read linear transformation matrix used as input_transform in function.sample from the resulting __meta__.json
-    Args:
-        store: The data.Store
+    @staticmethod
+    def from_meta(store: Store) -> NP.Matrix:
+        """ Read linear transformation matrix used as input_transform in function.sample from the resulting __meta__.json
+        Args:
+            store: The data.Store produced by function.sample.
 
-    Returns: The transformation matrix found, or the identity.
-
-    """
-    function_with_parameters = store.meta['origin']['functions'][0].split('; matrix=')
-    if len(function_with_parameters) > 1:
-        function_with_parameters = eval(function_with_parameters[-1][:-1])
-        return array(function_with_parameters)
-    else:
-        return eye(store.meta['data']['M'], dtype=float)
+        Returns: The transformation matrix found, or the identity.
+        """
+        function_with_parameters = store.meta['origin']['functions'][0].split('; matrix=')
+        if len(function_with_parameters) > 1:
+            function_with_parameters = eval(function_with_parameters[-1][:-1])
+            return array(function_with_parameters)
+        else:
+            return None
 
 
 class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
     """ A class for use with function.sample(...). Encapsulates a function and its parameters."""
 
-    @staticmethod
-    def DEFAULT(function_names: Sequence[str]) -> Tuple[NP.CovectorLike, NP.CovectorLike, Tuple['FunctionWithParameters', ...]]:
-        """ Construct a default FunctionWithParameters for ``function_``.
+    @classmethod
+    @property
+    def DEFAULTS(cls) -> Dict[str, Tuple[float, float, Tuple[Callable[..., NP.VectorOrMatrix], Dict[str, Numeric]]]]:
+        """ Default CDF_loc, CDF_scale and (function, parameters) indexed by function_name"""
+        return {'sin.1': (pi, 2 * pi, (ishigami, {'a': 0.0, 'b': 0.0})),
+                'sin.2': (pi, 2 * pi, (ishigami, {'a': 2.0, 'b': 0.0})),
+                'ishigami': (pi, 2 * pi, (ishigami, {'a': 7.0, 'b': 0.1})),
+                'sobol_g': (0.0, 1.0, (sobol_g, {'m_very_important': 0, 'm_important': 0, 'm_unimportant': 0,
+                                                 'a_i_very_important': 0, 'a_i_important': 1, 'a_i_unimportant': 9})),
+                'sobol_g_234': (0.0, 1.0, (sobol_g, {'m_very_important': 2, 'm_important': 3, 'm_unimportant': 4})),
+                'linear': (0.0, 1.0, (Matrix.multiply, {'matrix': None}))}
+
+    @classmethod
+    def default(cls, function_names: Sequence[str]) -> Tuple[NP.CovectorLike, NP.CovectorLike, Tuple[FunctionWithParameters, ...]]:
+        """ Construct default CDF_loc, CDF_scale and functionsWithParameters for ``function_names``.
 
         Args:
             function_names: A Sequence of names of a Callable[..., NP.VectorOrMatrix].
-        Returns: CDF_loc, CDF_scale and a tuple of default FunctionWithParameters.
+        Returns: Tuples CDF_loc, CDF_scale and functionsWithParameters.
 
         Raises:
             KeyError: If one of the function_names is not recognized.
-            ValueError: Unless (CDF_loc, CDF_scale) is the same for every function named.
         """
-        defaults = {
-            'sin.1': (pi, 2 * pi, (ishigami, {'a': 0.0, 'b': 0.0})),
-            'sin.2': (pi, 2 * pi, (ishigami, {'a': 2.0, 'b': 0.0})),
-            'ishigami': (pi, 2 * pi, (ishigami, {'a': 7.0, 'b': 0.1})),
-            'sobol_g': (0.0, 1.0, (sobol_g, {'m_very_important': 0, 'm_important': 0, 'm_unimportant': 0,
-                                             'a_i_very_important': 0, 'a_i_important': 1, 'a_i_unimportant': 9})),
-            'sobol_g_234': (0.0, 1.0, (sobol_g, {'m_very_important': 2, 'm_important': 3, 'm_unimportant': 4})),
-            'linear': (0.0, 1.0, (linear, {'matrix': None}))
-        }
         function_names = (function_names,) if isinstance(function_names, str) else function_names
-        CDF_loc, CDF_scale, functions_with_parameters = zip(*(defaults[function_name] for function_name in function_names))
+        CDF_loc, CDF_scale, functions_with_parameters = zip(*(FunctionWithParameters.DEFAULTS[function_name] for function_name in function_names))
         return CDF_loc, CDF_scale, tuple((FunctionWithParameters(*fwp) for fwp in functions_with_parameters))
 
     @classmethod
-    def from_meta(cls, meta: Dict[str, Any]) -> 'FunctionWithParameters':
-        """ Construct a FunctionWithParameters from metadata.
+    def from_meta(cls, meta: Dict[str, Any]) -> FunctionWithParameters:
+        """ Construct a FunctionWithParameters from meta data.
 
         Args:
             meta: A ``dict`` produced by ``functionWithParameters.meta``.
@@ -176,10 +184,12 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
 
     @property
     def function(self) -> Callable[..., NP.VectorOrMatrix]:
+        """ The function of this FunctionWithParameters."""
         return self._function
 
     @property
     def parameters(self) -> Dict[str, Numeric]:
+        """ The parameters of this FunctionWithParameters."""
         return self._parameters
 
     @parameters.setter
@@ -188,6 +198,7 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
 
     @property
     def meta(self) -> Dict[str, Any]:
+        """ The meta data of this FunctionWithParameters."""
         parameters_meta = {key: (val.tolist() if isinstance(val, ndarray) else val) for key, val in self._parameters.items()}
         return {'function': self._function.__name__, 'parameters': parameters_meta}
 
@@ -195,8 +206,8 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
         """ Construct function_ with parameters_.
 
         Args:
-            function_:
-            parameters_:
+            function_: The function of this FunctionWithParameters.
+            parameters_: The parameters of this FunctionWithParameters.
         """
         self._function = function_
         self._parameters = parameters_

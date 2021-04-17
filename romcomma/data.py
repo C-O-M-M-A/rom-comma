@@ -21,7 +21,7 @@
 
 """ Encapsulates data storage structures."""
 
-from romcomma.typing_ import Callable, PathLike, ZeroOrMoreInts, List, Tuple, Union, Dict
+from romcomma.typing_ import Callable, PathLike, ZeroOrMoreInts, List, Tuple, Union, Dict, Any, Type
 from copy import deepcopy
 from itertools import chain
 from random import shuffle
@@ -33,16 +33,16 @@ import json
 
 
 class Frame:
-    """ Encapsulates a DataFrame (df) backed by a csv file.
-
-    Attributes:
-        df: The pandas DataFrame.
-    """
-    DEFAULT_CSV_KWARGS = {'sep': ',', 'header': [0, 1], 'index_col': 0, }
+    """ Encapsulates a DataFrame (df) backed by a source file."""
+    @classmethod
+    @property
+    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
+        """ The default options (kwargs) to pass to pandas.read_csv."""
+        return {'sep': ',', 'header': [0, 1], 'index_col': 0, }
 
     @property
     def csv(self) -> Path:
-        """ The csv file."""
+        """ The source file."""
         return self._csv
 
     @property
@@ -51,28 +51,28 @@ class Frame:
         return 0 == len(self._csv.parts)
 
     def write(self):
-        """ Write to csv, according to Frame.DEFAULT_CSV_KWARGS."""
+        """ Write to source, according to Frame.DEFAULT_CSV_KWARGS."""
         assert not self.is_empty, 'Cannot write when frame.is_empty.'
-        self.df.to_csv(self._csv, sep=Frame.DEFAULT_CSV_KWARGS['sep'], index=True)
+        self.df.to_csv(self._csv, sep=Frame.DEFAULT_CSV_OPTIONS['sep'], index=True)
 
     # noinspection PyDefaultArgument
     def __init__(self, csv: PathLike = Path(), df: DataFrame = DataFrame(), **kwargs):
         """ Initialize Frame.
 
         Args:
-            csv: The csv file.
-            df: The initial data. If this is empty, it is read from csv, otherwise it overwrites (or creates) csv.
+            csv: The source file.
+            df: The initial data. If this is empty, it is read from source, otherwise it overwrites (or creates) source.
         Keyword Args:
-            kwargs: Updates Frame.DEFAULT_CSV_KWARGS for csv reading as detailed in
+            kwargs: Updates Frame.DEFAULT_CSV_KWARGS for source reading as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
                 This is not relevant to writing, which just uses Frame.DEFAULT_CSV_KWARGS.
         """
         self._csv = Path(csv)
         if self.is_empty:
-            assert df.empty, 'csv is an empty path, but df is not an empty DataFrame.'
+            assert df.empty, 'source is an empty path, but df is not an empty DataFrame.'
             self.df = df
         elif df.empty:
-            self.df = read_csv(self._csv, **{**Frame.DEFAULT_CSV_KWARGS, **kwargs})
+            self.df = read_csv(self._csv, **{**Frame.DEFAULT_CSV_OPTIONS, **kwargs})
         else:
             self.df = df
             self.write()
@@ -95,16 +95,20 @@ class Store:
         Ultimately the Store class standardizes ``df`` to ``(df - loc)/scale``.
         """
 
-        Specification = Callable[[DataFrame], DataFrame]
+        @classmethod
+        @property
+        def Specification(cls) -> Type[Callable[[DataFrame], DataFrame]]:
+            """ The type of a Standard specification."""
+            return Callable[[DataFrame], DataFrame]
 
-        @staticmethod
-        def __mean(df: DataFrame) -> Series:
+        @classmethod
+        def __mean(cls, df: DataFrame) -> Series:
             mean = df.mean()
             mean.name = 'mean'
             return mean
 
-        @staticmethod
-        def __stack_as_rows(top: Series, bottom: Series):
+        @classmethod
+        def __stack_as_rows(cls, top: Series, bottom: Series):
             return concat([top, bottom], axis=1).T
 
         # noinspection PyUnusedLocal
@@ -126,6 +130,7 @@ class Store:
                     df: The data to be standardized.
                 Returns: The mean and range of data.
             """
+            # noinspection PyArgumentList,PyArgumentList,PyArgumentList,PyArgumentList
             scale = df.max() - df.min()
             scale.name = 'range'
             result = cls.__stack_as_rows(cls.__mean(df), scale)
@@ -148,8 +153,6 @@ class Store:
         READ = auto()
         CREATE = auto()
 
-    DEFAULT_META = {'csv_kwargs': Frame.DEFAULT_CSV_KWARGS, 'standard': Standard.none.__name__, 'data': {}, 'K': 0, 'shuffled before folding': False}
-
     @property
     def dir(self) -> Path:
         """ The Store directory."""
@@ -158,17 +161,17 @@ class Store:
     @property
     def data_csv(self) -> Path:
         """ The Store data file."""
-        return self.__dir / '__data__.csv'
+        return self.__dir / '__data__.source'
 
     @property
     def meta_json(self) -> Path:
-        """ The Store metadata file."""
+        """ The Store meta data file."""
         return self.__dir / '__meta__.json'
 
     @property
     def standard_csv(self) -> Path:
         """ The Store standardization file."""
-        return self.__dir / '__standard__.csv' if self.is_standardized else Path()
+        return self.__dir / '__standard__.source' if self.is_standardized else Path()
 
     @property
     def data(self) -> Frame:
@@ -178,7 +181,7 @@ class Store:
 
     @property
     def meta(self) -> dict:
-        """ The Store metadata."""
+        """ The Store meta data."""
         return self._meta
 
     @property
@@ -220,12 +223,12 @@ class Store:
         return self._meta['standard'] != Store.Standard.none.__name__
 
     def create_standardized_frame(self, csv: PathLike, df: DataFrame) -> Frame:
-        """ Overwrite ``df`` with its standardized version, saving to csv.
+        """ Overwrite ``df`` with its standardized version, saving to source.
 
         Args:
             csv: Locates the return Frame.
             df: The data to standardize.
-        Returns: A Frame written to csv containing df, standardized.
+        Returns: A Frame written to source containing df, standardized.
         """
         if self.is_standardized:
             df = (df - self.standard.df.iloc[0]) / self.standard.df.iloc[1]
@@ -279,6 +282,7 @@ class Store:
             if self.__class__ == Fold:
                 # noinspection PyUnresolvedReferences
                 test = self._test.df.take(indices, axis=1, is_copy=True)
+                # noinspection PyUnresolvedReferences
                 Frame(destination / self.test_csv.name, test)
             else:
                 for k in range(self.K):
@@ -325,7 +329,12 @@ class Store:
         else:
             self.__dir.mkdir(mode=0o777, parents=True, exist_ok=True)
 
-    # noinspection PyDefaultArgument
+    @classmethod
+    @property
+    def DEFAULT_META(cls) -> Dict[str, Any]:
+        """ Default meta data for a store."""
+        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'standard': cls.Standard.none.__name__, 'data': {}, 'K': 0, 'shuffled before folding': False}
+
     @classmethod
     def from_df(cls, dir_: PathLike, df: DataFrame, meta: Dict = DEFAULT_META) -> 'Store':
         """ Create a Store from a DataFrame.
@@ -333,7 +342,7 @@ class Store:
         Args:
             dir_: The location (directory) of the Store.
             df: The data to store in [Return].data_csv.
-            meta: The metadata to store in [Return].meta_json.
+            meta: The meta data to store in [Return].meta_json.
         Returns: A new Store.
         """
         store = Store(dir_, Store.InitMode.CREATE)
@@ -343,34 +352,37 @@ class Store:
         store.standardize(Store.Standard.none)
         return store
 
-    DEFAULT_ORIGIN_CSV_KWARGS = {'skiprows': None, 'index_col': None}
-
-    # noinspection PyDefaultArgument
     @classmethod
-    def from_csv(cls, dir_: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> 'Store':
+    @property
+    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
+        """ The default options (kwargs) to pass to pandas.read_csv."""
+        return {'skiprows': None, 'index_col': None}
+
+    @classmethod
+    def from_csv(cls, dir_: PathLike, source: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> 'Store':
         """ Create a Store from a csv file.
 
         Args:
-            dir_: The location (directory) of the Store.
-            csv: File containing the data to store in [Return].data_csv.
-            meta: The metadata to store in [Return].meta_json.
+            dir_: The location (directory) of the target Store.
+            source: The file containing the data to store in [Return].data_csv.
+            meta: The meta data to store in [Return].meta_json.
             skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
         Keyword Args:
-            kwargs: Updates Store.DEFAULT_ORIGIN_CSV_KWARGS for csv reading, as detailed in
+            kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the source file, as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
-        Returns: A new Store.
+        Returns: A new Store located in dir_.
         """
-        csv = Path(csv)
+        source = Path(source)
         _meta = {**Store.DEFAULT_META, **meta}
-        origin_csv_kwargs = {**cls.DEFAULT_ORIGIN_CSV_KWARGS, **kwargs, **{'skiprows': skiprows}}
-        data = Frame(csv, **origin_csv_kwargs)
-        _meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
+        origin_csv_kwargs = {**cls.DEFAULT_CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
+        data = Frame(source, **origin_csv_kwargs)
+        _meta['origin'] = {'source': str(source.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
         return cls.from_df(dir_, data.df, _meta)
 
 
 class Fold(Store):
-    """ A Fold is defined as a dir containing a ``__data__.csv``, a ``__meta__.json`` file and a ``__test__.csv`` file.
-    A Fold is a Store equipped with a test DataFrame backed by ``__test__.csv``.
+    """ A Fold is defined as a dir containing a ``__data__.source``, a ``__meta__.json`` file and a ``__test__.source`` file.
+    A Fold is a Store equipped with a test DataFrame backed by ``__test__.source``.
 
     Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
     """
@@ -386,7 +398,7 @@ class Fold(Store):
     @property
     def test_csv(self) -> Path:
         """ The test data file. Must be identical in format to the self.data_csv file."""
-        return self.dir / '__test__.csv'
+        return self.dir / '__test__.source'
 
     @property
     def test(self) -> Frame:
@@ -428,7 +440,11 @@ class Fold(Store):
         self._M = M if 0 < M < super().M else super().M
         self._test = Frame(self.test_csv)
 
-    DEFAULT_META = {'parent_dir': '', 'k': -1, 'K': -1}
+    @classmethod
+    @property
+    def DEFAULT_META(cls) -> Dict[str, Any]:
+        """ Default meta data for a fold."""
+        return {'parent_dir': '', 'k': -1, 'K': -1}
 
     @classmethod
     def into_K_folds(cls, parent: Store, K: int, shuffled_before_folding: bool = True,
@@ -457,7 +473,7 @@ class Fold(Store):
         if shuffled_before_folding:
             shuffle(indices)
 
-        # noinspection PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
+        # noinspection PyUnresolvedReferences
         def __fold_from_indices(_k: int, train: List[int], test: List[int]):
             assert len(train) > 0
             meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.dir), 'k': _k, 'K': parent.K}}
@@ -473,8 +489,8 @@ class Fold(Store):
             else:
                 fold._test = fold.create_standardized_frame(fold.test_csv, parent.data.df.iloc[test])
 
-        # noinspection PyUnusedLocal
         def __indicators():
+            # noinspection PyUnusedLocal
             K_blocks = [list(range(K)) for i in range(int(N / K))]
             K_blocks.append(list(range(N % K)))
             for K_range in K_blocks:

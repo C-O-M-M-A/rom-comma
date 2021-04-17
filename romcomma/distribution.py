@@ -39,22 +39,29 @@ class SampleDesign(Enum):
 class Univariate:
     """ A univariate, fully parametrized (SciPy frozen) continuous distribution."""
 
-    SUPER_FAMILY: ClassVar[Type[stats.rv_continuous]] = stats.rv_continuous     # The SciPy (super) family of continuous, univariate distributions
+    @classmethod
+    @property
+    def SUPER_FAMILY(cls) -> Type[stats.rv_continuous]:
+        """ The SciPy (super) family of continuous, univariate distributions."""
+        return stats.rv_continuous
 
-    @staticmethod
-    def CLASS_FAMILY() -> Dict[str, Type[stats.rv_continuous]]:
+    @classmethod
+    @property
+    def CLASS_FAMILY(cls) -> Dict[str, Type[stats.rv_continuous]]:
         """ The romcomma dictionary of univariate distribution classes."""
         return {_class.__name__[:-4]: _class for _class in Univariate.SUPER_FAMILY.__subclasses__() if _class.__name__[-4:] == '_gen'}
 
-    @staticmethod
-    def OBJECT_FAMILY() -> Dict[str, stats.rv_continuous]:
+    @classmethod
+    @property
+    def OBJECT_FAMILY(cls) -> Dict[str, stats.rv_continuous]:
         """ The romcomma dictionary of unparametrized univariate distribution objects."""
-        return {name_: Fam() for name_, Fam in Univariate.CLASS_FAMILY().items()}
+        return {name_: Fam() for name_, Fam in Univariate.CLASS_FAMILY.items()}
 
-    @staticmethod
-    def NAME_FAMILY() -> Tuple[str]:
+    @classmethod
+    @property
+    def NAME_FAMILY(cls) -> Tuple[str]:
         """ The romcomma list of unparametrized univariate distributions."""
-        return tuple(Univariate.CLASS_FAMILY().keys())
+        return tuple(Univariate.CLASS_FAMILY.keys())
     
     @classmethod
     def parameter_defaults(cls, name: str) -> dict:
@@ -64,7 +71,7 @@ class Univariate:
             name: The name of the univariate distribution to interrogate.
         Returns: A Dict of parameters and their default values.
         """
-        keys = cls.OBJECT_FAMILY()[name].shapes.split(',') if cls.OBJECT_FAMILY()[name].shapes else []
+        keys = cls.OBJECT_FAMILY[name].shapes.split(',') if cls.OBJECT_FAMILY[name].shapes else []
         return {**{'name': name, 'loc': 0, 'scale': 1}, **{_key: None for _key in keys}}
 
     @property
@@ -86,7 +93,7 @@ class Univariate:
     def unparametrized(self) -> SUPER_FAMILY:
         """ A **new** instance of the unparametrized distribution. An existing unparametrized instance is always available through Univariate.family[name].
         """
-        return Univariate.CLASS_FAMILY()[self._name]()
+        return Univariate.CLASS_FAMILY[self._name]()
 
     def rvs(self, N: int, M: int) -> NP.Vector:
         """ Random variate sample from this distribution.Univariate.

@@ -46,13 +46,13 @@ from numpy import atleast_1d, atleast_2d, full, broadcast_to, transpose
 from pandas import concat
 from enum import Enum
 from pathlib import Path
-from romcomma.model import gpflow_
+from romcomma.model import implemented_in_gpflow
 import time
 
 
 class Module(Enum):
     """ Enumerate implementations of model.base. Each implementation is a module."""
-    GPFLOW_ = gpflow_
+    GPFLOW_ = implemented_in_gpflow
 
 
 def GPs(module: Module, name: str, store: Store, M: Union[int, List[int]], parameters: Optional[base.GP.Parameters],
@@ -63,11 +63,11 @@ def GPs(module: Module, name: str, store: Store, M: Union[int, List[int]], param
     Args:
         module: Sets the implementation to either Module.GPY_ or Module.SCIPY_.
         name: The GP name.
-        store: The source of the training __data__.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
+        store: The source of the training __data__.source. May be a Fold, or a Split (whose Folds are to be analyzed),
             or a Store which contains Splits or Folds.
         M: The number of input dimensions to use. If a list is given, its length much match the number of Splits in store.
             Fold.M is actually used for the current Fold, but Folds are initialized with M
-            (with the usual proviso that M is between 1 and the number of input columns in __data__.csv).
+            (with the usual proviso that M is between 1 and the number of input columns in __data__.source).
         parameters: The parameters with which to initialize each GP. If None, these are read from Fold/name in each Fold.
             If provided, follow the instructions in base.py, in particular populate parameters.kernel with the Kernel.Parameters NamedTuple
             (not numpy array!) needed to construct the kernel.
@@ -126,16 +126,16 @@ def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union
     Args:
         module: Sets the implementation to either Module.GPY_ or Module.SCIPY_.
         name: The ROM name.
-        store: The source of the training __data__.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
+        store: The source of the training __data__.source. May be a Fold, or a Split (whose Folds are to be analyzed),
             or a Store which contains Splits or Folds.
         source_gp_name: The name of the source GP for the ROM. Must exist in every Fold.
         Mu: The dimensionality of the rotated basis. If a list is given, its length much match the number of Splits in store.
             If Mu is not between 1 and Mx, Mx is used
-            (where Mx is replaced by  the number of input columns in __data__.csv whenever Mx is not between 1 and the number of input columns in
-            __data__.csv).
+            (where Mx is replaced by  the number of input columns in __data__.source whenever Mx is not between 1 and the number of input columns in
+            __data__.source).
         Mx: The number of input dimensions to use. If a list is given, its length much match the number of Splits in store.
             Fold.M is actually used for the current Fold, but Folds are initialized with Mx
-            (with the usual proviso that Mx is between 1 and the number of input columns in __data__.csv).
+            (with the usual proviso that Mx is between 1 and the number of input columns in __data__.source).
         optimizer_options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.ROM.DEFAULT_OPTIMIZER_OPTIONS.
 
     Raises:
@@ -203,7 +203,7 @@ def collect(store: Store, model_name: str, parameters: base.Model.Parameters, is
             destination.mkdir(mode=0o777, parents=True, exist_ok=True)
             for k in range(K):
                 fold = Fold(split_store, k)
-                source = (fold.dir / model_name) / (param + ".csv")
+                source = (fold.dir / model_name) / (param + ".source")
                 if param == "Theta":
                     result = Frame(source, **base.Model.CSV_PARAMETERS).df
                 else:
@@ -213,7 +213,7 @@ def collect(store: Store, model_name: str, parameters: base.Model.Parameters, is
                     parameters[param] = result.copy(deep=True)
                 else:
                     parameters[param] = concat([parameters[param], result.copy(deep=True)], axis=0, ignore_index=True)
-            frame = Frame(destination / (param + ".csv"), parameters[param])
+            frame = Frame(destination / (param + ".source"), parameters[param])
             if is_split:
                 result = frame.df
                 result.insert(0, "Split", full(result.shape[0], split[0]), True)
@@ -222,7 +222,7 @@ def collect(store: Store, model_name: str, parameters: base.Model.Parameters, is
                 else:
                     final_parameters[param] = concat([final_parameters[param], result.copy(deep=True)], axis=0, ignore_index=True)
         # noinspection PyUnusedLocal
-        frame = Frame(final_destination / (param + ".csv"), final_parameters[param]) if is_split else None
+        frame = Frame(final_destination / (param + ".source"), final_parameters[param]) if is_split else None
     return splits
 
 
@@ -250,7 +250,7 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
         destination.mkdir(mode=0o777, parents=True, exist_ok=True)
         for k in range(K):
             fold = Fold(split_store, k)
-            source = (fold.dir / model_name) / "__test__.csv"
+            source = (fold.dir / model_name) / "__test__.source"
             result = Frame(source).df
             result.insert(0, "Fold", full(result.shape[0], k), True)
             std = result.iloc[:, -1]
@@ -258,7 +258,7 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
             out = result.iloc[:, -3]
             result.iloc[:, -3] = (out - mean) / std
             if k == 0:
-                frame = Frame(destination / "__test__.csv", result.copy(deep=True))
+                frame = Frame(destination / "__test__.source", result.copy(deep=True))
             else:
                 frame.df = concat([frame.df, result.copy(deep=True)], axis=0, ignore_index=False)
         frame.write()
@@ -270,7 +270,7 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
             result.insert(0, "Split", full(result.shape[0], split_index), True)
             result = result.reset_index()
             if split_index == 0:
-                final_frame = Frame(final_destination / "__test__.csv", result.copy(deep=True))
+                final_frame = Frame(final_destination / "__test__.source", result.copy(deep=True))
             else:
                 final_frame.df = concat([final_frame.df, result.copy(deep=True)], axis=0, ignore_index=True)
     if is_split:
@@ -314,7 +314,7 @@ def rotate_inputs(gb_path: Union[str, Path], X_stand: NP.Matrix) -> NP.Matrix:
     Mu = int(gb_path.suffix[1:])
     fold_dir = gb_path.parent
     sobol = fold_dir / "ROM.optimized" / "sobol"
-    theta_T = transpose(Frame(sobol / "Theta.csv", csv_parameters={'header': [0]}).df.values)
+    theta_T = transpose(Frame(sobol / "Theta.source", csv_parameters={'header': [0]}).df.values)
     k = int(fold_dir.suffix[1:])
     M = Fold(fold_dir.parent, k, Mu).M +1
     if 0 < Mu < M:

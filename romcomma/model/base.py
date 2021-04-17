@@ -48,7 +48,7 @@ class Model(ABC):
     defining the parameter set it takes.
 
     ``model.parameters`` is a ``NamedTuple`` of NP.Matrices.
-    If ``model.with_frames``, each parameter is backed by a csv file, otherwise no file operations are involved.
+    If ``model.with_frames``, each parameter is backed by a source file, otherwise no file operations are involved.
 
     In case ``model.parameters is None``, ``model.parameters`` is read from ``model.dir``.
     """
@@ -90,7 +90,7 @@ class Model(ABC):
 
     @property
     def with_frames(self) -> bool:
-        """ Whether the Model has csv files backing its parameters."""
+        """ Whether the Model has source files backing its parameters."""
         return bool(self._dir.parts)
 
     @property
@@ -106,20 +106,20 @@ class Model(ABC):
 
     @property
     def parameters_csv(self) -> Parameters:
-        """ A Model.Parameters NamedTuple of the csv files backing the model.parameters."""
+        """ A Model.Parameters NamedTuple of the source files backing the model.parameters."""
         return self._parameters_csv
 
     def read_parameters(self):
-        """ Read model.parameters from their csv files."""
+        """ Read model.parameters from their source files."""
         assert self.with_frames
         self._parameters = self.Parameters(*(Frame(self._parameters_csv[i], **self.CSV_PARAMETERS).df.values for i, p in enumerate(self.DEFAULT_PARAMETERS)))
 
     def write_parameters(self, parameters: Parameters) -> Parameters:
-        """ Write model.parameters to their csv files.
+        """ Write model.parameters to their source files.
 
         Args:
             parameters: The NamedTuple to be the new value for self.parameters.
-        Returns: The NamedTuple written to csv. Essentially self.parameters, but with Frames in place of Matrices.
+        Returns: The NamedTuple written to source. Essentially self.parameters, but with Frames in place of Matrices.
         """
         assert self.with_frames
         self._parameters = self.Parameters(*(atleast_2d(p) for p in parameters))
@@ -170,7 +170,7 @@ class Model(ABC):
                 If None then model.parameters are read from dir_, otherwise they are written to dir_, provided model.with_frames.
         """
         self._dir = Path(dir_)
-        self._parameters_csv = self.Parameters(*((self._dir / field).with_suffix(".csv") for field in self.DEFAULT_PARAMETERS._fields))
+        self._parameters_csv = self.Parameters(*((self._dir / field).with_suffix(".source") for field in self.DEFAULT_PARAMETERS._fields))
         if parameters is None:
             self.read_parameters()
         else:
@@ -331,7 +331,7 @@ class GP(Model):
 
     @property
     def test_csv(self) -> Path:
-        return self._dir / "__test__.csv"
+        return self._dir / "__test__.source"
 
     @property
     def N(self) -> int:
@@ -518,7 +518,7 @@ class Sobol(Model):
             if isinstance(meta, Sobol.SemiNorm):
                 return meta
             if not isinstance(meta, dict):
-                raise TypeError("SemiNorm metadata must be a Dict or a SemiNorm, not a {0}.".format(type(meta)))
+                raise TypeError("SemiNorm meta data must be a Dict or a SemiNorm, not a {0}.".format(type(meta)))
             if meta['classmethod'] == 'element':
                 return cls.element(meta['L'], **meta['kwargs'])
             else:
@@ -753,11 +753,11 @@ class Sobol(Model):
         # self.replace_X_with_U()
 
     # def write_parameters(self, parameters: Parameters) -> Parameters:
-    #     """ Calculate the main Sobol' indices _S1, then write model.parameters to their csv files.
+    #     """ Calculate the main Sobol' indices _S1, then write model.parameters to their source files.
     #
     #     Args:
     #         parameters: The NamedTuple to be the new value for self.parameters.
-    #     Returns: The NamedTuple written to csv. Essentially self.parameters, but with Frames in place of Matrices.
+    #     Returns: The NamedTuple written to source. Essentially self.parameters, but with Frames in place of Matrices.
     #     """
     #     if self._m is not None:
     #         m_saved = self._m

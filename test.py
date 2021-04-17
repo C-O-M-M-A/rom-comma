@@ -23,7 +23,7 @@
 
 from romcomma import model
 from romcomma.data import Fold, Store
-from romcomma.function import FunctionWithParameters, functions_of_normal, linear
+from romcomma.function import Matrix, FunctionWithParameters, functions_of_normal
 from numpy import eye, savetxt, transpose, full
 from pathlib import Path
 from scipy.stats import ortho_group
@@ -36,22 +36,22 @@ def run_gps(name, function_name: str, N: int, noise_std: float, random: bool, M:
     store_dir = f'{function_name}.{M:d}.{noise_std:.3f}.{N:d}'
     if random:
         lin_trans = ortho_group.rvs(M)
-        input_transform = FunctionWithParameters(function_=linear, parameters_={'matrix': lin_trans})
+        input_transform = FunctionWithParameters(function_=Matrix.multiply, parameters_={'matrix': lin_trans})
         store_dir += '.random'
     else:
         lin_trans = eye(M)
         input_transform = None
         store_dir += '.rom'
     store_dir = BASE_PATH / store_dir
-    CDF_loc, CDF_scale, functions = FunctionWithParameters.DEFAULT(function_name)
+    CDF_loc, CDF_scale, functions = FunctionWithParameters.default(function_name)
     store = functions_of_normal(store_dir=store_dir, N=N, M=M, CDF_loc=CDF_loc, CDF_scale=CDF_scale,
                                 input_transform=input_transform, functions=functions, noise_std=noise_std)
-    savetxt(store.dir / 'InverseRotation.csv', transpose(lin_trans))
+    savetxt(store.dir / 'InverseRotation.source', transpose(lin_trans))
     Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
     gp_optimizer_options = {'optimizer': 'bfgs', 'max_iters': 5000, 'gtol': 1E-16}
-    kernel_parameters = model.gpflow_.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5 ** (M / 5), dtype=float))
+    kernel_parameters = model.implemented_in_gpflow.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5 ** (M / 5), dtype=float))
     # noinspection PyProtectedMember
-    gp_parameters = model.gpflow_.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
+    gp_parameters = model.implemented_in_gpflow.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
     # model.run.GPs(module=model.run.Module.GPFLOW_, name=name, store=store, M=-1, parameters=gp_parameters, optimize=True, test=True, sobol=False,
     #               optimizer_options=gp_optimizer_options, make_ard=False)
     # model.run.GPs(module=model.run.Module.GPFLOW_, name=name, store=store, M=-1, parameters=None, optimize=True, test=True, sobol=False,
@@ -59,6 +59,7 @@ def run_gps(name, function_name: str, N: int, noise_std: float, random: bool, M:
 
 
 if __name__ == '__main__':
+    cunt = FunctionWithParameters.DEFAULTS
     for N in (800,):
         for noise_std in (0,):
             for random in (False,):

@@ -249,7 +249,7 @@ class Sobol(base.Sobol):
             if isinstance(meta, Sobol.SemiNorm):
                 return meta
             if not isinstance(meta, dict):
-                raise TypeError("SemiNorm metadata must be a Dict or a SemiNorm, not a {0}.".format(type(meta)))
+                raise TypeError("SemiNorm meta data must be a Dict or a SemiNorm, not a {0}.".format(type(meta)))
             if meta['classmethod'] == 'element':
                 return cls.element(meta['L'], **meta['kwargs'])
             else:
