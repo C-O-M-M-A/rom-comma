@@ -61,6 +61,7 @@ def ishigami(X: NP.MatrixLike, a: float = 7.0, b: float = 0.1) -> NP.Vector:
     elif 2 == X.shape[1]:
         return sin(X[:, [0]]) + a * sin(X[:, [1]]) ** 2
     else:
+        ishigami = (sin(X[:, [0]]) + (a * sin(X[:, [1]]) ** 2) + (b * (X[:, [2]] ** 4) * sin(X[:, [0]]))
         return (1 + b * X[:, [2]] ** 4) * sin(X[:, [0]]) + a * sin(X[:, [1]]) ** 2
 
 
