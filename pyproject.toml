@@ -29,7 +29,7 @@ requires = [
     "scipy >= 1.6.2",
     "tensorflow >= 2.5.0",
     "tensorflow-probability >= 0.12.2",
-    "gpflow >= 2.1.5",
+    "gpflow >= 2.2.1",
     "pyDOE2 >= 1.3.0"
 ]
 build-backend = "setuptools.build_meta"

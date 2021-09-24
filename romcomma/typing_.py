@@ -22,8 +22,12 @@
 """ Adds extra Types to the standard library typing package."""
 
 import numpy
+# noinspection PyPep8Naming
+import tensorflow as TF
 from typing import *
 from pathlib import Path
+
+EFFECTIVELY_ZERO = 1.0E-64
 
 Numeric = Union[int, float]
 OneOrMoreInts = Union[int, Sequence[int]]
@@ -33,12 +37,12 @@ ZeroOrMoreFloats = Optional[OneOrMoreFloats]
 Module = type(numpy)
 
 PathLike = Union[str, Path]
+Unused = TF.exp
 
 
 # noinspection PyPep8Naming
 class NP:
     """ Extended numpy types."""
-
     Array = numpy.ndarray
     Tensor = numpy.ndarray  # Generic Tensor.
     Tensor4 = Tensor    # Fourth Order Tensor, ndarray.shape = (i,j,k,l).

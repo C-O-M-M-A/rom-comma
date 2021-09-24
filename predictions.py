@@ -5,7 +5,7 @@ A function that can be used to make predictions on a test data csv file using ei
 Some terminology on the directories:
 Base_Path: the base path is where the initial data is found.
 Store: inside the base path there maybe multiple stores depending on how the data has been treated using "store_and_fold".
-Split: the next directory will usually be the splits if the data has more than 1 output.
+Split: the next folder will usually be the splits if the data has more than 1 output.
 Fold: Each fold will then be found.
 Models: The models can be the GP (e.g. "ARD") or a ROM (e.g. "ROM.optimized"). Each rotation of the ROM will be in here too (e.g. "ROM.0").
 After that, files are collected together back down these directories.
@@ -73,7 +73,7 @@ def make_predictions(input_source: str, store_name: str, is_split: bool = True, 
                            test=[index for index, indicator in zip(indices, indicators) if k == indicator])
         def _fold_from_indices(_k: int, train: List[int], test: List[int]):
             assert len(train) > 0
-            meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.dir), 'k': _k,
+            meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.folder), 'k': _k,
                                     'K': parent.K}}
             fold = Store.from_df(parent.fold_dir(_k), parent.data.df.iloc[train], meta)
             fold.standardize(standard)

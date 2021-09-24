@@ -37,13 +37,11 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 
 from __future__ import annotations
 
+from romcomma.typing_ import *
 from numpy import atleast_2d, arange, prod, sin, einsum, concatenate, ndarray, array, pi
 from pandas import DataFrame, MultiIndex
-
-from romcomma import EFFECTIVELY_ZERO
 from romcomma.data import Store
 from romcomma.distribution import SampleDesign, Multivariate, Univariate
-from romcomma.typing_ import NP, Callable, Dict, Numeric, Sequence, Any, PathLike, Generic, Tuple
 
 
 def ishigami(X: NP.MatrixLike, a: float = 7.0, b: float = 0.1) -> NP.Vector:
@@ -168,7 +166,7 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
         """
         function_names = (function_names,) if isinstance(function_names, str) else function_names
         CDF_loc, CDF_scale, functions_with_parameters = zip(*(FunctionWithParameters.DEFAULTS[function_name] for function_name in function_names))
-        return CDF_loc, CDF_scale, tuple((FunctionWithParameters(*fwp) for fwp in functions_with_parameters))
+        return CDF_loc, CDF_scale, tuple(FunctionWithParameters(*fwp) for fwp in functions_with_parameters)
 
     @classmethod
     def from_meta(cls, meta: Dict[str, Any]) -> FunctionWithParameters:
@@ -266,7 +264,7 @@ def sample(store_dir: PathLike, N: int, X_distribution: Multivariate.Independent
         meta['origin']['noise_distribution'] = noise_distribution.parameters
     columns = [('X', f'X[{i:d}]') for i in range(X.shape[1])] + [('Y', f'Y[{i:d}]') for i in range(Y.shape[1])]
     df = DataFrame(concatenate((X, Y), axis=1), columns=MultiIndex.from_tuples(columns), dtype=float)
-    return Store.from_df(dir_=store_dir, df=df, meta=meta)
+    return Store.from_df(folder=store_dir, df=df, meta=meta)
 
 
 def functions_of_normal(store_dir: PathLike, N: int, M: int, CDF_loc: NP.CovectorLike = None, CDF_scale: NP.CovectorLike = None,

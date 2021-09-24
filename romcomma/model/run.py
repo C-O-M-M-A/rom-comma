@@ -38,8 +38,9 @@
 
     **collect_tests** function to instantiate the collection of test results.
 """
+import gpflow.config
 
-from romcomma.typing_ import NP, Optional, Sequence, Union, List, Dict
+from romcomma.typing_ import *
 from romcomma.data import Store, Fold, Frame
 from romcomma.model import base
 from numpy import atleast_1d, atleast_2d, full, broadcast_to, transpose
@@ -48,102 +49,170 @@ from enum import Enum
 from pathlib import Path
 from romcomma.model import implemented_in_gpflow
 import time
+from contextlib import contextmanager
 
 
-class Module(Enum):
-    """ Enumerate implementations of model.base. Each implementation is a module."""
-    GPFLOW_ = implemented_in_gpflow
+class Implementation(Enum):
+    """ An Enum indexing model implementations (i.e. modules). """
+    GPFLOW: Module = implemented_in_gpflow
 
 
-def GPs(module: Module, name: str, store: Store, M: Union[int, List[int]], parameters: Optional[base.GP.Parameters],
-        optimize: bool, test: bool, sobol: bool, optimizer_options: Dict = None, semi_norm: Dict = base.Sobol.SemiNorm.DEFAULT_META,
-        make_ard: bool=False):
-    """ Service routine to recursively run GPs on the Splits in a Store, the Folds in a Split or Store, and on a single Fold.
+IMPLEMENTATION: Implementation = Implementation.GPFLOW      # The implementation module to use. Reset using Context
+
+
+@contextmanager
+def Timing(name: str):
+    """ Context Manager for timing operations.
 
     Args:
-        module: Sets the implementation to either Module.GPY_ or Module.SCIPY_.
+        name: The name of this context, this appears as what is being timed. The empty string will not be timed.
+    """
+    _enter = time.time()
+    yield
+    if name != '':
+        _exit = time.time()
+        print(f'Timing {(_exit-_enter)/60:.1f}min for {name}.')
+
+
+@contextmanager
+def Running(name: str, implementation: Implementation = IMPLEMENTATION, device: str = '', **kwargs: Any):
+    """ Context Manager for running operations.
+
+    Args:
+        name: The name of this context, this appears as what is being run.
+        device: The device to run on. If this ends in the regex ``[C,G]PU*`` then the logical device ``/[C,G]*`` is used,
+            otherwise device allocation is automatic.
+        implementation: An Implementation Enum specifying the implementation library for this run.
+        **kwargs: Is passed straight to the implementation configuration manager.
+    """
+    timing = Timing(f'running {name}')
+    message = f'Running {name} in {implementation.name.lower()}'
+    global IMPLEMENTATION
+    saved_implementation, IMPLEMENTATION = IMPLEMENTATION, implementation
+    device_manager = Timing('')
+    implementation_manager = Timing('')
+    if IMPLEMENTATION == Implementation.GPFLOW:
+        device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
+        if len(device) > 3:
+            device_manager = implemented_in_gpflow.tf.device(device)
+            message += f' on {device}'
+        implementation_manager = gpflow.config.as_context(gpflow.config.Config(**kwargs))
+    print(f'{message}...')
+    yield
+    device_manager.next()
+    implementation_manager.next()
+    IMPLEMENTATION = saved_implementation
+    print(f'...finished running {name}.')
+    timing.next()
+
+
+def GPs(name: str, store: Store, M: int, is_read: bool, shared_lengthscales: bool, is_isotropic: bool,
+        kernel_parameters: base.Kernel.Parameters = base.Kernel.Parameters(), parameters: base.GP.Parameters = base.GP.Parameters(),
+        optimize: bool = True, test: bool = True,
+        # sobol: bool, semi_norm: Dict = base.Sobol.SemiNorm.DEFAULT_META
+        **kwargs: Any):
+    """ Service routine to recursively run GPs the Folds in a Store, and on a single Fold.
+
+    Args:
         name: The GP name.
-        store: The source of the training __data__.source. May be a Fold, or a Split (whose Folds are to be analyzed),
+        store: The source of the training __data__.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
             or a Store which contains Splits or Folds.
-        M: The number of input dimensions to use. If a list is given, its length much match the number of Splits in store.
-            Fold.M is actually used for the current Fold, but Folds are initialized with M
-            (with the usual proviso that M is between 1 and the number of input columns in __data__.source).
-        parameters: The parameters with which to initialize each GP. If None, these are read from Fold/name in each Fold.
-            If provided, follow the instructions in base.py, in particular populate parameters.kernel with the Kernel.Parameters NamedTuple
-            (not numpy array!) needed to construct the kernel.
+        M: The number of input dimensions to use.
+        is_read: If True, the GP.kernel.parameters and GP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
+        shared_lengthscales: Whether to share lengthscales across kernels.
+        is_isotropic: Whether to coerce the kernel to be isotropic.
+        kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. This will be ignored/overridden if ``read_parameters == True``.
+        parameters: The GP.parameters fields=values to replace after reading from file/defaults.
         optimize: Whether to optimize each GP.
         test: Whether to test each GP.
         sobol: Whether to calculate Sobol' indices for each GP.
-        optimizer_options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.DEFAULT_OPTIMIZER_OPTIONS.
         semi_norm: Meta json describing a Sobol.SemiNorm.
-        make_ard: True makes a new ARD GP.
+        kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.DEFAULT_OPTIMIZER_OPTIONS.
+
     Raises:
-        IndexError: If M is a list and len(M) != len(store.splits).
-        FileNotFoundError: If store is not a Fold, and contains neither Splits nor Folds.
+        FileNotFoundError: If store is not a Fold, and contains no Folds.
     """
-    optimizer_options = module.value.GP.DEFAULT_OPTIMIZER_OPTIONS if optimizer_options is None else optimizer_options
-    splits = store.splits
-    if splits:
-        if isinstance(M, list):
-            if len(M) != len(splits):
-                raise IndexError("M has {0:d} elements which does not match the number of splits ({1:d}).".format(len(M),
-                                                                                                                       len(splits)))
-        else:
-            M = [M] * len(splits)
-        for split_index, split_dir in splits:
-            split = Store(split_dir)
-            GPs(module, name, split, M[split_index], parameters, optimize, test, sobol, optimizer_options, semi_norm, make_ard)
-    elif not isinstance(store, Fold):
-        start_time = time.time()
-        K_range = range(store.meta['K'])
-        if K_range:
-            for k in K_range:
-                GPs(module, name, Fold(store, k, M), M, parameters, optimize, test, sobol, optimizer_options, semi_norm, make_ard)
-                print("Fold", k, "has finished")
-        else:
-            raise FileNotFoundError('Cannot construct a GP in a Store ({0:s}) which is not a Fold.'.format(store.dir))
-        elapsed_mins = (time.time() - start_time) / 60
-        print(store.dir.name, "has finished in {:.2f} minutes.".format(elapsed_mins))
+    if not isinstance(store, Fold):
+        K = range(store.meta['K'])
+        if not K:
+            raise FileNotFoundError(f'Cannot construct a GP in a Store ({store.folder:s}) which is not a Fold.')
+        for k in K:
+            if is_isotropic or is_isotropic is None:
+                full_name = name + '.isotr'
+                fold = Fold(store, k, M)
+                with Running(f'{full_name} on Fold {k}'):
+                    GPs(full_name, fold, M, is_read, shared_lengthscales, True, kernel_parameters, parameters,
+                        optimize, test,
+                        # sobol, semi_norm,
+                        **kwargs)
+                if is_isotropic:
+                    return
+                else:
+                    name += '.aniso'
+                    name, full_name = full_name, name
+                    base.GP.copy(src_folder=fold.folder/name, dst_folder=fold.folder/full_name)
+                    fold = Fold(store, k, M)
+                    with Running(f'{full_name} on Fold {k}'):
+                        GPs(full_name, fold, M, is_read, shared_lengthscales, True, kernel_parameters, parameters,
+                            optimize, test,
+                            # sobol, semi_norm,
+                            **kwargs)
+                if is_isotropic is None:
+                    name += '.aniso'
+                    name, full_name = full_name, name
+                    base.GP.copy(src_folder=fold.folder/name, dst_folder=fold.folder/full_name)
+                    with Running(f'{full_name} on Fold {k}'):
+                        GPs(full_name, fold, M, is_read, shared_lengthscales, True, kernel_parameters, parameters,
+                            optimize, test,
+                            # sobol, semi_norm,
+                            **kwargs)
     else:
-        if make_ard:
-            base.Model.copy(store.dir / name, store.dir / (name + '.ard'))
-            name += '.ard'
-            kernel = module.value.Kernel.ExponentialQuadratic(None, None, (store.dir / name) / module.value.GP.KERNEL_NAME)
-            kernel.make_ard(store.M)
-        gp = module.value.GP(fold=store, name=name, parameters=parameters)
+        """     def __init__(self, fold: Fold, name: str, is_read: bool, shared_lengthscales: bool, is_isotropic: bool,
+                         kernel_parameters: Kernel.Parameters = Kernel.ARD.Parameters(), **kwargs: NP.Matrix):
+        """
+        params = parameters.as_dict()
+        if not is_isotropic:
+            name += '.aniso'
+            gp = IMPLEMENTATION.value.GP(store, name, is_read, shared_lengthscales, False, kernel_parameters, **params)
+            if not is_read:
+                is_isotropic = True
+                name += '.isotr'
+                gp = IMPLEMENTATION.value.GP(store, name, is_read, shared_lengthscales, is_isotropic, kernel_parameters, **params)
+        else:
+            gp = IMPLEMENTATION.value.GP(store, name, is_read, shared_lengthscales, is_isotropic, kernel_parameters, **params)
         if optimize:
-            gp.optimize(**optimizer_options)
+            gp.optimize(**kwargs)
         if test:
             gp.test()
-        if sobol:
-            module.value.Sobol(gp, semi_norm)
+        # if sobol:
+        #     module.value.Sobol(gp, semi_norm)
 
 
 def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
-         optimizer_options: Dict = None, rbf_parameters: Optional[base.GP.Parameters] = None):
+         options: Dict = None, rbf_parameters: Optional[base.GP.Parameters] = None):
     """ Service routine to recursively run ROMs on the Splits in a Store, the Folds in a Split or Store, and on a single Fold.
 
     Args:
         module: Sets the implementation to either Module.GPY_ or Module.SCIPY_.
         name: The ROM name.
-        store: The source of the training __data__.source. May be a Fold, or a Split (whose Folds are to be analyzed),
+        store: The source of the training __data__.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
             or a Store which contains Splits or Folds.
         source_gp_name: The name of the source GP for the ROM. Must exist in every Fold.
         Mu: The dimensionality of the rotated basis. If a list is given, its length much match the number of Splits in store.
             If Mu is not between 1 and Mx, Mx is used
-            (where Mx is replaced by  the number of input columns in __data__.source whenever Mx is not between 1 and the number of input columns in
-            __data__.source).
+            (where Mx is replaced by  the number of input columns in __data__.csv whenever Mx is not between 1 and the number of input columns in
+            __data__.csv).
         Mx: The number of input dimensions to use. If a list is given, its length much match the number of Splits in store.
             Fold.M is actually used for the current Fold, but Folds are initialized with Mx
-            (with the usual proviso that Mx is between 1 and the number of input columns in __data__.source).
-        optimizer_options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.ROM.DEFAULT_OPTIMIZER_OPTIONS.
+            (with the usual proviso that Mx is between 1 and the number of input columns in __data__.csv).
+        options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.ROM.DEFAULT_OPTIMIZER_OPTIONS.
 
     Raises:
         IndexError: If Mu is a list and len(Mu) != len(store.splits).
         IndexError: If Mx is a list and len(Mu) != len(store.splits).
         FileNotFoundError: If store is not a Fold, and contains neither Splits nor Folds.
     """
-    optimizer_options = module.value.ROM.DEFAULT_OPTIMIZER_OPTIONS if optimizer_options is None else optimizer_options
+    options = module.value.ROM.DEFAULT_OPTIONS if options is None else options
     splits = store.splits
     if splits:
         if isinstance(Mx, list):
@@ -158,20 +227,20 @@ def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union
             Mu = [Mu] * len(splits)
         for split_index, split_dir in splits:
             split = Store(split_dir)
-            ROMs(module, name, split, source_gp_name, Mu[split_index], Mx[split_index], optimizer_options, rbf_parameters)
+            ROMs(module, name, split, source_gp_name, Mu[split_index], Mx[split_index], options, rbf_parameters)
     elif not isinstance(store, Fold):
         start_time = time.time()
         K_range = range(store.meta['K'])
         if K_range:
             for k in K_range:
-                ROMs(module, name, Fold(store, k, M=Mx), source_gp_name, Mu, Mx, optimizer_options, rbf_parameters)
+                ROMs(module, name, Fold(store, k, M=Mx), source_gp_name, Mu, Mx, options, rbf_parameters)
                 print("Fold", k, "has finished")
         else:
-            raise FileNotFoundError('Cannot construct a GP in a Store ({0:s}) which is not a Fold.'.format(store.dir))
+            raise FileNotFoundError('Cannot construct a GP in a Store ({0:s}) which is not a Fold.'.format(store.folder))
         elapsed_mins = (time.time() - start_time) / 60
-        print(store.dir.name, "has finished in {:.2f} minutes.".format(elapsed_mins))
+        print(store.folder.name, "has finished in {:.2f} minutes.".format(elapsed_mins))
     else:
-        module.value.ROM.from_GP(fold=store, name=name, source_gp_name=source_gp_name, optimizer_options=optimizer_options, Mu=Mu,
+        module.value.ROM.from_GP(fold=store, name=name, source_gp_name=source_gp_name, options=options, Mu=Mu,
                                  rbf_parameters=rbf_parameters)
 
 
@@ -189,31 +258,31 @@ def collect(store: Store, model_name: str, parameters: base.Model.Parameters, is
     parameters = parameters._asdict()
     final_parameters = parameters.copy()
     if is_split:
-        final_destination = store.dir / model_name
+        final_destination = store.folder / model_name
         final_destination.mkdir(mode=0o777, parents=True, exist_ok=True)
         splits = store.splits
     else:
         final_destination = None
-        splits = [(None, store.dir)]
+        splits = [(None, store.folder)]
     for param in parameters.keys():
         for split in splits:
             split_store = Store(split[-1])
             K = split_store.meta['K']
-            destination = split_store.dir / model_name
+            destination = split_store.folder / model_name
             destination.mkdir(mode=0o777, parents=True, exist_ok=True)
             for k in range(K):
                 fold = Fold(split_store, k)
-                source = (fold.dir / model_name) / (param + ".source")
+                source = (fold.folder / model_name) / (param + ".csv")
                 if param == "Theta":
-                    result = Frame(source, **base.Model.CSV_PARAMETERS).df
+                    result = Frame(source, **base.Model.CSV_OPTIONS).df
                 else:
-                    result = Frame(source, **base.Model.CSV_PARAMETERS).df.tail(1)
+                    result = Frame(source, **base.Model.CSV_OPTIONS).df.tail(1)
                 result.insert(0, "Fold", full(result.shape[0], k), True)
                 if k == 0:
                     parameters[param] = result.copy(deep=True)
                 else:
                     parameters[param] = concat([parameters[param], result.copy(deep=True)], axis=0, ignore_index=True)
-            frame = Frame(destination / (param + ".source"), parameters[param])
+            frame = Frame(destination / (param + ".csv"), parameters[param])
             if is_split:
                 result = frame.df
                 result.insert(0, "Split", full(result.shape[0], split[0]), True)
@@ -222,7 +291,7 @@ def collect(store: Store, model_name: str, parameters: base.Model.Parameters, is
                 else:
                     final_parameters[param] = concat([final_parameters[param], result.copy(deep=True)], axis=0, ignore_index=True)
         # noinspection PyUnusedLocal
-        frame = Frame(final_destination / (param + ".source"), final_parameters[param]) if is_split else None
+        frame = Frame(final_destination / (param + ".csv"), final_parameters[param]) if is_split else None
     return splits
 
 
@@ -237,20 +306,20 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
     """
     final_frame = frame = None
     if is_split:
-        final_destination = store.dir / model_name
+        final_destination = store.folder / model_name
         final_destination.mkdir(mode=0o777, parents=True, exist_ok=True)
         split_dirs = store.splits
     else:
         final_destination = None
-        split_dirs = [store.dir]
+        split_dirs = [store.folder]
     for split_dir in split_dirs:
         split_store = Store(split_dir)
         K = split_store.meta['K']
-        destination = split_store.dir / model_name
+        destination = split_store.folder / model_name
         destination.mkdir(mode=0o777, parents=True, exist_ok=True)
         for k in range(K):
             fold = Fold(split_store, k)
-            source = (fold.dir / model_name) / "__test__.source"
+            source = (fold.folder / model_name) / "__test__.csv"
             result = Frame(source).df
             result.insert(0, "Fold", full(result.shape[0], k), True)
             std = result.iloc[:, -1]
@@ -258,7 +327,7 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
             out = result.iloc[:, -3]
             result.iloc[:, -3] = (out - mean) / std
             if k == 0:
-                frame = Frame(destination / "__test__.source", result.copy(deep=True))
+                frame = Frame(destination / "__test__.csv", result.copy(deep=True))
             else:
                 frame.df = concat([frame.df, result.copy(deep=True)], axis=0, ignore_index=False)
         frame.write()
@@ -270,7 +339,7 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
             result.insert(0, "Split", full(result.shape[0], split_index), True)
             result = result.reset_index()
             if split_index == 0:
-                final_frame = Frame(final_destination / "__test__.source", result.copy(deep=True))
+                final_frame = Frame(final_destination / "__test__.csv", result.copy(deep=True))
             else:
                 final_frame.df = concat([final_frame.df, result.copy(deep=True)], axis=0, ignore_index=True)
     if is_split:
@@ -300,7 +369,7 @@ def collect_GPs(store: Store, model_name: str, test: bool, sobol: bool, is_split
     return collect(store, model_name + "\\Kernel", base.Kernel.TypeFromIdentifier(kernelTypeIdentifier).DEFAULT_PARAMETERS, is_split)
 
 
-def rotate_inputs(gb_path: Union[str, Path], X_stand: NP.Matrix) -> NP.Matrix:
+def rotate_inputs(gb_path: PathLike, X_stand: NP.Matrix) -> NP.Matrix:
     """ Rotates the standardized inputs by theta to produce the rotated inputs that can be used when predicting with a ROM.
 
     Args:
@@ -314,7 +383,7 @@ def rotate_inputs(gb_path: Union[str, Path], X_stand: NP.Matrix) -> NP.Matrix:
     Mu = int(gb_path.suffix[1:])
     fold_dir = gb_path.parent
     sobol = fold_dir / "ROM.optimized" / "sobol"
-    theta_T = transpose(Frame(sobol / "Theta.source", csv_parameters={'header': [0]}).df.values)
+    theta_T = transpose(Frame(sobol / "Theta.csv", csv_parameters={'header': [0]}).df.values)
     k = int(fold_dir.suffix[1:])
     M = Fold(fold_dir.parent, k, Mu).M +1
     if 0 < Mu < M:

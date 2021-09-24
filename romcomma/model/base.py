@@ -25,183 +25,279 @@ Because implementation may involve parallelization, these classes should only co
 
 """
 
+from __future__ import annotations
+
+from romcomma.typing_ import *
 import shutil
 from abc import ABC, abstractmethod
 from enum import IntEnum, auto
 from pathlib import Path
 from warnings import warn
-from numpy import atleast_2d, sqrt, einsum, exp, prod, eye, append, transpose, zeros, delete, diag, reshape, full, ones, empty, \
+from numpy import atleast_2d, broadcast_to, sqrt, einsum, exp, prod, eye, shape, transpose, zeros, delete, diag, reshape, full, ones, empty, \
     arange, sum, concatenate, copyto, sign
 from pandas import DataFrame, MultiIndex, concat
 from scipy import optimize
 from scipy.linalg import cho_factor, cho_solve, qr
 import json
 from romcomma.data import Frame, Fold
-from romcomma.typing_ import PathLike, Optional, NamedTuple, NP, Tuple, Type, Callable, Union, Any, List, Dict
 from copy import deepcopy
 from romcomma import distribution
 
 
 class Model(ABC):
     """ Abstract base class for any model. This base class implements generic file storage and parameter handling.
-    The latter is dealt with by each subclass overriding the ``Model.Parameters`` type with its own ``NamedTuple``
-    defining the parameter set it takes.
-
-    ``model.parameters`` is a ``NamedTuple`` of NP.Matrices.
-    If ``model.with_frames``, each parameter is backed by a source file, otherwise no file operations are involved.
-
-    In case ``model.parameters is None``, ``model.parameters`` is read from ``model.dir``.
+    The latter is dealt with by each subclass overriding ``Model.Parameters.Values`` with its own ``Type[NamedTuple]``
+    defining the parameter set it takes.``model.parameters.values`` is a ``Values=Type[NamedTuple]`` of NP.Matrices.
     """
 
-    CSV_PARAMETERS = {'header': [0]}
-
-    class Parameters(NamedTuple):
-        OVERRIDE_THIS: NP.Matrix
-    DEFAULT_PARAMETERS: Parameters = "OVERRIDE_THIS"
-    DEFAULT_OPTIMIZER_OPTIONS: Dict[str, Any] = {"OVERRIDE": "THIS"}
-    MEMORY_LAYOUT: str = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
-
-    @staticmethod
-    def rmdir(dir_: Union[str, Path], ignore_errors: bool = True):
-        """ Remove a directory tree, using shutil.
-
-        Args:
-            dir_: Root of the tree to remove.
-            ignore_errors: Boolean.
-        """
-        shutil.rmtree(dir_, ignore_errors=ignore_errors)
-
-    @staticmethod
-    def copy(src_dir: Union[str, Path], dst_dir: Union[str, Path], ignore_errors: bool = True):
-        """ Copy a directory tree, using shutil.
-
-        Args:
-            src_dir: Source root of the tree to copy.
-            dst_dir: Destination root.
-            ignore_errors: Boolean
-        """
-        shutil.rmtree(dst_dir, ignore_errors=ignore_errors)
-        shutil.copytree(src=src_dir, dst=dst_dir)
-
+    @classmethod
     @property
-    def dir(self) -> Path:
-        """ The model directory."""
-        return self._dir
+    @abstractmethod
+    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+        """ Default options."""
 
-    @property
-    def with_frames(self) -> bool:
-        """ Whether the Model has source files backing its parameters."""
-        return bool(self._dir.parts)
+    class Parameters(ABC):
+        """ Abstraction of the parameters of a Model. Essentially a NamedTuple backed by files in a folder.
+        Note that file writing is lazy, it must be called explicitly, but the Parameters are designed for chained calls."""
+
+        @classmethod
+        @property
+        @abstractmethod
+        def Values(cls) -> Type[NamedTuple]:
+            """ The NamedTuple underpinning this Parameters set."""
+
+        @classmethod
+        def make(cls, iterable: Iterable) -> Model.Parameters:
+            """ Wrapper for namedtuple._make. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
+            return cls.Values._make(iterable)
+
+        @classmethod
+        @property
+        def fields(cls) -> Tuple[str, ...]:
+            """ Wrapper for namedtuple._fields. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
+            return cls.Values()._fields
+
+        @classmethod
+        @property
+        def field_defaults(cls) -> Dict[str, Any]:
+            """ Wrapper for namedtuple._field_defaults. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
+            return cls.Values()._field_defaults
+
+        def as_dict(self) -> Dict[str, Any]:
+            """ Wrapper for namedtuple._asdict. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
+            return self._values._asdict()
+
+        def replace(self, **kwargs: NP.Matrix) -> Model.Parameters:
+            """ Replace selected field values in this Parameters. Does not write to folder.
+
+            Args:
+                **kwargs: key=value pairs of NamedTuple fields, precisely as in NamedTuple._replace(**kwargs).
+            Returns: ``self``, for chaining calls.
+            """
+            for key, value in kwargs.items():
+                kwargs[key] = atleast_2d(value)
+            self._values = self._values._replace(**kwargs)
+            return self
+
+        @property
+        def folder(self) -> Path:
+            """ The folder containing the Model.Parameters. """
+            return self._folder
+
+        @property
+        def values(self) -> Values:
+            """ Gets or Sets the NamedTuple of the Model.Parameters."""
+            return self._values
+
+        @values.setter
+        def values(self, value: Values):
+            """ Gets or Sets the NamedTuple of the Model.Parameters."""
+            self._values = self.Values(*(atleast_2d(val) for val in value))
+
+        def _set_folder(self, folder: Optional[PathLike] = None):
+            """ Set the file location for these Parameters.
+
+            Args:
+                folder: The file location is changed to ``folder`` unless ``folder`` is ``None`` (the default).
+            """
+            if folder is not None:
+                self._folder = Path(folder)
+                self._csv = tuple((self._folder / field).with_suffix(".csv") for field in self.fields)
+
+        def read(self) -> Model.Parameters:
+            """ Read Model.Parameters from their csv files.
+
+            Returns: ``self``, for chaining calls.
+            Raises:
+                AssertionError: If self._csv is not set.
+            """
+            assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
+            self._values = self.Values(**{key: Frame(self._csv[i], header=[0]).df.values for i, key in enumerate(self.fields)})
+            return self
+
+        def write(self, folder: Optional[PathLike] = None) -> Model.Parameters:
+            """  Write Model.Parameters to their csv files.
+
+            Args:
+                folder: The file location is changed to ``folder`` unless ``folder`` is ``None`` (the default).
+            Returns: ``self``, for chaining calls.
+            Raises:
+                AssertionError: If self._csv is not set.
+            """
+            self._set_folder(folder)
+            assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
+            dummy = (Frame(self._csv[i], DataFrame(p)) for i, p in enumerate(self._values))
+            return self
+
+        def __init__(self, folder: Optional[PathLike] = None, **kwargs: NP.Matrix):
+            """ Parameters Constructor. Shouldn't need to be overridden. Does not write to file.
+
+            Args:
+                folder: The folder to store the parameters.
+                **kwargs: key=value initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs). It is the caller's responsibility to ensure
+                    that every value is of type NP.Matrix. Missing fields receive their defaults, so Parameters(folder) is the default parameter set.
+            """
+            for key, value in kwargs.items():
+                kwargs[key] = atleast_2d(value)
+            self._set_folder(folder)
+            self._values = self.Values(**kwargs)
 
     @property
     def parameters(self) -> Parameters:
-        """ Sets or gets the model parameters, as a NamedTuple of Matrices."""
+        """ Sets or gets the model parameters, as a Parameters object."""
         return self._parameters
 
     @parameters.setter
     def parameters(self, value: Parameters):
-        """ Sets or gets the model parameters, as a NamedTuple of Matrices."""
+        """ Sets or gets the model parameters, as a Parameters object."""
         self._parameters = value
         self.calculate()
 
     @property
-    def parameters_csv(self) -> Parameters:
-        """ A Model.Parameters NamedTuple of the source files backing the model.parameters."""
-        return self._parameters_csv
-
-    def read_parameters(self):
-        """ Read model.parameters from their source files."""
-        assert self.with_frames
-        self._parameters = self.Parameters(*(Frame(self._parameters_csv[i], **self.CSV_PARAMETERS).df.values for i, p in enumerate(self.DEFAULT_PARAMETERS)))
-
-    def write_parameters(self, parameters: Parameters) -> Parameters:
-        """ Write model.parameters to their source files.
-
-        Args:
-            parameters: The NamedTuple to be the new value for self.parameters.
-        Returns: The NamedTuple written to source. Essentially self.parameters, but with Frames in place of Matrices.
-        """
-        assert self.with_frames
-        self._parameters = self.Parameters(*(atleast_2d(p) for p in parameters))
-        return self.Parameters(*tuple(Frame(self._parameters_csv[i], DataFrame(p)) for i, p in enumerate(self._parameters)))
-
-    @property
-    def optimizer_options_json(self) -> Path:
-        return self._dir / "optimizer_options.json"
-
-    def _read_optimizer_options(self) -> dict:
-        # noinspection PyTypeChecker
-        with open(self.optimizer_options_json, mode='r') as file:
-            return json.load(file)
-
-    def _write_optimizer_options(self, optimizer_options: Dict):
-        # noinspection PyTypeChecker
-        with open(self.optimizer_options_json, mode='w') as file:
-            json.dump(optimizer_options, file, indent=8)
+    def params(self) -> Parameters.Values:
+        """ Gets the model parameters, as a NamedTuple of Matrices."""
+        return self._parameters
 
     @abstractmethod
     def calculate(self):
-        """ Calculate the Model. Do not call super().calculate, this interface only contains suggestions for implementation."""
-        return
-        self._test = None   # Remember to reset any test results.
+        """ Calculate the Model. **Do not call this interface, it only contains suggestions for implementation.**"""
+        if self.parameters.fields[0] != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks':
+            raise NotImplementedError('base.model.calculate() must never be called.')
+        else:
+            self._test = None   # Remember to reset any test results.
 
     @abstractmethod
-    def optimize(self, **kwargs):
-        """ Optimize the model parameters. Do not call super().optimize, this interface only contains suggestions for implementation.
+    def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
+        """ Optimize the model parameters. **Do not call this interface, it only contains suggestions for implementation.**
 
         Args:
-            kwargs: Dict of implementation-dependent optimizer options.
+            method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
+            options: Dict of implementation-dependent optimizer options. options = None indicates that options should be read from JSON file.
         """
-        return
-        if kwargs is None:
-            kwargs = self._read_optimizer_options() if self.optimizer_options_json.exists() else self.DEFAULT_OPTIMIZER_OPTIONS
-        # OPTIMIZE!!!!!
-        self._write_optimizer_options(kwargs)
-        self.write_parameters(parameters=self.DEFAULT_PARAMETERS)   # Remember to write optimization results.
-        self._test = None   # Remember to reset any test results.
+        if method != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks':
+            raise NotImplementedError('base.model.optimize() must never be called.')
+        else:
+            options = (options if options is not None
+                       else self._read_options() if self._options_json.exists() else self.DEFAULT_OPTIONS)
+            options.pop('result', default=None)
+            options = {**options, 'result': 'OPTIMIZE HERE !!!'}
+            self._write_options(options)
+            self.parameters = self._parameters.replace('WITH OPTIMAL PARAMETERS!!!').write(self.folder)   # Remember to write optimization results.
+            self._test = None   # Remember to reset any test results.
+
+    @property
+    def folder(self) -> Path:
+        """ The model folder."""
+        return self._folder
+
+    @property
+    def _options_json(self) -> Path:
+        return self._folder / "options.json"
+
+    def _read_options(self) -> Dict[str, Any]:
+        # noinspection PyTypeChecker
+        with open(self._options_json, mode='r') as file:
+            return json.load(file)
+
+    def _write_options(self, options: Dict[str, Any]):
+        # noinspection PyTypeChecker
+        with open(self._options_json, mode='w') as file:
+            json.dump(options, file, indent=8)
 
     @abstractmethod
-    def __init__(self, dir_: PathLike, parameters: Optional[Parameters] = None):
+    def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
         """ Model constructor, to be called by all subclasses as a matter of priority.
 
         Args:
-            dir_: The model file location. If and only if this is empty, then model.with_frames = False.
-            parameters: The model.parameters, an Optional NamedTuple of NP.Matrices.
-                If None then model.parameters are read from dir_, otherwise they are written to dir_, provided model.with_frames.
+            folder: The model file location.
+            read_parameters: If True, the model.parameters are read from ``folder``, otherwise defaults are used.
+            **kwargs: The model.parameters fields=values to replace after reading from file/defaults.
         """
-        self._dir = Path(dir_)
-        self._parameters_csv = self.Parameters(*((self._dir / field).with_suffix(".source") for field in self.DEFAULT_PARAMETERS._fields))
-        if parameters is None:
-            self.read_parameters()
+        self._folder = Path(folder)
+        if read_parameters:
+            self._parameters = self.Parameters(self._folder).read().replace(**kwargs)
         else:
-            self._dir.mkdir(mode=0o777, parents=True, exist_ok=True)
-            self.write_parameters(parameters)
+            self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
+            self._parameters = self.Parameters(self._folder).replace(**kwargs)
+        self._parameters.write()
         self._test = None
 
+    @staticmethod
+    def rmdir(folder: PathLike, ignore_errors: bool = True):
+        """ Remove a folder tree, using shutil.
 
-# noinspection PyPep8Naming
-class Kernel(Model):
-    """ Abstract interface to a Kernel. Essentially this is the code contract with the GP interface.
-
-    The kernel takes two input design matrices ``X0`` and ``X1``.
-
-    If these are populated then ``not kernel.with_frames``, for efficiency.
-    In this case, ``kernel.parameters.lengthscale.shape[1] &gt= kernel.M = X0.shape[1] = X1.shape[1]``.
-
-    If ``X0 is None is X1`` then ``kernel.with_frames`` and the kernel is used purely for recording parameters.
-    """
-
-    """ Required overrides."""
-
-    class Parameters(NamedTuple):
-        OVERRIDE_THIS: NP.Matrix
-    DEFAULT_PARAMETERS = "OVERRIDE_THIS"
-    MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
-
-    """ End of required overrides."""
+        Args:
+            folder: Root of the tree to remove.
+            ignore_errors: Boolean.
+        """
+        shutil.rmtree(folder, ignore_errors=ignore_errors)
 
     @staticmethod
-    def TypeFromParameters(parameters: Parameters) -> Type['Kernel']:
+    def copy(src_folder: PathLike, dst_folder: PathLike, ignore_errors: bool = True):
+        """ Copy a folder tree, using shutil.
+
+        Args:
+            src_folder: Source root of the tree to copy.
+            dst_folder: Destination root.
+            ignore_errors: Boolean
+        """
+        shutil.rmtree(dst_folder, ignore_errors=ignore_errors)
+        shutil.copytree(src=src_folder, dst=dst_folder)
+
+
+class Kernel(Model):
+    """ Abstract interface to a Kernel. Essentially this is the code contract with the GP interface."""
+
+    @classmethod
+    @property
+    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+        """ **Do not use, this function is merely an interface requirement. **"""
+        return {'A kernel has no use for optimizer options, only its parent GP does.': None}
+
+    class Parameters(Model.Parameters):
+        """ Abstraction of the parameters of a Kernel."""
+
+        @classmethod
+        @property
+        def Values(cls) -> Type[NamedTuple]:
+            """ The NamedTuple underpinning this Parameters set."""
+
+            class Values(NamedTuple):
+                """ Abstraction of the parameters of a Kernel.
+
+                Attributes:
+                    variance: An (L,L) or (1,L) Matrix of kernel variances. (1,L) represents a diagonal (L,L) variance matrix.
+                        (1,1) means a single kernel shared by all outputs.
+                    lengthscales: A (V,M) Matrix of anisotropic lengthscales, or a (V,1) Vector of isotropic lengthscales,
+                        where V=1 or V=variance.shape[1]*(variance.shape[0]+ 1)/2.
+                """
+                variance: NP.Matrix = atleast_2d(0.1)
+                lengthscales: NP.Matrix = atleast_2d(0.2)
+
+            return Values
+
+    @classmethod
+    def TypeFromParameters(cls, parameters: Parameters) -> Type[Kernel]:
         """ Recognize the Type of a Kernel from its Parameters.
 
         Args:
@@ -212,15 +308,16 @@ class Kernel(Model):
         for kernel_type in Kernel.__subclasses__():
             if isinstance(parameters, kernel_type.Parameters):
                 return kernel_type
-        raise TypeError("Kernel Parameters array of unrecognizable type.")
+        raise TypeError('Kernel Parameters array of unrecognizable type.')
 
     @classmethod
-    def TypeIdentifier(cls) -> str:
-        """ Returns the type of this Kernel object or class as "__module__.Kernel.__name__"."""
-        return cls.__module__.split('.')[-1] + "." + cls.__name__
+    @property
+    def TYPE_IDENTIFIER(cls) -> str:
+        """ The type of this Kernel object or class as '__module__.Kernel.__name__'."""
+        return cls.__module__.split('.')[-1] + '.' + cls.__name__
 
     @classmethod
-    def TypeFromIdentifier(cls, TypeIdentifier: str) -> Type['Kernel']:
+    def TypeFromIdentifier(cls, TypeIdentifier: str) -> Type[Kernel]:
         """ Convert a TypeIdentifier to a Kernel Type.
 
         Args:
@@ -229,100 +326,132 @@ class Kernel(Model):
             The type of Kernel that _TypeIdentifier specifies.
         """
         for KernelType in cls.__subclasses__():
-            if KernelType.TypeIdentifier() == TypeIdentifier:
+            if KernelType.TYPE_IDENTIFIER == TypeIdentifier:
                 return KernelType
-        raise TypeError("Kernel.TypeIdentifier() of unrecognizable type.")
+        raise TypeError('Kernel.TypeIdentifier() of unrecognizable type.')
 
     @property
-    def X0(self) -> int:
-        """ An (N0,M) Design (feature) Matrix containing the first argument to the kernel function."""
-        return self._X0
-
-    @property
-    def N0(self) -> int:
-        """ The number of datapoints (rows) in the first argument to the kernel function."""
-        return self._N0
-
-    @property
-    def X1(self) -> int:
-        """ An (N1,M) Design (feature) Matrix containing the second argument to the kernel function."""
-        return self._X1
-
-    @property
-    def N1(self) -> int:
-        """ The number of datapoints (rows) in the second argument to the kernel function."""
-        return self._N1
+    def L(self) -> int:
+        """ The output (Y) dimensionality, or 1 for a single kernel shared across all outputs."""
+        return self._L
 
     @property
     def M(self) -> int:
-        """ The number of columns in the arguments to the kernel function. Must be the same for both arguments."""
+        """ The input (X) dimensionality, or 1 for an isotropic kernel."""
         return self._M
 
-    @property
-    def matrix(self) -> NP.Matrix:
-        """ The (N0,N1) kernel Matrix K(X0,X1)."""
-        return self._matrix
-
-    def optimize(self, options: Dict = Model.DEFAULT_OPTIMIZER_OPTIONS):
-        """ Empty function, required by interface. Do not use.
+    def expand(self, independent_outputs: bool = True, L: int = 1, shared_lengthscales: bool = True, M: int = 1, folder: Optional[PathLike] = None) -> Kernel:
+        """ Expand this kernel to higher dimensions.
 
         Args:
-            kwrgsA Dict of implementation-dependent optimizer options, following the format of Model.DEFAULT_OPTIMIZER_OPTIONS.
+            independent_outputs: False for a single multi-output kernel, True otherwise.
+            L: The output (Y) dimensionality, or 1 for a single kernel shared by all outputs.
+            shared_lengthscales: True if lengthscales are shared across kernels.
+            M: The input (X) dimensionality, or 1 for an isotropic kernel.
+            folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
+        Returns: ``self``, for chaining calls.
         """
+        L, M = max(L, self._L), max(M, self.M)
+        variance_shape = (1, L)
+        variance = broadcast_to(self.params.variance, variance_shape)
+        if not independent_outputs:
+            variance_shape = (L, L)
+            variance = diag(variance)
+        lengthscales_shape = (1, M) if shared_lengthscales else (variance_shape[1] * (variance_shape[0] + 1) / 2, M)
+        self._parameters.replace(variance=variance, lengthscales=broadcast_to(self.params.lengthscales, lengthscales_shape)).write(folder)
+        return self
 
-    # noinspection PyUnusedLocal
     @abstractmethod
-    def __init__(self, X0: Optional[NP.Matrix], X1: Optional[NP.Matrix], dir_: PathLike, parameters: Optional[Parameters] = None):
-        """ Construct a Kernel.
+    @property
+    def implemented_in(self) -> Tuple[Any, ...]:
+        """ The implemented_in_??? version of this Kernel, for use in the implemented_in_??? GP.
+            If ``self.variance.shape == (1,1)`` a 1-tuple of kernels is returned.
+            If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
+            If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
+        """
+
+    def calculate(self):
+        """ **Do not use, this function is merely an interface requirement. **
+
+        Raises:
+            NotImplementedError:
+        """
+        raise NotImplementedError('A kernel cannot be calculated.')
+
+    def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
+        """ **Do not use, this function is merely an interface requirement. **
 
         Args:
-            X0: An (N0,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
-            X1: An (N1,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
-            dir_: The kernel file location.
-            parameters: The kernel parameters. If None these are read from dir_.
+            method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
+            options: Dict of implementation-dependent optimizer options. options = None indicates that options should be read from JSON file.
+        Raises:
+            NotImplementedError:
         """
-        super().__init__(dir_, parameters)
-        self._matrix = None
-        self._X0 = X0
-        self._X1 = X1
-        if self._X0 is not None and self._X1 is not None:
-            assert X0.shape[1] == X1.shape[1], "X0 and X1 have differing numbers of columns."
-            self._N0, self._N1, self._M = X0.shape[0], *X1.shape
-        else:
-            self._N0, self._N1, self._M = 0, 0, 0
+        raise NotImplementedError('A kernel has no use for optimizer options, only its parent GP does.')
+
+    def validate_parameters(self):
+        """
+
+        Raises:
+            IndexError: If ``variance.shape`` is neither (L,L) nor (1,L).
+            IndexError: If ``lengthscales.shape[0]`` is not equal to 1 or ``variance.shape[1] * (variance.shape[0] + 1)``.
+        """
+        if self.params.variance.shape[0] not in (1, self._L):
+            raise IndexError(f'kernel variance shape={self.params.variance.shape} is neither (L,L) nor (1,L).')
+        if self.params.lengthscales.shape[0] not in (1, self.params.variance.shape[1] * (self.params.variance.shape[0] + 1) / 2):
+            raise IndexError(f'kernel lengthscales shape[0]={self.params.lengthscales.shape[0]} is not equal to 1 or ' +
+                             f'variance.shape[1]*(variance.shape[0]+1)/2={self.params.variance.shape[1] * (self.params.variance.shape[0] + 1) / 2}.')
+
+    def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
+        """ Construct a Kernel. This must be called as a matter of priority by all implementations.
+
+        Args:
+            folder: The model file location.
+            read_parameters: If True, the model.parameters are read from ``folder``, otherwise defaults are used.
+            **kwargs: The model.parameters fields=values to replace after reading from file/defaults.
+        """
+        super().__init__(folder, read_parameters, **kwargs)
+        self._L, self._M = self.params.variance.shape[1], self.params.lengthscales.shape[1]
+        self.validate_parameters()
 
 
 # noinspection PyPep8Naming
 class GP(Model):
     """ Interface to a Gaussian Process."""
 
-    """ Required overrides."""
+    @classmethod
+    @property
+    @abstractmethod
+    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+        """ Default hyper-parameter optimizer options"""
 
-    MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
+    class Parameters(Model.Parameters):
+        """ Abstraction of the parameters of a GP."""
 
-    Parameters = NamedTuple("Parameters", [('kernel', NP.Matrix), ('e_floor', NP.Matrix), ('f', NP.Matrix), ('e', NP.Matrix),
-                                           ('log_likelihood', NP.Matrix)])
-    """ 
-        **kernel** -- A numpy [[str]] identifying the type of Kernel, as returned by gp.kernel.TypeIdentifier(). This is never set externally.
-            The kernel parameter, when provided, must be a Kernel.Parameters NamedTuple (not an NP.Matrix!) storing the desired kernel 
-            parameters. The kernel is constructed and its type inferred from these parameters.
+        @classmethod
+        @property
+        def Values(cls) -> Type[NamedTuple]:
+            """ The NamedTuple underpinning this Parameters set."""
+            class Values(NamedTuple):
+                """ Abstraction of the parameters of a GP.
 
-        **e_floor** -- A numpy [[float]] flooring the magnitude of the noise covariance.
+                Attributes:
+                    noise_variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
+                    kernel (NP.Matrix): A numpy [[str]] identifying the type of Kernel, as returned by gp.kernel.TypeIdentifier(). This is never set externally.
+                        The kernel parameter, when provided, must be a [[Kernel.Parameters]] storing the desired kernel parameters.
+                        The kernel is constructed and its type inferred from these parameters.
+                    log_marginal_likelihood (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
+                """
+                noise_variance: NP.Matrix = atleast_2d(0.9)
+                kernel: NP.Matrix = atleast_2d(None)
+                log_marginal_likelihood: NP.Matrix = atleast_2d(1.0)
+            return Values
 
-        **f** -- An (L,L) signal covariance matrix.
-
-        **e** -- An (L,L) noise covariance matrix.
-
-        **log_likelihood** -- A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
-    """
-    DEFAULT_PARAMETERS = Parameters(kernel=None, e_floor=atleast_2d(1E-12), f=atleast_2d(0.9), e=atleast_2d(0.1),
-                                    log_likelihood=atleast_2d(None))
-
-    DEFAULT_OPTIMIZER_OPTIONS = {"OVERRIDE": "THIS"}
-
-    KERNEL_NAME = "kernel"
-
-    """ End of required overrides."""
+    @classmethod
+    @property
+    def KERNEL_DIR_NAME(cls) -> str:
+        """ The name of the folder where kernel parameters are stored."""
+        return "kernel"
 
     @property
     def fold(self) -> Fold:
@@ -331,7 +460,7 @@ class GP(Model):
 
     @property
     def test_csv(self) -> Path:
-        return self._dir / "__test__.source"
+        return self._folder / "__test__.csv"
 
     @property
     def N(self) -> int:
@@ -363,34 +492,31 @@ class GP(Model):
         """ The GP Kernel. """
         return self._kernel
 
-    @property
-    @abstractmethod
-    def log_likelihood(self) -> float:
-        """ The log marginal likelihood of the training data given the GP parameters."""
+    def calculate(self):
+        """ Fit the GP to the training data, which is actually automatic. """
+        self._test = None
 
     @abstractmethod
-    def optimize(self, options: Dict = DEFAULT_OPTIMIZER_OPTIONS):
-        """ Empty function, required by interface. Do not use.
+    def optimize(self, method: str = 'L-BFGS-B', **kwargs: Any):
+        """ Optimize the GP hyper-parameters.
 
         Args:
-            kwrgsA Dict of implementation-dependent optimizer options, following the format of GP.DEFAULT_OPTIMIZER_OPTIONS.
+            method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
+            kwargs: A Dict of implementation-dependent optimizer options, following the format of GP.DEFAULT_OPTIMIZER_OPTIONS.
         """
-
     @abstractmethod
-    def predict(self, X: NP.Matrix, Y_instead_of_F: bool = True) -> Tuple[NP.Matrix, NP.Matrix, NP.Tensor3]:
+    def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
         """ Predicts the response to input X.
 
         Args:
-            X: An (N,M) design Matrix of inputs.
-            Y_instead_of_F: True to include noise e in the result covariance.
-        Returns: The distribution of Y or f, as a triplet (mean (N, L) Matrix, std (N, L) Matrix, covariance (N, L, L) Tensor3).
+            X: A (J,M) design Matrix of inputs.
+            y_instead_of_f: True to include noise e in the result covariance.
+        Returns: The distribution of Y or f, as a pair (mean (J, L) Matrix, std (J, L) Matrix).
         """
 
-    def test(self, full_cov: bool = False) -> Frame:
+    def test(self) -> Frame:
         """ Tests the GP on the test data in GP.fold.test_csv.
 
-        Args:
-            full_cov: Whether to return the full output covariance (N,L,L) Tensor3, or just the output variance (N,L) Matrix.
         Returns: The test results as a Frame backed by GP.test_result_csv.
         """
         if self._test is None:
@@ -402,68 +528,61 @@ class GP(Model):
             predictive_std = (self._test.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Std"}, level=0))
             predictive_std.iloc[:] = result[1]
             self._test.df = self._test.df.join([predictive_mean, predictive_std])
-            if full_cov and self._L > 1:
-                output_headings = self._fold.test_Y.columns
-                for l in range(self._L):
-                    predictive_std = (self._test.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: output_headings[l]}, level=0))
-                    predictive_std.iloc[:] = result[2][:, :, l]
-                    self._test.df = self._test.df.join(predictive_std)
             self._test.write()
         return self._test
 
     @property
     @abstractmethod
-    def Kinv_Y(self) -> NP.Matrix:
-        """ The (N,L) Matrix (f K(X,X) + e I)^(-1) Y."""
+    def KNoisyInv_Y(self) -> Union[NP.Matrix, TF.Tensor]:
+        """ The NL-Vector, which pre-multiplied by the JLxNL kernel k(x, X) gives the JL-Vector predictive mean fBar(x). """
 
-    @property
-    def f_Kinv_Y(self) -> NP.Matrix:
-        """ An (L,N) Matrix, known in the literature as Y_tilde. """
-        return einsum('LK, NK -> LN', self.parameters.f, self.f_Kinv_Y, dtype=float, order=self.MEMORY_LAYOUT, optimize=True)
-
-    # noinspection PyUnresolvedReferences
-    def _validate_parameters(self):
+    def _validate_parameters(self, shared_lengthscales: bool, is_isotropic: bool):
         """ Generic validation.
 
+        Args:
+            shared_lengthscales: Whether to share lengthscales across kernels.
+            is_isotropic: Whether to coerce the kernel to be isotropic.
         Raises:
-            IndexError: if parameters.kernel and parameters.e_floor are not shaped (1,1).
-            IndexError: unless parameters.f.shape == parameters.e == (1,1) or (L,L).
+            IndexError: If a parameter is mis-shaped.
         """
-        if self.parameters.kernel.shape != (1, 1):
-            raise IndexError("GaussianProcess.parameters.kernel.shape must be (1,1), not {0}.".format(self.parameters.kernel.shape))
-        if self.parameters.e_floor.shape != (1, 1):
-            raise IndexError("GaussianProcess.parameters.e_floor.shape must be (1,1), not {0}.".format(self.parameters.e_floor.shape))
-        if not (self.parameters.f.shape == self.parameters.e.shape):
-            raise ValueError("GaussianProcess.parameters requires f and e parameters to be the same shape.")
-        if self.parameters.e.shape not in ((1, 1), (self._L, self._L)):
-            raise IndexError("GaussianProcess.parameters.e.shape must be (1,1) or (L,L), not {0}.".format(self.parameters.e.shape))
+        if self.params.noise_variance.shape not in (admissable_shapes := ((self._L, self._L), (1, self._L), (1, 1))):
+            raise IndexError(f'The GP variance has shape {self.params.noise_variance.shape} '
+                             f'which is not in admissable_shapes={admissable_shapes} for L={self._L}.')
+        if self._kernel.L not in (self._L, 1):
+            raise IndexError(f'GP.kernel.L={self._kernel.L} which is neither GP.L={self._L} nor 1.')
+        if self._kernel.M not in (self._M, 1):
+            raise IndexError(f'GP.kernel.M={self._kernel.M} which is neither GP.M={self._M} nor 1.')
+        self._kernel.expand(independent_outputs=(self.params.noise_variance.shape[0] == 1), L=self.params.noise_variance.shape[1],
+                            shared_lengthscales=shared_lengthscales, M=1 if is_isotropic else self._M)
 
     @abstractmethod
-    def __init__(self, fold: Fold, name: str, parameters: Optional[Parameters] = None):
-        """ GP Constructor. Calls model.__Init__ to setup parameters, then checks dimensions.
+    def __init__(self, fold: Fold, name: str, is_read: bool, shared_lengthscales: bool, is_isotropic: bool,
+                 kernel_parameters: Kernel.Parameters = Kernel.Parameters(), **kwargs: NP.Matrix):
+        """ GP Constructor. Calls model.__init__ to setup parameters, then checks dimensions.
 
         Args:
-            fold: The Fold housing this GaussianProcess.
-            name: The name of this GaussianProcess.
-            parameters: The model parameters. If None these are read from fold/name, otherwise they are written to fold/name.
-                parameters.kernel, if provided, must be a Kernel.Parameters NamedTuple (not a numpy array!) storing the desired kernel parameters.
+            fold: The Fold housing this GP.
+            name: The name of this GP.
+            is_read: If True, the GP.kernel.parameters and GP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
+            shared_lengthscales: Whether to share lengthscales across kernels.
+            is_isotropic: Whether to coerce the kernel to be isotropic.
+            kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. This will be ignored/overridden if ``read_parameters == True``.
+            **kwargs: The GP.parameters fields=values to replace after reading from file/defaults.
+        Raises:
+            IndexError: If a parameter is mis-shaped.
         """
-        self._fold = fold
-        self._dir = fold.dir / name
-        self._test = None
-        self._X = self._fold.X.values.copy(order=self.MEMORY_LAYOUT)
-        self._Y = self._fold.Y.values.copy(order=self.MEMORY_LAYOUT)
+        self._fold, self._folder = fold, fold.folder / name
+        self._X, self._Y = self._fold.X.to_numpy(dtype=float, copy=True), self._fold.Y.to_numpy(dtype=float, copy=True)
         self._N, self._M, self._L = self._fold.N, self._fold.M, self._fold.L
-        if parameters is None:
-            super().__init__(self._dir, parameters)
-            KernelType = Kernel.TypeFromIdentifier(self._parameters.kernel[0, 0])
-            self._kernel = KernelType(X0=self.X, X1=self.X, dir_=self._dir/self.KERNEL_NAME, parameters=None)
+        super().__init__(self._folder, is_read, **kwargs)
+        if is_read:
+            KernelType = Kernel.TypeFromIdentifier(self.params.values.kernel[0, 0])
+            self._kernel = KernelType(self._folder / self.KERNEL_DIR_NAME, is_read)
         else:
-            KernelType = Kernel.TypeFromParameters(parameters.kernel)
-            self._kernel = KernelType(X0=self.X, X1=self.X, dir_=self._dir/self.KERNEL_NAME, parameters=parameters.kernel)
-            parameters = parameters._replace(kernel=atleast_2d(KernelType.TypeIdentifier()))
-            super().__init__(self._dir, parameters)
-        self._validate_parameters()
+            KernelType = Kernel.TypeFromParameters(kernel_parameters)
+            self._kernel = KernelType(self._folder / self.KERNEL_DIR_NAME, is_read, **kernel_parameters.as_dict())
+            self._parameters.replace(kernel=atleast_2d(KernelType.TYPE_IDENTIFIER)).write()
+        self._validate_parameters(shared_lengthscales, is_isotropic)
 
 
 # noinspection PyPep8Naming
@@ -503,7 +622,7 @@ class Sobol(Model):
         DEFAULT_META = {'classmethod': 'element', 'L': 1, 'kwargs': {'row': 0, 'column': 0}}
 
         @classmethod
-        def from_meta(cls, meta: Union[Dict, 'Sobol.SemiNorm']) -> 'Sobol.SemiNorm':
+        def from_meta(cls, meta: Union[Dict, 'Sobol.SemiNorm']) -> Sobol.SemiNorm:
             """ Create a SemiNorm from meta information. New SemiNorms should be registered in this function.
 
             Args:
@@ -527,7 +646,7 @@ class Sobol(Model):
                                           "and register it in Sobol.SemiNorm.from_meta().")
 
         @classmethod
-        def element(cls, L: int, row: int, column: int) -> 'Sobol.SemiNorm':
+        def element(cls, L: int, row: int, column: int) -> Sobol.SemiNorm:
             """ Defines a SemiNorm on (L,L) matrices which is just the (row, column) element.
             Args:
                 L:
@@ -609,7 +728,7 @@ class Sobol(Model):
         return self._ST
 
     @property
-    def lengthscale(self):
+    def lengthscales(self):
         """ An (Mx,) Array of ARD lengthscales."""
         return self._lengthscale
 
@@ -697,14 +816,14 @@ class Sobol(Model):
         """
         options = deepcopy(kwargs)
         if options is None:
-            options = self._read_optimizer_options() if self.optimizer_options_json.exists() else self.DEFAULT_OPTIMIZER_OPTIONS
+            options = self._read_options() if self._options_json.exists() else self.DEFAULT_OPTIMIZER_OPTIONS
         semi_norm = Sobol.SemiNorm.from_meta(options['semi_norm'])
         if semi_norm.meta['L'] != self._L:
             warn("I am changing Sobol.semi_norm.meta['L'] from {0:d} to {1:d} = Sobol.gp.L.".format(semi_norm.meta['L'], self._L))
             semi_norm.meta['L'] = self._L
             semi_norm = Sobol.SemiNorm.from_meta(semi_norm.meta)
         options['semi_norm'] = semi_norm.meta
-        self._write_optimizer_options(options)
+        self._write_options(options)
         #
         # def _objective_value(xi: NP.Array) -> float:
         #     """ Maps ``xi`` to the optimization objective (a conditional variance ``D'').
@@ -753,11 +872,11 @@ class Sobol(Model):
         # self.replace_X_with_U()
 
     # def write_parameters(self, parameters: Parameters) -> Parameters:
-    #     """ Calculate the main Sobol' indices _S1, then write model.parameters to their source files.
+    #     """ Calculate the main Sobol' indices _S1, then write model.parameters to their csv files.
     #
     #     Args:
     #         parameters: The NamedTuple to be the new value for self.parameters.
-    #     Returns: The NamedTuple written to source. Essentially self.parameters, but with Frames in place of Matrices.
+    #     Returns: The NamedTuple written to csv. Essentially self.parameters, but with Frames in place of Matrices.
     #     """
     #     if self._m is not None:
     #         m_saved = self._m
@@ -939,8 +1058,8 @@ class Sobol(Model):
         def _diagonal_matrices():
             """ Cache the diagonal parts of the key (Mx,Mx) matrices V, Sigma, Phi.
                 _FBold_diagonal = (_lengthscale^(2) + I)^(-1)
-                _Sigma_diagonal = (lengthscale^(-2) + I)^(-1)
-                _Psi_diagonal = (2*lengthscale^(-2) + I) (lengthscale^(-2) + I)^(-1)
+                _Sigma_diagonal = (lengthscales^(-2) + I)^(-1)
+                _Psi_diagonal = (2*lengthscales^(-2) + I) (lengthscales^(-2) + I)^(-1)
             All invariant.
             """
             self._FBold_diagonal = self._lengthscale ** 2
@@ -1027,11 +1146,11 @@ class Sobol(Model):
         self.write_parameters(self.Parameters(theta[reordering, :], self.Tensor3AsMatrix(self._D),
                                               self.Tensor3AsMatrix(self._S1), self.Tensor3AsMatrix(self._S), self.Tensor3AsMatrix(self._ST)))
 
-    def _read_semi_norm(self, semi_norm_meta: Dict) -> 'Sobol.SemiNorm':
+    def _read_semi_norm(self, semi_norm_meta: Dict) -> Sobol.SemiNorm:
         # noinspection PyTypeChecker
-        semi_norm_json = self._dir / "SemiNorm.json"
+        semi_norm_json = self._folder / "SemiNorm.json"
         if semi_norm_meta is None:
-            if self.optimizer_options_json.exists():
+            if self._options_json.exists():
                 with open(semi_norm_json, mode='r') as file:
                     semi_norm_meta = json.load(file)
             else:
@@ -1054,7 +1173,7 @@ class Sobol(Model):
         """ Private Attributes:
         _gp (invariant): The underlying GP.
         _N, _M, _L (invariant): _gp.N, _gp.M, _gp.L.
-        _lengthscale (invariant): The (M,) Array _gp.kernel.parameters.lengthscale[0, :].
+        _lengthscale (invariant): The (M,) Array _gp.kernel_parameters.parameters.lengthscales[0, :].
         _FBold_diagonal, _2Sigma_diagonal, _2Psi_diagonal (invariant): Arrays of shape (M,) representing (M,M) diagonal matrices.
 
         _fBold_bar_0 (invariant): An (L,N) Matrix.
@@ -1071,12 +1190,12 @@ class Sobol(Model):
         """ Initialize surrogate GP and related quantities, namely 
             _gp
             _N, _M, _L,: GP training data dimensions N = dataset rows (datapoints), M = input columns, L = input columns
-            _lengthscale: ARD lengthscale vector
+            _lengthscale: ARD lengthscales vector
         all of which are private and invariant.
         """
         self._gp = gp
         self._N, self._M, self._L = self._gp.N, self._gp.M, self._gp.L
-        self._lengthscale = self._gp.kernel.parameters.lengthscale[0, :]
+        self._lengthscale = self._gp.kernel.parameters.lengthscales[0, :]
         if self._lengthscale.shape != (self._M,):
             self._lengthscale = full(self._M, self._lengthscale[0], dtype=float, order=self.MEMORY_LAYOUT)
 
@@ -1091,7 +1210,7 @@ class Sobol(Model):
         self._FBold = self._V_pre_outer_square = self._fBold_bar_0 = self._f_bar_0_2 = None
         self._objective_value = self._objective_jacobian = None
 
-        super().__init__(self._gp.dir / self.NAME, self.Parameters(eye(self._M, dtype=float, order=self.MEMORY_LAYOUT),
+        super().__init__(self._gp.folder / self.NAME, self.Parameters(eye(self._M, dtype=float, order=self.MEMORY_LAYOUT),
                                                                    self.Tensor3AsMatrix(self._D), self.Tensor3AsMatrix(self._S1),
                                                                    self.Tensor3AsMatrix(self._S), self.Tensor3AsMatrix(self._ST)))
         self._semi_norm = self._read_semi_norm(semi_norm)
@@ -1099,20 +1218,20 @@ class Sobol(Model):
 
     @classmethod
     @abstractmethod
-    def from_GP(cls, fold: Fold, source_gp_name: str, destination_gp_name: str, semi_norm: Dict = SemiNorm.DEFAULT_META) -> 'Sobol':
-        """ Create a Sobol object from a saved GP directory.
+    def from_GP(cls, fold: Fold, source_gp_name: str, destination_gp_name: str, semi_norm: Dict = SemiNorm.DEFAULT_META) -> Sobol:
+        """ Create a Sobol object from a saved GP folder.
 
         Args:
             fold: The Fold housing the source and destination GPs.
-            source_gp_name: The source GP directory.
-            destination_gp_name: The destination GP directory. Must not exist.
+            source_gp_name: The source GP folder.
+            destination_gp_name: The destination GP folder. Must not exist.
             semi_norm: Meta json describing a Sobol.SemiNorm.
         Returns: The constructed Sobol object
         """
-        dst = fold.dir / destination_gp_name
+        dst = fold.folder / destination_gp_name
         if dst.exists():
             shutil.rmtree(dst)
-        shutil.copytree(src=fold.dir / source_gp_name, dst=dst)
+        shutil.copytree(src=fold.folder / source_gp_name, dst=dst)
         return cls(gp=GP(fold=fold, name=destination_gp_name, semi_norm=semi_norm))
 
 
@@ -1135,7 +1254,7 @@ class ROM(Model):
     MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
 
     Parameters = NamedTuple("Parameters", [('Mu', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix),
-                                           ('lengthscale', NP.Matrix), ('log_likelihood', NP.Matrix)])
+                                           ('lengthscales', NP.Matrix), ('log_marginal_likelihood', NP.Matrix)])
     """ 
         **Mu** -- A numpy [[int]] specifying the number of input dimensions in the rotated basis u.
 
@@ -1145,33 +1264,33 @@ class ROM(Model):
 
         **S** -- An (L L, M) Matrix of Sobol' cumulative indices.
 
-        **lengthscale** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscale.
+        **lengthscales** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscales.
 
-        **log_likelihood** -- A numpy [[float]] used to record the log marginal likelihood.
+        **log_marginal_likelihood** -- A numpy [[float]] used to record the log marginal likelihood.
     """
     DEFAULT_PARAMETERS = Parameters(*(atleast_2d(None),) * 6)
 
-    DEFAULT_OPTIMIZER_OPTIONS = {'iterations': 1, 'guess_identity_after_iteration': 1, 'sobol_optimizer_options': Sobol.DEFAULT_OPTIMIZER_OPTIONS,
+    DEFAULT_OPTIMIZER_OPTIONS = {'iterations': 1, 'guess_identity_after_iteration': 1, 'sobol_options': Sobol.DEFAULT_OPTIMIZER_OPTIONS,
                                  'gp_initializer': GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE,
-                                  'gp_optimizer_options': GP.DEFAULT_OPTIMIZER_OPTIONS}
+                                  'gp_options': GP.DEFAULT_OPTIONS}
     """ 
-        **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(options['sobol_optimizer_options']) 
-            followed by GP.optimize(options['gp_optimizer_options'])).
+        **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(options['sobol_options']) 
+            followed by GP.optimize(options['gp_options'])).
     
-        **sobol_optimizer_options*** -- A Dict of Sobol optimizer options, similar to (and documented in) Sobol.DEFAULT_OPTIMIZER_OPTIONS.
+        **sobol_options*** -- A Dict of Sobol optimizer options, similar to (and documented in) Sobol.DEFAULT_OPTIMIZER_OPTIONS.
         
         **guess_identity_after_iteration** -- After this many ROM iterations, Sobol.optimize does no exploration, 
             just gradient descending from Theta = Identity Matrix.
     
         **reuse_original_gp** -- True if GP.optimize is initialized each time from the GP originally provided.
 
-        **gp_optimizer_options** -- A Dict of GP optimizer options, similar to (and documented in) GP.DEFAULT_OPTIMIZER_OPTIONS.
+        **gp_options** -- A Dict of GP optimizer options, similar to (and documented in) GP.DEFAULT_OPTIMIZER_OPTIONS.
     """
 
     @classmethod
     @abstractmethod
-    def from_ROM(cls, fold: Fold, name: str, suffix: str = ".0", Mu: int = -1, rbf_parameters: Optional[GP.Parameters] = None) -> 'ROM':
-        """ Create a ROM object from a saved ROM directory.
+    def from_ROM(cls, fold: Fold, name: str, suffix: str = ".0", Mu: int = -1, rbf_parameters: Optional[GP.Parameters] = None) -> ROM:
+        """ Create a ROM object from a saved ROM folder.
 
         Args:
             fold: The Fold housing the ROM to load.
@@ -1181,31 +1300,31 @@ class ROM(Model):
 
         Returns: The constructed ROM object
         """
-        optimization_count = [optimized.name.count(cls.OPTIMIZED_GB_EXT) for optimized in fold.dir.glob("name" + cls.OPTIMIZED_GB_EXT + "*")]
+        optimization_count = [optimized.name.count(cls.OPTIMIZED_GB_EXT) for optimized in fold.folder.glob("name" + cls.OPTIMIZED_GB_EXT + "*")]
         source_gp_name = name + cls.OPTIMIZED_GB_EXT * max(optimization_count)
         destination_gp_name = source_gp_name + suffix
         return cls(name=name,
                    sobol=Sobol.from_GP(fold, source_gp_name, destination_gp_name, Mu=Mu, read_parameters=True),
-                   optimizer_options=None, rbf_parameters=rbf_parameters)
+                   options=None, rbf_parameters=rbf_parameters)
 
     @classmethod
     @abstractmethod
-    def from_GP(cls, fold: Fold, name: str, source_gp_name: str, optimizer_options: Dict, Mu: int = -1,
-                rbf_parameters: Optional[GP.Parameters] = None) -> 'ROM':
-        """ Create a ROM object from a saved GP directory.
+    def from_GP(cls, fold: Fold, name: str, source_gp_name: str, options: Dict, Mu: int = -1,
+                rbf_parameters: Optional[GP.Parameters] = None) -> ROM:
+        """ Create a ROM object from a saved GP folder.
 
         Args:
             fold: The Fold housing the ROM to load.
             name: The name of the saved ROM to create from.
-            source_gp_name: The source GP directory.
+            source_gp_name: The source GP folder.
             Mu: The dimensionality of the rotated input basis u. If this is not in range(1, fold.M+1), Mu=fold.M is used.
-            optimizer_options: A Dict of ROM optimizer options.
+            options: A Dict of ROM optimizer options.
 
         Returns: The constructed ROM object
         """
         return cls(name=name,
                    sobol=Sobol.from_GP(fold=fold, source_gp_name=source_gp_name, destination_gp_name=name + ".0", Mu=Mu),
-                   optimizer_options=optimizer_options, rbf_parameters=rbf_parameters)
+                   options=options, rbf_parameters=rbf_parameters)
 
     OPTIMIZED_GP_EXT = ".optimized"
     REDUCED_FOLD_EXT = ".reduced"
@@ -1215,7 +1334,7 @@ class ROM(Model):
     @property
     def name(self) -> str:
         """ The name of this ROM."""
-        return self.dir.name
+        return self.folder.name
 
     @property
     def sobol(self) -> Sobol:
@@ -1244,25 +1363,25 @@ class ROM(Model):
             gp_initializer = self.GP_Initializer.RBF
             parameters = self._rbf_parameters
             gp_rbf = self.GPType(self._fold, self.gp_name(iteration) + ".rbf", parameters)
-            gp_rbf.optimize(**self._optimizer_options[-1]['gp_optimizer_options'])
-            gp_dir = gp_rbf.dir.parent / self.gp_name(iteration)
-            Model.copy(gp_rbf.dir, gp_dir)
-            kernel = type(self._gp.kernel)(None, None, gp_dir / GP.KERNEL_NAME)
+            gp_rbf.optimize(**self._options[-1]['gp_options'])
+            gp_dir = gp_rbf.folder.parent / self.gp_name(iteration)
+            Model.copy(gp_rbf.folder, gp_dir)
+            kernel = type(self._gp.kernel)(None, None, gp_dir / GP.KERNEL_DIR_NAME)
             kernel.make_ard(self._gp.M)
             return self.GPType(self._fold, self.gp_name(iteration), parameters=None)
-        gp_initializer = self._optimizer_options[-1]['gp_initializer']
+        gp_initializer = self._options[-1]['gp_initializer']
         parameters = self._original_parameters if gp_initializer < self.GP_Initializer.CURRENT else self._gp.parameters
         if not self._gp.kernel.is_rbf:
             if gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_GUESSED_LENGTHSCALE, self.GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE):
-                lengthscale = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscale, optimize=True, dtype=float,
+                lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales, optimize=True, dtype=float,
                                      order=self.MEMORY_LAYOUT) * 0.5 * self._gp.M * (self._gp.M - arange(self._gp.M, dtype=float)) ** (-1)
             elif gp_initializer in (self.GP_Initializer.CURRENT_WITH_ORIGINAL_KERNEL, self.GP_Initializer.ORIGINAL):
-                lengthscale = einsum('MK, JK -> M', self._Theta, self._original_parameters.kernel.parameters.lengthscale,
+                lengthscales = einsum('MK, JK -> M', self._Theta, self._original_parameters.kernel.parameters.lengthscales,
                                      optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
             elif gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_CURRENT_KERNEL, self.GP_Initializer.CURRENT):
-                lengthscale = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscale, optimize=True, dtype=float,
+                lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales, optimize=True, dtype=float,
                                      order=self.MEMORY_LAYOUT)
-            parameters = parameters._replace(kernel=self._gp.kernel.Parameters(lengthscale=lengthscale))
+            parameters = parameters._replace(kernel=self._gp.kernel.Parameters(lengthscales=lengthscales))
         return self.GPType(self._fold, self.gp_name(iteration), parameters)
 
     def optimize(self, options: Dict):
@@ -1271,25 +1390,25 @@ class ROM(Model):
         Args:
             options: A Dict of implementation-dependent optimizer options, following the format of ROM.DEFAULT_OPTIMIZER_OPTIONS.
         """
-        if options is not self._optimizer_options[-1]:
-            self._optimizer_options.append(options)
-            self._semi_norm = Sobol.SemiNorm.from_meta(self._optimizer_options[-1]['sobol_optimizer_options']['semi_norm'])
+        if options is not self._options[-1]:
+            self._options.append(options)
+            self._semi_norm = Sobol.SemiNorm.from_meta(self._options[-1]['sobol_options']['semi_norm'])
             self._sobol_reordering_options['semi_norm'] = self._semi_norm
 
-        self._optimizer_options[-1]['sobol_optimizer_options']['semi_norm'] = self._semi_norm.meta
-        self._write_optimizer_options(self._optimizer_options)
+        self._options[-1]['sobol_options']['semi_norm'] = self._semi_norm.meta
+        self._write_options(self._options)
 
-        iterations = self._optimizer_options[-1]['iterations']
-        if iterations < 1 or self._optimizer_options[-1]['sobol_optimizer_options']['N_exploit'] < 1:
+        iterations = self._options[-1]['iterations']
+        if iterations < 1 or self._options[-1]['sobol_options']['N_exploit'] < 1:
             if not iterations <= 1:
                 warn("Your ROM optimization does not allow_rotation so iterations is set to 1, instead of {0:d}.".format(iterations), UserWarning)
             iterations = 1
 
-        guess_identity_after_iteration = self._optimizer_options[-1]['guess_identity_after_iteration']
+        guess_identity_after_iteration = self._options[-1]['guess_identity_after_iteration']
         if guess_identity_after_iteration < 0:
             guess_identity_after_iteration = iterations
 
-        sobol_guess_identity = {**self._optimizer_options[-1]['sobol_optimizer_options'], 'N_explore': 1}
+        sobol_guess_identity = {**self._options[-1]['sobol_options'], 'N_explore': 1}
         self._Theta = self._sobol.Theta_old
 
         for iteration in range(iterations):
@@ -1300,10 +1419,10 @@ class ROM(Model):
                 concatenate((self.parameters.D, atleast_2d(self._semi_norm.value(self._sobol.D))), axis=0),
                 concatenate((self.parameters.S1, atleast_2d(self._semi_norm.value(self._sobol.S1))), axis=0),
                 concatenate((self.parameters.S, atleast_2d(self._semi_norm.value(self._sobol.S))), axis=0),
-                concatenate((self.parameters.lengthscale, atleast_2d(self._sobol.lengthscale)), axis=0),
-                concatenate((self.parameters.log_likelihood, atleast_2d(self._gp.log_likelihood)), axis=0)))
+                concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
+                concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
             if iteration < guess_identity_after_iteration:
-                self._sobol.optimize(**self._optimizer_options[-1]['sobol_optimizer_options'])
+                self._sobol.optimize(**self._options[-1]['sobol_options'])
             else:
                 self._sobol.optimize(**sobol_guess_identity)
             self._Theta = einsum('MK, KL -> ML', self._sobol.Theta_old, self._Theta)
@@ -1316,8 +1435,8 @@ class ROM(Model):
             concatenate((self.parameters.D, atleast_2d(self._semi_norm.value(self._sobol.D))), axis=0),
             concatenate((self.parameters.S1, atleast_2d(self._semi_norm.value(self._sobol.S1))), axis=0),
             concatenate((self.parameters.S, atleast_2d(self._semi_norm.value(self._sobol.S))), axis=0),
-            concatenate((self.parameters.lengthscale, atleast_2d(self._sobol.lengthscale)), axis=0),
-            concatenate((self.parameters.log_likelihood, atleast_2d(self._gp.log_likelihood)), axis=0)))
+            concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
+            concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
         column_headings = ("x{:d}".format(i) for i in range(self._sobol.Mu))
         frame = Frame(self._sobol.parameters_csv.Theta, DataFrame(self._Theta, columns=column_headings))
         frame.write()
@@ -1333,39 +1452,39 @@ class ROM(Model):
 
     def calculate(self):
         """ Calculate the Model. """
-        self._gp.optimize(**self._optimizer_options[-1]['gp_optimizer_options'])
+        self._gp.optimize(**self._options[-1]['gp_options'])
         self._sobol = self.SobolType(self._gp)
 
-    def __init__(self, name: str, sobol: Sobol, optimizer_options: Dict = DEFAULT_OPTIMIZER_OPTIONS,
+    def __init__(self, name: str, sobol: Sobol, options: Dict = DEFAULT_OPTIMIZER_OPTIONS,
                  rbf_parameters: Optional[GP.Parameters] = None):
         """ Initialize ROM object.
 
         Args:
             sobol: The Sobol object to construct the ROM from.
-            optimizer_options: A List[Dict] similar to (and documented in) ROM.DEFAULT_OPTIMIZER_OPTIONS.
+            options: A List[Dict] similar to (and documented in) ROM.DEFAULT_OPTIMIZER_OPTIONS.
         """
         self._rbf_parameters = rbf_parameters
         self._sobol = sobol
         self._gp = sobol.gp
         self._original_parameters = self._gp.parameters._replace(kernel=self._gp.kernel.parameters)
         self._sobol_reordering_options = deepcopy(Sobol.DEFAULT_OPTIMIZER_OPTIONS)
-        self._fold = Fold(self._gp.fold.dir.parent, self._gp.fold.meta['k'], self._sobol.Mu)
+        self._fold = Fold(self._gp.fold.folder.parent, self._gp.fold.meta['k'], self._sobol.Mu)
         self.SobolType = deepcopy(type(self._sobol))
         self.GPType = deepcopy(type(self._gp))
-        if optimizer_options is None:
-            super().__init__(self._fold.dir / name, None)
-            self._optimizer_options = self._read_optimizer_options()
+        if options is None:
+            super().__init__(self._fold.folder / name, None)
+            self._options = self._read_options()
         else:
-            self._optimizer_options = [optimizer_options]
-            self._semi_norm = Sobol.SemiNorm.from_meta(self._optimizer_options[-1]['sobol_optimizer_options']['semi_norm'])
+            self._options = [options]
+            self._semi_norm = Sobol.SemiNorm.from_meta(self._options[-1]['sobol_options']['semi_norm'])
             self._sobol_reordering_options['semi_norm'] = self._semi_norm
             parameters = self.Parameters(Mu=self._sobol.Mu,
                                          D=self._semi_norm.value(self._sobol.D),
                                          S1=self._semi_norm.value(self._sobol.S1),
                                          S=self._semi_norm.value(self._sobol.S),
-                                         lengthscale=self._sobol.lengthscale,
-                                         log_likelihood=self._gp.log_likelihood)
-            super().__init__(self._fold.dir / name, parameters)
-            shutil.copy2(self._fold.data_csv, self.dir)
-            shutil.copy2(self._fold.test_csv, self.dir)
-            self.optimize(self._optimizer_options[-1])
+                                         lengthscales=self._sobol.lengthscales,
+                                         log_marginal_likelihood=self._gp.log_marginal_likelihood)
+            super().__init__(self._fold.folder / name, parameters)
+            shutil.copy2(self._fold.data_csv, self.folder)
+            shutil.copy2(self._fold.test_csv, self.folder)
+            self.optimize(self._options[-1])

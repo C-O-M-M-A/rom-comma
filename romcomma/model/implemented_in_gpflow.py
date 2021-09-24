@@ -21,14 +21,15 @@
 
 """ gpflow implementation of model.base."""
 
-from romcomma.typing_ import Optional, NP, PathLike, NamedTuple, Tuple, Dict, Union, Callable
+from __future__ import annotations
+
+from romcomma.typing_ import *
 from romcomma.data import Fold
 from romcomma.model import base
-from numpy import atleast_2d, atleast_3d, transpose, zeros, einsum, sqrt, array, full
-import gpflow as gpf
+from numpy import atleast_2d, zeros, sqrt, array, transpose
+import gpflow
 import tensorflow as tf
 import tensorflow_probability as tfp
-from tensorflow_probability import bijectors
 import shutil
 from enum import IntEnum, auto
 
@@ -37,164 +38,121 @@ from enum import IntEnum, auto
 class Kernel:
     """ This is just a container for Kernel classes. Put all new Kernel classes in here."""
 
-    class ExponentialQuadratic(base.Kernel):
-        """ Implements the exponential quadratic kernel for use with romcomma.gpy_."""
-
-        """ Required overrides."""
-
-        MEMORY_LAYOUT = 'C'
-        Parameters = NamedTuple("Parameters", [("lengthscale", NP.Matrix)])
-        """
-            **lengthscale** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscale.
-        """
-        DEFAULT_PARAMETERS = Parameters(lengthscale=atleast_2d(0.2))
-
-        """ End of required overrides."""
+    class ARD(base.Kernel):
+        """ Implements the ARD kernel_parameters for use with romcomma.model.implemented_in_gpflow."""
 
         @property
-        def is_rbf(self) -> bool:
-            """ Returns True if kernel is RBF, False if it is ARD. """
-            return self._is_rbf
-
-        def make_ard(self, M):
-            if self._is_rbf:
-                self.write_parameters(self.parameters._replace(lengthscale=full((1, M), self.parameters.lengthscale)))
-                self._is_rbf = False
-
-        def gpflow(self, f: float) -> gpf.kernels.RBF:
-            """ Returns the gpflow version of this kernel."""
-            return gpf.kernels.RBF(variance=f, lengthscales=self._parameters.lengthscale[0, 0], ard=False) if self._is_rbf \
-                else gpf.kernels.RBF(variance=f, lengthscales=self._parameters.lengthscale[0, :self._M], ard=True)
-
-        def calculate(self):
-            """ This function is an interface requirement which does nothing."""
-
-        @property
-        def matrix(self) -> NP.Matrix:
-            """ NOT FOR PUBLIC USE."""
-            return super().matrix
-
-        def __init__(self, X0: Optional[NP.Matrix], X1: Optional[NP.Matrix], dir_: PathLike = "", parameters: Optional[Parameters] = None):
-            """ Construct a Kernel.
-
-            Args:
-                X0: An (N0,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
-                X1: An (N1,M) Design (feature) Matrix. Use None if and only if kernel is only for recording parameters.
-                dir_: The kernel file location. If and only if this is empty, kernel.with_frames=False
-                parameters: The kernel parameters. If None these are read from dir_.
+        def implemented_in(self) -> Tuple[Any, ...]:
+            """ The implemented_in_??? version of this Kernel, for use in the implemented_in_??? GP.
+                If ``self.variance.shape == (1,1)`` a 1-tuple of kernels is returned.
+                If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
+                If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
             """
-            super().__init__(X0, X1, dir_, parameters)
-            self._is_rbf = (self.parameters.lengthscale.shape[1] == 1)
-            assert self.with_frames or (self._is_rbf or self._parameters.lengthscale.shape[1] >= self._M), \
-                "This ARD kernel has {0:d} lengthscale parameters when M={1:d}.".format(self._parameters.lengthscale.shape[1], self._M)
-
+            if self.params.variance.shape[0] == 1:
+                lm = self.params.lengthscales.shape[0]
+                if self.params.lengthscales.shape[1] == 1:
+                    results = tuple(gpflow.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[min(l, lm)], ard=False)
+                                    for l in range(self.params.variance.shape[1]))
+                else:
+                    results = tuple(gpflow.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[min(l, lm)], ard=True)
+                                    for l in range(self.params.variance.shape[1]))
+                for result in results[:-1]:
+                    gpflow.set_trainable(result, False)
+            else:
+                raise NotImplementedError(f'Kernel.ARD is not implemented_in_gpflow for variance.shape={self.params.variance.shape}, ' +
+                                          f'only for variance.shape=(1,{self.params.variance.shape[1]}) using independent GPs.')
+            return results
 
 # noinspection PyPep8Naming
 class GP(base.GP):
     """ Implementation of a Gaussian Process."""
 
-    """ Required overrides."""
-
-    MEMORY_LAYOUT = 'C'
-
-    Parameters = NamedTuple("Parameters", [('kernel', NP.Matrix), ('e_floor', NP.Matrix), ('f', NP.Matrix), ('e', NP.Matrix),
-                                           ('log_likelihood', NP.Matrix)])
-    """ 
-        **kernel** -- A numpy [[str]] identifying the type of Kernel, as returned by gp.kernel.TypeIdentifier(). This is never set externally.
-            The kernel parameter, when provided, must be a Kernel.Parameters NamedTuple (not an NP.Matrix!) storing the desired kernel 
-            parameters. The kernel is constructed and its type inferred from these parameters.
-
-        **e_floor** -- A numpy [[float]] flooring the magnitude of the noise covariance.
-
-        **f** -- An (L,L) signal covariance matrix.
-
-        **e** -- An (L,L) noise covariance matrix.
-
-        **log_likelihood** -- A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
-    """
-    DEFAULT_PARAMETERS = Parameters(kernel=Kernel.ExponentialQuadratic.DEFAULT_PARAMETERS,
-                                    e_floor=atleast_2d(1E-12), f=atleast_2d(0.9), e=atleast_2d(0.1), log_likelihood=atleast_2d(None))
-
-    DEFAULT_OPTIMIZER_OPTIONS = {}
-
-    KERNEL_NAME = "kernel"
-
-    """ End of required overrides."""
-
+    @classmethod
     @property
-    def log_likelihood(self) -> float:
-        """ The log marginal likelihood of the training data given the GP parameters."""
-        return -abs(self._gpflow.log_likelihood())
+    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+        """ Options passed to scipy.optimize."""
+        return {'max_iters': 5000, 'gtol': 1E-16}
 
-    def calculate(self):
-        """ Fit the GP to the training data. """
+    def optimize(self, method: str = 'L-BFGS-B', **kwargs: Any):
+        """ Optimize the GP hyper-parameters.
+
+        Args:
+            method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
+            kwargs: A Dict of implementation-dependent optimizer options, following the format of GP.DEFAULT_OPTIMIZER_OPTIONS.
+        """
+        options = (self._read_options() if self._options_json.exists() else self.DEFAULT_OPTIONS)
+        options.update(kwargs)
+        options.pop('result', default=None)
+        opt = gpflow.optimizers.Scipy()
+        options = {**options, 'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
+                                                  for gp in self._implemented_in))}
+        self._write_options(options)
+        if len(self._implemented_in) == 1:
+            gp = self._implemented_in[0]
+            self.parameters = self._parameters.replace(noise_variance=gp.likelihood.variance, log_marginal_likelihood=gp.log_marginal_likelihood()).write()
+            self._kernel.parameters = self._kernel.parameters.replace(variance=gp.kernel.variance, lengthscales=gp.kernel.lengthscales).write()
+        else:
+            self.parameters = self._parameters.replace(noise_variance=tuple(gp.likelihood.variance for gp in self._implemented_in),
+                                                       log_marginal_likelihood=tuple(gp.log_marginal_likelihood() for gp in self._implemented_in)).write()
+            self._kernel.parameters = self._kernel.parameters.replace(variance=tuple(gp.kernel.variance for gp in self._implemented_in),
+                                                                      lengthscales=tuple(gp.kernel.lengthscales for gp in self._implemented_in)).write()
         self._test = None
 
-    def predict(self, X: NP.Matrix, Y_instead_of_F: bool = True) -> Tuple[NP.Matrix, NP.Matrix, NP.Tensor3]:
+    def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
         """ Predicts the response to input X.
 
         Args:
             X: An (N,M) design Matrix of inputs.
-            Y_instead_of_F: True to include noise e in the result covariance.
-        Returns: The distribution of Y or f, as a triplet (mean (N, L) Matrix, std (N, L) Matrix), covariance (N, L, L) Tensor3.
+            y_instead_of_f: True to include noise e in the result covariance.
+        Returns: The distribution of Y or f, as a pair (mean (N, L) Matrix, std (N, L) Matrix).
         """
-        result = self._gpflow.predict(X, include_likelihood=Y_instead_of_F)
-        return result[0], sqrt(result[1]), transpose(atleast_3d(result[1]), [1, 2, 0])
-
-    def optimize(self, **kwargs):
-        """ Optimize the GP hyper-parameters.
-
-        Args:
-            options: A Dict of implementation-dependent optimizer options, following the format of GP.DEFAULT_OPTIMIZER_OPTIONS.
-        """
-        if kwargs is None:
-            kwargs = self._read_optimizer_options() if self.optimizer_options_json.exists() else self.DEFAULT_OPTIMIZER_OPTIONS
-        self._gpflow.optimize(**kwargs)
-        """ Update and record GP and kernel parameters, using Model.write_parameters(new_parameters)."""
-        self._write_optimizer_options(kwargs)
-        self.write_parameters(self._parameters._replace(f=array(self._gpflow.kernel.variance), e=array(self._gpflow.likelihood.variance),
-                                                        log_likelihood=self.log_likelihood))
-        self._kernel.write_parameters(self._kernel.parameters._replace(lengthscale=array(self._gpflow.rbf.lengthscale)))
-        self._test = None
+        results = tuple(gp.predict_y(X) if y_instead_of_f else gp.predict_f(X) for gp in self._implemented_in)
+        results = tuple(transpose(result) for result in zip(*results))
+        return atleast_2d(results[0]), atleast_2d(sqrt(results[1]))
 
     @property
-    def Kinv_Y(self) -> NP.Matrix:
-        """ The (N,L) Matrix (K(X,X) + e I)^(-1) Y."""
-        return atleast_2d(self._gpflow.posterior.woodbury_vector).reshape((self._N, self._L))
+    def KNoisyInv_Y(self) -> TF.Tensor:
+        """ The NL-Vector, which pre-multiplied by the JLxNL kernel k(x, X) gives the JL-Vector predictive mean fBar(x). """
+        if self.params.noise_variance.shape[0] != 1:
+            raise NotImplementedError('noise_variance.shape[0] must be equal to 1.')
+        result = []
+        for gp in self._implemented_in:
+            X_data, Y_data = gp.data
+            K = gp.kernel(X_data)
+            k_diag = tf.linalg.diag_part(K)
+            KNoisy = tf.linalg.set_diag(K, k_diag + tf.fill(tf.shape(k_diag), gp.likelihood.variance))
+            result.append(tf.linalg.cholesky_solve(tf.linalg.cholesky(KNoisy), Y_data))
+        return tf.reshape(tf.transpose(tf.constant(result)), shape=[-1])
 
-    def _check_Kinv_Y(self, x: NP.Matrix, Y_instead_of_F: bool = True) -> NP.Vector:
+    def _check_f_KNoisyInv_Y(self, x: NP.Matrix) -> TF.Tensor:
         """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance)."""
-        kernel = self._gpflow.kernels.K(x, self.X)
-        __Kinv_Y = self.Kinv_Y
-        result = self._gpflow.predict(x, include_likelihood=Y_instead_of_F)[0]
-        result -= einsum('in, nj -> ij', kernel, __Kinv_Y)
-        return result
+        kernel = [gp.kernel(self._X, x) for gp in self._implemented_in]
+        KNoisyInv_Y = tf.transpose(tf.reshape(self.KNoisyInv_Y, [-1, self._L]))
+        predicted = self.predict(x)[0]
+        return tf.constant([predicted[:, l] - array(tf.einsum('jn, n -> j', kernel, KNoisyInv_Y[:, l])) for l, kernel in enumerate(kernel)])
 
-    def _validate_parameters(self):
-        """ Generic and specific validation.
-
-        Raises:
-            IndexError: (generic) if parameters.kernel and parameters.e_floor are not shaped (1,1).
-            IndexError: (generic) unless parameters.f.shape == parameters.e == (1,1) or (L,L).
-            IndexError: (specific) unless parameters.f.shape == parameters.e == (1,1).
-        """
-        super()._validate_parameters()
-        if self.parameters.f.shape[0] != 1:
-            raise IndexError("gpflow will only accept (1,1) parameters.f and parameters.e, not ({0:d},{0:d})".format(self.parameters.f.shape[0]))
-
-    def __init__(self, fold: Fold, name: str, parameters: Optional[base.GP.Parameters] = None):
-        """ GP Constructor. Calls Model.__Init__ to setup parameters, then checks dimensions.
+    def __init__(self, fold: Fold, name: str, is_read: bool, shared_lengthscales: bool = False, is_isotropic: bool = False,
+                 kernel_parameters: base.Kernel.Parameters = base.Kernel.Parameters(), **kwargs: NP.Matrix):
+        """ GP Constructor. Calls model.__init__ to setup parameters, then checks dimensions.
 
         Args:
-            fold: The Fold housing this GaussianProcess.
-            name: The name of this GaussianProcess.
-            parameters: The model parameters. If None these are read from fold/name, otherwise they are written to fold/name.
+            fold: The Fold housing this GP.
+            name: The name of this GP.
+            is_read: If True, the GP.kernel.parameters and GP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
+            shared_lengthscales: Whether to share lengthscales across kernels.
+            is_isotropic: Whether to coerce the kernel to be isotropic.
+            kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. This will be ignored/overridden if ``read_parameters == True``.
+            **kwargs: The GP.parameters fields=values to replace after reading from file/defaults.
+        Raises:
+            IndexError: If a parameter is mis-shaped.
         """
-        super().__init__(fold, name, parameters)
-        e = gpf.Parameter(value=self.parameters.e, transform=tfp.bijectors.Chain([tfp.bijectors.Shift(self.parameters.e_floor), tfp.bijectors.Softplus()]),
-                          trainable=True)
-        self._gpflow = gpf.models.GPR(data=(self.X, self.Y), kernel=self._kernel.gpf(self.parameters.f),
-                                         mean_function=None, noise_variance=e)
+        super().__init__(fold, name, is_read, shared_lengthscales, is_isotropic, kernel_parameters, **kwargs)
+
+        # e = gpflow.Parameter(value=self._parameters.values.e,
+        #                      transform=tfp.bijectors.Chain([tfp.bijectors.Shift(self._parameters.values.e_floor), tfp.bijectors.Softplus()]), trainable=True)
+
+        self._implemented_in = tuple(gpflow.models.GPR(data=(self._X, self._Y[:, [i]]), kernel=self._kernel, mean_function=None,
+                                                       noise_variance=self.params.noise_variance[i]) for i, kernel in enumerate(self._kernel.implemented_in()))
 
 
 # noinspection PyPep8Naming
@@ -234,7 +192,7 @@ class Sobol(base.Sobol):
         DEFAULT_META = {'classmethod': 'element', 'L': 1, 'kwargs': {'row': 0, 'column': 0}}
 
         @classmethod
-        def from_meta(cls, meta: Union[Dict, 'Sobol.SemiNorm']) -> 'Sobol.SemiNorm':
+        def from_meta(cls, meta: Union[Dict, 'Sobol.SemiNorm']) -> Sobol.SemiNorm:
             """ Create a SemiNorm from meta information. New SemiNorms should be registered in this function.
 
             Args:
@@ -258,7 +216,7 @@ class Sobol(base.Sobol):
                                           "and register it in Sobol.SemiNorm.from_meta().")
 
         @classmethod
-        def element(cls, L: int, row: int, column: int) -> 'Sobol.SemiNorm':
+        def element(cls, L: int, row: int, column: int) -> Sobol.SemiNorm:
             """ Defines a SemiNorm on (L,L) matrices which is just the (row, column) element.
             Args:
                 L:
@@ -313,22 +271,22 @@ class Sobol(base.Sobol):
     NAME = "sobol"
 
     @classmethod
-    def from_GP(cls, fold: Fold, source_gp_name: str, destination_gp_name: str, Mu: int = -1, read_parameters: bool = False) -> 'Sobol':
-        """ Create a Sobol object from a saved GP directory.
+    def from_GP(cls, fold: Fold, source_gp_name: str, destination_gp_name: str, Mu: int = -1, read_parameters: bool = False) -> Sobol:
+        """ Create a Sobol object from a saved GP folder.
 
         Args:
             fold: The Fold housing the source and destination GPs.
-            source_gp_name: The source GP directory.
-            destination_gp_name: The destination GP directory. Must not exist.
+            source_gp_name: The source GP folder.
+            destination_gp_name: The destination GP folder. Must not exist.
             Mu: The dimensionality of the rotated input basis u. If this is not in range(1, fold.M+1), Mu=fold.M is used.
             read_parameters: True to store read the existing parameters and store them in self.parameters_read (for information purposes only).
 
         Returns: The constructed Sobol object
         """
-        dst = fold.dir / destination_gp_name
+        dst = fold.folder / destination_gp_name
         if dst.exists():
             shutil.rmtree(dst)
-        shutil.copytree(src=fold.dir / source_gp_name, dst=dst)
+        shutil.copytree(src=fold.folder / source_gp_name, dst=dst)
         return cls(gp=GP(fold=fold, name=destination_gp_name), Mu=Mu, read_parameters=read_parameters)
 
     """ End of required overrides."""
@@ -353,7 +311,7 @@ class ROM(base.ROM):
     MEMORY_LAYOUT = 'C'
 
     Parameters = NamedTuple("Parameters", [('Mu', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix),
-                                           ('lengthscale', NP.Matrix), ('log_likelihood', NP.Matrix)])
+                                           ('lengthscales', NP.Matrix), ('log_marginal_likelihood', NP.Matrix)])
     """ 
         **Mu** -- A numpy [[int]] specifying the number of input dimensions in the rotated basis u.
 
@@ -363,32 +321,32 @@ class ROM(base.ROM):
 
         **S** -- An (L L, M) Matrix of Sobol' cumulative indices.
 
-        **lengthscale** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscale.
+        **lengthscales** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscales.
 
-        **log_likelihood** -- A numpy [[float]] used to record the log marginal likelihood.
+        **log_marginal_likelihood** -- A numpy [[float]] used to record the log marginal likelihood.
     """
     DEFAULT_PARAMETERS = Parameters(*(atleast_2d(None),) * 6)
 
-    DEFAULT_OPTIMIZER_OPTIONS = {'iterations': 1, 'guess_identity_after_iteration': 1, 'sobol_optimizer_options': Sobol.DEFAULT_OPTIMIZER_OPTIONS,
+    DEFAULT_OPTIMIZER_OPTIONS = {'iterations': 1, 'guess_identity_after_iteration': 1, 'sobol_options': Sobol.DEFAULT_OPTIMIZER_OPTIONS,
                                  'gp_initializer': GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE,
-                                 'gp_optimizer_options': GP.DEFAULT_OPTIMIZER_OPTIONS}
+                                 'gp_options': GP.DEFAULT_OPTIONS}
     """ 
-        **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(options['sobol_optimizer_options']) 
-            followed by GP.optimize(options['gp_optimizer_options'])).
+        **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(options['sobol_options']) 
+            followed by GP.optimize(options['gp_options'])).
 
-        **sobol_optimizer_options*** -- A Dict of Sobol optimizer options, similar to (and documented in) Sobol.DEFAULT_OPTIMIZER_OPTIONS.
+        **sobol_options*** -- A Dict of Sobol optimizer options, similar to (and documented in) Sobol.DEFAULT_OPTIMIZER_OPTIONS.
 
         **guess_identity_after_iteration** -- After this many ROM iterations, Sobol.optimize does no exploration, 
             just gradient descending from Theta = Identity Matrix.
 
         **reuse_original_gp** -- True if GP.optimize is initialized each time from the GP originally provided.
 
-        **gp_optimizer_options** -- A Dict of GP optimizer options, similar to (and documented in) GP.DEFAULT_OPTIMIZER_OPTIONS.
+        **gp_options** -- A Dict of GP optimizer options, similar to (and documented in) GP.DEFAULT_OPTIMIZER_OPTIONS.
     """
 
     @classmethod
-    def from_ROM(cls, fold: Fold, name: str, suffix: str = ".0", Mu: int = -1, rbf_parameters: Optional[GP.Parameters] = None) -> 'ROM':
-        """ Create a ROM object from a saved ROM directory.
+    def from_ROM(cls, fold: Fold, name: str, suffix: str = ".0", Mu: int = -1, rbf_parameters: Optional[GP.Parameters] = None) -> ROM:
+        """ Create a ROM object from a saved ROM folder.
 
         Args:
             fold: The Fold housing the ROM to load.
@@ -398,30 +356,30 @@ class ROM(base.ROM):
 
         Returns: The constructed ROM object
         """
-        optimization_count = [optimized.name.count(cls.OPTIMIZED_GB_EXT) for optimized in fold.dir.glob(name + cls.OPTIMIZED_GB_EXT + "*")]
+        optimization_count = [optimized.name.count(cls.OPTIMIZED_GB_EXT) for optimized in fold.folder.glob(name + cls.OPTIMIZED_GB_EXT + "*")]
         source_gp_name = name + cls.OPTIMIZED_GB_EXT * max(optimization_count)
         destination_gp_name = source_gp_name + suffix
         return cls(name=name,
                    sobol=Sobol.from_GP(fold, source_gp_name, destination_gp_name, Mu=Mu, read_parameters=True),
-                   optimizer_options=None, rbf_parameters=rbf_parameters)
+                   options=None, rbf_parameters=rbf_parameters)
 
     @classmethod
-    def from_GP(cls, fold: Fold, name: str, source_gp_name: str, optimizer_options: Dict, Mu: int = -1,
-                rbf_parameters: Optional[GP.Parameters] = None) -> 'ROM':
-        """ Create a ROM object from a saved GP directory.
+    def from_GP(cls, fold: Fold, name: str, source_gp_name: str, options: Dict, Mu: int = -1,
+                rbf_parameters: Optional[GP.Parameters] = None) -> ROM:
+        """ Create a ROM object from a saved GP folder.
 
         Args:
             fold: The Fold housing the ROM to load.
             name: The name of the saved ROM to create from.
-            source_gp_name: The source GP directory.
+            source_gp_name: The source GP folder.
             Mu: The dimensionality of the rotated input basis u. If this is not in range(1, fold.M+1), Mu=fold.M is used.
-            optimizer_options: A Dict of ROM optimizer options.
+            options: A Dict of ROM optimizer options.
 
         Returns: The constructed ROM object
         """
         return cls(name=name,
                    sobol=Sobol.from_GP(fold=fold, source_gp_name=source_gp_name, destination_gp_name=name + ".0", Mu=Mu),
-                   optimizer_options=optimizer_options, rbf_parameters=rbf_parameters)
+                   options=options, rbf_parameters=rbf_parameters)
 
     OPTIMIZED_GB_EXT = ".optimized"
     REDUCED_FOLD_EXT = ".reduced"

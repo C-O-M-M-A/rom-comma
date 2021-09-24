@@ -21,10 +21,11 @@
 
 """ Run this module first thing, to test your installation of romcomma. """
 
+from romcomma.typing_ import *
 from romcomma import model
 from romcomma.data import Fold, Store
 from romcomma.function import Matrix, FunctionWithParameters, functions_of_normal
-from numpy import eye, savetxt, transpose, full
+from numpy import eye, savetxt, transpose, full, atleast_2d
 from pathlib import Path
 from scipy.stats import ortho_group
 
@@ -46,16 +47,15 @@ def run_gps(name, function_name: str, N: int, noise_std: float, random: bool, M:
     CDF_loc, CDF_scale, functions = FunctionWithParameters.default(function_name)
     store = functions_of_normal(store_dir=store_dir, N=N, M=M, CDF_loc=CDF_loc, CDF_scale=CDF_scale,
                                 input_transform=input_transform, functions=functions, noise_std=noise_std)
-    savetxt(store.dir / 'InverseRotation.source', transpose(lin_trans))
+    savetxt(store.folder / 'InverseRotation.csv', transpose(lin_trans))
     Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
-    gp_optimizer_options = {'optimizer': 'bfgs', 'max_iters': 5000, 'gtol': 1E-16}
-    kernel_parameters = model.implemented_in_gpflow.Kernel.ExponentialQuadratic.Parameters(lengthscale=full((1, 1), 2.5 ** (M / 5), dtype=float))
-    # noinspection PyProtectedMember
-    gp_parameters = model.implemented_in_gpflow.GP.DEFAULT_PARAMETERS._replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
+    kernel_parameters = model.implemented_in_gpflow.Kernel.ARD.Parameters()
+    gp_parameters = model.implemented_in_gpflow.GP.Parameters().replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
+    print(gp_parameters)
     # model.run.GPs(module=model.run.Module.GPFLOW_, name=name, store=store, M=-1, parameters=gp_parameters, optimize=True, test=True, sobol=False,
-    #               optimizer_options=gp_optimizer_options, make_ard=False)
+    #               options=gp_options, make_ard=False)
     # model.run.GPs(module=model.run.Module.GPFLOW_, name=name, store=store, M=-1, parameters=None, optimize=True, test=True, sobol=False,
-    #               optimizer_options=gp_optimizer_options, make_ard=True)
+    #               options=gp_options, make_ard=True)
 
 
 if __name__ == '__main__':
