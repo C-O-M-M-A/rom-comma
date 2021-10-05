@@ -48,16 +48,18 @@ from pandas import concat
 from enum import Enum
 from pathlib import Path
 from romcomma.model import implemented_in_gpflow
-import time
+from time import time
+from datetime import timedelta
+
 from contextlib import contextmanager
 
 
 class Implementation(Enum):
     """ An Enum indexing model implementations (i.e. modules). """
-    GPFLOW: Module = implemented_in_gpflow
+    TENSORFLOW: Module = implemented_in_gpflow
 
 
-IMPLEMENTATION: Implementation = Implementation.GPFLOW      # The implementation module to use. Reset using Context
+IMPLEMENTATION: Implementation = Implementation.TENSORFLOW      # The implementation module to use. Reset using Context
 
 
 @contextmanager
@@ -67,11 +69,13 @@ def Timing(name: str):
     Args:
         name: The name of this context, this appears as what is being timed. The empty string will not be timed.
     """
-    _enter = time.time()
+    _enter = time()
+    if name != '':
+        print (f'Running {name}', end='')
     yield
     if name != '':
-        _exit = time.time()
-        print(f'Timing {(_exit-_enter)/60:.1f}min for {name}.')
+        _exit = time()
+        print(f' took {timedelta(seconds=int(_exit-_enter))}.')
 
 
 @contextmanager
@@ -85,43 +89,41 @@ def Running(name: str, implementation: Implementation = IMPLEMENTATION, device: 
         implementation: An Implementation Enum specifying the implementation library for this run.
         **kwargs: Is passed straight to the implementation configuration manager.
     """
-    timing = Timing(f'running {name}')
-    message = f'Running {name} in {implementation.name.lower()}'
-    global IMPLEMENTATION
-    saved_implementation, IMPLEMENTATION = IMPLEMENTATION, implementation
-    device_manager = Timing('')
-    implementation_manager = Timing('')
-    if IMPLEMENTATION == Implementation.GPFLOW:
-        device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
-        if len(device) > 3:
-            device_manager = implemented_in_gpflow.tf.device(device)
-            message += f' on {device}'
-        implementation_manager = gpflow.config.as_context(gpflow.config.Config(**kwargs))
-    print(f'{message}...')
-    yield
-    device_manager.next()
-    implementation_manager.next()
-    IMPLEMENTATION = saved_implementation
-    print(f'...finished running {name}.')
-    timing.next()
+    with Timing(name):
+        global IMPLEMENTATION
+        saved_implementation, IMPLEMENTATION = IMPLEMENTATION, implementation
+        device_manager = Timing('')
+        implementation_manager = Timing('')
+        message = ' in ' + implementation.name.lower()
+        if IMPLEMENTATION == Implementation.TENSORFLOW:
+            device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
+            if len(device) > 3:
+                device_manager = implemented_in_gpflow.tf.device(device)
+                message = ' on ' + device
+            implementation_manager = gpflow.config.as_context(gpflow.config.Config(**kwargs))
+        print(message + '.')
+        with device_manager:
+            with implementation_manager:
+                yield
+        IMPLEMENTATION = saved_implementation
+        print('Running ' + name, end='')
 
 
-def GPs(name: str, store: Store, M: int, is_read: bool, shared_lengthscales: bool, is_isotropic: bool,
-        kernel_parameters: base.Kernel.Parameters = base.Kernel.Parameters(), parameters: base.GP.Parameters = base.GP.Parameters(),
-        optimize: bool = True, test: bool = True,
-        # sobol: bool, semi_norm: Dict = base.Sobol.SemiNorm.DEFAULT_META
-        **kwargs: Any):
+def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
+        kernel_parameters: Optional[base.Kernel.Parameters] = None, parameters: Optional[base.GP.Parameters] = None,
+        optimize: bool = True, test: bool = True, sobol: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.DEFAULT_META'}, **kwargs: Any):
     """ Service routine to recursively run GPs the Folds in a Store, and on a single Fold.
 
     Args:
         name: The GP name.
-        store: The source of the training __data__.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
-            or a Store which contains Splits or Folds.
+        store: The source of the training __data__.csv. May be a Fold, or a Store which contains Folds.
         M: The number of input dimensions to use.
-        is_read: If True, the GP.kernel.parameters and GP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
-        shared_lengthscales: Whether to share lengthscales across kernels.
-        is_isotropic: Whether to coerce the kernel to be isotropic.
-        kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. This will be ignored/overridden if ``read_parameters == True``.
+        is_read: If True, the GP.kernel.parameters and GP.parameters are read from ``fold.folder/name``, otherwise defaults are used.
+            If None, the nearest available GP down the hierarchy is broadcast, constructing from scratch if no nearby GP is available.
+        is_isotropic: Whether to coerce the kernel to be isotropic. If None, isotropic is run, then broadcast to run anisotropic.
+        is_independent: Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.
+        kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
+            If None, the kernel is read from file, or set to the default base.Kernel.Parameters(), according to read_from_file.
         parameters: The GP.parameters fields=values to replace after reading from file/defaults.
         optimize: Whether to optimize each GP.
         test: Whether to test each GP.
@@ -137,55 +139,38 @@ def GPs(name: str, store: Store, M: int, is_read: bool, shared_lengthscales: boo
         if not K:
             raise FileNotFoundError(f'Cannot construct a GP in a Store ({store.folder:s}) which is not a Fold.')
         for k in K:
-            if is_isotropic or is_isotropic is None:
-                full_name = name + '.isotr'
-                fold = Fold(store, k, M)
-                with Running(f'{full_name} on Fold {k}'):
-                    GPs(full_name, fold, M, is_read, shared_lengthscales, True, kernel_parameters, parameters,
-                        optimize, test,
-                        # sobol, semi_norm,
-                        **kwargs)
-                if is_isotropic:
-                    return
-                else:
-                    name += '.aniso'
-                    name, full_name = full_name, name
-                    base.GP.copy(src_folder=fold.folder/name, dst_folder=fold.folder/full_name)
-                    fold = Fold(store, k, M)
-                    with Running(f'{full_name} on Fold {k}'):
-                        GPs(full_name, fold, M, is_read, shared_lengthscales, True, kernel_parameters, parameters,
-                            optimize, test,
-                            # sobol, semi_norm,
-                            **kwargs)
-                if is_isotropic is None:
-                    name += '.aniso'
-                    name, full_name = full_name, name
-                    base.GP.copy(src_folder=fold.folder/name, dst_folder=fold.folder/full_name)
-                    with Running(f'{full_name} on Fold {k}'):
-                        GPs(full_name, fold, M, is_read, shared_lengthscales, True, kernel_parameters, parameters,
-                            optimize, test,
-                            # sobol, semi_norm,
-                            **kwargs)
+            gps(name, Fold(store, k, M), M, is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
     else:
-        """     def __init__(self, fold: Fold, name: str, is_read: bool, shared_lengthscales: bool, is_isotropic: bool,
-                         kernel_parameters: Kernel.Parameters = Kernel.ARD.Parameters(), **kwargs: NP.Matrix):
-        """
-        params = parameters.as_dict()
-        if not is_isotropic:
-            name += '.aniso'
-            gp = IMPLEMENTATION.value.GP(store, name, is_read, shared_lengthscales, False, kernel_parameters, **params)
-            if not is_read:
-                is_isotropic = True
-                name += '.isotr'
-                gp = IMPLEMENTATION.value.GP(store, name, is_read, shared_lengthscales, is_isotropic, kernel_parameters, **params)
+        if is_independent is None:
+            gps(name, store, M, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+            gps(name, store, M, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
         else:
-            gp = IMPLEMENTATION.value.GP(store, name, is_read, shared_lengthscales, is_isotropic, kernel_parameters, **params)
-        if optimize:
-            gp.optimize(**kwargs)
-        if test:
-            gp.test()
-        # if sobol:
-        #     module.value.Sobol(gp, semi_norm)
+            full_name = name + ('.i' if is_independent else '.d')
+            if is_isotropic is None:
+                gps(name, store, M, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+                gps(name, store, M, None, False, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+            else:
+                full_name = full_name + ('.i' if is_isotropic else '.a')
+                if is_read is None:
+                    if not (store.folder / full_name).exists():
+                        nearest_name = name + '.i' + full_name[-2:]
+                        if is_independent or not (store.folder / nearest_name).exists():
+                            nearest_name = full_name[:-2] + '.i'
+                            if not (store.folder / nearest_name).exists():
+                                gps(name, store, M, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol,
+                                    semi_norm, **kwargs)
+                                return
+                        base.GP.copy(src_folder=store.folder/nearest_name, dst_folder=store.folder/full_name)
+                    gps(name, store, M, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+                else:
+                    gp = IMPLEMENTATION.value.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
+                                                 **({} if parameters is None else parameters.as_dict()))
+                    if optimize:
+                        gp.optimize(**kwargs)
+                    if test:
+                        gp.test()
+                    # if sobol:
+                    #     module.value.Sobol(gp, semi_norm)
 
 
 def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,

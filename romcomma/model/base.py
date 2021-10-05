@@ -33,7 +33,7 @@ from abc import ABC, abstractmethod
 from enum import IntEnum, auto
 from pathlib import Path
 from warnings import warn
-from numpy import atleast_2d, broadcast_to, sqrt, einsum, exp, prod, eye, shape, transpose, zeros, delete, diag, reshape, full, ones, empty, \
+from numpy import array, atleast_2d, broadcast_to, sqrt, einsum, exp, prod, eye, shape, transpose, zeros, delete, diag, diagonal, reshape, full, ones, empty, \
     arange, sum, concatenate, copyto, sign
 from pandas import DataFrame, MultiIndex, concat
 from scipy import optimize
@@ -99,6 +99,31 @@ class Model(ABC):
             self._values = self._values._replace(**kwargs)
             return self
 
+        def broadcast_value(self, model_name: str, field: str, target_shape: Tuple[int,int], is_diagonal: bool = True,
+                            folder: Optional[PathLike] = None) -> Model.Parameters:
+            """ Broadcast a parameter value.
+
+            Args:
+                model_name: Used only in error reporting.
+                field: The name of the field whose value we are broadcasting.
+                target_shape: The shape to broadcast to.
+                is_diagonal: Whether to zero the off-diagonal elements of a square matrix.
+                folder:
+
+            Returns: Self, for chaining calls.
+            Raises:
+                IndexError: If broadcasting is impossible.
+            """
+            replacement = {field: getattr(self.values, field)}
+            try:
+                replacement[field] = array(broadcast_to(replacement[field], target_shape))
+            except ValueError:
+                raise IndexError(f'The {model_name} {field} has shape {replacement[field].shape} '
+                                 f' which cannot be broadcast to {target_shape}.')
+            if is_diagonal:
+                replacement[field] = diag(diagonal(replacement[field]))
+            return self.replace(**replacement).write(folder)
+
         @property
         def folder(self) -> Path:
             """ The folder containing the Model.Parameters. """
@@ -146,7 +171,7 @@ class Model(ABC):
             """
             self._set_folder(folder)
             assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
-            dummy = (Frame(self._csv[i], DataFrame(p)) for i, p in enumerate(self._values))
+            dummy = tuple(Frame(self._csv[i], DataFrame(p)) for i, p in enumerate(self._values))
             return self
 
         def __init__(self, folder: Optional[PathLike] = None, **kwargs: NP.Matrix):
@@ -176,7 +201,7 @@ class Model(ABC):
     @property
     def params(self) -> Parameters.Values:
         """ Gets the model parameters, as a NamedTuple of Matrices."""
-        return self._parameters
+        return self._parameters.values
 
     @abstractmethod
     def calculate(self):
@@ -340,43 +365,36 @@ class Kernel(Model):
         """ The input (X) dimensionality, or 1 for an isotropic kernel."""
         return self._M
 
-    def expand(self, independent_outputs: bool = True, L: int = 1, shared_lengthscales: bool = True, M: int = 1, folder: Optional[PathLike] = None) -> Kernel:
-        """ Expand this kernel to higher dimensions.
-
+    def broadcast_parameters(self, variance_shape: Tuple[int, int], M, folder: Optional[PathLike] = None) -> Kernel:
+        """ Broadcast this kernel to higher dimensions. Shrinkage raises errors, unchanged dimensions silently nop.
+        A diagonal variance matrix broadcast to a square matrix is initially diagonal. All other expansions are straightforward broadcasts.
         Args:
-            independent_outputs: False for a single multi-output kernel, True otherwise.
-            L: The output (Y) dimensionality, or 1 for a single kernel shared by all outputs.
-            shared_lengthscales: True if lengthscales are shared across kernels.
-            M: The input (X) dimensionality, or 1 for an isotropic kernel.
+            variance_shape: The new shape for the variance, must be (1, L) or (L, L).
+            M: The number of input Lengthscales per output.
             folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
         Returns: ``self``, for chaining calls.
+        Raises:
+            IndexError: If an attempt is made to shrink a parameter.
         """
-        L, M = max(L, self._L), max(M, self.M)
-        variance_shape = (1, L)
-        variance = broadcast_to(self.params.variance, variance_shape)
-        if not independent_outputs:
-            variance_shape = (L, L)
-            variance = diag(variance)
-        lengthscales_shape = (1, M) if shared_lengthscales else (variance_shape[1] * (variance_shape[0] + 1) / 2, M)
-        self._parameters.replace(variance=variance, lengthscales=broadcast_to(self.params.lengthscales, lengthscales_shape)).write(folder)
+        if variance_shape != self.params.variance.shape:
+            self.parameters.broadcast_value(model_name=str(self.folder), field="variance", target_shape=variance_shape, is_diagonal=True, folder=folder)
+            self._L = variance_shape[1]
+        if (self._L, M) != self.params.lengthscales.shape:
+            self.parameters.broadcast_value(model_name=str(self.folder), field="lengthscales", target_shape=(self._L, M), is_diagonal=False, folder=folder)
+            self._M = M
         return self
 
-    @abstractmethod
     @property
+    @abstractmethod
     def implemented_in(self) -> Tuple[Any, ...]:
         """ The implemented_in_??? version of this Kernel, for use in the implemented_in_??? GP.
-            If ``self.variance.shape == (1,1)`` a 1-tuple of kernels is returned.
             If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
 
     def calculate(self):
-        """ **Do not use, this function is merely an interface requirement. **
-
-        Raises:
-            NotImplementedError:
-        """
-        raise NotImplementedError('A kernel cannot be calculated.')
+        """ Calculate the kernel."""
+        pass
 
     def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
         """ **Do not use, this function is merely an interface requirement. **
@@ -387,20 +405,7 @@ class Kernel(Model):
         Raises:
             NotImplementedError:
         """
-        raise NotImplementedError('A kernel has no use for optimizer options, only its parent GP does.')
-
-    def validate_parameters(self):
-        """
-
-        Raises:
-            IndexError: If ``variance.shape`` is neither (L,L) nor (1,L).
-            IndexError: If ``lengthscales.shape[0]`` is not equal to 1 or ``variance.shape[1] * (variance.shape[0] + 1)``.
-        """
-        if self.params.variance.shape[0] not in (1, self._L):
-            raise IndexError(f'kernel variance shape={self.params.variance.shape} is neither (L,L) nor (1,L).')
-        if self.params.lengthscales.shape[0] not in (1, self.params.variance.shape[1] * (self.params.variance.shape[0] + 1) / 2):
-            raise IndexError(f'kernel lengthscales shape[0]={self.params.lengthscales.shape[0]} is not equal to 1 or ' +
-                             f'variance.shape[1]*(variance.shape[0]+1)/2={self.params.variance.shape[1] * (self.params.variance.shape[0] + 1) / 2}.')
+        raise NotImplementedError('A kernel cannot be implemented.')
 
     def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
         """ Construct a Kernel. This must be called as a matter of priority by all implementations.
@@ -412,7 +417,7 @@ class Kernel(Model):
         """
         super().__init__(folder, read_parameters, **kwargs)
         self._L, self._M = self.params.variance.shape[1], self.params.lengthscales.shape[1]
-        self.validate_parameters()
+        self.broadcast_parameters(self.params.variance.shape, self._M)
 
 
 # noinspection PyPep8Naming
@@ -504,14 +509,15 @@ class GP(Model):
             method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
             kwargs: A Dict of implementation-dependent optimizer options, following the format of GP.DEFAULT_OPTIMIZER_OPTIONS.
         """
+
     @abstractmethod
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
         """ Predicts the response to input X.
 
         Args:
-            X: A (J,M) design Matrix of inputs.
+            X: A (o, M) design Matrix of inputs.
             y_instead_of_f: True to include noise e in the result covariance.
-        Returns: The distribution of Y or f, as a pair (mean (J, L) Matrix, std (J, L) Matrix).
+        Returns: The distribution of Y or f, as a pair (mean (o, L) Matrix, std (o, L) Matrix).
         """
 
     def test(self) -> Frame:
@@ -533,40 +539,41 @@ class GP(Model):
 
     @property
     @abstractmethod
-    def KNoisyInv_Y(self) -> Union[NP.Matrix, TF.Tensor]:
-        """ The NL-Vector, which pre-multiplied by the JLxNL kernel k(x, X) gives the JL-Vector predictive mean fBar(x). """
+    def KNoisy_Cho(self) -> Union[NP.Matrix, TF.Tensor]:
+        """ The Cholesky decomposition of the LNxLN noisy kernel k(X, X)+E. """
 
-    def _validate_parameters(self, shared_lengthscales: bool, is_isotropic: bool):
-        """ Generic validation.
+    @property
+    @abstractmethod
+    def KNoisyInv_Y(self) -> Union[NP.Matrix, TF.Tensor]:
+        """ The LN-Vector, which pre-multiplied by the LoxLN kernel k(x, X) gives the Lo-Vector predictive mean fBar(x).
+        Returns: ChoSolve(self.KNoisy_Cho, self.Y) """
+
+    def broadcast_parameters(self, is_independent: bool, is_isotropic: bool, folder: Optional[PathLike] = None) -> GP:
+        """ Broadcast the parameters of the GP (including kernels) to highr dimensions. Shrinkage raises errors, unchanged dimensions silently nop.
 
         Args:
-            shared_lengthscales: Whether to share lengthscales across kernels.
-            is_isotropic: Whether to coerce the kernel to be isotropic.
-        Raises:
-            IndexError: If a parameter is mis-shaped.
+            is_independent: Whether the outputs will be treated as independent.
+            is_isotropic: Whether to restrict the kernel to be isotropic.
+            folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
+        Returns: ``self``, for chaining calls.
         """
-        if self.params.noise_variance.shape not in (admissable_shapes := ((self._L, self._L), (1, self._L), (1, 1))):
-            raise IndexError(f'The GP variance has shape {self.params.noise_variance.shape} '
-                             f'which is not in admissable_shapes={admissable_shapes} for L={self._L}.')
-        if self._kernel.L not in (self._L, 1):
-            raise IndexError(f'GP.kernel.L={self._kernel.L} which is neither GP.L={self._L} nor 1.')
-        if self._kernel.M not in (self._M, 1):
-            raise IndexError(f'GP.kernel.M={self._kernel.M} which is neither GP.M={self._M} nor 1.')
-        self._kernel.expand(independent_outputs=(self.params.noise_variance.shape[0] == 1), L=self.params.noise_variance.shape[1],
-                            shared_lengthscales=shared_lengthscales, M=1 if is_isotropic else self._M)
+        target_shape = (1, self._L) if is_independent else (self._L, self._L)
+        self._parameters.broadcast_value(model_name=self.folder, field="noise_variance", target_shape=target_shape, is_diagonal=is_independent, folder=folder)
+        self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
 
     @abstractmethod
-    def __init__(self, fold: Fold, name: str, is_read: bool, shared_lengthscales: bool, is_isotropic: bool,
-                 kernel_parameters: Kernel.Parameters = Kernel.Parameters(), **kwargs: NP.Matrix):
+    def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
+                 kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):
         """ GP Constructor. Calls model.__init__ to setup parameters, then checks dimensions.
 
         Args:
-            fold: The Fold housing this GP.
             name: The name of this GP.
+            fold: The Fold housing this GP.
             is_read: If True, the GP.kernel.parameters and GP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
-            shared_lengthscales: Whether to share lengthscales across kernels.
-            is_isotropic: Whether to coerce the kernel to be isotropic.
-            kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. This will be ignored/overridden if ``read_parameters == True``.
+            is_independent: Whether the outputs will be treated as independent.
+            is_isotropic: Whether to restrict the kernel to be isotropic.
+            kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
+                If None, the kernel is read from file, or set to the default base.Kernel.Parameters(), according to read_from_file.
             **kwargs: The GP.parameters fields=values to replace after reading from file/defaults.
         Raises:
             IndexError: If a parameter is mis-shaped.
@@ -575,14 +582,16 @@ class GP(Model):
         self._X, self._Y = self._fold.X.to_numpy(dtype=float, copy=True), self._fold.Y.to_numpy(dtype=float, copy=True)
         self._N, self._M, self._L = self._fold.N, self._fold.M, self._fold.L
         super().__init__(self._folder, is_read, **kwargs)
-        if is_read:
+        if is_read and kernel_parameters is None:
             KernelType = Kernel.TypeFromIdentifier(self.params.values.kernel[0, 0])
             self._kernel = KernelType(self._folder / self.KERNEL_DIR_NAME, is_read)
         else:
+            if kernel_parameters is None:
+                kernel_parameters = Kernel.Parameters()
             KernelType = Kernel.TypeFromParameters(kernel_parameters)
             self._kernel = KernelType(self._folder / self.KERNEL_DIR_NAME, is_read, **kernel_parameters.as_dict())
             self._parameters.replace(kernel=atleast_2d(KernelType.TYPE_IDENTIFIER)).write()
-        self._validate_parameters(shared_lengthscales, is_isotropic)
+        self.broadcast_parameters(is_independent, is_isotropic)
 
 
 # noinspection PyPep8Naming
@@ -729,7 +738,7 @@ class Sobol(Model):
 
     @property
     def lengthscales(self):
-        """ An (Mx,) Array of ARD lengthscales."""
+        """ An (Mx,) Array of RBF lengthscales."""
         return self._lengthscale
 
     def Tensor3AsMatrix(self, DorS: NP.Tensor3) -> NP.Matrix:
@@ -1190,7 +1199,7 @@ class Sobol(Model):
         """ Initialize surrogate GP and related quantities, namely 
             _gp
             _N, _M, _L,: GP training data dimensions N = dataset rows (datapoints), M = input columns, L = input columns
-            _lengthscale: ARD lengthscales vector
+            _lengthscale: RBF lengthscales vector
         all of which are private and invariant.
         """
         self._gp = gp
@@ -1264,7 +1273,7 @@ class ROM(Model):
 
         **S** -- An (L L, M) Matrix of Sobol' cumulative indices.
 
-        **lengthscales** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscales.
+        **lengthscales** -- A (1,M) Covector of RBF lengthscales, or a (1,1) RBF lengthscales.
 
         **log_marginal_likelihood** -- A numpy [[float]] used to record the log marginal likelihood.
     """

@@ -49,9 +49,8 @@ def run_gps(name, function_name: str, N: int, noise_std: float, random: bool, M:
                                 input_transform=input_transform, functions=functions, noise_std=noise_std)
     savetxt(store.folder / 'InverseRotation.csv', transpose(lin_trans))
     Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
-    kernel_parameters = model.implemented_in_gpflow.Kernel.ARD.Parameters()
-    gp_parameters = model.implemented_in_gpflow.GP.Parameters().replace(kernel=kernel_parameters, e_floor=1E-6, e=0.003)
-    print(gp_parameters)
+    model.run.gps(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+                  optimize=True, test=True)
     # model.run.GPs(module=model.run.Module.GPFLOW_, name=name, store=store, M=-1, parameters=gp_parameters, optimize=True, test=True, sobol=False,
     #               options=gp_options, make_ard=False)
     # model.run.GPs(module=model.run.Module.GPFLOW_, name=name, store=store, M=-1, parameters=None, optimize=True, test=True, sobol=False,
@@ -59,8 +58,8 @@ def run_gps(name, function_name: str, N: int, noise_std: float, random: bool, M:
 
 
 if __name__ == '__main__':
-    cunt = FunctionWithParameters.DEFAULTS
-    for N in (800,):
-        for noise_std in (0,):
-            for random in (False,):
-                run_gps('initial', 'sin.1', N, noise_std, random, M=1)
+    with model.run.Running('Test'):
+        for N in (800,):
+            for noise_std in (0,):
+                for random in (False,):
+                    run_gps('initial', 'sin.1', N, noise_std, random, M=2)

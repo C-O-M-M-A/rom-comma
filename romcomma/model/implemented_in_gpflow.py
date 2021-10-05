@@ -32,14 +32,15 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import shutil
 from enum import IntEnum, auto
+from contextlib import suppress
 
 
 # noinspection PyPep8Naming,PyPep8Naming
-class Kernel:
+class Kernels:
     """ This is just a container for Kernel classes. Put all new Kernel classes in here."""
 
-    class ARD(base.Kernel):
-        """ Implements the ARD kernel_parameters for use with romcomma.model.implemented_in_gpflow."""
+    class RBF(base.Kernel):
+        """ Implements the RBF kernel_parameters for use with romcomma.model.implemented_in_gpflow."""
 
         @property
         def implemented_in(self) -> Tuple[Any, ...]:
@@ -49,18 +50,14 @@ class Kernel:
                 If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
             """
             if self.params.variance.shape[0] == 1:
-                lm = self.params.lengthscales.shape[0]
-                if self.params.lengthscales.shape[1] == 1:
-                    results = tuple(gpflow.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[min(l, lm)], ard=False)
-                                    for l in range(self.params.variance.shape[1]))
-                else:
-                    results = tuple(gpflow.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[min(l, lm)], ard=True)
-                                    for l in range(self.params.variance.shape[1]))
-                for result in results[:-1]:
-                    gpflow.set_trainable(result, False)
+                ard = (self.params.lengthscales.shape[1] == 1)
+                results = tuple(gpflow.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[l])
+                                for l in range(self.params.variance.shape[1]))
+                # for result in results[:-1]:
+                #     gpflow.set_trainable(result, False)
             else:
-                raise NotImplementedError(f'Kernel.ARD is not implemented_in_gpflow for variance.shape={self.params.variance.shape}, ' +
-                                          f'only for variance.shape=(1,{self.params.variance.shape[1]}) using independent GPs.')
+                raise NotImplementedError(f'Kernel.RBF is not implemented_in_gpflow for variance.shape={self.params.variance.shape}, ' +
+                                          f'only for variance.shape=(1,{self.params.variance.shape[1]}) using independent gps.')
             return results
 
 # noinspection PyPep8Naming
@@ -71,7 +68,7 @@ class GP(base.GP):
     @property
     def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
         """ Options passed to scipy.optimize."""
-        return {'max_iters': 5000, 'gtol': 1E-16}
+        return {'maxiter': 5000, 'gtol': 1E-16}
 
     def optimize(self, method: str = 'L-BFGS-B', **kwargs: Any):
         """ Optimize the GP hyper-parameters.
@@ -82,20 +79,19 @@ class GP(base.GP):
         """
         options = (self._read_options() if self._options_json.exists() else self.DEFAULT_OPTIONS)
         options.update(kwargs)
-        options.pop('result', default=None)
+        with suppress(KeyError):
+            options.pop('result')
         opt = gpflow.optimizers.Scipy()
-        options = {**options, 'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
-                                                  for gp in self._implemented_in))}
+        options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
+                                                  for gp in self._implemented_in))})
         self._write_options(options)
-        if len(self._implemented_in) == 1:
-            gp = self._implemented_in[0]
-            self.parameters = self._parameters.replace(noise_variance=gp.likelihood.variance, log_marginal_likelihood=gp.log_marginal_likelihood()).write()
-            self._kernel.parameters = self._kernel.parameters.replace(variance=gp.kernel.variance, lengthscales=gp.kernel.lengthscales).write()
-        else:
-            self.parameters = self._parameters.replace(noise_variance=tuple(gp.likelihood.variance for gp in self._implemented_in),
-                                                       log_marginal_likelihood=tuple(gp.log_marginal_likelihood() for gp in self._implemented_in)).write()
-            self._kernel.parameters = self._kernel.parameters.replace(variance=tuple(gp.kernel.variance for gp in self._implemented_in),
-                                                                      lengthscales=tuple(gp.kernel.lengthscales for gp in self._implemented_in)).write()
+        self.parameters = self._parameters.replace(noise_variance=tuple(gp.likelihood.variance.numpy() for gp in self._implemented_in),
+                                                   log_marginal_likelihood=tuple(gp.log_marginal_likelihood()
+                                                                                 for gp in self._implemented_in)).write()
+        self._kernel.parameters = self._kernel.parameters.replace(variance=tuple(gp.kernel.variance.numpy()
+                                                                                 for gp in self._implemented_in),
+                                                                  lengthscales=tuple(gp.kernel.lengthscales.numpy()
+                                                                                     for gp in self._implemented_in)).write()
         self._test = None
 
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
@@ -111,48 +107,60 @@ class GP(base.GP):
         return atleast_2d(results[0]), atleast_2d(sqrt(results[1]))
 
     @property
-    def KNoisyInv_Y(self) -> TF.Tensor:
-        """ The NL-Vector, which pre-multiplied by the JLxNL kernel k(x, X) gives the JL-Vector predictive mean fBar(x). """
-        if self.params.noise_variance.shape[0] != 1:
-            raise NotImplementedError('noise_variance.shape[0] must be equal to 1.')
-        result = []
-        for gp in self._implemented_in:
-            X_data, Y_data = gp.data
+    def KNoisy_Cho(self) -> TF.Tensor:
+        """ The Cholesky decomposition of the LNxLN noisy kernel k(X, X)+E. """
+        result = zeros(shape=(self._L * self._N, self._L * self._N))
+        for l, gp in enumerate(self._implemented_in):
+            X_data = gp.data[0]
             K = gp.kernel(X_data)
-            k_diag = tf.linalg.diag_part(K)
-            KNoisy = tf.linalg.set_diag(K, k_diag + tf.fill(tf.shape(k_diag), gp.likelihood.variance))
-            result.append(tf.linalg.cholesky_solve(tf.linalg.cholesky(KNoisy), Y_data))
-        return tf.reshape(tf.transpose(tf.constant(result)), shape=[-1])
+            K_diag = tf.linalg.diag_part(K)
+            result[l*self._N:(l+1)*self._N, l*self._N:(l+1)*self._N] = tf.linalg.set_diag(K, K_diag + tf.fill(tf.shape(K_diag), gp.likelihood.variance))
+        return tf.linalg.cholesky(result)
 
-    def _check_f_KNoisyInv_Y(self, x: NP.Matrix) -> TF.Tensor:
-        """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance)."""
-        kernel = [gp.kernel(self._X, x) for gp in self._implemented_in]
-        KNoisyInv_Y = tf.transpose(tf.reshape(self.KNoisyInv_Y, [-1, self._L]))
+    @property
+    def KNoisyInv_Y(self) -> TF.Tensor:
+        """ The LN-Vector, which pre-multiplied by the LoxLN kernel k(x, X) gives the Lo-Vector predictive mean fBar(x).
+        Returns: ChoSolve(self.KNoisy_Cho, self.Y) """
+        Y_data = self._Y.transpose().flatten()
+        return tf.linalg.cholesky_solve(tf.linalg.cholesky(self.KNoisy_Cho), Y_data)
+
+    def _check_KNoisyInv_Y(self, x: NP.Matrix) -> TF.Tensor:
+        """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance).
+
+        Args:
+            x: An (o, M) matrix of inputs.
+        Returns: Should return zeros((Lo)) (to within numerical error tolerance)
+
+        """
+        o = x.shape[0]
+        kernel = zeros(shape=(self._L * o, self._L * self._N))
+        for l, gp in enumerate(self._implemented_in):
+            X_data = gp.data[0]
+            kernel[l*o:(l+1)*o, l*self._N:(l+1)*self._N] = gp.kernel(X_data, x)
         predicted = self.predict(x)[0]
-        return tf.constant([predicted[:, l] - array(tf.einsum('jn, n -> j', kernel, KNoisyInv_Y[:, l])) for l, kernel in enumerate(kernel)])
+        return predicted - tf.einsum('on, n -> o', kernel, self.KNoisyInv_Y)
 
-    def __init__(self, fold: Fold, name: str, is_read: bool, shared_lengthscales: bool = False, is_isotropic: bool = False,
-                 kernel_parameters: base.Kernel.Parameters = base.Kernel.Parameters(), **kwargs: NP.Matrix):
+    def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
+                 kernel_parameters: Optional[base.Kernel.Parameters] = None, **kwargs: NP.Matrix):
         """ GP Constructor. Calls model.__init__ to setup parameters, then checks dimensions.
 
         Args:
-            fold: The Fold housing this GP.
             name: The name of this GP.
+            fold: The Fold housing this GP.
             is_read: If True, the GP.kernel.parameters and GP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
-            shared_lengthscales: Whether to share lengthscales across kernels.
-            is_isotropic: Whether to coerce the kernel to be isotropic.
-            kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. This will be ignored/overridden if ``read_parameters == True``.
+            is_independent: Whether the outputs will be treated as independent.
+            is_isotropic: Whether to restrict the kernel to be isotropic.
+            kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
+                If None, the kernel is read from file, or set to the default base.Kernel.Parameters(), according to read_from_file.
             **kwargs: The GP.parameters fields=values to replace after reading from file/defaults.
         Raises:
             IndexError: If a parameter is mis-shaped.
         """
-        super().__init__(fold, name, is_read, shared_lengthscales, is_isotropic, kernel_parameters, **kwargs)
-
+        super().__init__(name, fold, is_read, is_isotropic, is_independent, kernel_parameters, **kwargs)
         # e = gpflow.Parameter(value=self._parameters.values.e,
         #                      transform=tfp.bijectors.Chain([tfp.bijectors.Shift(self._parameters.values.e_floor), tfp.bijectors.Softplus()]), trainable=True)
-
-        self._implemented_in = tuple(gpflow.models.GPR(data=(self._X, self._Y[:, [i]]), kernel=self._kernel, mean_function=None,
-                                                       noise_variance=self.params.noise_variance[i]) for i, kernel in enumerate(self._kernel.implemented_in()))
+        self._implemented_in = tuple(gpflow.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None,
+                                                       noise_variance=self.params.noise_variance[0, l]) for l, kernel in enumerate(self._kernel.implemented_in))
 
 
 # noinspection PyPep8Naming
@@ -275,7 +283,7 @@ class Sobol(base.Sobol):
         """ Create a Sobol object from a saved GP folder.
 
         Args:
-            fold: The Fold housing the source and destination GPs.
+            fold: The Fold housing the source and destination gps.
             source_gp_name: The source GP folder.
             destination_gp_name: The destination GP folder. Must not exist.
             Mu: The dimensionality of the rotated input basis u. If this is not in range(1, fold.M+1), Mu=fold.M is used.
@@ -321,7 +329,7 @@ class ROM(base.ROM):
 
         **S** -- An (L L, M) Matrix of Sobol' cumulative indices.
 
-        **lengthscales** -- A (1,M) Covector of ARD lengthscales, or a (1,1) RBF lengthscales.
+        **lengthscales** -- A (1,M) Covector of RBF lengthscales, or a (1,1) RBF lengthscales.
 
         **log_marginal_likelihood** -- A numpy [[float]] used to record the log marginal likelihood.
     """

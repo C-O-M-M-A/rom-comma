@@ -7,7 +7,7 @@ Base_Path: the base path is where the initial data is found.
 Store: inside the base path there maybe multiple stores depending on how the data has been treated using "store_and_fold".
 Split: the next folder will usually be the splits if the data has more than 1 output.
 Fold: Each fold will then be found.
-Models: The models can be the GP (e.g. "ARD") or a ROM (e.g. "ROM.optimized"). Each rotation of the ROM will be in here too (e.g. "ROM.0").
+Models: The models can be the GP (e.g. "RBF") or a ROM (e.g. "ROM.optimized"). Each rotation of the ROM will be in here too (e.g. "ROM.0").
 After that, files are collected together back down these directories.
 """
 
