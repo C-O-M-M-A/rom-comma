@@ -60,4 +60,4 @@ if __name__ == '__main__':
         for N in (800,):
             for noise_std in (0,):
                 for random in (False,):
-                    run_gps('initial', ['sin.1', 'sin.2'], N, noise_std, random, M=2)
+                    run_gps('initial', ['sin.2', 'sin.1'], N, noise_std, random, M=2)
