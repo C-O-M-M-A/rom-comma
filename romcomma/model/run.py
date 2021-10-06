@@ -1,6 +1,6 @@
 # BSD 3-Clause License
 #
-# Copyright (c) 2019-2021, Robert A. Milton
+# Copyright (c) 2019-2022, Robert A. Milton
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -47,7 +47,7 @@ from numpy import atleast_1d, atleast_2d, full, broadcast_to, transpose
 from pandas import concat
 from enum import Enum
 from pathlib import Path
-from romcomma.model import implemented_in_gpflow
+from romcomma.model import in_tensorflow
 from time import time
 from datetime import timedelta
 
@@ -56,7 +56,7 @@ from contextlib import contextmanager
 
 class Implementation(Enum):
     """ An Enum indexing model implementations (i.e. modules). """
-    TENSORFLOW: Module = implemented_in_gpflow
+    TENSORFLOW: Module = in_tensorflow
 
 
 IMPLEMENTATION: Implementation = Implementation.TENSORFLOW      # The implementation module to use. Reset using Context
@@ -98,7 +98,7 @@ def Running(name: str, implementation: Implementation = IMPLEMENTATION, device: 
         if IMPLEMENTATION == Implementation.TENSORFLOW:
             device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
             if len(device) > 3:
-                device_manager = implemented_in_gpflow.tf.device(device)
+                device_manager = in_tensorflow.tf.device(device)
                 message = ' on ' + device
             implementation_manager = gpflow.config.as_context(gpflow.config.Config(**kwargs))
         print(message + '.')
