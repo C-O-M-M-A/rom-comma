@@ -207,10 +207,29 @@ class Store:
         return self._meta['data']['L']
 
     @property
+    def splits(self) -> List[Tuple[int, Path]]:
+        """ Lists the index and path of every Split in this Store."""
+        return [(int(split_dir.suffix[1:]), split_dir) for split_dir in self.folder.glob('split.[0-9]*')]
+
+    @property
     def standard(self) -> Frame:
         """ The Store standard: A (2, M+L) DataFrame consisting of (,M+L) ``loc`` values in the first row, (,M+L) ``scale`` values in the second."""
         self._standard = Frame(self.standard_csv) if self._standard is None else self._standard
         return self._standard
+
+    @property
+    def is_standardized(self) -> bool:
+        return self._meta['standard'] != Store.Standard.none.__name__
+
+    @property
+    def X(self) -> DataFrame:
+        """ The input X, as an (N,M) design Matrix with column headings."""
+        return self.data.df[self._meta['data']['X_heading']]
+
+    @property
+    def Y(self) -> DataFrame:
+        """ The output Y as an (N,L) Matrix with column headings."""
+        return self.data.df[self._meta['data']['Y_heading']]
 
     def __read_meta_json(self) -> dict:
         with open(self.meta_json, mode='r') as file:
@@ -219,10 +238,6 @@ class Store:
     def __write_meta_json(self):
         with open(self.meta_json, mode='w') as file:
             json.dump(self._meta, file, indent=8)
-
-    @property
-    def is_standardized(self) -> bool:
-        return self._meta['standard'] != Store.Standard.none.__name__
 
     def create_standardized_frame(self, csv: PathLike, df: DataFrame) -> Frame:
         """ Overwrite ``df`` with its standardized version, saving to csv.
@@ -291,11 +306,6 @@ class Store:
                     fold = Fold(self, k)
                     fold.split()
 
-    @property
-    def splits(self) -> List[Tuple[int, Path]]:
-        """ Lists the index and path of every Split in this Store."""
-        return [(int(split_dir.suffix[1:]), split_dir) for split_dir in self.folder.glob('split.[0-9]*')]
-
     def meta_data_update(self):
         """ Update __meta__"""
         self._meta.update({'data': {'X_heading': self._data.df.columns.values[0][0],
@@ -303,16 +313,6 @@ class Store:
         self._meta['data'].update({'N': self.data.df.shape[0], 'M': self.X.shape[1],
                                    'L': self.Y.shape[1]})
         self.__write_meta_json()
-
-    @property
-    def X(self) -> DataFrame:
-        """ The input X, as an (N,M) design Matrix with column headings."""
-        return self.data.df[self._meta['data']['X_heading']]
-
-    @property
-    def Y(self) -> DataFrame:
-        """ The output Y as an (N,L) Matrix with column headings."""
-        return self.data.df[self._meta['data']['Y_heading']]
 
     def __init__(self, folder: PathLike, init_mode: InitMode = InitMode.READ):
         """ Initialize Store.

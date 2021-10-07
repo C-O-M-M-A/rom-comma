@@ -27,7 +27,7 @@ from romcomma.typing_ import *
 from romcomma.data import Fold
 from romcomma.model import base
 from numpy import atleast_2d, zeros, sqrt, array, transpose
-import gpflow
+import gpflow as gf
 import tensorflow as tf
 import shutil
 from enum import IntEnum, auto
@@ -50,7 +50,7 @@ class Kernels:
             """
             if self.params.variance.shape[0] == 1:
                 ard = (self.params.lengthscales.shape[1] == 1)
-                results = tuple(gpflow.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[l])
+                results = tuple(gf.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[l])
                                 for l in range(self.params.variance.shape[1]))
                 # for result in results[:-1]:
                 #     gpflow.set_trainable(result, False)
@@ -80,7 +80,7 @@ class GP(base.GP):
         options.update(kwargs)
         with suppress(KeyError):
             options.pop('result')
-        opt = gpflow.optimizers.Scipy()
+        opt = gf.optimizers.Scipy()
         options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
                                                   for gp in self._implemented_in))})
         self._write_options(options)
@@ -158,7 +158,7 @@ class GP(base.GP):
         super().__init__(name, fold, is_read, is_isotropic, is_independent, kernel_parameters, **kwargs)
         # e = gpflow.Parameter(value=self._parameters.values.e,
         #                      transform=tfp.bijectors.Chain([tfp.bijectors.Shift(self._parameters.values.e_floor), tfp.bijectors.Softplus()]), trainable=True)
-        self._implemented_in = tuple(gpflow.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None,
+        self._implemented_in = tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None,
                                                        noise_variance=self.params.noise_variance[0, l]) for l, kernel in enumerate(self._kernel.implemented_in))
 
 
