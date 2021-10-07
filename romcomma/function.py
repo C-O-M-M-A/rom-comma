@@ -295,8 +295,8 @@ def functions_of_normal(store_dir: PathLike, N: int, M: int, CDF_loc: NP.Covecto
     X_distribution = Multivariate.Independent(M, Univariate('norm', loc=0, scale=1))
     L = M if functions is None else len(functions)
     noise_distribution = Multivariate.Independent(L, Univariate('norm', loc=0, scale=noise_std)) if noise_std > EFFECTIVELY_ZERO else None
-    return sample(store_dir=store_dir, N=N, X_distribution=X_distribution, X_sample_design=SampleDesign.LATIN_HYPERCUBE, CDF_loc=CDF_loc, CDF_scale=CDF_scale,
-                  input_transform=input_transform, functions=functions, noise_distribution=noise_distribution, noise_sample_design=SampleDesign.LATIN_HYPERCUBE)
+    return sample(store_dir, N, X_distribution, SampleDesign.LATIN_HYPERCUBE, CDF_loc, CDF_scale, input_transform, functions,
+                  noise_distribution, SampleDesign.LATIN_HYPERCUBE)
 
 
 def g_sobol_to_csv(n_samples: int, dim: int = 5, upper_bound: float = 1.0, lower_bound: float = 0.0, csv_name: str = "g_sobol.csv"):

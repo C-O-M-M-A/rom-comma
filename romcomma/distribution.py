@@ -168,7 +168,7 @@ class Multivariate:
         @abstractmethod
         def __init__(self):
             """ This is actually inaccessible, but serves as an abstract declaration."""
-            self._M = 0
+            raise NotImplementedError('This abstract constructor is not for calling.')
 
     # noinspection PyPep8Naming
     class Independent(Base):
@@ -184,8 +184,6 @@ class Multivariate:
 
         @property
         def parameters(self) -> dict:
-            """ The parameters of this multivariate distribution, as a Dict containing ``M`` and ``marginals`` which is a list of parameter 
-            Dicts for each marginal distribution in turn."""
             marginals = [marginal.parameters for marginal in self.marginals]
             return {'M': self._M, 'marginals': marginals}
 
@@ -238,15 +236,6 @@ class Multivariate:
                     return Univariate(name='uniform', loc=0, scale=1).rvs(N, self.M)
 
         def cdf(self, X: NP.Matrix) -> NP.Matrix:
-            """ Calculate cumulative distribution function (CDF) of this Multivariate.Independent.
-
-            Args:
-                X: (N,M) Matrix of values.
-            Returns: (N,M) Matrix of CDF(values)
-
-            Raises:
-                ValueError: If len(X.shape) != 2 or X.shape[1] != self.M.
-            """
             if len(X.shape) != 2 or X.shape[1] != self.M:
                 raise ValueError(f'X.shape = {X.shape} when M ={self.M:d}')
             N = X.shape[0]
@@ -262,13 +251,6 @@ class Multivariate:
                     return Univariate(name='uniform', loc=0, scale=1).parametrized.cdf(X)
 
         def sample(self, N: int, sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE) -> NP.Matrix:
-            """ Sample random noise from this Multivariate.Independent.
-
-            Args:
-                N: The number of rows returned.
-                sample_design: A SampleDesign, either LATIN_HYPERCUBE or RANDOM_VARIATE. Defaults to LATIN_HYPERCUBE.
-            Returns: An (N,M) design Matrix of random noise sampled from the underlying Multivariate.Independent.
-            """
             return self.rvs(N) if sample_design is SampleDesign.RANDOM_VARIATE else self.lhs(N)
 
         # noinspection PyMissingConstructor
@@ -333,31 +315,13 @@ class Multivariate:
 
         @property
         def parameters(self) -> dict:
-            """ The parameters of this multivariate distribution, as a Dict containing ``M`` and ``marginals`` which is a list of parameter 
-            Dicts for each marginal distribution in turn."""
             return {'M': self._M, 'name': 'Multivariate.Normal', 'mean': self._mean.tolist(), 'covariance': self._covariance.tolist()}
 
         def sample(self, N: int, sample_design: SampleDesign = SampleDesign.LATIN_HYPERCUBE) -> NP.Matrix:
-            """ Sample random noise from this Multivariate.Independent.
-
-            Args:
-                N: The number of rows returned.
-                sample_design: A SampleDesign, either LATIN_HYPERCUBE or RANDOM_VARIATE. Defaults to LATIN_HYPERCUBE.
-            Returns: An (N,M) design Matrix of random noise sampled from the underlying Multivariate.Normal.
-            """
             iid_standard_normal_sample = self._iid_standard_normal.sample(N, sample_design)
             return self.mean + iid_standard_normal_sample @ self.cholesky
 
         def cdf(self, X: NP.Matrix) -> NP.Matrix:
-            """ Calculate cumulative distribution function (CDF) of this Multivariate.Normal.
-
-            Args:
-                X: (N,M) Matrix of values.
-            Returns:  (N,M) Matrix of CDF(values)
-
-            Raises:
-                ValueError: If len(X.shape) != 2 or X.shape[1] != self.M.
-            """
             if len(X.shape) != 2 or X.shape[1] != self.M:
                 raise ValueError(f'X.shape = {X.shape} when M ={self.M:d}')
             return self._parametrized.cdf(X)

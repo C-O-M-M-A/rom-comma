@@ -44,11 +44,165 @@ from copy import deepcopy
 from romcomma import distribution
 
 
+class Parameters(ABC):
+    """ Abstraction of the parameters of a Model. Essentially a NamedTuple backed by files in a folder.
+    Note that file writing is lazy, it must be called explicitly, but the Parameters are designed for chained calls."""
+
+    @classmethod
+    @property
+    @abstractmethod
+    def Values(cls) -> Type[NamedTuple]:
+        """ The NamedTuple underpinning this Parameters set."""
+
+    @classmethod
+    def make(cls, iterable: Iterable) -> Parameters:
+        """ Wrapper for namedtuple._make. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
+        return cls.Values._make(iterable)
+
+    @classmethod
+    @property
+    def fields(cls) -> Tuple[str, ...]:
+        """ Wrapper for namedtuple._fields. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
+        return cls.Values()._fields
+
+    @classmethod
+    @property
+    def field_defaults(cls) -> Dict[str, Any]:
+        """ Wrapper for namedtuple._field_defaults. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
+        return cls.Values()._field_defaults
+
+    @property
+    def folder(self) -> Path:
+        """ The folder containing the Parameters. """
+        return self._folder
+
+    @property
+    def values(self) -> Values:
+        """ Gets or Sets the NamedTuple of the Parameters."""
+        return self._values
+
+    @values.setter
+    def values(self, value: Values):
+        """ Gets or Sets the NamedTuple of the Parameters."""
+        self._values = self.Values(*(atleast_2d(val) for val in value))
+
+    def as_dict(self) -> Dict[str, Any]:
+        """ Wrapper for namedtuple._asdict. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
+        return self._values._asdict()
+
+    def replace(self, **kwargs: NP.Matrix) -> Parameters:
+        """ Replace selected field values in this Parameters. Does not write to folder.
+
+        Args:
+            **kwargs: key=value pairs of NamedTuple fields, precisely as in NamedTuple._replace(**kwargs).
+        Returns: ``self``, for chaining calls.
+        """
+        for key, value in kwargs.items():
+            kwargs[key] = atleast_2d(value)
+        self._values = self._values._replace(**kwargs)
+        return self
+
+    def broadcast_value(self, model_name: str, field: str, target_shape: Tuple[int, int], is_diagonal: bool = True,
+                        folder: Optional[PathLike] = None) -> Parameters:
+        """ Broadcast a parameter value.
+
+        Args:
+            model_name: Used only in error reporting.
+            field: The name of the field whose value we are broadcasting.
+            target_shape: The shape to broadcast to.
+            is_diagonal: Whether to zero the off-diagonal elements of a square matrix.
+            folder:
+
+        Returns: Self, for chaining calls.
+        Raises:
+            IndexError: If broadcasting is impossible.
+        """
+        replacement = {field: getattr(self.values, field)}
+        try:
+            replacement[field] = array(broadcast_to(replacement[field], target_shape))
+        except ValueError:
+            raise IndexError(f'The {model_name} {field} has shape {replacement[field].shape} '
+                             f' which cannot be broadcast to {target_shape}.')
+        if is_diagonal and target_shape[0] > 1:
+            replacement[field] = diag(diagonal(replacement[field]))
+        return self.replace(**replacement).write(folder)
+
+    def _set_folder(self, folder: Optional[PathLike] = None):
+        """ Set the file location for these Parameters.
+
+        Args:
+            folder: The file location is changed to ``folder`` unless ``folder`` is ``None`` (the default).
+        """
+        if folder is not None:
+            self._folder = Path(folder)
+            self._csv = tuple((self._folder / field).with_suffix(".csv") for field in self.fields)
+
+    def read(self) -> Parameters:
+        """ Read Parameters from their csv files.
+
+        Returns: ``self``, for chaining calls.
+        Raises:
+            AssertionError: If self._csv is not set.
+        """
+        assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
+        self._values = self.Values(**{key: Frame(self._csv[i], header=[0]).df.values for i, key in enumerate(self.fields)})
+        return self
+
+    def write(self, folder: Optional[PathLike] = None) -> Parameters:
+        """  Write Parameters to their csv files.
+
+        Args:
+            folder: The file location is changed to ``folder`` unless ``folder`` is ``None`` (the default).
+        Returns: ``self``, for chaining calls.
+        Raises:
+            AssertionError: If self._csv is not set.
+        """
+        self._set_folder(folder)
+        assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
+        dummy = tuple(Frame(self._csv[i], DataFrame(p)) for i, p in enumerate(self._values))
+        return self
+
+    def __init__(self, folder: Optional[PathLike] = None, **kwargs: NP.Matrix):
+        """ Parameters Constructor. Shouldn't need to be overridden. Does not write to file.
+
+        Args:
+            folder: The folder to store the parameters.
+            **kwargs: key=value initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs). It is the caller's responsibility to ensure
+                that every value is of type NP.Matrix. Missing fields receive their defaults, so Parameters(folder) is the default parameter set.
+        """
+        for key, value in kwargs.items():
+            kwargs[key] = atleast_2d(value)
+        self._set_folder(folder)
+        self._values = self.Values(**kwargs)
+
+
 class Model(ABC):
     """ Abstract base class for any model. This base class implements generic file storage and parameter handling.
-    The latter is dealt with by each subclass overriding ``Model.Parameters.Values`` with its own ``Type[NamedTuple]``
+    The latter is dealt with by each subclass overriding ``Parameters.Values`` with its own ``Type[NamedTuple]``
     defining the parameter set it takes.``model.parameters.values`` is a ``Values=Type[NamedTuple]`` of NP.Matrices.
     """
+
+    @staticmethod
+    def delete(folder: PathLike, ignore_errors: bool = True):
+        """ Remove a folder tree, using shutil.
+
+        Args:
+            folder: Root of the tree to remove.
+            ignore_errors: Boolean.
+        """
+        shutil.rmtree(folder, ignore_errors=ignore_errors)
+
+    @staticmethod
+    def copy(src_folder: PathLike, dst_folder: PathLike, ignore_errors: bool = True):
+        """ Copy a folder tree, using shutil.
+
+        Args:
+            src_folder: Source root of the tree to copy.
+            dst_folder: Destination root.
+            ignore_errors: Boolean
+        """
+        shutil.rmtree(dst_folder, ignore_errors=ignore_errors)
+        shutil.copytree(src=src_folder, dst=dst_folder)
 
     @classmethod
     @property
@@ -56,136 +210,14 @@ class Model(ABC):
     def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
         """ Default options."""
 
-    class Parameters(ABC):
-        """ Abstraction of the parameters of a Model. Essentially a NamedTuple backed by files in a folder.
-        Note that file writing is lazy, it must be called explicitly, but the Parameters are designed for chained calls."""
+    @property
+    def folder(self) -> Path:
+        """ The model folder."""
+        return self._folder
 
-        @classmethod
-        @property
-        @abstractmethod
-        def Values(cls) -> Type[NamedTuple]:
-            """ The NamedTuple underpinning this Parameters set."""
-
-        @classmethod
-        def make(cls, iterable: Iterable) -> Model.Parameters:
-            """ Wrapper for namedtuple._make. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
-            return cls.Values._make(iterable)
-
-        @classmethod
-        @property
-        def fields(cls) -> Tuple[str, ...]:
-            """ Wrapper for namedtuple._fields. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
-            return cls.Values()._fields
-
-        @classmethod
-        @property
-        def field_defaults(cls) -> Dict[str, Any]:
-            """ Wrapper for namedtuple._field_defaults. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
-            return cls.Values()._field_defaults
-
-        def as_dict(self) -> Dict[str, Any]:
-            """ Wrapper for namedtuple._asdict. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
-            return self._values._asdict()
-
-        def replace(self, **kwargs: NP.Matrix) -> Model.Parameters:
-            """ Replace selected field values in this Parameters. Does not write to folder.
-
-            Args:
-                **kwargs: key=value pairs of NamedTuple fields, precisely as in NamedTuple._replace(**kwargs).
-            Returns: ``self``, for chaining calls.
-            """
-            for key, value in kwargs.items():
-                kwargs[key] = atleast_2d(value)
-            self._values = self._values._replace(**kwargs)
-            return self
-
-        def broadcast_value(self, model_name: str, field: str, target_shape: Tuple[int, int], is_diagonal: bool = True,
-                            folder: Optional[PathLike] = None) -> Model.Parameters:
-            """ Broadcast a parameter value.
-
-            Args:
-                model_name: Used only in error reporting.
-                field: The name of the field whose value we are broadcasting.
-                target_shape: The shape to broadcast to.
-                is_diagonal: Whether to zero the off-diagonal elements of a square matrix.
-                folder:
-
-            Returns: Self, for chaining calls.
-            Raises:
-                IndexError: If broadcasting is impossible.
-            """
-            replacement = {field: getattr(self.values, field)}
-            try:
-                replacement[field] = array(broadcast_to(replacement[field], target_shape))
-            except ValueError:
-                raise IndexError(f'The {model_name} {field} has shape {replacement[field].shape} '
-                                 f' which cannot be broadcast to {target_shape}.')
-            if is_diagonal and target_shape[0] > 1:
-                replacement[field] = diag(diagonal(replacement[field]))
-            return self.replace(**replacement).write(folder)
-
-        @property
-        def folder(self) -> Path:
-            """ The folder containing the Model.Parameters. """
-            return self._folder
-
-        @property
-        def values(self) -> Values:
-            """ Gets or Sets the NamedTuple of the Model.Parameters."""
-            return self._values
-
-        @values.setter
-        def values(self, value: Values):
-            """ Gets or Sets the NamedTuple of the Model.Parameters."""
-            self._values = self.Values(*(atleast_2d(val) for val in value))
-
-        def _set_folder(self, folder: Optional[PathLike] = None):
-            """ Set the file location for these Parameters.
-
-            Args:
-                folder: The file location is changed to ``folder`` unless ``folder`` is ``None`` (the default).
-            """
-            if folder is not None:
-                self._folder = Path(folder)
-                self._csv = tuple((self._folder / field).with_suffix(".csv") for field in self.fields)
-
-        def read(self) -> Model.Parameters:
-            """ Read Model.Parameters from their csv files.
-
-            Returns: ``self``, for chaining calls.
-            Raises:
-                AssertionError: If self._csv is not set.
-            """
-            assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
-            self._values = self.Values(**{key: Frame(self._csv[i], header=[0]).df.values for i, key in enumerate(self.fields)})
-            return self
-
-        def write(self, folder: Optional[PathLike] = None) -> Model.Parameters:
-            """  Write Model.Parameters to their csv files.
-
-            Args:
-                folder: The file location is changed to ``folder`` unless ``folder`` is ``None`` (the default).
-            Returns: ``self``, for chaining calls.
-            Raises:
-                AssertionError: If self._csv is not set.
-            """
-            self._set_folder(folder)
-            assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
-            dummy = tuple(Frame(self._csv[i], DataFrame(p)) for i, p in enumerate(self._values))
-            return self
-
-        def __init__(self, folder: Optional[PathLike] = None, **kwargs: NP.Matrix):
-            """ Parameters Constructor. Shouldn't need to be overridden. Does not write to file.
-
-            Args:
-                folder: The folder to store the parameters.
-                **kwargs: key=value initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs). It is the caller's responsibility to ensure
-                    that every value is of type NP.Matrix. Missing fields receive their defaults, so Parameters(folder) is the default parameter set.
-            """
-            for key, value in kwargs.items():
-                kwargs[key] = atleast_2d(value)
-            self._set_folder(folder)
-            self._values = self.Values(**kwargs)
+    @property
+    def _options_json(self) -> Path:
+        return self._folder / "options.json"
 
     @property
     def parameters(self) -> Parameters:
@@ -230,15 +262,6 @@ class Model(ABC):
             self.parameters = self._parameters.replace('WITH OPTIMAL PARAMETERS!!!').write(self.folder)   # Remember to write optimization results.
             self._test = None   # Remember to reset any test results.
 
-    @property
-    def folder(self) -> Path:
-        """ The model folder."""
-        return self._folder
-
-    @property
-    def _options_json(self) -> Path:
-        return self._folder / "options.json"
-
     def _read_options(self) -> Dict[str, Any]:
         # noinspection PyTypeChecker
         with open(self._options_json, mode='r') as file:
@@ -266,1234 +289,3 @@ class Model(ABC):
             self._parameters = self.Parameters(self._folder).replace(**kwargs)
         self._parameters.write()
         self._test = None
-
-    @staticmethod
-    def rmdir(folder: PathLike, ignore_errors: bool = True):
-        """ Remove a folder tree, using shutil.
-
-        Args:
-            folder: Root of the tree to remove.
-            ignore_errors: Boolean.
-        """
-        shutil.rmtree(folder, ignore_errors=ignore_errors)
-
-    @staticmethod
-    def copy(src_folder: PathLike, dst_folder: PathLike, ignore_errors: bool = True):
-        """ Copy a folder tree, using shutil.
-
-        Args:
-            src_folder: Source root of the tree to copy.
-            dst_folder: Destination root.
-            ignore_errors: Boolean
-        """
-        shutil.rmtree(dst_folder, ignore_errors=ignore_errors)
-        shutil.copytree(src=src_folder, dst=dst_folder)
-
-
-class Kernel(Model):
-    """ Abstract interface to a Kernel. Essentially this is the code contract with the GP interface."""
-
-    @classmethod
-    @property
-    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
-        """ **Do not use, this function is merely an interface requirement. **"""
-        return {'A kernel has no use for optimizer options, only its parent GP does.': None}
-
-    class Parameters(Model.Parameters):
-        """ Abstraction of the parameters of a Kernel."""
-
-        @classmethod
-        @property
-        def Values(cls) -> Type[NamedTuple]:
-            """ The NamedTuple underpinning this Parameters set."""
-
-            class Values(NamedTuple):
-                """ Abstraction of the parameters of a Kernel.
-
-                Attributes:
-                    variance: An (L,L) or (1,L) Matrix of kernel variances. (1,L) represents a diagonal (L,L) variance matrix.
-                        (1,1) means a single kernel shared by all outputs.
-                    lengthscales: A (V,M) Matrix of anisotropic lengthscales, or a (V,1) Vector of isotropic lengthscales,
-                        where V=1 or V=variance.shape[1]*(variance.shape[0]+ 1)/2.
-                """
-                variance: NP.Matrix = atleast_2d(0.1)
-                lengthscales: NP.Matrix = atleast_2d(0.2)
-
-            return Values
-
-    @classmethod
-    def TypeFromParameters(cls, parameters: Parameters) -> Type[Kernel]:
-        """ Recognize the Type of a Kernel from its Parameters.
-
-        Args:
-            parameters: A Kernel.Parameters array to recognize.
-        Returns:
-            The type of Kernel that parameters defines.
-        """
-        for kernel_type in Kernel.__subclasses__():
-            if isinstance(parameters, kernel_type.Parameters):
-                return kernel_type
-        raise TypeError('Kernel Parameters array of unrecognizable type.')
-
-    @classmethod
-    @property
-    def TYPE_IDENTIFIER(cls) -> str:
-        """ The type of this Kernel object or class as '__module__.Kernel.__name__'."""
-        return cls.__module__.split('.')[-1] + '.' + cls.__name__
-
-    @classmethod
-    def TypeFromIdentifier(cls, TypeIdentifier: str) -> Type[Kernel]:
-        """ Convert a TypeIdentifier to a Kernel Type.
-
-        Args:
-            TypeIdentifier: A string generated by Kernel.TypeIdentifier().
-        Returns:
-            The type of Kernel that _TypeIdentifier specifies.
-        """
-        for KernelType in cls.__subclasses__():
-            if KernelType.TYPE_IDENTIFIER == TypeIdentifier:
-                return KernelType
-        raise TypeError('Kernel.TypeIdentifier() of unrecognizable type.')
-
-    @property
-    def L(self) -> int:
-        """ The output (Y) dimensionality, or 1 for a single kernel shared across all outputs."""
-        return self._L
-
-    @property
-    def M(self) -> int:
-        """ The input (X) dimensionality, or 1 for an isotropic kernel."""
-        return self._M
-
-    def broadcast_parameters(self, variance_shape: Tuple[int, int], M, folder: Optional[PathLike] = None) -> Kernel:
-        """ Broadcast this kernel to higher dimensions. Shrinkage raises errors, unchanged dimensions silently nop.
-        A diagonal variance matrix broadcast to a square matrix is initially diagonal. All other expansions are straightforward broadcasts.
-        Args:
-            variance_shape: The new shape for the variance, must be (1, L) or (L, L).
-            M: The number of input Lengthscales per output.
-            folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
-        Returns: ``self``, for chaining calls.
-        Raises:
-            IndexError: If an attempt is made to shrink a parameter.
-        """
-        if variance_shape != self.params.variance.shape:
-            self.parameters.broadcast_value(model_name=str(self.folder), field="variance", target_shape=variance_shape, is_diagonal=True, folder=folder)
-            self._L = variance_shape[1]
-        if (self._L, M) != self.params.lengthscales.shape:
-            self.parameters.broadcast_value(model_name=str(self.folder), field="lengthscales", target_shape=(self._L, M), is_diagonal=False, folder=folder)
-            self._M = M
-        return self
-
-    @property
-    @abstractmethod
-    def implemented_in(self) -> Tuple[Any, ...]:
-        """ The implemented_in_??? version of this Kernel, for use in the implemented_in_??? GP.
-            If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
-            If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
-        """
-
-    def calculate(self):
-        """ Calculate the kernel."""
-        pass
-
-    def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
-        """ **Do not use, this function is merely an interface requirement. **
-
-        Args:
-            method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
-            options: Dict of implementation-dependent optimizer options. options = None indicates that options should be read from JSON file.
-        Raises:
-            NotImplementedError:
-        """
-        raise NotImplementedError('A kernel cannot be implemented.')
-
-    def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
-        """ Construct a Kernel. This must be called as a matter of priority by all implementations.
-
-        Args:
-            folder: The model file location.
-            read_parameters: If True, the model.parameters are read from ``folder``, otherwise defaults are used.
-            **kwargs: The model.parameters fields=values to replace after reading from file/defaults.
-        """
-        super().__init__(folder, read_parameters, **kwargs)
-        self._L, self._M = self.params.variance.shape[1], self.params.lengthscales.shape[1]
-        self.broadcast_parameters(self.params.variance.shape, self._M)
-
-
-# noinspection PyPep8Naming
-class GP(Model):
-    """ Interface to a Gaussian Process."""
-
-    @classmethod
-    @property
-    @abstractmethod
-    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
-        """ Default hyper-parameter optimizer options"""
-
-    class Parameters(Model.Parameters):
-        """ Abstraction of the parameters of a GP."""
-
-        @classmethod
-        @property
-        def Values(cls) -> Type[NamedTuple]:
-            """ The NamedTuple underpinning this Parameters set."""
-            class Values(NamedTuple):
-                """ Abstraction of the parameters of a GP.
-
-                Attributes:
-                    noise_variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
-                    kernel (NP.Matrix): A numpy [[str]] identifying the type of Kernel, as returned by gp.kernel.TypeIdentifier(). This is never set externally.
-                        The kernel parameter, when provided, must be a [[Kernel.Parameters]] storing the desired kernel parameters.
-                        The kernel is constructed and its type inferred from these parameters.
-                    log_marginal_likelihood (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
-                """
-                noise_variance: NP.Matrix = atleast_2d(0.9)
-                kernel: NP.Matrix = atleast_2d(None)
-                log_marginal_likelihood: NP.Matrix = atleast_2d(1.0)
-            return Values
-
-    @classmethod
-    @property
-    def KERNEL_DIR_NAME(cls) -> str:
-        """ The name of the folder where kernel parameters are stored."""
-        return "kernel"
-
-    @property
-    def fold(self) -> Fold:
-        """ The parent fold """
-        return self._fold
-
-    @property
-    def test_csv(self) -> Path:
-        return self._folder / "__test__.csv"
-
-    @property
-    def N(self) -> int:
-        """ The number of input rows = The number of output rows  = datapoints in the training set."""
-        return self._N
-
-    @property
-    def M(self) -> int:
-        """ The number of input columns."""
-        return self._M
-
-    @property
-    def L(self) -> int:
-        """ The number of output columns."""
-        return self._L
-
-    @property
-    def X(self) -> NP.Matrix:
-        """ The input X, as an (N,M) design Matrix."""
-        return self._X
-
-    @property
-    def Y(self) -> NP.Vector:
-        """ The output Y, as an (N,L) NP.Matrix."""
-        return self._Y
-
-    @property
-    def kernel(self) -> Kernel:
-        """ The GP Kernel. """
-        return self._kernel
-
-    def calculate(self):
-        """ Fit the GP to the training data, which is actually automatic. """
-        self._test = None
-
-    @abstractmethod
-    def optimize(self, method: str = 'L-BFGS-B', **kwargs: Any):
-        """ Optimize the GP hyper-parameters.
-
-        Args:
-            method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
-            kwargs: A Dict of implementation-dependent optimizer options, following the format of GP.DEFAULT_OPTIMIZER_OPTIONS.
-        """
-
-    @abstractmethod
-    def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
-        """ Predicts the response to input X.
-
-        Args:
-            X: A (o, M) design Matrix of inputs.
-            y_instead_of_f: True to include noise e in the result covariance.
-        Returns: The distribution of Y or f, as a pair (mean (o, L) Matrix, std (o, L) Matrix).
-        """
-
-    def test(self) -> Frame:
-        """ Tests the GP on the test data in GP.fold.test_csv.
-
-        Returns: The test results as a Frame backed by GP.test_result_csv.
-        """
-        if self._test is None:
-            self._test = Frame(self.test_csv, self._fold.test.df)
-            Y_heading = self._fold.meta['data']['Y_heading']
-            result = self.predict(self._fold.test_X.values)
-            predictive_mean = (self._test.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Mean"}, level=0))
-            predictive_mean.iloc[:] = result[0]
-            predictive_std = (self._test.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Std"}, level=0))
-            predictive_std.iloc[:] = result[1]
-            self._test.df = self._test.df.join([predictive_mean, predictive_std])
-            self._test.write()
-        return self._test
-
-    @property
-    @abstractmethod
-    def KNoisy_Cho(self) -> Union[NP.Matrix, TF.Tensor]:
-        """ The Cholesky decomposition of the LNxLN noisy kernel k(X, X)+E. """
-
-    @property
-    @abstractmethod
-    def KNoisyInv_Y(self) -> Union[NP.Matrix, TF.Tensor]:
-        """ The LN-Vector, which pre-multiplied by the LoxLN kernel k(x, X) gives the Lo-Vector predictive mean fBar(x).
-        Returns: ChoSolve(self.KNoisy_Cho, self.Y) """
-
-    def broadcast_parameters(self, is_independent: bool, is_isotropic: bool, folder: Optional[PathLike] = None) -> GP:
-        """ Broadcast the parameters of the GP (including kernels) to highr dimensions. Shrinkage raises errors, unchanged dimensions silently nop.
-
-        Args:
-            is_independent: Whether the outputs will be treated as independent.
-            is_isotropic: Whether to restrict the kernel to be isotropic.
-            folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
-        Returns: ``self``, for chaining calls.
-        """
-        target_shape = (1, self._L) if is_independent else (self._L, self._L)
-        self._parameters.broadcast_value(model_name=self.folder, field="noise_variance", target_shape=target_shape, is_diagonal=is_independent, folder=folder)
-        self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
-
-    @abstractmethod
-    def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
-                 kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):
-        """ GP Constructor. Calls model.__init__ to setup parameters, then checks dimensions.
-
-        Args:
-            name: The name of this GP.
-            fold: The Fold housing this GP.
-            is_read: If True, the GP.kernel.parameters and GP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
-            is_independent: Whether the outputs will be treated as independent.
-            is_isotropic: Whether to restrict the kernel to be isotropic.
-            kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
-                If None, the kernel is read from file, or set to the default base.Kernel.Parameters(), according to read_from_file.
-            **kwargs: The GP.parameters fields=values to replace after reading from file/defaults.
-        Raises:
-            IndexError: If a parameter is mis-shaped.
-        """
-        self._fold, self._folder = fold, fold.folder / name
-        self._X, self._Y = self._fold.X.to_numpy(dtype=float, copy=True), self._fold.Y.to_numpy(dtype=float, copy=True)
-        self._N, self._M, self._L = self._fold.N, self._fold.M, self._fold.L
-        super().__init__(self._folder, is_read, **kwargs)
-        if is_read and kernel_parameters is None:
-            KernelType = Kernel.TypeFromIdentifier(self.params.values.kernel[0, 0])
-            self._kernel = KernelType(self._folder / self.KERNEL_DIR_NAME, is_read)
-        else:
-            if kernel_parameters is None:
-                kernel_parameters = Kernel.Parameters()
-            KernelType = Kernel.TypeFromParameters(kernel_parameters)
-            self._kernel = KernelType(self._folder / self.KERNEL_DIR_NAME, is_read, **kernel_parameters.as_dict())
-            self._parameters.replace(kernel=atleast_2d(KernelType.TYPE_IDENTIFIER)).write()
-        self.broadcast_parameters(is_independent, is_isotropic)
-
-
-# noinspection PyPep8Naming
-class Sobol(Model):
-    """ Interface to a Sobol' Index Calculator and Optimizer.
-    
-    Internal quantities are called variant if they depend on Theta, invariant otherwise. 
-    Invariants are calculated in the constructor. Variants are calculated in Theta.setter."""
-
-    """ Required overrides."""
-
-    MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
-
-    Parameters = NamedTuple("Parameters", [('Theta', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix), ('ST', NP.Matrix)])
-    """ 
-        **Theta** -- The (Mu, M) rotation matrix ``U = X Theta.T`` (in design matrix terms), so u = Theta x (in column vector terms).
-
-        **D** -- An (L L, M) Matrix of cumulative conditional variances D[l,k,m] = S[l,k,m] D[l,k,M].
-
-        **S1** -- An (L L, M) Matrix of Sobol' first order indices.
-
-        **S** -- An (L L, M) Matrix of Sobol' closed indices.
-
-        **ST** -- An (L L, M) Matrix of Sobol' total indices.
-    """
-    DEFAULT_PARAMETERS = Parameters(*(atleast_2d(None),) * 5)
-
-    # noinspection PyPep8Naming
-    class SemiNorm:
-        """Defines a SemiNorm on (L,L) matrices, for use by Sobol.
-
-        Attributes:
-            value: The SemiNorm.value function, which is Callable[[Tensor], ArrayLike] so it is vectorizable.
-            derivative: The SemiNorm.derivative function, which is Callable[[Matrix], Matrix] as it is not vectorizable.
-        """
-
-        DEFAULT_META = {'classmethod': 'element', 'L': 1, 'kwargs': {'row': 0, 'column': 0}}
-
-        @classmethod
-        def from_meta(cls, meta: Union[Dict, 'Sobol.SemiNorm']) -> Sobol.SemiNorm:
-            """ Create a SemiNorm from meta information. New SemiNorms should be registered in this function.
-
-            Args:
-                meta: A Dict containing the meta data for function construction. Use SemiNorm.DEFAULT_META as a template.
-                    Otherwise, meta in the form of a SemiNorm is just returned verbatim, anything elses raises a TypeError.
-            Returns: The SemiNorm constructed according to meta.
-
-            Raises:
-                TypeError: Unless meta must is a Dict or a SemiNorm.
-                NotImplementedError: if meta['classmethod'] is not recognized by this function.
-            """
-            if isinstance(meta, Sobol.SemiNorm):
-                return meta
-            if not isinstance(meta, dict):
-                raise TypeError("SemiNorm meta data must be a Dict or a SemiNorm, not a {0}.".format(type(meta)))
-            if meta['classmethod'] == 'element':
-                return cls.element(meta['L'], **meta['kwargs'])
-            else:
-                raise NotImplementedError("Unrecognized meta['classmethod'] = '{0}'. ".format(meta['classmethod']) +
-                                          "Please implement the relevant @classmethod in Sobol.SemiNorm " +
-                                          "and register it in Sobol.SemiNorm.from_meta().")
-
-        @classmethod
-        def element(cls, L: int, row: int, column: int) -> Sobol.SemiNorm:
-            """ Defines a SemiNorm on (L,L) matrices which is just the (row, column) element.
-            Args:
-                L:
-                row:
-                column:
-            Returns: A SemiNorm object encapsulating the (row, column) element semi-norm on (L,L) matrices.
-
-            Raises:
-                ValueError: If row or column not in range(L).
-            """
-            if not 0 <= row <= L:
-                raise ValueError("row {0:d} is not in range(L={1:d}.".format(row, L))
-            if not 0 <= column <= L:
-                raise ValueError("column {0:d} is not in range(L={1:d}.".format(column, L))
-            meta = {'classmethod': 'element', 'L': L, 'kwargs': {'row': row, 'column': column}}
-            _derivative = zeros((L, L), dtype=float)
-            _derivative[row, column] = 1.0
-
-            def value(D: NP.Tensor) -> NP.ArrayLike:
-                return D[row, column]
-
-            def derivative(D: NP.Matrix) -> NP.Matrix:
-                return _derivative
-
-            return Sobol.SemiNorm(value, derivative, meta)
-
-        def __init__(self, value: Callable[[NP.Tensor], NP.ArrayLike], derivative: Callable[[NP.Matrix], NP.Matrix], meta: Dict):
-            """ Construct a SemiNorm on (L,L) matrices.
-
-            Args:
-                value: A function mapping an (L,L) matrix D to a float SemiNorm.value
-                derivative: A function mapping an (L,L) matrix D to an (L,L) matrix SemiNorm.derivative = d SemiNorm.value / (d D).
-                meta: A Dict similar to SemiNorm.DEFAULT_META, giving precise information to construct this SemiNorm
-            """
-            self.value = value
-            self.derivative = derivative
-            self.meta = meta
-
-    DEFAULT_OPTIMIZER_OPTIONS = {'semi_norm': SemiNorm.DEFAULT_META, 'N_exploit': 0, 'N_explore': 0, 'options': {'gtol': 1.0E-12}}
-    """ 
-        **semi_norm** -- A Sobol.SemiNorm on (L,L) matrices defining the Sobol' measure to optimize against.
-                
-        **N_exploit** -- The number of exploratory xi vectors to exploit (gradient descend) in search of the global optimum.
-            If N_exploit < 1, only re-ordering of the input basis is allowed.
-        
-        **N_explore** -- The number of random_sgn xi vectors to explore in search of the global optimum. 
-            If N_explore <= 1, gradient descent is initialized from Theta = Identity Matrix.
-        
-        **options** -- A Dict of options passed directly to the underlying optimizer.
-    """
-
-    NAME = "sobol"
-
-    """ End of required overrides."""
-
-    @property
-    def gp(self):
-        """ The underlying GP."""
-        return self._gp
-
-    @property
-    def D(self) -> NP.Tensor3:
-        """ An (L, L, Mx) Tensor3 of conditional variances."""
-        return self._D
-
-    @property
-    def S(self) -> NP.Tensor3:
-        """ An (L, L, M) Tensor3 of Closed (cumulative) Sobol' indices."""
-        return self._D / self._D[:, :, -1]
-
-    @property
-    def S1(self) -> NP.Tensor3:
-        """ An (L, L, Mx) Tensor3 of first order (main effect) Sobol' indices."""
-        return self._S1
-
-    @property
-    def ST(self) -> NP.Tensor3:
-        """ An (L, L, Mx) Tensor3 of Total Sobol' indices."""
-        return self._ST
-
-    @property
-    def lengthscales(self):
-        """ An (Mx,) Array of RBF lengthscales."""
-        return self._lengthscale
-
-    def Tensor3AsMatrix(self, DorS: NP.Tensor3) -> NP.Matrix:
-        return reshape(DorS, (self._L * self._L, self._M))
-
-    # @property
-    # def Theta_old(self) -> NP.Matrix:
-    #     """ Sets or gets the (M, M) rotation Matrix, prior to updates by xi. Setting automatically updates Theta, triggering Sobol' recalculation."""
-    #     return self._Theta_old
-    #
-    # @Theta_old.setter
-    # def Theta_old(self, value: NP.Matrix):
-    #     assert value.shape == (self._M, self._M)
-    #     self._Theta_old = value
-    #     self.Theta = self.Theta_old[:self._m + 1, :].copy(order=self.MEMORY_LAYOUT)
-    #
-    # @property
-    # def Theta(self) -> NP.Matrix:
-    #     """ Sets or gets the (m+1, Mx) rotation Matrix which has been updated by xi. Setting triggers Sobol' recalculation."""
-    #     return self._Theta
-    #
-    # # noinspection PyAttributeOutsideInit
-    # @Theta.setter
-    # def Theta(self, value: NP.Matrix):
-    #     """ Complete calculation of variants and Sobol' indices (conditional variances _D actually) is found here and here only."""
-    #
-    #     assert value.shape == (self._m + 1, self._M)
-    #     self._Theta = value
-    #
-    #     """ Calculate variants related to Sigma. """
-    #     self._Sigma_partial = einsum('M, kM -> Mk', self._Sigma_diagonal, self.Theta, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     Sigma = einsum('mM, Mk -> mk', self.Theta, self._Sigma_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     self._Sigma_cho = cho_factor(Sigma, lower=False, overwrite_a=False, check_finite=False)
-    #     Sigma_cho_det = prod(diag(self._Sigma_cho[0]))
-    #     self._2I_minus_Sigma_partial = einsum('M, kM -> Mk', 2 - self._Sigma_diagonal, self.Theta, optimize=True, dtype=float,
-    #                                           order=self.MEMORY_LAYOUT)
-    #     _2I_minus_Sigma = einsum('mM, Mk -> mk', self.Theta, self._2I_minus_Sigma_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     self._2I_minus_Sigma_cho = cho_factor(_2I_minus_Sigma, lower=False, overwrite_a=False, check_finite=False)
-    #     _2I_minus_Sigma_cho_det = prod(diag(self._2I_minus_Sigma_cho[0]))
-    #     self._inv_Sigma_Theta = cho_solve(self._Sigma_cho, self.Theta, overwrite_b=False, check_finite=False)
-    #     T_inv_Sigma_T = atleast_2d(einsum('NM, mM, mK, NK -> N', self._FBold, self.Theta, self._inv_Sigma_Theta, self._FBold,
-    #                                       optimize=True, dtype=float, order=self.MEMORY_LAYOUT))
-    #     self._D_const = (_2I_minus_Sigma_cho_det * Sigma_cho_det) ** (-1)
-    #
-    #     """ Calculate variants related to Phi. """
-    #     self._Phi_partial = einsum('M, kM -> Mk', self._Psi_diagonal, self.Theta, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     Phi = einsum('mM, Mk -> mk', self.Theta, self._Phi_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     self._Phi_cho = cho_factor(Phi, lower=False, overwrite_a=False, check_finite=False)
-    #     self._inv_Phi_inv_Sigma_Theta = cho_solve(self._Phi_cho, self._inv_Sigma_Theta, overwrite_b=False, check_finite=False)
-    #     T_inv_Phi_inv_Sigma_T = einsum('NOM, mM, mK, NOK -> NO', self._V_pre_outer_square, self.Theta, self._inv_Phi_inv_Sigma_Theta,
-    #                                     self._V_pre_outer_square, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #
-    #     """ Finally calculate conditional variances _D."""
-    #     self._W = exp(-0.5 * (T_inv_Sigma_T + transpose(T_inv_Sigma_T) - T_inv_Phi_inv_Sigma_T))
-    #     self._D_plus_Ft_1_Ft = self._D_const * einsum('LN, NO, KO -> LK', self._fBold_bar_0, self._W, self._fBold_bar_0,
-    #                                                   optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     self._D[:, :, self._m] = self._D_plus_Ft_1_Ft - self._f_bar_0_2
-    #
-    # @property
-    # def xi(self) -> NP.Array:
-    #     """ Sets or gets the (Mx-m-1) Array which is the row m update to Theta. Setting updates Theta, so triggers Sobol' recalculation."""
-    #     return self._xi
-    #
-    # @xi.setter
-    # def xi(self, value: NP.Array):
-    #     assert value.shape[0] == self._xi_len
-    #     norm = 1 - einsum('m, m -> ', value, value, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     if norm < EFFECTIVELY_ZERO:
-    #         value *= sqrt((1-EFFECTIVELY_ZERO)/(1-norm))
-    #         norm = EFFECTIVELY_ZERO
-    #     self._xi = append(sqrt(norm), value)
-    #     self.Theta[self._m, :] = einsum('k, kM -> M', self._xi, self.Theta_old[self._m:, :],
-    #                                    optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     self.Theta = self.Theta[:self._m + 1, :]
-
-    def optimize(self, **kwargs):
-        """ Optimize ``Theta`` to maximize ``semi_norm(D[:,:,m])`` for ``m=0,1,..(Mu-1)``.
-
-        Args:
-            options: A Dict similar to (and documented in) Sobol.DEFAULT_OPTIMIZER_OPTIONS.
-        Raises:
-            TypeError: Unless options['SemiNorm'] is a Sobol.SemiNorm or a Dict.
-            UserWarning: If L for the SemiNorm must be changed to match self._L.
-        """
-        options = deepcopy(kwargs)
-        if options is None:
-            options = self._read_options() if self._options_json.exists() else self.DEFAULT_OPTIMIZER_OPTIONS
-        semi_norm = Sobol.SemiNorm.from_meta(options['semi_norm'])
-        if semi_norm.meta['L'] != self._L:
-            warn("I am changing Sobol.semi_norm.meta['L'] from {0:d} to {1:d} = Sobol.gp.L.".format(semi_norm.meta['L'], self._L))
-            semi_norm.meta['L'] = self._L
-            semi_norm = Sobol.SemiNorm.from_meta(semi_norm.meta)
-        options['semi_norm'] = semi_norm.meta
-        self._write_options(options)
-        #
-        # def _objective_value(xi: NP.Array) -> float:
-        #     """ Maps ``xi`` to the optimization objective (a conditional variance ``D'').
-        #
-        #     Args:
-        #         xi: The Theta row update.
-        #     Returns: The scalar (float) -semi_norm(D[:, :, m]).
-        #     """
-        #     self.xi = xi
-        #     return -semi_norm.value(self._D[:, :, self._m])
-        #
-        # def _objective_jacobian(xi: NP.Array) -> NP.Array:
-        #     """ Maps ``xi`` to an ``(Mx-m,) Array``, the optimization objective jacobian.
-        #
-        #     Args:
-        #         xi: The Theta row update.
-        #     Returns: The (Mx-m,) jacobian Array -d(semi_norm(D[:, :, m])) / (d xi).
-        #     """
-        #     self.xi = xi
-        #     return -einsum('LK, LKj -> j', semi_norm.derivative(self.D[:, :, self._m]), self.D_jacobian,
-        #                    optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-        #
-        # self._objective_value, self._objective_jacobian = _objective_value, _objective_jacobian
-        #
-        # if options['N_exploit'] >= 1:
-        #     q = None
-        #     for self.m in range(self._Mu):
-        #         if q is not None:
-        #             self.Theta_old = transpose(q)
-        #         self.xi = self._optimal_rotating_xi(options['N_explore'], options['N_exploit'], options['options'])
-        #         q, r = qr(transpose(self.Theta), check_finite=False)
-        #         sign_correction = sign(diag(r))
-        #         q *= concatenate((sign_correction, ones(self._M - len(sign_correction), dtype=int)))
-        #     self.Theta_old = transpose(q)
-        # q = None
-        # for self.m in range(self._Mu):
-        #     if q is not None:
-        #         self.Theta_old = transpose(q)
-        #     self.xi = self._optimal_reordering_xi()
-        #     q, r = qr(transpose(self.Theta), check_finite=False)
-        #     # sign_correction = sign(diag(r))
-        #     # q *= concatenate((sign_correction, ones(self._M - len(sign_correction), dtype=int)))
-        # self.Theta_old = transpose(q)
-        # self.write_parameters(self.Parameters(Mu=self.Mu, Theta=self._Theta_old, D=self.Tensor3AsMatrix(self._D), S1=None,
-        #                                       S=self.Tensor3AsMatrix(self.S)))
-        # self.replace_X_with_U()
-
-    # def write_parameters(self, parameters: Parameters) -> Parameters:
-    #     """ Calculate the main Sobol' indices _S1, then write model.parameters to their csv files.
-    #
-    #     Args:
-    #         parameters: The NamedTuple to be the new value for self.parameters.
-    #     Returns: The NamedTuple written to csv. Essentially self.parameters, but with Frames in place of Matrices.
-    #     """
-    #     if self._m is not None:
-    #         m_saved = self._m
-    #         self.m = 0
-    #         xi_temp = zeros(self._xi_len, dtype=float, order=self.MEMORY_LAYOUT)
-    #         for m in reversed(range(len(xi_temp))):
-    #             xi_temp[m] = 1.0
-    #             self.xi = xi_temp
-    #             self._S1[:, :, m+1] = self.D[:, :, 0] / self.D[:, :, -1]
-    #             xi_temp[m] = 0.0
-    #         self.xi = xi_temp
-    #         self._S1[:, :, 0] = self.D[:, :, 0] / self.D[:, :, -1]
-    #         self.m = m_saved
-    #     return super().write_parameters(parameters._replace(S1=self.Tensor3AsMatrix(self._S1)))
-
-    def replace_X_with_U(self):
-        """ Replace X with its rotated/reordered version U."""
-        column_headings = MultiIndex.from_product(((self._gp.fold.meta['data']['X_heading'],), ("u{:d}".format(i) for i in range(self.Mu))))
-        X = DataFrame(einsum('MK, NK -> NM', self.Theta_old, self._gp.X, optimize=True, dtype=float, order=self.MEMORY_LAYOUT),
-                      columns=column_headings, index=self._gp.fold.X.index)
-        test_X = DataFrame(einsum('MK, NK -> NM', self.Theta_old, self._gp.fold.test_X, optimize=True, dtype=float, order=self.MEMORY_LAYOUT),
-                      columns=column_headings, index=self._gp.fold.test_X.index)
-        self._gp.fold.data.df = concat((X, self._gp.fold.data.df[[self._gp.fold.meta['data']['Y_heading']]].copy(deep=True)), axis='columns')
-        self._gp.fold.data.write()
-        self._gp.fold.test.df = concat((test_X, self._gp.fold.test.df[[self._gp.fold.meta['data']['Y_heading']]].copy(deep=True)), axis='columns')
-        self._gp.fold.test.write()
-        self._gp.fold.meta_data_update()
-
-    def reorder_data_columns(self, reordering: NP.Array):
-        """ Reorder the columns in self._gp.data
-
-        Args:
-            reordering: An array of column indices specifying the reordering
-        """
-        columns = self._gp.fold.data.df.columns
-        new_columns = columns.levels[1].to_numpy()
-        new_columns[:reordering.shape[0]] = new_columns[reordering]
-        columns = columns.reindex(new_columns, level=1)
-        self._gp.fold.data.df.reindex(columns=columns, copy=False)
-        self._gp.fold.data.write()
-        self._gp.fold.test.df.reindex(columns=columns, copy=False)
-        self._gp.fold.test.write()
-
-    # def exploratory_xi(self, N_explore: int) -> NP.Matrix:
-    #     """ Generate a matrix of xi's to explore.
-    #
-    #     Args:
-    #         N_explore: The maximum number of xi's to explore. If N_explore &le 1 the zero vector is returned.
-    #             This is tantamount to taking Theta = I (the identity matrix).
-    #         xi_len: The length of each xi (row) Array.
-    #     Returns: An (N_explore, xi_len) Matrix where 1 &le N_explore &le max(N_explore,1).
-    #     """
-    #     assert self._xi_len > 0
-    #     if N_explore <= 1:
-    #         return zeros((1, self._xi_len))
-    #     else:
-    #         N_explore = round(N_explore**((self._xi_len + 1) / self._M))
-    #         dist = distribution.Multivariate.Independent(self._xi_len + 1, distribution.Univariate('uniform', loc=-1, scale=2))
-    #         result = dist.sample(N_explore, distribution.SampleDesign.LATIN_HYPERCUBE)
-    #         norm = sqrt(sum(result ** 2, axis=1).reshape((N_explore, 1)))
-    #         return result[:, 1:] / norm
-    #
-    #     """
-    #     if N_explore <= 1:
-    #         return zeros((1, xi_len))
-    #     elif N_explore < 3 ** xi_len:
-    #         result = random.randint(3, size=(N_explore, xi_len)) - 1
-    #     else:
-    #         values = array([-1, 0, 1])
-    #         # noinspection PyUnusedLocal
-    #         values = [values.copy() for i in range(xi_len)]
-    #         result = meshgrid(*values)
-    #         result = [ravel(arr, order=cls.MEMORY_LAYOUT) for arr in result]
-    #         result = concatenate(result, axis=0)
-    #     return result * xi_len ** (-1 / 2)
-    #     """
-    #
-    # def _optimal_rotating_xi(self, N_explore: int, N_exploit: int, options: Dict) -> NP.Array:
-    #     """ Optimizes the ``Theta`` row update ``xi`` by allowing general rotation.
-    #
-    #     Args:
-    #         N_explore: The number of random_sgn xi vectors to explore in search of the global optimum.
-    #         N_exploit: The number of exploratory xi vectors to exploit (gradient descend) in search of the global optimum.
-    #         options: A Dict of options passed directly to the underlying optimizer.
-    #     Returns:
-    #         The Array xi of euclidean length &le 1 which maximizes self.optimization_objective(xi).
-    #     """
-    #     explore = self.exploratory_xi(N_explore)
-    #     best = [[0, explore[0]]] * N_exploit
-    #     for xi in explore:
-    #         objective_value = self._objective_value(xi)
-    #         for i in range(N_exploit):
-    #             if objective_value < best[i][0]:
-    #                 for j in reversed(range(i + 1, N_exploit)):
-    #                     best[j] = best[j - 1]
-    #                 best[i] = [objective_value, xi]
-    #                 break
-    #     for record in best:
-    #         result = optimize.minimize(self._objective_value, record[1], method='BFGS', jac=self._objective_jacobian, options=options)
-    #         if result.fun < best[0][0]:
-    #             best[0] = [result.fun, result.x]
-    #     return best[0][1]
-    #
-    # def _optimal_reordering_xi(self) -> NP.Array:
-    #     """ Optimizes the ``Theta`` row update ``xi`` by allowing re-ordering only.
-    #
-    #     Returns:
-    #         The Array xi consisting of all zeros except at most one 1.0 which maximizes self.optimization_objective(xi).
-    #     """
-    #     xi = zeros(self._xi_len, dtype=float, order=self.MEMORY_LAYOUT)
-    #     best = self._objective_value(xi), self._xi_len
-    #     for m in range(self._xi_len):
-    #         xi[m] = 1.0 - EFFECTIVELY_ZERO
-    #         objective = self._objective_value(xi), m
-    #         if objective[0] < best[0]:
-    #             best = objective
-    #         xi[m] = 0.0
-    #     if best[1] < self._xi_len:
-    #         xi[best[1]] = 1.0 - EFFECTIVELY_ZERO
-    #     return xi
-    #
-    # # noinspection PyAttributeOutsideInit
-    # @property
-    # def D_jacobian(self) -> NP.Tensor3:
-    #     """ Calculate the Jacobian d (``D[:, ;, m]``) / d (``xi``).
-    #
-    #     Returns:  The Tensor3(L, L, M-m) jacobian d(D[:, ;, m]) / d (xi).
-    #     """
-    #
-    #     """ Calculate various jacobians."""
-    #     Theta_jac = zeros((self._m + 1, self._M, self._xi_len + 1), dtype=float, order=self.MEMORY_LAYOUT)
-    #     Theta_jac[self._m, :, :] = transpose(self.Theta_old[self._m:self._M, :])
-    #     Sigma_jac = einsum('mMj, Mk -> mkj', Theta_jac, self._Sigma_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     inv_Sigma_jac_Sigma = zeros((self._m + 1, self._m + 1, self._xi_len + 1), dtype=float, order=self.MEMORY_LAYOUT)
-    #     _2I_minus_Sigma_jac = einsum('mMj, Mk -> mkj', Theta_jac, self._2I_minus_Sigma_partial, optimize=True,
-    #                                       dtype=float, order=self.MEMORY_LAYOUT)
-    #     inv_2I_minus_Sigma_jac_2I_minus_Sigma = zeros((self._m + 1, self._m + 1, self._xi_len + 1), dtype=float, order=self.MEMORY_LAYOUT)
-    #     Phi_jac = einsum('mMj, Mk -> mkj', Theta_jac, self._Phi_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     inv_Phi_jac_Phi = zeros((self._m + 1, self._m + 1, self._xi_len + 1), dtype=float, order=self.MEMORY_LAYOUT)
-    #     inv_Phi_inv_Sigma_jac_Sigma = zeros((self._m + 1, self._m + 1, self._xi_len + 1), dtype=float, order=self.MEMORY_LAYOUT)
-    #     log_D_const_jac = zeros(self._xi_len + 1, dtype=float, order=self.MEMORY_LAYOUT)
-    #     for j in range(self._xi_len + 1):
-    #         inv_Sigma_jac_Sigma[:, :, j] = cho_solve(self._Sigma_cho, Sigma_jac[:, :, j], overwrite_b=False, check_finite=False)
-    #         inv_2I_minus_Sigma_jac_2I_minus_Sigma[:, :, j] = cho_solve(self._2I_minus_Sigma_cho, _2I_minus_Sigma_jac[:, :, j],
-    #                                                                          overwrite_b=False, check_finite=False)
-    #         inv_Phi_jac_Phi[:, :, j] = cho_solve(self._Phi_cho, Phi_jac[:, :, j], overwrite_b=False, check_finite=False)
-    #         inv_Phi_inv_Sigma_jac_Sigma[:, :, j] = cho_solve(self._Phi_cho, inv_Sigma_jac_Sigma[:, :, j], overwrite_b=False, check_finite=False)
-    #         log_D_const_jac[j] = (sum(diag(inv_2I_minus_Sigma_jac_2I_minus_Sigma[:, :, j])) + sum(diag(inv_Sigma_jac_Sigma[:, :, j])))
-    #
-    #     """ Calculate self._V, a Tensor3(N, N, M-m,) known in the literature as V. """
-    #     Sigma_factor_transpose = Theta_jac - einsum('kmj, kM -> mMj', inv_Sigma_jac_Sigma, self.Theta,
-    #                                                       optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     Theta_inv_Sigma_Theta_jac = einsum('mMj, mK -> MKj', Sigma_factor_transpose, self._inv_Sigma_Theta,
-    #                                        optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     T_inv_Sigma_T_jac = einsum('NM, MKj, NK -> Nj', self._FBold, Theta_inv_Sigma_Theta_jac, self._FBold,
-    #                                optimize=True, dtype=float, order=self.MEMORY_LAYOUT).reshape((1, self._N, self._xi_len + 1),
-    #                                                                                               order=self.MEMORY_LAYOUT)
-    #     Phi_factor_transpose = Theta_jac - einsum('kmj, kM -> mMj', inv_Phi_jac_Phi, self.Theta,
-    #                                               optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     Theta_inv_Phi_inv_Sigma_Theta_jac = einsum('mMj, mK -> MKj', Phi_factor_transpose, self._inv_Phi_inv_Sigma_Theta,
-    #                                                optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     Theta_inv_Phi_inv_Sigma_Theta_jac -= einsum('kM, kmj, mK -> MKj', self.Theta, inv_Phi_inv_Sigma_jac_Sigma, self._inv_Sigma_Theta,
-    #                                                 optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     T_inv_Phi_inv_Sigma_T_jac = einsum('NOM, MKj, NOK -> NOj',
-    #                                        self._V_pre_outer_square, Theta_inv_Phi_inv_Sigma_Theta_jac, self._V_pre_outer_square,
-    #                                        optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     self._V = T_inv_Phi_inv_Sigma_T_jac - (T_inv_Sigma_T_jac + transpose(T_inv_Sigma_T_jac, (1, 0, 2)))
-    #
-    #     """ Calculate D_jacobian. """
-    #     D_derivative = self._D_const * einsum('LN, NO, NOj, KO -> LKj', self._fBold_bar_0, self._W, self._V, self._fBold_bar_0,
-    #                                           optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     D_derivative -= einsum('j, LK -> LKj', log_D_const_jac, self._D_plus_Ft_1_Ft, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     result = -self._xi[1:] / self._xi[0]
-    #     result = einsum('LK, j -> LKj', D_derivative[:, :, 0], result, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-    #     return result + D_derivative[:, :, 1:]
-
-    def calculate(self):
-        """ Calculate the Sobol' Indices S1 and S."""
-        def _diagonal_matrices():
-            """ Cache the diagonal parts of the key (Mx,Mx) matrices V, Sigma, Phi.
-                _FBold_diagonal = (_lengthscale^(2) + I)^(-1)
-                _Sigma_diagonal = (lengthscales^(-2) + I)^(-1)
-                _Psi_diagonal = (2*lengthscales^(-2) + I) (lengthscales^(-2) + I)^(-1)
-            All invariant.
-            """
-            self._FBold_diagonal = self._lengthscale ** 2
-            self._Psi_diagonal = self._FBold_diagonal ** (-1)
-            self._FBold_diagonal += 1.0
-            self._Psi_diagonal += 1.0
-            self._2Sigma_diagonal = 2 * (self._Psi_diagonal ** (-1))
-            self._FBold_diagonal = self._FBold_diagonal ** (-1)
-            self._2Psi_diagonal = (2 * self._Psi_diagonal - 1.0) * self._2Sigma_diagonal
-        _diagonal_matrices()
-
-        def _precursors_to_D():
-            """ Cache invariant precursors to _D."""
-            self._FBold = einsum('NM, M -> MN', self._gp.X, self._FBold_diagonal, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-            self._FBold_outer_plus = self._FBold_outer_minus = self._FBold.reshape((self._M, 1, self._N))
-            FBold_T = transpose(self._FBold_outer_minus, (0, 2, 1))
-            self._FBold_outer_plus = self._FBold_outer_plus + FBold_T
-            self._FBold_outer_minus = self._FBold_outer_minus - FBold_T
-        _precursors_to_D()
-
-        def _conditional_expectations():
-            """ Cache invariant conditional expectations _fBold_bar_0 and _f_bar_0_2. """
-            self._fBold_bar_0 = einsum('MN, NM -> N', self._FBold, self._gp.X, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-            self._fBold_bar_0 = sqrt(prod(self._2Sigma_diagonal) / (2**self._M)) * exp(-0.5 * self._fBold_bar_0)
-            self._fBold_bar_0 = einsum('Ll, Nl, N -> LN', self._gp.parameters.f, self._gp.inv_prior_Y_Y, self._fBold_bar_0, optimize=True,
-                                       dtype=float, order=self.MEMORY_LAYOUT)
-            self._f_bar_0_2 = einsum('LN -> L', self._fBold_bar_0, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-            self._f_bar_0_2 = einsum('L, l -> Ll', self._f_bar_0_2, self._f_bar_0_2, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-        _conditional_expectations()
-
-        def _DBold_DBold_full_DBold_full_determinant() -> Tuple[NP.Matrix, NP.Tensor3, NP.Array]:
-            """ Calculate DBold and its expanded form DBold_full, with a determinant pre-factor. """
-            DBold_full_determinant = (self._2Sigma_diagonal / self._2Psi_diagonal) ** (1/2)
-            DBold_numerator_precision_halved = 0.5 * (self._2Sigma_diagonal ** (-1))
-            DBold_denominator_precision_halved = 0.5 * (self._2Psi_diagonal ** (-1))
-            DBold_full = einsum('MNO, M, MNO -> MNO', self._FBold_outer_minus, DBold_numerator_precision_halved, self._FBold_outer_minus,
-                                  optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-            DBold_full -= einsum('MNO, M, MNO -> MNO', self._FBold_outer_plus, DBold_denominator_precision_halved, self._FBold_outer_plus,
-                                  optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-            DBold = einsum('MNO -> NO', DBold_full, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-            return ((prod(DBold_full_determinant) ** (-1)) * exp(-DBold), exp(DBold_full), DBold_full_determinant)
-        DBold, DBold_full, DBold_full_determinant = _DBold_DBold_full_DBold_full_determinant()
-
-        def sobol_and_reorder() -> NP.Array:
-            """ Calculate all Sobol Indices, returning a reordering by decreasing ST_m """
-            self._D[:, :, -1] = einsum('LN, NO, lO -> Ll', self._fBold_bar_0, DBold, self._fBold_bar_0,
-                                            optimize=True, dtype=float, order=self.MEMORY_LAYOUT) - self._f_bar_0_2
-            DBold_m_included = DBold.copy(order=self.MEMORY_LAYOUT)
-            DBold_m_to_include = empty((self._N, self._N), dtype=float, order=self.MEMORY_LAYOUT)
-            DBold_m = empty((self._N, self._N), dtype=float, order=self.MEMORY_LAYOUT)
-            reordering = -ones(self._M, dtype=int, order=self.MEMORY_LAYOUT)
-            D_m = empty((self._L, self._L), dtype=float, order=self.MEMORY_LAYOUT)
-            S_m = empty((self._L, self._L), dtype=float, order=self.MEMORY_LAYOUT)
-            for m_excluded in reversed(range(1, self._M)):
-                max_semi_norm = (-1, -1.5)
-                for m_to_exclude in reversed(range(self._M)):
-                    if m_to_exclude not in reordering[m_excluded:]:
-                        DBold_m[:] = DBold_m_included * DBold_full[m_to_exclude, :, :] * DBold_full_determinant[m_to_exclude]
-                        einsum('LN, NO, lO -> Ll', self._fBold_bar_0, DBold_m, self._fBold_bar_0, out=D_m,
-                               optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-                        D_m -= self._f_bar_0_2
-                        S_m[:] = D_m / self._D[:, :, -1]
-                        semi_norm = self._semi_norm.value(S_m)
-                        if semi_norm > max_semi_norm[1]:
-                            max_semi_norm = (m_to_exclude, semi_norm)
-                            copyto(DBold_m_to_include, DBold_m)
-                            self._D[:, :, m_excluded - 1] = D_m[:]
-                reordering[m_excluded] = max_semi_norm[0]
-                self._S[:, :, m_excluded - 1] = self._D[:, :, m_excluded - 1] / self._D[:, :, -1]
-                self._ST[:, :, m_excluded] = 1 - self._S[:, :, m_excluded - 1]
-                DBold_m = (DBold_full[max_semi_norm[0], :, :] * DBold_full_determinant[max_semi_norm[0]]) ** (-1)
-                einsum('LN, NO, lO -> Ll', self._fBold_bar_0, DBold_m, self._fBold_bar_0, out=D_m,
-                             optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-                D_m -= self._f_bar_0_2
-                self._S1[:, :, m_excluded] = D_m / self._D[:, :, -1]
-                copyto(DBold_m_included, DBold_m_to_include)
-            self._S1[:, :, 0] = self._S[:, :, 0]
-            reordering[0] = (set(range(self._M))-set(reordering)).pop()   # This is the element in range(self._M) which is missing from reordering.
-            return reordering
-        reordering = sobol_and_reorder()
-
-        self.reorder_data_columns(reordering)
-        theta = eye(self._M, dtype=float, order=self.MEMORY_LAYOUT)
-        self.write_parameters(self.Parameters(theta[reordering, :], self.Tensor3AsMatrix(self._D),
-                                              self.Tensor3AsMatrix(self._S1), self.Tensor3AsMatrix(self._S), self.Tensor3AsMatrix(self._ST)))
-
-    def _read_semi_norm(self, semi_norm_meta: Dict) -> Sobol.SemiNorm:
-        # noinspection PyTypeChecker
-        semi_norm_json = self._folder / "SemiNorm.json"
-        if semi_norm_meta is None:
-            if self._options_json.exists():
-                with open(semi_norm_json, mode='r') as file:
-                    semi_norm_meta = json.load(file)
-            else:
-                semi_norm_meta = self.DEFAULT_OPTIMIZER_OPTIONS
-        if semi_norm_meta['L'] != self._L:
-            warn("I am changing Sobol.semi_norm.meta['L'] from {0:d} to {1:d} = Sobol.gp.L.".format(semi_norm_meta['L'], self._L))
-            semi_norm_meta['L'] = self._L
-        with open(semi_norm_json, mode='w') as file:
-            json.dump(semi_norm_meta, file, indent=8)
-        return Sobol.SemiNorm.from_meta(semi_norm_meta)
-
-    def __init__(self, gp: GP, semi_norm: Dict = SemiNorm.DEFAULT_META):
-        """ Initialize Sobol' Calculator and Optimizer.
-
-        Args:
-            gp: The underlying Gaussian process surrogate.
-            semi_norm: Meta json describing a Sobol.SemiNorm.
-        """
-
-        """ Private Attributes:
-        _gp (invariant): The underlying GP.
-        _N, _M, _L (invariant): _gp.N, _gp.M, _gp.L.
-        _lengthscale (invariant): The (M,) Array _gp.kernel_parameters.parameters.lengthscales[0, :].
-        _FBold_diagonal, _2Sigma_diagonal, _2Psi_diagonal (invariant): Arrays of shape (M,) representing (M,M) diagonal matrices.
-
-        _fBold_bar_0 (invariant): An (L,N) Matrix.
-        _f_bar_0_2 (invariant): The (L,L) Matrix product of E[f] E[f.T].
-        _FBold (invariant): An (M,N) Matrix.
-
-        _objective_value: The optimization objective value (function of Theta_M_M), set by the call to Sobol.optimize()
-        _objective_jacobian: The optimization objective jacobian (function of Theta_M_M), set by the call to Sobol.optimize()
-
-        _Sigma_tilde, _Psi_tilde: (M,M) matrices.
-        _FBold_tilde: An (M,N) matrix.
-        """
-
-        """ Initialize surrogate GP and related quantities, namely 
-            _gp
-            _N, _M, _L,: GP training data dimensions N = dataset rows (datapoints), M = input columns, L = input columns
-            _lengthscale: RBF lengthscales vector
-        all of which are private and invariant.
-        """
-        self._gp = gp
-        self._N, self._M, self._L = self._gp.N, self._gp.M, self._gp.L
-        self._lengthscale = self._gp.kernel.parameters.lengthscales[0, :]
-        if self._lengthscale.shape != (self._M,):
-            self._lengthscale = full(self._M, self._lengthscale[0], dtype=float, order=self.MEMORY_LAYOUT)
-
-        self._Theta_M_M = zeros(self._M, dtype=float, order=self.MEMORY_LAYOUT)
-        self._D = empty((self._L, self._L, self._M), dtype=float, order=self.MEMORY_LAYOUT)
-        self._S1 = empty((self._L, self._L, self._M), dtype=float, order=self.MEMORY_LAYOUT)
-        self._S = ones((self._L, self._L, self._M), dtype=float, order=self.MEMORY_LAYOUT)
-        self._ST = zeros((self._L, self._L, self._M), dtype=float, order=self.MEMORY_LAYOUT)
-
-        """ Declare internal calculation stages. These are documented where they are calculated, in Sobol.calculate()."""
-        self._FBold_diagonal = self._2Sigma_diagonal = self._2Psi_diagonal = None
-        self._FBold = self._V_pre_outer_square = self._fBold_bar_0 = self._f_bar_0_2 = None
-        self._objective_value = self._objective_jacobian = None
-
-        super().__init__(self._gp.folder / self.NAME, self.Parameters(eye(self._M, dtype=float, order=self.MEMORY_LAYOUT),
-                                                                   self.Tensor3AsMatrix(self._D), self.Tensor3AsMatrix(self._S1),
-                                                                   self.Tensor3AsMatrix(self._S), self.Tensor3AsMatrix(self._ST)))
-        self._semi_norm = self._read_semi_norm(semi_norm)
-        self.calculate()
-
-    @classmethod
-    @abstractmethod
-    def from_GP(cls, fold: Fold, source_gp_name: str, destination_gp_name: str, semi_norm: Dict = SemiNorm.DEFAULT_META) -> Sobol:
-        """ Create a Sobol object from a saved GP folder.
-
-        Args:
-            fold: The Fold housing the source and destination GPs.
-            source_gp_name: The source GP folder.
-            destination_gp_name: The destination GP folder. Must not exist.
-            semi_norm: Meta json describing a Sobol.SemiNorm.
-        Returns: The constructed Sobol object
-        """
-        dst = fold.folder / destination_gp_name
-        if dst.exists():
-            shutil.rmtree(dst)
-        shutil.copytree(src=fold.folder / source_gp_name, dst=dst)
-        return cls(gp=GP(fold=fold, name=destination_gp_name, semi_norm=semi_norm))
-
-
-# noinspection PyPep8Naming
-class ROM(Model):
-    """ Reduced Order Model (ROM) Calculator and optimizer.
-    This class is documented through its public properties."""
-
-    """ Required overrides."""
-
-    class GP_Initializer(IntEnum):
-        ORIGINAL = auto()
-        ORIGINAL_WITH_CURRENT_KERNEL = auto()
-        ORIGINAL_WITH_GUESSED_LENGTHSCALE = auto()
-        CURRENT = auto()
-        CURRENT_WITH_ORIGINAL_KERNEL = auto()
-        CURRENT_WITH_GUESSED_LENGTHSCALE = auto()
-        RBF = auto()
-
-    MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
-
-    Parameters = NamedTuple("Parameters", [('Mu', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix),
-                                           ('lengthscales', NP.Matrix), ('log_marginal_likelihood', NP.Matrix)])
-    """ 
-        **Mu** -- A numpy [[int]] specifying the number of input dimensions in the rotated basis u.
-
-        **D** -- An (L L, M) Matrix of cumulative conditional variances D[l,k,m] = S[l,k,m] D[l,k,M].
-
-        **S1** -- An (L L, M) Matrix of Sobol' main indices.
-
-        **S** -- An (L L, M) Matrix of Sobol' cumulative indices.
-
-        **lengthscales** -- A (1,M) Covector of RBF lengthscales, or a (1,1) RBF lengthscales.
-
-        **log_marginal_likelihood** -- A numpy [[float]] used to record the log marginal likelihood.
-    """
-    DEFAULT_PARAMETERS = Parameters(*(atleast_2d(None),) * 6)
-
-    DEFAULT_OPTIMIZER_OPTIONS = {'iterations': 1, 'guess_identity_after_iteration': 1, 'sobol_options': Sobol.DEFAULT_OPTIMIZER_OPTIONS,
-                                 'gp_initializer': GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE,
-                                  'gp_options': GP.DEFAULT_OPTIONS}
-    """ 
-        **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(options['sobol_options']) 
-            followed by GP.optimize(options['gp_options'])).
-    
-        **sobol_options*** -- A Dict of Sobol optimizer options, similar to (and documented in) Sobol.DEFAULT_OPTIMIZER_OPTIONS.
-        
-        **guess_identity_after_iteration** -- After this many ROM iterations, Sobol.optimize does no exploration, 
-            just gradient descending from Theta = Identity Matrix.
-    
-        **reuse_original_gp** -- True if GP.optimize is initialized each time from the GP originally provided.
-
-        **gp_options** -- A Dict of GP optimizer options, similar to (and documented in) GP.DEFAULT_OPTIMIZER_OPTIONS.
-    """
-
-    @classmethod
-    @abstractmethod
-    def from_ROM(cls, fold: Fold, name: str, suffix: str = ".0", Mu: int = -1, rbf_parameters: Optional[GP.Parameters] = None) -> ROM:
-        """ Create a ROM object from a saved ROM folder.
-
-        Args:
-            fold: The Fold housing the ROM to load.
-            name: The name of the saved ROM to create from.
-            suffix: The suffix to append to the most optimized gp.
-            Mu: The dimensionality of the rotated input basis u. If this is not in range(1, fold.M+1), Mu=fold.M is used.
-
-        Returns: The constructed ROM object
-        """
-        optimization_count = [optimized.name.count(cls.OPTIMIZED_GB_EXT) for optimized in fold.folder.glob("name" + cls.OPTIMIZED_GB_EXT + "*")]
-        source_gp_name = name + cls.OPTIMIZED_GB_EXT * max(optimization_count)
-        destination_gp_name = source_gp_name + suffix
-        return cls(name=name,
-                   sobol=Sobol.from_GP(fold, source_gp_name, destination_gp_name, Mu=Mu, read_parameters=True),
-                   options=None, rbf_parameters=rbf_parameters)
-
-    @classmethod
-    @abstractmethod
-    def from_GP(cls, fold: Fold, name: str, source_gp_name: str, options: Dict, Mu: int = -1,
-                rbf_parameters: Optional[GP.Parameters] = None) -> ROM:
-        """ Create a ROM object from a saved GP folder.
-
-        Args:
-            fold: The Fold housing the ROM to load.
-            name: The name of the saved ROM to create from.
-            source_gp_name: The source GP folder.
-            Mu: The dimensionality of the rotated input basis u. If this is not in range(1, fold.M+1), Mu=fold.M is used.
-            options: A Dict of ROM optimizer options.
-
-        Returns: The constructed ROM object
-        """
-        return cls(name=name,
-                   sobol=Sobol.from_GP(fold=fold, source_gp_name=source_gp_name, destination_gp_name=name + ".0", Mu=Mu),
-                   options=options, rbf_parameters=rbf_parameters)
-
-    OPTIMIZED_GP_EXT = ".optimized"
-    REDUCED_FOLD_EXT = ".reduced"
-
-    """ End of required overrides."""
-
-    @property
-    def name(self) -> str:
-        """ The name of this ROM."""
-        return self.folder.name
-
-    @property
-    def sobol(self) -> Sobol:
-        """ The Sobol object underpinning this ROM."""
-        return self._sobol
-
-    @property
-    def gp(self) -> Sobol:
-        """ The GP underpinning this ROM."""
-        return self._gp
-
-    @property
-    def semi_norm(self) -> Sobol.SemiNorm:
-        """ A Sobol.SemiNorm on the (L,L) matrix of Sobol' indices, defining the ROM optimization objective ``semi_norm(D[:,:,m])``."""
-        return self._semi_norm
-
-    def gp_name(self, iteration: int) -> str:
-        """ The name of the GP produced by iteration."""
-        if iteration >= 0:
-            return "{0}.{1:d}".format(self.name, iteration)
-        else:
-            return "{0}{1}".format(self.name, self.OPTIMIZED_GB_EXT)
-
-    def _initialize_gp(self, iteration: int) -> GP:
-        if self._rbf_parameters is not None:
-            gp_initializer = self.GP_Initializer.RBF
-            parameters = self._rbf_parameters
-            gp_rbf = self.GPType(self._fold, self.gp_name(iteration) + ".rbf", parameters)
-            gp_rbf.optimize(**self._options[-1]['gp_options'])
-            gp_dir = gp_rbf.folder.parent / self.gp_name(iteration)
-            Model.copy(gp_rbf.folder, gp_dir)
-            kernel = type(self._gp.kernel)(None, None, gp_dir / GP.KERNEL_DIR_NAME)
-            kernel.make_ard(self._gp.M)
-            return self.GPType(self._fold, self.gp_name(iteration), parameters=None)
-        gp_initializer = self._options[-1]['gp_initializer']
-        parameters = self._original_parameters if gp_initializer < self.GP_Initializer.CURRENT else self._gp.parameters
-        if not self._gp.kernel.is_rbf:
-            if gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_GUESSED_LENGTHSCALE, self.GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE):
-                lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales, optimize=True, dtype=float,
-                                     order=self.MEMORY_LAYOUT) * 0.5 * self._gp.M * (self._gp.M - arange(self._gp.M, dtype=float)) ** (-1)
-            elif gp_initializer in (self.GP_Initializer.CURRENT_WITH_ORIGINAL_KERNEL, self.GP_Initializer.ORIGINAL):
-                lengthscales = einsum('MK, JK -> M', self._Theta, self._original_parameters.kernel.parameters.lengthscales,
-                                     optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-            elif gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_CURRENT_KERNEL, self.GP_Initializer.CURRENT):
-                lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales, optimize=True, dtype=float,
-                                     order=self.MEMORY_LAYOUT)
-            parameters = parameters._replace(kernel=self._gp.kernel.Parameters(lengthscales=lengthscales))
-        return self.GPType(self._fold, self.gp_name(iteration), parameters)
-
-    def optimize(self, options: Dict):
-        """ Optimize the model parameters. Do not call super().optimize, this interface only contains suggestions for implementation.
-
-        Args:
-            options: A Dict of implementation-dependent optimizer options, following the format of ROM.DEFAULT_OPTIMIZER_OPTIONS.
-        """
-        if options is not self._options[-1]:
-            self._options.append(options)
-            self._semi_norm = Sobol.SemiNorm.from_meta(self._options[-1]['sobol_options']['semi_norm'])
-            self._sobol_reordering_options['semi_norm'] = self._semi_norm
-
-        self._options[-1]['sobol_options']['semi_norm'] = self._semi_norm.meta
-        self._write_options(self._options)
-
-        iterations = self._options[-1]['iterations']
-        if iterations < 1 or self._options[-1]['sobol_options']['N_exploit'] < 1:
-            if not iterations <= 1:
-                warn("Your ROM optimization does not allow_rotation so iterations is set to 1, instead of {0:d}.".format(iterations), UserWarning)
-            iterations = 1
-
-        guess_identity_after_iteration = self._options[-1]['guess_identity_after_iteration']
-        if guess_identity_after_iteration < 0:
-            guess_identity_after_iteration = iterations
-
-        sobol_guess_identity = {**self._options[-1]['sobol_options'], 'N_explore': 1}
-        self._Theta = self._sobol.Theta_old
-
-        for iteration in range(iterations):
-            self._gp = self._initialize_gp(iteration + 1)
-            self.calculate()
-            self.write_parameters(self.Parameters(
-                concatenate((self.parameters.Mu, atleast_2d(self._sobol.Mu)), axis=0),
-                concatenate((self.parameters.D, atleast_2d(self._semi_norm.value(self._sobol.D))), axis=0),
-                concatenate((self.parameters.S1, atleast_2d(self._semi_norm.value(self._sobol.S1))), axis=0),
-                concatenate((self.parameters.S, atleast_2d(self._semi_norm.value(self._sobol.S))), axis=0),
-                concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
-                concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
-            if iteration < guess_identity_after_iteration:
-                self._sobol.optimize(**self._options[-1]['sobol_options'])
-            else:
-                self._sobol.optimize(**sobol_guess_identity)
-            self._Theta = einsum('MK, KL -> ML', self._sobol.Theta_old, self._Theta)
-
-        self._gp = self._initialize_gp(-1)
-        self.calculate()
-        self._gp.test()
-        self.write_parameters(self.Parameters(
-            concatenate((self.parameters.Mu, atleast_2d(self._sobol.Mu)), axis=0),
-            concatenate((self.parameters.D, atleast_2d(self._semi_norm.value(self._sobol.D))), axis=0),
-            concatenate((self.parameters.S1, atleast_2d(self._semi_norm.value(self._sobol.S1))), axis=0),
-            concatenate((self.parameters.S, atleast_2d(self._semi_norm.value(self._sobol.S))), axis=0),
-            concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
-            concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
-        column_headings = ("x{:d}".format(i) for i in range(self._sobol.Mu))
-        frame = Frame(self._sobol.parameters_csv.Theta, DataFrame(self._Theta, columns=column_headings))
-        frame.write()
-
-    def reduce(self, Mu: int = -1):
-        """
-
-        Args:
-            Mu: The reduced dimensionality Mu &le sobol.Mu. If Mu &le 0, then Mu = sobol.Mu.
-
-        Returns:
-        """
-
-    def calculate(self):
-        """ Calculate the Model. """
-        self._gp.optimize(**self._options[-1]['gp_options'])
-        self._sobol = self.SobolType(self._gp)
-
-    def __init__(self, name: str, sobol: Sobol, options: Dict = DEFAULT_OPTIMIZER_OPTIONS,
-                 rbf_parameters: Optional[GP.Parameters] = None):
-        """ Initialize ROM object.
-
-        Args:
-            sobol: The Sobol object to construct the ROM from.
-            options: A List[Dict] similar to (and documented in) ROM.DEFAULT_OPTIMIZER_OPTIONS.
-        """
-        self._rbf_parameters = rbf_parameters
-        self._sobol = sobol
-        self._gp = sobol.gp
-        self._original_parameters = self._gp.parameters._replace(kernel=self._gp.kernel.parameters)
-        self._sobol_reordering_options = deepcopy(Sobol.DEFAULT_OPTIMIZER_OPTIONS)
-        self._fold = Fold(self._gp.fold.folder.parent, self._gp.fold.meta['k'], self._sobol.Mu)
-        self.SobolType = deepcopy(type(self._sobol))
-        self.GPType = deepcopy(type(self._gp))
-        if options is None:
-            super().__init__(self._fold.folder / name, None)
-            self._options = self._read_options()
-        else:
-            self._options = [options]
-            self._semi_norm = Sobol.SemiNorm.from_meta(self._options[-1]['sobol_options']['semi_norm'])
-            self._sobol_reordering_options['semi_norm'] = self._semi_norm
-            parameters = self.Parameters(Mu=self._sobol.Mu,
-                                         D=self._semi_norm.value(self._sobol.D),
-                                         S1=self._semi_norm.value(self._sobol.S1),
-                                         S=self._semi_norm.value(self._sobol.S),
-                                         lengthscales=self._sobol.lengthscales,
-                                         log_marginal_likelihood=self._gp.log_marginal_likelihood)
-            super().__init__(self._fold.folder / name, parameters)
-            shutil.copy2(self._fold.data_csv, self.folder)
-            shutil.copy2(self._fold.test_csv, self.folder)
-            self.optimize(self._options[-1])

@@ -19,7 +19,7 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Encapsulates data storage structures."""
+""" Contains data storage structures."""
 
 from __future__ import annotations
 
@@ -155,25 +155,75 @@ class Store:
         READ = auto()
         CREATE = auto()
 
+    @classmethod
+    @property
+    def DEFAULT_META(cls) -> Dict[str, Any]:
+        """ Default meta data for a store."""
+        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'standard': cls.Standard.none.__name__, 'data': {}, 'K': 0, 'shuffled before folding': False}
+
+    @classmethod
+    @property
+    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
+        """ The default options (kwargs) to pass to pandas.read_csv."""
+        return {'skiprows': None, 'index_col': None}
+
+    @classmethod
+    def from_df(cls, folder: PathLike, df: DataFrame, meta: Dict = DEFAULT_META) -> Store:
+        """ Create a Store from a DataFrame.
+
+        Args:
+            folder: The location (folder) of the Store.
+            df: The data to store in [Return].data_csv.
+            meta: The meta data to store in [Return].meta_json.
+        Returns: A new Store.
+        """
+        store = Store(folder, Store.InitMode.CREATE)
+        store._meta = {**cls.DEFAULT_META, **meta}
+        store._data = Frame(store.data_csv, df)
+        store.meta_data_update()
+        store.standardize(Store.Standard.none)
+        return store
+
+    @classmethod
+    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
+        """ Create a Store from a csv file.
+
+        Args:
+            folder: The location (folder) of the target Store.
+            csv: The file containing the data to store in [Return].data_csv.
+            meta: The meta data to store in [Return].meta_json.
+            skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
+        Keyword Args:
+            kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the csv file, as detailed in
+                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
+        Returns: A new Store located in folder.
+        """
+        csv = Path(csv)
+        _meta = {**Store.DEFAULT_META, **meta}
+        origin_csv_kwargs = {**cls.DEFAULT_CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
+        data = Frame(csv, **origin_csv_kwargs)
+        _meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
+        return cls.from_df(folder, data.df, _meta)
+
     @property
     def folder(self) -> Path:
         """ The Store folder."""
-        return self.__dir
+        return self._folder
 
     @property
     def data_csv(self) -> Path:
         """ The Store data file."""
-        return self.__dir / '__data__.csv'
+        return self._folder / '__data__.csv'
 
     @property
     def meta_json(self) -> Path:
         """ The Store meta data file."""
-        return self.__dir / '__meta__.json'
+        return self._folder / '__meta__.json'
 
     @property
     def standard_csv(self) -> Path:
         """ The Store standardization file."""
-        return self.__dir / '__standard__.csv' if self.is_standardized else Path()
+        return self._folder / '__standard__.csv' if self.is_standardized else Path()
 
     @property
     def data(self) -> Frame:
@@ -207,10 +257,29 @@ class Store:
         return self._meta['data']['L']
 
     @property
+    def splits(self) -> List[Tuple[int, Path]]:
+        """ Lists the index and path of every Split in this Store."""
+        return [(int(split_dir.suffix[1:]), split_dir) for split_dir in self.folder.glob('split.[0-9]*')]
+
+    @property
     def standard(self) -> Frame:
         """ The Store standard: A (2, M+L) DataFrame consisting of (,M+L) ``loc`` values in the first row, (,M+L) ``scale`` values in the second."""
         self._standard = Frame(self.standard_csv) if self._standard is None else self._standard
         return self._standard
+
+    @property
+    def is_standardized(self) -> bool:
+        return self._meta['standard'] != Store.Standard.none.__name__
+
+    @property
+    def X(self) -> DataFrame:
+        """ The input X, as an (N,M) design Matrix with column headings."""
+        return self.data.df[self._meta['data']['X_heading']]
+
+    @property
+    def Y(self) -> DataFrame:
+        """ The output Y as an (N,L) Matrix with column headings."""
+        return self.data.df[self._meta['data']['Y_heading']]
 
     def __read_meta_json(self) -> dict:
         with open(self.meta_json, mode='r') as file:
@@ -219,10 +288,6 @@ class Store:
     def __write_meta_json(self):
         with open(self.meta_json, mode='w') as file:
             json.dump(self._meta, file, indent=8)
-
-    @property
-    def is_standardized(self) -> bool:
-        return self._meta['standard'] != Store.Standard.none.__name__
 
     def create_standardized_frame(self, csv: PathLike, df: DataFrame) -> Frame:
         """ Overwrite ``df`` with its standardized version, saving to csv.
@@ -291,11 +356,6 @@ class Store:
                     fold = Fold(self, k)
                     fold.split()
 
-    @property
-    def splits(self) -> List[Tuple[int, Path]]:
-        """ Lists the index and path of every Split in this Store."""
-        return [(int(split_dir.suffix[1:]), split_dir) for split_dir in self.folder.glob('split.[0-9]*')]
-
     def meta_data_update(self):
         """ Update __meta__"""
         self._meta.update({'data': {'X_heading': self._data.df.columns.values[0][0],
@@ -304,16 +364,6 @@ class Store:
                                    'L': self.Y.shape[1]})
         self.__write_meta_json()
 
-    @property
-    def X(self) -> DataFrame:
-        """ The input X, as an (N,M) design Matrix with column headings."""
-        return self.data.df[self._meta['data']['X_heading']]
-
-    @property
-    def Y(self) -> DataFrame:
-        """ The output Y as an (N,L) Matrix with column headings."""
-        return self.data.df[self._meta['data']['Y_heading']]
-
     def __init__(self, folder: PathLike, init_mode: InitMode = InitMode.READ):
         """ Initialize Store.
 
@@ -321,7 +371,7 @@ class Store:
             folder: The location (folder) of the Store.
             init_mode: The mode to initialize with, variations on READ (an existing Store) and CREATE (a new one).
         """
-        self.__dir = Path(folder)
+        self._folder = Path(folder)
         self._data = None
         self._standard = None
         if init_mode <= Store.InitMode.READ:
@@ -329,57 +379,7 @@ class Store:
             if init_mode is Store.InitMode.READ:
                 self._data = Frame(self.data_csv)
         else:
-            self.__dir.mkdir(mode=0o777, parents=True, exist_ok=True)
-
-    @classmethod
-    @property
-    def DEFAULT_META(cls) -> Dict[str, Any]:
-        """ Default meta data for a store."""
-        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'standard': cls.Standard.none.__name__, 'data': {}, 'K': 0, 'shuffled before folding': False}
-
-    @classmethod
-    def from_df(cls, folder: PathLike, df: DataFrame, meta: Dict = DEFAULT_META) -> Store:
-        """ Create a Store from a DataFrame.
-
-        Args:
-            folder: The location (folder) of the Store.
-            df: The data to store in [Return].data_csv.
-            meta: The meta data to store in [Return].meta_json.
-        Returns: A new Store.
-        """
-        store = Store(folder, Store.InitMode.CREATE)
-        store._meta = {**cls.DEFAULT_META, **meta}
-        store._data = Frame(store.data_csv, df)
-        store.meta_data_update()
-        store.standardize(Store.Standard.none)
-        return store
-
-    @classmethod
-    @property
-    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
-        """ The default options (kwargs) to pass to pandas.read_csv."""
-        return {'skiprows': None, 'index_col': None}
-
-    @classmethod
-    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
-        """ Create a Store from a csv file.
-
-        Args:
-            folder: The location (folder) of the target Store.
-            csv: The file containing the data to store in [Return].data_csv.
-            meta: The meta data to store in [Return].meta_json.
-            skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
-        Keyword Args:
-            kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the csv file, as detailed in
-                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
-        Returns: A new Store located in folder.
-        """
-        csv = Path(csv)
-        _meta = {**Store.DEFAULT_META, **meta}
-        origin_csv_kwargs = {**cls.DEFAULT_CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
-        data = Frame(csv, **origin_csv_kwargs)
-        _meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
-        return cls.from_df(folder, data.df, _meta)
+            self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
 
 
 class Fold(Store):
@@ -388,59 +388,6 @@ class Fold(Store):
 
     Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
     """
-
-    def set_test_data(self, df: DataFrame):
-        """ Set the test data for this Fold.
-
-        args:
-            **df**: The test data to be used.
-        """
-        self._test = self.create_standardized_frame(self.test_csv, df)
-
-    @property
-    def test_csv(self) -> Path:
-        """ The test data file. Must be identical in format to the self.data_csv file."""
-        return self.folder / '__test__.csv'
-
-    @property
-    def test(self) -> Frame:
-        """ The test data."""
-        return self._test
-
-    @property
-    def test_Y(self) -> DataFrame:
-        """ The test output Y as an (N,L) Matrix with column headings."""
-        return self._test.df[self._meta['data']['Y_heading']]
-
-    @property
-    def test_X(self) -> DataFrame:
-        """ The test input X, as an (N,M) design Matrix with column headings."""
-        return self._test.df[self._meta['data']['X_heading']].iloc[:, :self._M]
-
-    @property
-    def M(self) -> int:
-        """ The number of input columns of data."""
-        return self._M
-
-    @property
-    def X(self) -> DataFrame:
-        """ The input X, as an (N,M) design Matrix with column headings."""
-        return super().X.iloc[:, 0:self._M]
-
-    def __init__(self, parent: Union[Store, PathLike], k: int, M: int = -1):
-        """ Initialize Fold by reading existing files. Creation is handled by the classmethod Fold.into_K_folds.
-
-        Args:
-            parent: The parent Store, or its folder.
-            k: The index of the Fold within parent.
-            M: The number of input columns used. If not 0 &lt M &lt self.M, all columns are used.
-        """
-        if not isinstance(parent, Store):
-            parent = Store(parent, Store.InitMode.READ_META_ONLY)
-        assert 0 <= k < parent.K, f'Fold k={k:d} is out of bounds 0 <= k < K = {self.K:d} in data.Store({parent.folder:s}'
-        super().__init__(parent.fold_dir(k))
-        self._M = M if 0 < M < super().M else super().M
-        self._test = Frame(self.test_csv)
 
     @classmethod
     @property
@@ -508,3 +455,56 @@ class Fold(Store):
                                     train=[index for index, indicator in zip(indices, indicators) if k != indicator],
                                     test=[index for index, indicator in zip(indices, indicators) if k == indicator])
         return K
+
+    @property
+    def test_csv(self) -> Path:
+        """ The test data file. Must be identical in format to the self.data_csv file."""
+        return self.folder / '__test__.csv'
+
+    @property
+    def test(self) -> Frame:
+        """ The test data."""
+        return self._test
+
+    @property
+    def test_Y(self) -> DataFrame:
+        """ The test output Y as an (N,L) Matrix with column headings."""
+        return self._test.df[self._meta['data']['Y_heading']]
+
+    @property
+    def test_X(self) -> DataFrame:
+        """ The test input X, as an (N,M) design Matrix with column headings."""
+        return self._test.df[self._meta['data']['X_heading']].iloc[:, :self._M]
+
+    @property
+    def M(self) -> int:
+        """ The number of input columns of data. Overrides the 'store.M' property."""
+        return self._M
+
+    @property
+    def X(self) -> DataFrame:
+        """ The input X, as an (N,M) design Matrix with column headings. Overrides the 'store.X' property."""
+        return super().X.iloc[:, 0:self._M]
+
+    def set_test_data(self, df: DataFrame):
+        """ Set the test data for this Fold.
+
+        args:
+            **df**: The test data to be used.
+        """
+        self._test = self.create_standardized_frame(self.test_csv, df)
+
+    def __init__(self, parent: Union[Store, PathLike], k: int, M: int = -1):
+        """ Initialize Fold by reading existing files. Creation is handled by the classmethod Fold.into_K_folds.
+
+        Args:
+            parent: The parent Store, or its folder.
+            k: The index of the Fold within parent.
+            M: The number of input columns used. If not 0 &lt M &lt self.M, all columns are used.
+        """
+        if not isinstance(parent, Store):
+            parent = Store(parent, Store.InitMode.READ_META_ONLY)
+        assert 0 <= k < parent.K, f'Fold k={k:d} is out of bounds 0 <= k < K = {self.K:d} in data.Store({parent.folder:s}'
+        super().__init__(parent.fold_dir(k))
+        self._M = M if 0 < M < super().M else super().M
+        self._test = Frame(self.test_csv)

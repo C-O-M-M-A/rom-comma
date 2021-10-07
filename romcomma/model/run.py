@@ -19,47 +19,22 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains routines for running models.
+""" Contains routines for running models. """
 
-**Contents**:
-    **Module** enum with each value bound to an model implementation module.
-
-    **gp** function to instantiate a GaussianBundle.
-
-    **_gbs** function that runs Gaussian Bundles across the Folds of a store.
-
-    **gbs** function to instantiate, optimize and test GaussianBundles on a store.
-
-    **ROM_fold** function to instantiate a Reduced Order Model on a Fold.
-
-    **ROM_store** function to instantiate a Reduced Order Model across the Folds of a store.
-
-    **collect** function to instantiate the collection of new parameters.
-
-    **collect_tests** function to instantiate the collection of test results.
-"""
 import gpflow.config
 
 from romcomma.typing_ import *
 from romcomma.data import Store, Fold, Frame
-from romcomma.model import base
+from romcomma.model import gpr, kernels
+from romcomma.model.base import Parameters, Model
 from numpy import atleast_1d, atleast_2d, full, broadcast_to, transpose
 from pandas import concat
-from enum import Enum
 from pathlib import Path
-from romcomma.model import in_tensorflow
+from romcomma.model import gpr
 from time import time
 from datetime import timedelta
 
 from contextlib import contextmanager
-
-
-class Implementation(Enum):
-    """ An Enum indexing model implementations (i.e. modules). """
-    TENSORFLOW: Module = in_tensorflow
-
-
-IMPLEMENTATION: Implementation = Implementation.TENSORFLOW      # The implementation module to use. Reset using Context
 
 
 @contextmanager
@@ -79,38 +54,35 @@ def Timing(name: str):
 
 
 @contextmanager
-def Running(name: str, implementation: Implementation = IMPLEMENTATION, device: str = '', **kwargs: Any):
+def Running(name: str, device: str = '', **kwargs: Any):
     """ Context Manager for running operations.
 
     Args:
         name: The name of this context, this appears as what is being run.
         device: The device to run on. If this ends in the regex ``[C,G]PU*`` then the logical device ``/[C,G]*`` is used,
             otherwise device allocation is automatic.
-        implementation: An Implementation Enum specifying the implementation library for this run.
-        **kwargs: Is passed straight to the implementation configuration manager.
+        **kwargs: Is passed straight to the implementation GPFlow manager.
     """
     with Timing(name):
-        global IMPLEMENTATION
-        saved_implementation, IMPLEMENTATION = IMPLEMENTATION, implementation
-        device_manager = Timing('')
-        implementation_manager = Timing('')
-        message = ' in ' + implementation.name.lower()
-        if IMPLEMENTATION == Implementation.TENSORFLOW:
-            device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
-            if len(device) > 3:
-                device_manager = in_tensorflow.tf.device(device)
-                message = ' on ' + device
-            implementation_manager = gpflow.config.as_context(gpflow.config.Config(**kwargs))
-        print(message + '.')
+        print(' using GPFlow', end='')
+        device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
+        if len(device) > 3:
+            device_manager = gpr.tf.device(device)
+            print(f' on {device}', end='')
+        else:
+            device_manager = Timing('')
+        implementation_manager = gpflow.config.as_context(gpflow.config.Config(**kwargs))
+        if len(kwargs) > 0:
+            print(' with ' + ', '.join([f'{k}={v!r}' for k, v in kwargs.items()]), end='')
+        print('.')
         with device_manager:
             with implementation_manager:
                 yield
-        IMPLEMENTATION = saved_implementation
         print('Running ' + name, end='')
 
 
 def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
-        kernel_parameters: Optional[base.Kernel.Parameters] = None, parameters: Optional[base.GP.Parameters] = None,
+        kernel_parameters: Optional[kernels.Kernel.Parameters] = None, parameters: Optional[gpr.GP.Parameters] = None,
         optimize: bool = True, test: bool = True, sobol: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.DEFAULT_META'}, **kwargs: Any):
     """ Service routine to recursively run GPs the Folds in a Store, and on a single Fold.
 
@@ -160,11 +132,11 @@ def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: 
                                 gps(name, store, M, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol,
                                     semi_norm, **kwargs)
                                 return
-                        base.GP.copy(src_folder=store.folder/nearest_name, dst_folder=store.folder/full_name)
+                        gpr.GP.copy(src_folder=store.folder/nearest_name, dst_folder=store.folder/full_name)
                     gps(name, store, M, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
                 else:
-                    gp = IMPLEMENTATION.value.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
-                                                 **({} if parameters is None else parameters.as_dict()))
+                    gp = gpr.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
+                                **({} if parameters is None else parameters.as_dict()))
                     if optimize:
                         gp.optimize(**kwargs)
                     if test:
@@ -174,7 +146,7 @@ def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: 
 
 
 def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
-         options: Dict = None, rbf_parameters: Optional[base.GP.Parameters] = None):
+         options: Dict = None, rbf_parameters: Optional[gpr.GP.Parameters] = None):
     """ Service routine to recursively run ROMs on the Splits in a Store, the Folds in a Split or Store, and on a single Fold.
 
     Args:
@@ -230,7 +202,7 @@ def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union
 
 
 # noinspection PyProtectedMember
-def collect(store: Store, model_name: str, parameters: base.Model.Parameters, is_split: bool = True) -> Sequence[Path]:
+def collect(store: Store, model_name: str, parameters: Parameters, is_split: bool = True) -> Sequence[Path]:
     """Collect the Parameters of a Model.
 
         Args:
@@ -259,9 +231,9 @@ def collect(store: Store, model_name: str, parameters: base.Model.Parameters, is
                 fold = Fold(split_store, k)
                 source = (fold.folder / model_name) / (param + ".csv")
                 if param == "Theta":
-                    result = Frame(source, **base.Model.CSV_OPTIONS).df
+                    result = Frame(source, **Model.CSV_OPTIONS).df
                 else:
-                    result = Frame(source, **base.Model.CSV_OPTIONS).df.tail(1)
+                    result = Frame(source, **Model.CSV_OPTIONS).df.tail(1)
                 result.insert(0, "Fold", full(result.shape[0], k), True)
                 if k == 0:
                     parameters[param] = result.copy(deep=True)
@@ -346,12 +318,12 @@ def collect_GPs(store: Store, model_name: str, test: bool, sobol: bool, is_split
     Returns: The split directories collected.
 
     """
-    collect(store, model_name, base.GP.DEFAULT_PARAMETERS, is_split)
+    collect(store, model_name, gpr.GP.DEFAULT_PARAMETERS, is_split)
     if test:
         collect_tests(store, model_name, is_split)
-    if sobol:
-        collect(store, model_name + "\\Sobol", base.Sobol.DEFAULT_PARAMETERS, is_split)
-    return collect(store, model_name + "\\Kernel", base.Kernel.TypeFromIdentifier(kernelTypeIdentifier).DEFAULT_PARAMETERS, is_split)
+    # if sobol:
+    #     collect(store, model_name + "\\Sobol", base.Sobol.DEFAULT_PARAMETERS, is_split)
+    return collect(store, model_name + "\\Kernel", kernels.Kernel.TypeFromIdentifier(kernelTypeIdentifier).DEFAULT_PARAMETERS, is_split)
 
 
 def rotate_inputs(gb_path: PathLike, X_stand: NP.Matrix) -> NP.Matrix:
