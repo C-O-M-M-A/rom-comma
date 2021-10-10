@@ -19,12 +19,11 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" gpflow implementation of model.base."""
+""" Contains extensions to gpflow.likelihoods."""
 
 from __future__ import annotations
 
-from romcomma.typing_ import *
-from numpy import atleast_2d, zeros, sqrt, array, transpose
+
 import gpflow as gf
 from gpflow.base import Parameter
 import tensorflow as tf
@@ -97,4 +96,3 @@ class Likelihood(gf.likelihoods.QuadratureLikelihood):
             - 0.5 * ((Y - Fmu) ** 2 + Fvar) / self.variance,
             axis=-1,
         )
-
