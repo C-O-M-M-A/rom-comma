@@ -31,13 +31,11 @@ from __future__ import annotations
 from abc import abstractmethod
 from romcomma.typing_ import *
 from romcomma.data import Fold, Frame
-from romcomma.model.base import Parameters, Model
-from romcomma.model. kernels import Kernel
-from numpy import atleast_2d, zeros, sqrt, array, transpose
+from romcomma.base import Parameters, Model
+from romcomma. kernels import Kernel
+from numpy import atleast_2d, zeros, sqrt, transpose
 import gpflow as gf
 import tensorflow as tf
-import shutil
-from enum import IntEnum, auto
 from contextlib import suppress
 
 
@@ -193,7 +191,7 @@ class GPInterface(Model):
     @abstractmethod
     def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
                  kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):
-        """ GP Constructor. Calls model.__init__ to setup parameters, then checks dimensions.
+        """ GP Constructor. Calls __init__ to setup parameters, then checks dimensions.
 
         Args:
             name: The name of this GP.
@@ -235,7 +233,7 @@ class GP(GPInterface):
 
     @property
     def implementation(self) -> Tuple[Any, ...]:
-        return tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None, noise_variance=self.params.noise_variance[0, l])
+        return tuple(gfs.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None, noise_variance=self.params.noise_variance[0, l])
                      for l, kernel in enumerate(self._kernel.implementation))
 
     def optimize(self, method: str = 'L-BFGS-B', **kwargs: Any):
@@ -300,7 +298,7 @@ class GP(GPInterface):
 
     def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
                  kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):
-        """ GP Constructor. Calls model.__init__ to setup parameters, then checks dimensions.
+        """ GP Constructor. Calls __init__ to setup parameters, then checks dimensions.
 
         Args:
             name: The name of this GP.

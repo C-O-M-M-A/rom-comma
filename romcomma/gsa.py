@@ -313,7 +313,7 @@ class Sobol(Model):
         # self.replace_X_with_U()
 
     # def write_parameters(self, parameters: Parameters) -> Parameters:
-    #     """ Calculate the main Sobol' indices _S1, then write model.parameters to their csv files.
+    #     """ Calculate the main Sobol' indices _S1, then write parameters to their csv files.
     #
     #     Args:
     #         parameters: The NamedTuple to be the new value for self.parameters.

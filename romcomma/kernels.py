@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from romcomma.typing_ import *
 from abc import abstractmethod
-from romcomma.model.base import Parameters, Model
+from romcomma.base import Parameters, Model
 from numpy import atleast_2d
 import gpflow as gf
 
@@ -152,7 +152,7 @@ class Kernel(Model):
 
         Args:
             folder: The model file location.
-            read_parameters: If True, the model.parameters are read from ``folder``, otherwise defaults are used.
+            read_parameters: If True, the parameters are read from ``folder``, otherwise defaults are used.
             **kwargs: The model.parameters fields=values to replace after reading from file/defaults.
         """
         super().__init__(folder, read_parameters, **kwargs)
@@ -161,7 +161,7 @@ class Kernel(Model):
 
 
 class RBF(Kernel):
-    """ Implements the RBF kernel_parameters for use with romcomma.model.implemented_in_gpflow."""
+    """ Implements the RBF kernel_parameters for use with romcomma.implemented_in_gpflow."""
 
     @property
     def implementation(self) -> Tuple[Any, ...]:

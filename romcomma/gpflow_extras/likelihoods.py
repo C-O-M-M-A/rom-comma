@@ -23,11 +23,11 @@
 
 from __future__ import annotations
 
-from gpflow_extras.base import Covariance
+from romcomma.gpflow_extras.base import Covariance
 
 import gpflow as gf
 import tensorflow as tf
-import numpy as np
+
 
 class MultivariateGaussian(gf.likelihoods.QuadratureLikelihood):
     """ A non-diagonal, multivariate likelihood, extending gpflow. The code is the multivariate version of gf.likelihoods.Gaussian.

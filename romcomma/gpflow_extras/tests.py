@@ -19,17 +19,18 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains ."""  # TODO: Describe contents
+""" Contains tests of the gpflow_extras package."""
 
 from __future__ import annotations
 
-from romcomma.model.gpflow_extras.base import Covariance
+#import romcomma
+from romcomma.gpflow_extras import base, kernels, likelihoods, models
 import numpy as np
 import tensorflow as tf
 
 if __name__ == '__main__':
     a = np.array([[0.9, -0.5], [-0.5, 0.75]])
-    b = Covariance(a)
+    b = base.Covariance(a)
     print(b.value)
     print(b.value)
     b._cholesky_diagonal.assign([1.0, 1.0])

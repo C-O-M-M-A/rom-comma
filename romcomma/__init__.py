@@ -19,4 +19,9 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from romcomma import typing_, distribution, data, function, model
+""" Contains the romcomma library."""
+
+from . import test
+from . import data, kernels, run
+from .base import Model, Parameters
+from .gpr import GP

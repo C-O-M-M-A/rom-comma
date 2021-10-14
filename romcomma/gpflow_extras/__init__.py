@@ -21,4 +21,3 @@
 
 """ Contains extensions to the GPFlow library."""
 
-from romcomma.model.gpflow_extras import base, models, likelihoods, kernels

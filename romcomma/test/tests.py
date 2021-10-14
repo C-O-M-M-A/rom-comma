@@ -22,10 +22,10 @@
 """ Run this module first thing, to test your installation of romcomma. """
 
 from romcomma.typing_ import *
-from romcomma import model
+from romcomma import run
 from romcomma.data import Fold, Store
-from romcomma.function import Matrix, FunctionWithParameters, functions_of_normal
-from numpy import eye, savetxt, transpose, full, atleast_2d
+from romcomma.test.functions import Matrix, FunctionWithParameters, functions_of_normal
+from numpy import eye, savetxt, transpose
 from pathlib import Path
 from scipy.stats import ortho_group
 
@@ -51,12 +51,12 @@ def run_gps(name, function_name: Sequence[str], N: int, noise_std: float, random
                                 input_transform=input_transform, functions=functions, noise_std=noise_std)
     savetxt(store.folder / 'InverseRotation.csv', transpose(lin_trans))
     Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
-    model.run.gps(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+    run.gps(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
                   optimize=True, test=True)
 
 
 if __name__ == '__main__':
-    with model.run.Running('Test'):
+    with run.Context('Test'):
         for N in (800,):
             for noise_std in (0,):
                 for random in (False,):

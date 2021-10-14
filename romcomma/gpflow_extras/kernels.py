@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-from romcomma.model.gpflow_extras.base import Covariance
+from romcomma.gpflow_extras.base import Covariance
 from abc import abstractmethod
 import gpflow as gf
 import tensorflow as tf
