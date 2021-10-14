@@ -23,10 +23,9 @@
 
 from __future__ import annotations
 
-from gpflow_ext.base import Covariance
+from gpflow_extras.base import Covariance
 
 import gpflow as gf
-from gpflow.base import Parameter
 import tensorflow as tf
 import numpy as np
 
@@ -43,18 +42,21 @@ class MultivariateGaussian(gf.likelihoods.QuadratureLikelihood):
     """
     @property
     def covariance(self):
-        """ A gpflow_ext.base.Covariance, which is the covariance matrix of the likelihood distribution."""
+        """ A gpflow_extras.base.Covariance, which is the covariance matrix of the likelihood distribution."""
         return self._covariance
 
-    def __init__(self, covariance, **kwargs):
+    def __init__(self, variance, **kwargs):
         """ Constructor, which passes the Cholesky decomposition of the variance matrix.
 
         Args:
-            covariance: The covariance matrix of the likelihood, expressed in tensorflow or numpy. Is checked for symmetry and positive definiteness.
+            variance: The covariance matrix of the likelihood, expressed in tensorflow or numpy. Is checked for symmetry and positive definiteness.
             **kwargs: Keyword arguments forwarded to :class:`Likelihood`.
         """
-        self._covariance = Covariance(covariance)
-        super().__init__(latent_dim=self._covariance.shape, observation_dim=self._covariance.shape)
+        self._covariance = Covariance(variance)
+        super().__init__(*(self._covariance.shape))
+
+    def _check_ndims(self, F):
+        assert tf.rank(F) == 2, f'gpflow_extras.Likelihood only accepts F of rank 2 at present, provided F of rank {tf.rank(F)}.'
 
     def _log_prob(self, F, Y):
         return gf.logdensities.multivariate_normal(Y, F, self._covariance.cholesky)
@@ -63,14 +65,18 @@ class MultivariateGaussian(gf.likelihoods.QuadratureLikelihood):
         return tf.identity(F)
 
     def _conditional_variance(self, F):
-        return self._covariance.value
+        self._check_ndims(F)
+        return self._covariance.variance
 
     def _predict_mean_and_var(self, Fmu, Fvar):
-        return tf.identity(Fmu), Fvar + self._covariance.value
+        self._check_ndims(Fmu)
+        return tf.identity(Fmu), Fvar + self._covariance.variance
 
     def _predict_log_density(self, Fmu, Fvar, Y):
+        self._check_ndims(Fmu)
         return tf.reduce_sum(gf.logdensities.multivariate_normal(Y, Fmu, tf.linalg.cholesky(Fvar + self._covariance.value)), axis=-1)
 
     def _variational_expectations(self, Fmu, Fvar, Y):
+        self._check_ndims(Fmu)
         tr = tf.linalg.cholesky_solve(self._covariance.cholesky, Fvar)
         return self._log_prob(Fmu, Y) - 0.5 * tf.linalg.trace(tr)

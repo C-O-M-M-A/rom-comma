@@ -23,7 +23,7 @@
 name = "rom-comma"
 version = "1.0.0"
 description = "Reduced Order Modelling software, implementing Global Sensitivity Analysis of Gaussian Processes."
-authors = ["Robert Milton <r.a.milton@sheffield.ac.uk>", "Aaron Yeardley<asyeardley1@sheffield.ac.uk>"]
+authors = ["Robert Milton <r.a.milton@sheffield.ac.uk>"]
 license = "BSD 3-Clause"
 
 readme = "README.md"
@@ -49,8 +49,6 @@ requires = [
     "numpy >= 1.20.2",
     "scipy >= 1.6.2",
     "tensorflow >= 2.5.0",
-    "tensorflow-probability >= 0.12.2",
     "gpflow >= 2.2.1",
-    "pyDOE2 >= 1.3.0"
 ]
 build-backend = "setuptools.build_meta"

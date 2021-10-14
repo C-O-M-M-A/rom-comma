@@ -23,8 +23,8 @@
 
 from romcomma.typing_ import *
 from scipy import linalg, stats
-# noinspection PyPep8Naming
-from pyDOE2 import lhs as pyDOE_lhs
+
+from scipy.stats.qmc import LatinHypercube
 from numpy import zeros, atleast_2d
 from enum import Enum, auto
 from abc import ABC, abstractmethod
@@ -187,15 +187,13 @@ class Multivariate:
             marginals = [marginal.parameters for marginal in self.marginals]
             return {'M': self._M, 'marginals': marginals}
 
-        def lhs(self, N: int, criterion: Optional[str] = None, iterations: Optional[int] = None) -> NP.Matrix:
+        def lhs(self, N: int, is_centered: bool = False, seed: Optional[int] = None) -> NP.Matrix:
             """ Sample latin hypercube noise from this Multivariate.Independent.
 
             Args:
                 N: The number of sample points to generate.
-                criterion: Allowable values are "center" or "c", "maximin" or "M", "centermaximin"
-                    or "cm", and "correlation" or "corr". If no value is given, the design is simply
-                    randomized. For further details see https://pythonhosted.org/pyDOE/randomized.html#latin-hypercube.
-                iterations: The number of iterations in the maximin and correlations algorithms (Default: 5).
+                is_centered: False if sample points are random within their cells, True if centred within cells instead.
+                seed: The seed for a new numpy.random.Generator.
             Returns: An (N, M) latin hypercube design Matrix.
 
             Raises:
@@ -203,7 +201,7 @@ class Multivariate:
             """
             if N < 1:
                 raise ValueError(f'N = {N:d} < 1')
-            _lhs = pyDOE_lhs(self._M, N, criterion, iterations)
+            _lhs = LatinHypercube(self._M, centered=is_centered, seed=seed).random(N)
             if len(self._marginals) > 1:
                 for i in range(self._M):
                     _lhs[:, i] = self._marginals[i].parametrized.ppf(_lhs[:, i])
