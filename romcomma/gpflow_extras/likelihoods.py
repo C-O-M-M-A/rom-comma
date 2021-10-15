@@ -25,11 +25,12 @@ from __future__ import annotations
 
 from romcomma.gpflow_extras.base import Covariance
 
-import gpflow as gf
+from gpflow.likelihoods import QuadratureLikelihood
+from gpflow.logdensities import multivariate_normal
 import tensorflow as tf
 
 
-class MultivariateGaussian(gf.likelihoods.QuadratureLikelihood):
+class MultivariateGaussian(QuadratureLikelihood):
     """ A non-diagonal, multivariate likelihood, extending gpflow. The code is the multivariate version of gf.likelihoods.Gaussian.
 
     The Gaussian likelihood is appropriate where uncertainties associated with
@@ -59,7 +60,7 @@ class MultivariateGaussian(gf.likelihoods.QuadratureLikelihood):
         assert tf.rank(F) == 2, f'gpflow_extras.Likelihood only accepts F of rank 2 at present, provided F of rank {tf.rank(F)}.'
 
     def _log_prob(self, F, Y):
-        return gf.logdensities.multivariate_normal(Y, F, self._covariance.cholesky)
+        return multivariate_normal(Y, F, self._covariance.cholesky)
 
     def _conditional_mean(self, F):  # pylint: disable=R0201
         return tf.identity(F)
@@ -74,7 +75,7 @@ class MultivariateGaussian(gf.likelihoods.QuadratureLikelihood):
 
     def _predict_log_density(self, Fmu, Fvar, Y):
         self._check_ndims(Fmu)
-        return tf.reduce_sum(gf.logdensities.multivariate_normal(Y, Fmu, tf.linalg.cholesky(Fvar + self._covariance.value)), axis=-1)
+        return tf.reduce_sum(multivariate_normal(Y, Fmu, tf.linalg.cholesky(Fvar + self._covariance.value)), axis=-1)
 
     def _variational_expectations(self, Fmu, Fvar, Y):
         self._check_ndims(Fmu)

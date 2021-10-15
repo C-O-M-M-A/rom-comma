@@ -23,7 +23,9 @@
 
 from __future__ import annotations
 
-import gpflow as gf
+from gpflow import Parameter
+from gpflow.utilities import positive
+from gpflow.models.util import data_input_to_tensor
 import tensorflow as tf
 
 class Covariance:
@@ -75,7 +77,7 @@ class Covariance:
             value: A symmetric, positive definite matrix, expressed in tensorflow or numpy.
             cholesky_diagonal_lower_bound: Lower bound on the diagonal of the Cholesky decomposition.
         """
-        value = tf.squeeze(value)
+        value = data_input_to_tensor(value)
         self._shape = (value.shape[-1], value.shape[-1])
         self._variance_shape = (value.shape[-1], 1, value.shape[-1], 1)
         if value.shape != self._shape:
@@ -86,11 +88,11 @@ class Covariance:
         self._cholesky_diagonal = tf.linalg.diag_part(cholesky)
         if min(self._cholesky_diagonal) <= cholesky_diagonal_lower_bound:
             raise ValueError(f'The Cholesky diagonal of {name} must be strictly greater than {cholesky_diagonal_lower_bound}.')
-        self._cholesky_diagonal = gf.Parameter(self._cholesky_diagonal, transform=gf.utilities.positive(lower=cholesky_diagonal_lower_bound),
+        self._cholesky_diagonal = Parameter(self._cholesky_diagonal, transform=positive(lower=cholesky_diagonal_lower_bound),
                                                name=name+'.cholesky_diagonal')
 
         mask = sum([list(range(i * self._shape[0], i * (self._shape[0] + 1))) for i in range(1, self._shape[0])], start=[])
-        self._cholesky_lower_triangle = gf.Parameter(tf.gather(tf.reshape(cholesky, [-1]), mask), name=name+'.cholesky_lower_triangle')
+        self._cholesky_lower_triangle = Parameter(tf.gather(tf.reshape(cholesky, [-1]), mask), name=name+'.cholesky_lower_triangle')
 
         self._row_lengths = tuple(range(self._shape[0]))
         self._cholesky_diagonal_stale, self._cholesky_lower_triangle_stale = self._cholesky_diagonal + 1, self._cholesky_lower_triangle + 1

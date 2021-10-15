@@ -27,6 +27,7 @@ from romcomma.typing_ import *
 from romcomma.base import Parameters, Model
 from romcomma.data import Store, Fold, Frame
 from romcomma import kernels, gpr
+from gpflow.config import set_default_float
 from numpy import full, transpose
 from pandas import concat
 from pathlib import Path
@@ -34,6 +35,8 @@ from time import time
 from datetime import timedelta
 
 from contextlib import contextmanager
+
+DEFAULT_FLOAT_DTYPE: str = 'float64'
 
 
 @contextmanager
@@ -45,7 +48,7 @@ def Timing(name: str):
     """
     _enter = time()
     if name != '':
-        print (f'Context {name}', end='')
+        print (f'Running {name}', end='')
     yield
     if name != '':
         _exit = time()
@@ -53,17 +56,21 @@ def Timing(name: str):
 
 
 @contextmanager
-def Context(name: str, device: str = '', **kwargs: Any):
+def Context(name: str, default_float_dtype: str = DEFAULT_FLOAT_DTYPE, device: str = '', **kwargs: Any):
     """ Context Manager for running operations.
 
     Args:
         name: The name of this context, this appears as what is being run.
+        default_float_dtype: the floating type to use.
         device: The device to run on. If this ends in the regex ``[C,G]PU*`` then the logical device ``/[C,G]*`` is used,
             otherwise device allocation is automatic.
         **kwargs: Is passed straight to the implementation GPFlow manager.
     """
     with Timing(name):
-        print(' using GPFlow', end='')
+        global DEFAULT_FLOAT_DTYPE
+        DEFAULT_FLOAT_DTYPE = default_float_dtype
+        set_default_float(default_float_dtype)
+        print(f' using GPFlow {default_float_dtype}', end='')
         device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
         if len(device) > 3:
             device_manager = gpr.tf.device(device)
@@ -73,11 +80,11 @@ def Context(name: str, device: str = '', **kwargs: Any):
         implementation_manager = gpflow.config.as_context(gpflow.config.Config(**kwargs))
         if len(kwargs) > 0:
             print(' with ' + ', '.join([f'{k}={v!r}' for k, v in kwargs.items()]), end='')
-        print('.')
+        print('...')
         with device_manager:
             with implementation_manager:
                 yield
-        print('Context ' + name, end='')
+        print('...Running ' + name, end='')
 
 
 def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],

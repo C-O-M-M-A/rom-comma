@@ -25,12 +25,15 @@ from __future__ import annotations
 
 from romcomma.gpflow_extras.base import Covariance
 from abc import abstractmethod
-import gpflow as gf
+from gpflow.kernels import Kernel, AnisotropicStationary
+from gpflow import Parameter, set_trainable
+from gpflow.utilities import positive
+from gpflow.models.util import data_input_to_tensor
 import tensorflow as tf
 import numpy as np
 
 
-class Stationary(gf.kernels.AnisotropicStationary, gf.kernels.Kernel):
+class Stationary(AnisotropicStationary, Kernel):
     """
     Base class for stationary kernels, i.e. kernels that only
     depend on
@@ -49,13 +52,18 @@ class Stationary(gf.kernels.AnisotropicStationary, gf.kernels.Kernel):
         return self._covariance
 
     @property
+    def lengthscales(self):
+        """ The kernel lengthscales as an (L,M) matrix."""
+        return tf.reshape(self._lengthscales, (self.L, self._M))
+
+    @property
     def is_lengthscales_trainable(self):
         """ Boolean value indicating whether the kernel lengthscales are trainable."""
         return self._lengthscales.trainable
 
     @is_lengthscales_trainable.setter
     def is_lengthscales_trainable(self, value: bool):
-        gf.set_trainable(self._lengthscales, value)
+        set_trainable(self._lengthscales, value)
 
     def K_diag(self, X):
         assert len(tf.shape(X)) == 2, f'gpflow_extras.kernels.Stationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
@@ -82,13 +90,14 @@ class Stationary(gf.kernels.AnisotropicStationary, gf.kernels.Kernel):
             name: The name of this kenel.
             active_dims: Which of the input dimensions are used. The default None means all of them.
         """
-        super(gf.kernels.Kernel).__init__(active_dims=active_dims, name=name)  # Do not call gf.kernels.Stationary.__init__()!
+        super(Kernel).__init__(active_dims=active_dims, name=name)  # Do not call gf.kernels.Stationary.__init__()!
         self._covariance = Covariance(value=np.atleast_2d(variance), name=name + '.covariance')
         self._L = self._covariance.shape[0]
-        lengthscales_shape = np.shape(lengthscales)
+        lengthscales_shape = tf.shape(data_input_to_tensor(lengthscales))
         self._M = 1 if lengthscales_shape == () or lengthscales_shape == (self._L,) else lengthscales_shape[-1]
         lengthscales = tf.broadcast_to(lengthscales, (self._L, 1, self._M))
-        self._lengthscales = gf.Parameter(lengthscales, transform=gf.utilities.positive(), trainable=False, name=name + '.lengthscales')
+        self._lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + '.lengthscales')
+        self.is_lengthscales_trainable = False
         self._validate_ard_active_dims(self._lengthscales[0, 0])
 
 
