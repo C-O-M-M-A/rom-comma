@@ -58,7 +58,7 @@ class Kernel(Model):
     @classmethod
     @property
     def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
-        """ **Do not use, this function is merely an interface requirement. **"""
+        """ **Do not use, this functions is merely an interface requirement. **"""
         return {'A kernel has no use for optimizer options, only its parent GP does.': None}
 
     @classmethod
@@ -137,7 +137,7 @@ class Kernel(Model):
         pass
 
     def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
-        """ **Do not use, this function is merely an interface requirement. **
+        """ **Do not use, this functions is merely an interface requirement. **
 
         Args:
             method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).

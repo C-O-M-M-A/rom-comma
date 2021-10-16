@@ -91,7 +91,7 @@ class Store:
     class Standard:
         """ Encapsulates Specifications for standardizing data as ``classmethods``.
 
-        A Specification is a function taking an (N,M+L) DataFrame ``df `` (to be standardized) as input and returning a (2,M+L) DataFrame.
+        A Specification is a functions taking an (N,M+L) DataFrame ``df `` (to be standardized) as input and returning a (2,M+L) DataFrame.
         The first row of the return contains (,M+L) ``loc`` values, the second row (,M+L) ``scale`` values.
 
         Ultimately the Store class standardizes ``df`` to ``(df - loc)/scale``.
@@ -159,7 +159,7 @@ class Store:
     @property
     def DEFAULT_META(cls) -> Dict[str, Any]:
         """ Default meta data for a store."""
-        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'standard': cls.Standard.none.__name__, 'data': {}, 'K': 0, 'shuffled before folding': False}
+        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'standard': cls.Standard.none.__name__, 'data': {}, 'KXX': 0, 'shuffled before folding': False}
 
     @classmethod
     @property
@@ -237,9 +237,9 @@ class Store:
         return self._meta
 
     @property
-    def K(self) -> int:
+    def KXX(self) -> int:
         """ The number of folds contained in this Store."""
-        return self._meta['K']
+        return self._meta['KXX']
 
     @property
     def N(self) -> int:
@@ -303,7 +303,7 @@ class Store:
 
     def standardize(self, standard: Standard.Specification) -> Frame:
         """ Standardize this Store, and update ``self.meta``. If ``standard==Standard.none``, nothing else is done.
-        Otherwise, ``standard`` (a function member of Standard.Specification) is applied to ``self.data.df``, standardizing it,
+        Otherwise, ``standard`` (a functions member of Standard.Specification) is applied to ``self.data.df``, standardizing it,
         and writing the files ``[self.standard_csv]`` and ``[self.data_csv]``.
 
         Args:
@@ -318,15 +318,15 @@ class Store:
         return self._standard
 
     def fold_dir(self, k: int) -> Path:
-        """ Returns the path containing each fold between 0 and K.
+        """ Returns the path containing each fold between 0 and KXX.
 
         Args:
-            k: The fold which the function is creating the path for.
+            k: The fold which the functions is creating the path for.
         """
         return self.folder / f'fold.{k:d}'
 
-    def _K_folds_update(self, K: int, shuffled_before_folding: bool):
-        self._meta.update({'K': K, 'shuffled before folding': shuffled_before_folding})
+    def _K_folds_update(self, KXX: int, shuffled_before_folding: bool):
+        self._meta.update({'KXX': K, 'shuffled before folding': shuffled_before_folding})
         self.__write_meta_json()
 
     def split(self):
@@ -393,27 +393,27 @@ class Fold(Store):
     @property
     def DEFAULT_META(cls) -> Dict[str, Any]:
         """ Default meta data for a fold."""
-        return {'parent_dir': '', 'k': -1, 'K': -1}
+        return {'parent_dir': '', 'k': -1, 'KXX': -1}
 
     @classmethod
-    def into_K_folds(cls, parent: Store, K: int, shuffled_before_folding: bool = True,
+    def into_K_folds(cls, parent: Store, KXX: int, shuffled_before_folding: bool = True,
                      standard: Store.Standard.Specification = Store.Standard.mean_and_std, replace_empty_test_with_data_: bool = True):
-        """ Fold parent into K Folds for testing.
+        """ Fold parent into KXX Folds for testing.
 
         Args:
-            parent: The Store to fold into K.
+            parent: The Store to fold into KXX.
             K: The number of Folds, between 1 and N inclusive.
             shuffled_before_folding: Whether to shuffle the samples before sampling.
-            If False, each Fold.test will contain 1 sample from the first K samples in parent.__data__, 1 sample from the second K samples, and so on.
+            If False, each Fold.test will contain 1 sample from the first KXX samples in parent.__data__, 1 sample from the second KXX samples, and so on.
             standard: Specification of Standard, either Standard.none, Standard.mean_and_range or Standard.mean_and_std.
-            replace_empty_test_with_data_: Whether to replace an empty test file with the training data when K==1.
+            replace_empty_test_with_data_: Whether to replace an empty test file with the training data when KXX==1.
 
         Raises:
-            ValueError: Unless 1 &lt= K &lt= N.
+            ValueError: Unless 1 &lt= KXX &lt= N.
         """
         N = len(parent.data.df.index)
         if not (1 <= K <= N):
-            raise ValueError(f'K={K:d} does not lie between 1 and N={N:d} inclusive.')
+            raise ValueError(f'KXX={K:d} does not lie between 1 and N={N:d} inclusive.')
         for k in range(K, parent.K):
             parent.fold_dir(k).mkdir(mode=0o777, parents=False, exist_ok=True)
             parent.fold_dir(k).rmdir()
@@ -425,7 +425,7 @@ class Fold(Store):
         # noinspection PyUnresolvedReferences
         def __fold_from_indices(_k: int, train: List[int], test: List[int]):
             assert len(train) > 0
-            meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.folder), 'k': _k, 'K': parent.K}}
+            meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.folder), 'k': _k, 'KXX': parent.K}}
             fold = Store.from_df(parent.fold_dir(_k), parent.data.df.iloc[train], meta)
             fold.standardize(standard)
             fold.__class__ = cls
@@ -504,7 +504,7 @@ class Fold(Store):
         """
         if not isinstance(parent, Store):
             parent = Store(parent, Store.InitMode.READ_META_ONLY)
-        assert 0 <= k < parent.K, f'Fold k={k:d} is out of bounds 0 <= k < K = {self.K:d} in data.Store({parent.folder:s}'
+        assert 0 <= k < parent.K, f'Fold k={k:d} is out of bounds 0 <= k < KXX = {self.K:d} in data.Store({parent.folder:s}'
         super().__init__(parent.fold_dir(k))
         self._M = M if 0 < M < super().M else super().M
         self._test = Frame(self.test_csv)

@@ -57,32 +57,21 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
 
     .. math::
        \log p(Y \,|\, \sigma_n, \theta) =
-            \mathcal N(Y \,|\, 0, \mathbf{K} + \sigma_n^2 \mathbf{I})
+            \mathcal N(Y \,|\, 0, \mathbf{KXX} + \sigma_n^2 \mathbf{I})
     """
 
-    def __init__(
-        self,
-        data: RegressionData,
-        kernel: kernels.Stationary,
-        mean_function: Optional[MOMeanFunction] = None,
-        noise_variance: float = 1.0,
-    ):
-        likelihood = likelihoods.MOGaussian(noise_variance)
-        if mean_function is None:
-            mean_function = MOMeanFunction(Zero(), likelihood.latent_dim)
-        super().__init__(kernel, likelihood, mean_function, num_latent_gps=1)
-        if self._X.shape != (shape := (self._X.shape[-2], self.kernel.lengthscales.shape[-1])):
-            raise IndexError(f'Y.shape should be {shape} instead of {self._X.shape}.')
-        self._X = data_input_to_tensor(data[0])
-        self._Y = data_input_to_tensor(tf.transpose(data[1]))
-        if self._Y.shape != (shape := (likelihood.latent_dim, self._X.shape[-2])):
-            raise IndexError(f'Y.shape should be {shape} instead of {self._Y.shape}.')
-        self._Y = tf.reshape(data_input_to_tensor(data[1]), [-1])
-        self._mean = self.mean_function(self._X)
-        self._K_unit_variance = None if self.kernel.is_lengthscales_trainable else self.kernel.K_unit_variance(self._X)
+    @property
+    def M(self):
+        """ The input dimensionality."""
+        return self._M
 
     @property
-    def K(self):
+    def L(self):
+        """ The output dimensionality."""
+        return self._L
+
+    @property
+    def KXX(self):
         K = self.kernel(self._X) if self._K_unit_variance is None else self.kernel.K_d_apply_variance(self._K_unit_variance)
         return tf.reshape(K, tf.repeat(self._mean.shape, 2))
 
@@ -97,13 +86,10 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
             \log p(Y | \theta).
 
         """
-        L = tf.linalg.cholesky(self.likelihood.add_variance(self.K))
+        L = tf.linalg.cholesky(self.likelihood.add_variance(self.KXX))
         return multivariate_normal(self._Y, self._mean, L)
 
-
-    def predict_f(
-        self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False
-    ) -> MeanAndVariance:
+    def predict_f(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
         r"""
         This method computes predictions at X \in R^{N \x D} input points
 
@@ -112,7 +98,42 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
 
         where F* are points on the GP at new data points, Y are noisy observations at training data points.
         """
-        f_mean, f_var = base_conditional(Kmn=self.kernel(self._X, Xnew), Kmm=self._add_noise_cov(self.K), Knn=self.kernel(Xnew, full_cov=full_cov),
-                                         f=self._Y - self._mean, full_cov=full_cov, white=False)
+        Xnew = tf.reshape(data_input_to_tensor(Xnew), (-1, self._M))
+        n = Xnew.shape[0]
+        f_mean, f_var = base_conditional(Kmn=self.kernel(self._X, Xnew), Kmm=self._add_noise_cov(self.KXX), Knn=self.kernel(Xnew, full_cov=full_cov),
+                                         f=self._Y - self._mean, full_cov=True, white=False)
         f_mean += self.mean_function(Xnew)
-        return f_mean, f_var
+        f_mean_shape = (self._L, n)
+        f_var = tf.reshape(f_var, f_mean_shape * 2)
+        einsum = 'LNln -> LlNn' if full_output_cov else 'LNLn -> LNn'
+        f_var = tf.einsum(einsum, f_var)
+        if not full_cov:
+            f_var = tf.einsum('...NN->...N', f_var)
+
+        return tf.transpose(tf.reshape(f_mean, f_mean_shape)), f_var
+
+    def __init__(self, data: RegressionData, kernel: kernels.MOStationary, mean_function: Optional[MOMeanFunction] = None, noise_variance: float = 1.0):
+        """
+
+        Args:
+            data: Tuple[InputData, OutputData], which determines L, M and N. Both InputData and OutputData must be of rank 2.
+            kernel: Must be well-formed, with an (L,L) variance and an (L,M) lengthscales matrix.
+            mean_function: Defaults to Zero.
+            noise_variance: Broadcast to (diagonal) (L,L) if necessary.
+        """
+        self._X = data_input_to_tensor(data[0])
+        if (rank := tf.rank(self._X)) != (required_rank := 2):
+            raise IndexError(f'X should be of rank {required_rank} instead of {rank}.')
+        self._N, self._M = self._X.shape
+        Y = data_input_to_tensor(data[1])
+        self._L = Y.shape[-1]
+        if (shape := Y.shape) != (required_shape := (self._N, self._L)):
+            raise IndexError(f'Y.shape should be {required_shape} instead of {shape}.')
+        self._Y = tf.reshape(tf.transpose(Y), [-1])   # self_Y is now concatenated into an (LN,)-vector
+        noise_variance = tf.broadcast_to(data_input_to_tensor(noise_variance), (self._L, self._L))
+        likelihood = likelihoods.MOGaussian(noise_variance)
+        if mean_function is None:
+            mean_function = MOMeanFunction(self._L)
+        super().__init__(kernel, likelihood, mean_function, num_latent_gps=1)
+        self._mean = self.mean_function(self._X)
+        self._K_unit_variance = None if self.kernel.is_lengthscales_trainable else self.kernel.K_unit_variance(self._X)

@@ -56,24 +56,24 @@ class Sobol(Model):
         """Defines a SemiNorm on (L,L) matrices, for use by Sobol.
 
         Attributes:
-            value: The SemiNorm.value function, which is Callable[[Tensor], ArrayLike] so it is vectorizable.
-            derivative: The SemiNorm.derivative function, which is Callable[[Matrix], Matrix] as it is not vectorizable.
+            value: The SemiNorm.value functions, which is Callable[[Tensor], ArrayLike] so it is vectorizable.
+            derivative: The SemiNorm.derivative functions, which is Callable[[Matrix], Matrix] as it is not vectorizable.
         """
 
         DEFAULT_META = {'classmethod': 'element', 'L': 1, 'kwargs': {'row': 0, 'column': 0}}
 
         @classmethod
         def from_meta(cls, meta: Union[Dict, 'Sobol.SemiNorm']) -> Sobol.SemiNorm:
-            """ Create a SemiNorm from meta information. New SemiNorms should be registered in this function.
+            """ Create a SemiNorm from meta information. New SemiNorms should be registered in this functions.
 
             Args:
-                meta: A Dict containing the meta data for function construction. Use SemiNorm.DEFAULT_META as a template.
+                meta: A Dict containing the meta data for functions construction. Use SemiNorm.DEFAULT_META as a template.
                     Otherwise, meta in the form of a SemiNorm is just returned verbatim, anything elses raises a TypeError.
             Returns: The SemiNorm constructed according to meta.
 
             Raises:
                 TypeError: Unless meta must is a Dict or a SemiNorm.
-                NotImplementedError: if meta['classmethod'] is not recognized by this function.
+                NotImplementedError: if meta['classmethod'] is not recognized by this functions.
             """
             if isinstance(meta, Sobol.SemiNorm):
                 return meta
@@ -118,8 +118,8 @@ class Sobol(Model):
             """ Construct a SemiNorm on (L,L) matrices.
 
             Args:
-                value: A function mapping an (L,L) matrix D to a float SemiNorm.value
-                derivative: A function mapping an (L,L) matrix D to an (L,L) matrix SemiNorm.derivative = d SemiNorm.value / (d D).
+                value: A functions mapping an (L,L) matrix D to a float SemiNorm.value
+                derivative: A functions mapping an (L,L) matrix D to an (L,L) matrix SemiNorm.derivative = d SemiNorm.value / (d D).
                 meta: A Dict similar to SemiNorm.DEFAULT_META, giving precise information to construct this SemiNorm
             """
             self.value = value
@@ -627,8 +627,8 @@ class Sobol(Model):
         _f_bar_0_2 (invariant): The (L,L) Matrix product of E[f] E[f.T].
         _FBold (invariant): An (M,N) Matrix.
 
-        _objective_value: The optimization objective value (function of Theta_M_M), set by the call to Sobol.optimize()
-        _objective_jacobian: The optimization objective jacobian (function of Theta_M_M), set by the call to Sobol.optimize()
+        _objective_value: The optimization objective value (functions of Theta_M_M), set by the call to Sobol.optimize()
+        _objective_jacobian: The optimization objective jacobian (functions of Theta_M_M), set by the call to Sobol.optimize()
 
         _Sigma_tilde, _Psi_tilde: (M,M) matrices.
         _FBold_tilde: An (M,N) matrix.

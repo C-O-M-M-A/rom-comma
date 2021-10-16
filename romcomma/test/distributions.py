@@ -155,7 +155,7 @@ class Multivariate:
 
         @abstractmethod
         def cdf(self, X: NP.Matrix) -> NP.Matrix:
-            """ Calculate cumulative distribution function (CDF) of this Multivariate.
+            """ Calculate cumulative distribution functions (CDF) of this Multivariate.
 
             Args:
                 X: (N,M) Matrix of values.

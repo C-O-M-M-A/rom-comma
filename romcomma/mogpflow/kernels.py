@@ -34,7 +34,7 @@ import tensorflow as tf
 import numpy as np
 
 
-class Stationary(AnisotropicStationary, Kernel):
+class MOStationary(AnisotropicStationary, Kernel):
     """
     Base class for stationary kernels, i.e. kernels that only
     depend on
@@ -48,6 +48,14 @@ class Stationary(AnisotropicStationary, Kernel):
     """
 
     @property
+    def L(self):
+        return self._L
+
+    @property
+    def M(self):
+        return self._M
+
+    @property
     def covariance(self):
         """ The covariance matrix as a mogpflow.base.Covariance object."""
         return self._covariance
@@ -55,7 +63,7 @@ class Stationary(AnisotropicStationary, Kernel):
     @property
     def lengthscales(self):
         """ The kernel lengthscales as an (L,M) matrix."""
-        return tf.reshape(self._lengthscales, (self.L, self._M))
+        return tf.reshape(self._lengthscales, (self._L, self._M))
 
     @property
     def is_lengthscales_trainable(self):
@@ -73,8 +81,8 @@ class Stationary(AnisotropicStationary, Kernel):
             X: An (N,M) Tensor.
         Returns: An (L, L, N) Tensor.
         """
-        assert len(tf.shape(X)) == 2, f'mogpflow.kernels.Stationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
-        return tf.broadcast_to(tf.reshape(self._covariance.value, self._covariance.shape + (1,)), self._covariance.shape + (tf.shape(X)[-2].numpy(),))
+        assert len(tf.shape(X)) == 2, f'mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
+        return tf.broadcast_to(tf.reshape(self._covariance.value, self._covariance.shape + (1,)), self._covariance.shape + (tf.shape(X)[-2],))
 
     def K_unit_variance(self, X, X2=None):
         return self.K_d_unit_variance(self.scaled_difference_matrix(X, X2))
@@ -96,7 +104,7 @@ class Stationary(AnisotropicStationary, Kernel):
             K_d_unit_variance: An (L,N,L,N) Tensor.
         Returns: An (L,N,L,N) Tensor
         """
-        assert len(tf.shape(K_d_unit_variance)) == 4, f'mogpflow.kernels.Stationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
+        assert len(tf.shape(K_d_unit_variance)) == 4, f'mogpflow.kernels.MOStationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
                                                          f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.'
         return self._covariance.variance * K_d_unit_variance
 
@@ -114,11 +122,11 @@ class Stationary(AnisotropicStationary, Kernel):
 
         Args:
             variance: An (L,L) symmetric, positive definite matrix for the signal variance.
-            lengthscales: An (L,M) matrix of positive lengthscales.
+            lengthscales: An (L,M) matrix of positive definite lengthscales.
             name: The name of this kernel.
             active_dims: Which of the input dimensions are used. The default None means all of them.
         """
-        super(Kernel).__init__(active_dims=active_dims, name=name)  # Do not call gf.kernels.Stationary.__init__()!
+        super(Kernel).__init__(active_dims=active_dims, name=name)  # Do not call gf.kernels.MOStationary.__init__()!
         self._covariance = Covariance(value=np.atleast_2d(variance), name=name + '.covariance')
         self._L = self._covariance.shape[0]
         lengthscales_shape = tf.shape(data_input_to_tensor(lengthscales))
@@ -129,9 +137,9 @@ class Stationary(AnisotropicStationary, Kernel):
         self._validate_ard_active_dims(self._lengthscales[0, 0])
 
 
-class RBF(Stationary):
+class RBF(MOStationary):
     """
-    The radial basis function (RBF) or squared exponential kernel. The kernel equation is
+    The radial basis functions (RBF) or squared exponential kernel. The kernel equation is
 
         k(d) = σ² exp{-½ r²}
 
