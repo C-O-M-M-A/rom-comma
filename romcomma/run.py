@@ -27,7 +27,6 @@ from romcomma.typing_ import *
 from romcomma.base import Parameters, Model
 from romcomma.data import Store, Fold, Frame
 from romcomma import kernels, gpr
-from gpflow.config import set_default_float
 from numpy import full, transpose
 from pandas import concat
 from pathlib import Path
@@ -35,8 +34,6 @@ from time import time
 from datetime import timedelta
 
 from contextlib import contextmanager
-
-DEFAULT_FLOAT_DTYPE: str = 'float64'
 
 
 @contextmanager
@@ -56,21 +53,18 @@ def Timing(name: str):
 
 
 @contextmanager
-def Context(name: str, default_float_dtype: str = DEFAULT_FLOAT_DTYPE, device: str = '', **kwargs: Any):
+def Context(name: str, device: str = '', **kwargs: Any):
     """ Context Manager for running operations.
 
     Args:
         name: The name of this context, this appears as what is being run.
-        default_float_dtype: the floating type to use.
         device: The device to run on. If this ends in the regex ``[C,G]PU*`` then the logical device ``/[C,G]*`` is used,
             otherwise device allocation is automatic.
-        **kwargs: Is passed straight to the implementation GPFlow manager.
+        **kwargs: Is passed straight to the implementation GPFlow manager. In particular ``float=float32`` sets the dtype for tensorflow ops.
     """
     with Timing(name):
-        global DEFAULT_FLOAT_DTYPE
-        DEFAULT_FLOAT_DTYPE = default_float_dtype
-        set_default_float(default_float_dtype)
-        print(f' using GPFlow {default_float_dtype}', end='')
+        kwargs = {'float': 'float64'} | kwargs
+        print(' using GPFlow(' + ', '.join([f'{k}={v!r}' for k, v in kwargs.items()]), end=')')
         device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
         if len(device) > 3:
             device_manager = gpr.tf.device(device)
@@ -78,8 +72,6 @@ def Context(name: str, default_float_dtype: str = DEFAULT_FLOAT_DTYPE, device: s
         else:
             device_manager = Timing('')
         implementation_manager = gpflow.config.as_context(gpflow.config.Config(**kwargs))
-        if len(kwargs) > 0:
-            print(' with ' + ', '.join([f'{k}={v!r}' for k, v in kwargs.items()]), end='')
         print('...')
         with device_manager:
             with implementation_manager:

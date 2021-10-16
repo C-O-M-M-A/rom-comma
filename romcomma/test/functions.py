@@ -186,6 +186,10 @@ class FunctionWithParameters(Generic[NP.VectorOrMatrix]):
         """ The function of this FunctionWithParameters."""
         return self._function
 
+    def __call__(self, *args, **kwargs):
+        kwargs = self._parameters | kwargs
+        return self._function(*args, **kwargs)
+
     @property
     def parameters(self) -> Dict[str, Numeric]:
         """ The parameters of this FunctionWithParameters."""
@@ -252,10 +256,10 @@ def sample(store_dir: PathLike, N: int, X_distribution: Multivariate.Independent
         return X.copy() if (CDF_loc is None or CDF_scale is None) else CDF_scale * X_distribution.cdf(X) - CDF_loc
 
     def __input_transform_representation(X_: NP.Matrix) -> NP.Matrix:
-        return X_ if input_transform is None else input_transform.function(X_, **input_transform.parameters)
+        return X_ if input_transform is None else input_transform(X_)
 
     def __functions_representation(X_: NP.Matrix) -> NP.Matrix:
-        return X_ if functions is None else concatenate([f.function(X_, **f.parameters) for f in functions], axis=1)
+        return X_ if functions is None else concatenate([f(X_) for f in functions], axis=1)
 
     Y = __functions_representation(__input_transform_representation(__CDF_representation()))
     if noise_distribution is not None:
@@ -297,56 +301,3 @@ def functions_of_normal(store_dir: PathLike, N: int, M: int, CDF_loc: NP.Covecto
     noise_distribution = Multivariate.Independent(L, Univariate('norm', loc=0, scale=noise_std)) if noise_std > EFFECTIVELY_ZERO else None
     return sample(store_dir, N, X_distribution, SampleDesign.LATIN_HYPERCUBE, CDF_loc, CDF_scale, input_transform, functions,
                   noise_distribution, SampleDesign.LATIN_HYPERCUBE)
-
-
-def g_sobol_to_csv(n_samples: int, dim: int = 5, upper_bound: float = 1.0, lower_bound: float = 0.0, csv_name: str = "g_sobol.csv"):
-    """
-    This uses the Sobol' G function as described in https://www.sfu.ca/~ssurjano/gfunc.html to create a csv file of training data ready to use
-    :param n_samples: The number of samples used for each input variable in between the lower and upper bound. The total number of datapoints will be n_samples**dim.
-    :param dim: The number of input variables used in the input grid.
-    :param upper_bound: The upper bound is the maximum value the inputs can be.
-    :param lower_bound: The lower bound is the lowest value the inputs can be.
-    :param csv_name: Choose a sensible name for the csv file and ensure it includes ".csv",
-    :return: A frame containing the input grid and the G_Sobol output as a csv file saved in BASE_PATH ready to train a GP.
-    """
-    # Create ndarray of input values.
-    space = np.linspace(lower_bound, upper_bound, n_samples)
-    a_tuple = (space,) * dim
-    mesh = np.ravel(np.meshgrid(*a_tuple))
-    mesh.shape = (dim, n_samples ** dim)
-    X = np.transpose(mesh)
-    # Save ndarray of input values as a datafram with two labelled header columns (Input, Input, ..., Input) & (x1, x2, ..., xdim)
-    df_X = pd.DataFrame(X)
-    inputs_label = ['x' + str(i - 1) for i in np.arange(1, len(df_X.columns) + 1)]
-    inputs_dict = dict(zip(df_X.columns, inputs_label))
-    df_X = df_X.rename(columns=inputs_dict)
-    list_input_header = list(df_X.columns.values)
-    for idx, val in enumerate(list_input_header):
-        list_input_header[idx] = "Input"
-    df_X.columns = pd.MultiIndex.from_tuples(zip(list_input_header, df_X.columns))
-    # Calculate the Sobol G function as described in https://www.sfu.ca/~ssurjano/gfunc.html using the ndarray of input values X.
-    prod = 1
-    a = np.linspace(1, dim, dim)
-    for j in range(dim):
-        j = int(j)
-        xi = X[:, [j]]
-        ai = a[j]
-        new1 = np.abs(4 * xi - 2) + ai
-        new2 = 1 + ai
-        prod = prod * new1 / new2
-    y = prod
-    # Save(1 x dim) ndarray of output values as a dataframe with two labelled header columns (Output) & (y)
-    df_y = pd.DataFrame(y)
-    output_label = ['y' + str(i - 1) for i in np.arange(1, len(df_y.columns) + 1)]
-    output_dict = dict(zip(df_y.columns, output_label))
-    df_y = df_y.rename(columns=output_dict)
-    list_output_header = list(df_y.columns.values)
-    for idx, val in enumerate(list_output_header):
-        list_output_header[idx] = "Output"
-    df_y.columns = pd.MultiIndex.from_tuples(zip(list_output_header, df_y.columns))
-    g_sobol_data = np.concatenate((X, y), axis=1)
-    df_sobol = pd.DataFrame(g_sobol_data, index=None)
-    # concatenate both df's and save is as frame
-    df = pd.concat([df_X, df_y], axis=1)
-    frame = Frame(BASE_PATH / csv_name, df)
-    return frame

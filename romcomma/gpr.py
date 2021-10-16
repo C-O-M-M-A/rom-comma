@@ -132,7 +132,7 @@ class GPInterface(Model):
     @property
     @abstractmethod
     def KNoisyInv_Y(self) -> Union[NP.Matrix, TF.Tensor]:
-        """ The LN-Vector, which pre-multiplied by the LoxLN kernel k(x, X) gives the Lo-Vector predictive mean fBar(x).
+        """ The split_axis_shape-Vector, which pre-multiplied by the LoxLN kernel k(x, X) gives the Lo-Vector predictive mean fBar(x).
         Returns: ChoSolve(self.KNoisy_Cho, self.Y) """
 
     @abstractmethod

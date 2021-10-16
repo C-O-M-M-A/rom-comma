@@ -1,17 +1,17 @@
 #  BSD 3-Clause License.
-# 
+#
 #  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
-# 
+#
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-# 
+#
 #  1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-# 
+#
 #  2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
 #     documentation and/or other materials provided with the distribution.
-# 
+#
 #  3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this
 #     software without specific prior written permission.
-# 
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
 #  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
@@ -19,20 +19,27 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains tests of the gpflow_extras package."""
+# Contains  #TODO: Describe contents
 
 from __future__ import annotations
 
-#import romcomma
-from romcomma.gpflow_extras import base, kernels, likelihoods, models
-import numpy as np
+from typing import Sequence, Optional, Union
+from gpflow.config import default_float
+from gpflow.mean_functions import MeanFunction
 import tensorflow as tf
 
-if __name__ == '__main__':
-    a = np.array([[0.9, -0.5], [-0.5, 0.75]])
-    b = base.Covariance(a)
-    print(b.value)
-    print(b.value)
-    b._cholesky_diagonal.assign([1.0, 1.0])
-    print(b.value)
-    print(b.value)
+class MOMeanFunction(MeanFunction):
+
+    @property
+    def function(self):
+        return self._function
+
+    def __call__(self, X):
+        return tf.concat([f(X) for f in self._function], axis=0)
+
+    def __init__(self, mean_function: Union[MOMeanFunction, MeanFunction, Sequence[MeanFunction]], output_dim: int):
+        if isinstance(mean_function, MOMeanFunction):
+            mean_function = mean_function.function
+        elif isinstance(mean_function, MeanFunction):
+            mean_function = (mean_function,) * output_dim
+        self._function = mean_function

@@ -35,6 +35,7 @@ class Covariance:
 
     @property
     def shape(self):
+        """ Returns (L,L), which is the shape of self.value and self.cholesky."""
         return self._shape
 
     @property

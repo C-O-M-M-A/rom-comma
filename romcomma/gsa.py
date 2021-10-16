@@ -225,7 +225,7 @@ class Sobol(Model):
     #
     #     """ Finally calculate conditional variances _D."""
     #     self._W = exp(-0.5 * (T_inv_Sigma_T + transpose(T_inv_Sigma_T) - T_inv_Phi_inv_Sigma_T))
-    #     self._D_plus_Ft_1_Ft = self._D_const * einsum('LN, NO, KO -> LK', self._fBold_bar_0, self._W, self._fBold_bar_0,
+    #     self._D_plus_Ft_1_Ft = self._D_const * einsum('split_axis_shape, NO, KO -> LK', self._fBold_bar_0, self._W, self._fBold_bar_0,
     #                                                   optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
     #     self._D[:, :, self._m] = self._D_plus_Ft_1_Ft - self._f_bar_0_2
     #
@@ -487,7 +487,7 @@ class Sobol(Model):
     #     self._V = T_inv_Phi_inv_Sigma_T_jac - (T_inv_Sigma_T_jac + transpose(T_inv_Sigma_T_jac, (1, 0, 2)))
     #
     #     """ Calculate D_jacobian. """
-    #     D_derivative = self._D_const * einsum('LN, NO, NOj, KO -> LKj', self._fBold_bar_0, self._W, self._V, self._fBold_bar_0,
+    #     D_derivative = self._D_const * einsum('split_axis_shape, NO, NOj, KO -> LKj', self._fBold_bar_0, self._W, self._V, self._fBold_bar_0,
     #                                           optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
     #     D_derivative -= einsum('j, LK -> LKj', log_D_const_jac, self._D_plus_Ft_1_Ft, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
     #     result = -self._xi[1:] / self._xi[0]
@@ -528,9 +528,9 @@ class Sobol(Model):
             """ Cache invariant conditional expectations _fBold_bar_0 and _f_bar_0_2. """
             self._fBold_bar_0 = einsum('MN, NM -> N', self._FBold, self._gp.X, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
             self._fBold_bar_0 = sqrt(prod(self._2Sigma_diagonal) / (2 ** self._M)) * exp(-0.5 * self._fBold_bar_0)
-            self._fBold_bar_0 = einsum('Ll, Nl, N -> LN', self._gp.parameters.f, self._gp.inv_prior_Y_Y, self._fBold_bar_0, optimize=True,
+            self._fBold_bar_0 = einsum('Ll, Nl, N -> split_axis_shape', self._gp.parameters.f, self._gp.inv_prior_Y_Y, self._fBold_bar_0, optimize=True,
                                        dtype=float, order=self.MEMORY_LAYOUT)
-            self._f_bar_0_2 = einsum('LN -> L', self._fBold_bar_0, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
+            self._f_bar_0_2 = einsum('split_axis_shape -> L', self._fBold_bar_0, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
             self._f_bar_0_2 = einsum('L, l -> Ll', self._f_bar_0_2, self._f_bar_0_2, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 
         _conditional_expectations()
@@ -551,7 +551,7 @@ class Sobol(Model):
 
         def sobol_and_reorder() -> NP.Array:
             """ Calculate all Sobol Indices, returning a reordering by decreasing ST_m """
-            self._D[:, :, -1] = einsum('LN, NO, lO -> Ll', self._fBold_bar_0, DBold, self._fBold_bar_0,
+            self._D[:, :, -1] = einsum('split_axis_shape, NO, lO -> Ll', self._fBold_bar_0, DBold, self._fBold_bar_0,
                                        optimize=True, dtype=float, order=self.MEMORY_LAYOUT) - self._f_bar_0_2
             DBold_m_included = DBold.copy(order=self.MEMORY_LAYOUT)
             DBold_m_to_include = empty((self._N, self._N), dtype=float, order=self.MEMORY_LAYOUT)
@@ -564,7 +564,7 @@ class Sobol(Model):
                 for m_to_exclude in reversed(range(self._M)):
                     if m_to_exclude not in reordering[m_excluded:]:
                         DBold_m[:] = DBold_m_included * DBold_full[m_to_exclude, :, :] * DBold_full_determinant[m_to_exclude]
-                        einsum('LN, NO, lO -> Ll', self._fBold_bar_0, DBold_m, self._fBold_bar_0, out=D_m,
+                        einsum('split_axis_shape, NO, lO -> Ll', self._fBold_bar_0, DBold_m, self._fBold_bar_0, out=D_m,
                                optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
                         D_m -= self._f_bar_0_2
                         S_m[:] = D_m / self._D[:, :, -1]
@@ -577,7 +577,7 @@ class Sobol(Model):
                 self._S[:, :, m_excluded - 1] = self._D[:, :, m_excluded - 1] / self._D[:, :, -1]
                 self._ST[:, :, m_excluded] = 1 - self._S[:, :, m_excluded - 1]
                 DBold_m = (DBold_full[max_semi_norm[0], :, :] * DBold_full_determinant[max_semi_norm[0]]) ** (-1)
-                einsum('LN, NO, lO -> Ll', self._fBold_bar_0, DBold_m, self._fBold_bar_0, out=D_m,
+                einsum('split_axis_shape, NO, lO -> Ll', self._fBold_bar_0, DBold_m, self._fBold_bar_0, out=D_m,
                        optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
                 D_m -= self._f_bar_0_2
                 self._S1[:, :, m_excluded] = D_m / self._D[:, :, -1]

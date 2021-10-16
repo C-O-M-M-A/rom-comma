@@ -23,8 +23,9 @@
 
 from __future__ import annotations
 
-from romcomma.gpflow_extras.base import Covariance
+from romcomma.mogpflow.base import Covariance
 from abc import abstractmethod
+from gpflow.config import default_float
 from gpflow.kernels import Kernel, AnisotropicStationary
 from gpflow import Parameter, set_trainable
 from gpflow.utilities import positive
@@ -48,7 +49,7 @@ class Stationary(AnisotropicStationary, Kernel):
 
     @property
     def covariance(self):
-        """ The covariance matrix as a gpflow_extras.base.Covariance object."""
+        """ The covariance matrix as a mogpflow.base.Covariance object."""
         return self._covariance
 
     @property
@@ -66,20 +67,47 @@ class Stationary(AnisotropicStationary, Kernel):
         set_trainable(self._lengthscales, value)
 
     def K_diag(self, X):
-        assert len(tf.shape(X)) == 2, f'gpflow_extras.kernels.Stationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
+        """ The kernel diagonal.
+
+        Args:
+            X: An (N,M) Tensor.
+        Returns: An (L, L, N) Tensor.
+        """
+        assert len(tf.shape(X)) == 2, f'mogpflow.kernels.Stationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
         return tf.broadcast_to(tf.reshape(self._covariance.value, self._covariance.shape + (1,)), self._covariance.shape + (tf.shape(X)[-2].numpy(),))
+
+    def K_unit_variance(self, X, X2=None):
+        return self.K_d_unit_variance(self.scaled_difference_matrix(X, X2))
 
     @abstractmethod
     def K_d_unit_variance(self, d):
+        """ The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.
+
+        Args:
+            d: An (L,N,L,N,M) Tensor.
+        Returns: An (L,N,L,N) Tensor.
+        """
         raise NotImplementedError(f'You must implement K_d_unit_variance(self, d) in {type(self)}.')
 
-    def K_d_apply_Variance(self, K_d_unit_variance):
-        assert len(tf.shape(K_d_unit_variance)) == 4, f'gpflow_extras.kernels.Stationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
+    def K_d_apply_variance(self, K_d_unit_variance):
+        """ Multiply the unit variance kernel by the kernel variance.
+
+        Args:
+            K_d_unit_variance: An (L,N,L,N) Tensor.
+        Returns: An (L,N,L,N) Tensor
+        """
+        assert len(tf.shape(K_d_unit_variance)) == 4, f'mogpflow.kernels.Stationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
                                                          f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.'
         return self._covariance.variance * K_d_unit_variance
 
     def K_d(self, d):
-        return self.K_d_apply_Variance(self.K_d_unit_variance(d))
+        """ The kernel.
+
+        Args:
+            d: An (L,N,L,N,M) Tensor.
+        Returns: An (L,N,L,N) Tensor.
+        """
+        return self.K_d_apply_variance(self.K_d_unit_variance(d))
 
     def __init__(self, variance, lengthscales, name='kernel', active_dims=None):
         """ Kernel Constructor.
@@ -87,7 +115,7 @@ class Stationary(AnisotropicStationary, Kernel):
         Args:
             variance: An (L,L) symmetric, positive definite matrix for the signal variance.
             lengthscales: An (L,M) matrix of positive lengthscales.
-            name: The name of this kenel.
+            name: The name of this kernel.
             active_dims: Which of the input dimensions are used. The default None means all of them.
         """
         super(Kernel).__init__(active_dims=active_dims, name=name)  # Do not call gf.kernels.Stationary.__init__()!

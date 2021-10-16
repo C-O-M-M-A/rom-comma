@@ -23,16 +23,21 @@
 
 from __future__ import annotations
 
+import self as self
+
 from romcomma.typing_ import *
 import tensorflow as tf
+from gpflow.config import default_float
 from gpflow.models.training_mixins import InternalDataTrainingLossMixin
 from gpflow.logdensities import multivariate_normal
-from gpflow.mean_functions import MeanFunction
+from gpflow.mean_functions import Zero
 from gpflow.models.model import GPModel, InputData, MeanAndVariance, RegressionData
 from gpflow.models.util import data_input_to_tensor
-from romcomma.gpflow_extras import base, kernels, likelihoods
+from gpflow.conditionals import base_conditional
+from romcomma.mogpflow import base, kernels, likelihoods
+from romcomma.mogpflow.mean_functions import MOMeanFunction
 
-class GPR(GPModel, InternalDataTrainingLossMixin):
+class MOGPR(GPModel, InternalDataTrainingLossMixin):
     r"""
     Gaussian Process Regression.
 
@@ -59,25 +64,30 @@ class GPR(GPModel, InternalDataTrainingLossMixin):
         self,
         data: RegressionData,
         kernel: kernels.Stationary,
-        mean_function: Optional[MeanFunction] = None,
+        mean_function: Optional[MOMeanFunction] = None,
         noise_variance: float = 1.0,
     ):
-        likelihood = likelihoods.MultivariateGaussian(noise_variance)
-        _, Y_data = data
+        likelihood = likelihoods.MOGaussian(noise_variance)
+        if mean_function is None:
+            mean_function = MOMeanFunction(Zero(), likelihood.latent_dim)
         super().__init__(kernel, likelihood, mean_function, num_latent_gps=1)
-        self.data = data_input_to_tensor(data)
+        if self._X.shape != (shape := (self._X.shape[-2], self.kernel.lengthscales.shape[-1])):
+            raise IndexError(f'Y.shape should be {shape} instead of {self._X.shape}.')
+        self._X = data_input_to_tensor(data[0])
+        self._Y = data_input_to_tensor(tf.transpose(data[1]))
+        if self._Y.shape != (shape := (likelihood.latent_dim, self._X.shape[-2])):
+            raise IndexError(f'Y.shape should be {shape} instead of {self._Y.shape}.')
+        self._Y = tf.reshape(data_input_to_tensor(data[1]), [-1])
+        self._mean = self.mean_function(self._X)
+        self._K_unit_variance = None if self.kernel.is_lengthscales_trainable else self.kernel.K_unit_variance(self._X)
+
+    @property
+    def K(self):
+        K = self.kernel(self._X) if self._K_unit_variance is None else self.kernel.K_d_apply_variance(self._K_unit_variance)
+        return tf.reshape(K, tf.repeat(self._mean.shape, 2))
 
     def maximum_log_likelihood_objective(self) -> tf.Tensor:
         return self.log_marginal_likelihood()
-
-    def _add_noise_cov(self, K: tf.Tensor) -> tf.Tensor:
-        """
-        Returns K + σ² I, where σ² is the likelihood noise variance (scalar),
-        and I is the corresponding identity matrix.
-        """
-        k_diag = tf.linalg.diag_part(K)
-        s_diag = tf.fill(tf.shape(k_diag), self.likelihood.variance)
-        return tf.linalg.set_diag(K, k_diag + s_diag)
 
     def log_marginal_likelihood(self) -> tf.Tensor:
         r"""
@@ -87,15 +97,9 @@ class GPR(GPModel, InternalDataTrainingLossMixin):
             \log p(Y | \theta).
 
         """
-        X, Y = self.data
-        K = self.kernel(X)
-        ks = self._add_noise_cov(K)
-        L = tf.linalg.cholesky(ks)
-        m = self.mean_function(X)
+        L = tf.linalg.cholesky(self.likelihood.add_variance(self.K))
+        return multivariate_normal(self._Y, self._mean, L)
 
-        # [R,] log-likelihoods for each independent dimension of Y
-        log_prob = multivariate_normal(Y, m, L)
-        return tf.reduce_sum(log_prob)
 
     def predict_f(
         self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False
@@ -108,17 +112,7 @@ class GPR(GPModel, InternalDataTrainingLossMixin):
 
         where F* are points on the GP at new data points, Y are noisy observations at training data points.
         """
-        X_data, Y_data = self.data
-        err = Y_data - self.mean_function(X_data)
-
-        kmm = self.kernel(X_data)
-        knn = self.kernel(Xnew, full_cov=full_cov)
-        kmn = self.kernel(X_data, Xnew)
-        kmm_plus_s = self._add_noise_cov(kmm)
-
-        conditional = gpflow.conditionals.base_conditional
-        f_mean_zero, f_var = conditional(
-            kmn, kmm_plus_s, knn, err, full_cov=full_cov, white=False
-        )  # [N, P], [N, P] or [P, N, N]
-        f_mean = f_mean_zero + self.mean_function(Xnew)
+        f_mean, f_var = base_conditional(Kmn=self.kernel(self._X, Xnew), Kmm=self._add_noise_cov(self.K), Knn=self.kernel(Xnew, full_cov=full_cov),
+                                         f=self._Y - self._mean, full_cov=full_cov, white=False)
+        f_mean += self.mean_function(Xnew)
         return f_mean, f_var
