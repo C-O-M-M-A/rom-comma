@@ -642,7 +642,7 @@ class Sobol(Model):
         """
         self._gp = gp
         self._N, self._M, self._L = self._gp.N, self._gp.M, self._gp.L
-        self._lengthscale = self._gp.kernel.parameters.lengthscales[0, :]
+        self._lengthscale = self._gp.kernel.parameters.lengthscales_neat[0, :]
         if self._lengthscale.shape != (self._M,):
             self._lengthscale = full(self._M, self._lengthscale[0], dtype=float, order=self.MEMORY_LAYOUT)
 

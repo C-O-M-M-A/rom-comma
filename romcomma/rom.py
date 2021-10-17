@@ -164,13 +164,13 @@ class ROM(Model):
         parameters = self._original_parameters if gp_initializer < self.GP_Initializer.CURRENT else self._gp.parameters
         if not self._gp.kernel.is_rbf:
             if gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_GUESSED_LENGTHSCALE, self.GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE):
-                lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales, optimize=True, dtype=float,
+                lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales_neat, optimize=True, dtype=float,
                                       order=self.MEMORY_LAYOUT) * 0.5 * self._gp.M * (self._gp.M - arange(self._gp.M, dtype=float)) ** (-1)
             elif gp_initializer in (self.GP_Initializer.CURRENT_WITH_ORIGINAL_KERNEL, self.GP_Initializer.ORIGINAL):
-                lengthscales = einsum('MK, JK -> M', self._Theta, self._original_parameters.kernel.parameters.lengthscales,
+                lengthscales = einsum('MK, JK -> M', self._Theta, self._original_parameters.kernel.parameters.lengthscales_neat,
                                       optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
             elif gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_CURRENT_KERNEL, self.GP_Initializer.CURRENT):
-                lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales, optimize=True, dtype=float,
+                lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales_neat, optimize=True, dtype=float,
                                       order=self.MEMORY_LAYOUT)
             parameters = parameters._replace(kernel=self._gp.kernel.Parameters(lengthscales=lengthscales))
         return self.GPType(self._fold, self.gp_name(iteration), parameters)
@@ -210,7 +210,7 @@ class ROM(Model):
                 concatenate((self.parameters.D, atleast_2d(self._semi_norm.value(self._sobol.D))), axis=0),
                 concatenate((self.parameters.S1, atleast_2d(self._semi_norm.value(self._sobol.S1))), axis=0),
                 concatenate((self.parameters.S, atleast_2d(self._semi_norm.value(self._sobol.S))), axis=0),
-                concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
+                concatenate((self.parameters.lengthscales_neat, atleast_2d(self._sobol.lengthscales_neat)), axis=0),
                 concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
             if iteration < guess_identity_after_iteration:
                 self._sobol.optimize(**self._options[-1]['sobol_options'])
@@ -226,7 +226,7 @@ class ROM(Model):
             concatenate((self.parameters.D, atleast_2d(self._semi_norm.value(self._sobol.D))), axis=0),
             concatenate((self.parameters.S1, atleast_2d(self._semi_norm.value(self._sobol.S1))), axis=0),
             concatenate((self.parameters.S, atleast_2d(self._semi_norm.value(self._sobol.S))), axis=0),
-            concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
+            concatenate((self.parameters.lengthscales_neat, atleast_2d(self._sobol.lengthscales_neat)), axis=0),
             concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
         column_headings = ("x{:d}".format(i) for i in range(self._sobol.Mu))
         frame = Frame(self._sobol.parameters_csv.Theta, DataFrame(self._Theta, columns=column_headings))
@@ -273,7 +273,7 @@ class ROM(Model):
                                          D=self._semi_norm.value(self._sobol.D),
                                          S1=self._semi_norm.value(self._sobol.S1),
                                          S=self._semi_norm.value(self._sobol.S),
-                                         lengthscales=self._sobol.lengthscales,
+                                         lengthscales=self._sobol.lengthscales_neat,
                                          log_marginal_likelihood=self._gp.log_marginal_likelihood)
             super().__init__(self._fold.folder / name, parameters)
             shutil.copy2(self._fold.data_csv, self.folder)

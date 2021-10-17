@@ -130,7 +130,9 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         if (shape := Y.shape) != (required_shape := (self._N, self._L)):
             raise IndexError(f'Y.shape should be {required_shape} instead of {shape}.')
         self._Y = tf.reshape(tf.transpose(Y), [-1])   # self_Y is now concatenated into an (LN,)-vector
-        noise_variance = tf.broadcast_to(data_input_to_tensor(noise_variance), (self._L, self._L))
+        if tf.shape(noise_variance) != (self._L, self._L):
+            noise_variance = tf.broadcast_to(data_input_to_tensor(noise_variance), (self._L, self._L))
+            noise_variance = tf.linalg.band_part(noise_variance, 0, 0)
         likelihood = likelihoods.MOGaussian(noise_variance)
         if mean_function is None:
             mean_function = MOMeanFunction(self._L)

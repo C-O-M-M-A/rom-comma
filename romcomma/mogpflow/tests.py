@@ -27,12 +27,30 @@ from romcomma import run
 from romcomma.mogpflow import base, kernels, likelihoods, models
 import numpy as np
 
+def covariance():
+    a = np.array([[0.9, -0.5], [-0.5, 0.75]])
+    b = base.Covariance(a)
+    print(b.value)
+    print(b.value)
+    b._cholesky_diagonal.assign([1.0, 1.0])
+    print(b.value)
+    print(b.value)
+
+def regression_data():
+    data = np.linspace(start=1, stop=50, num=50, dtype='float32').reshape(5, 10).transpose()
+    return data[:, :3], data[:, 3:]
+
+def kernel():
+    lengthscales = [10 * np.ones(3), 20 * np.ones(3)]
+    variance = 1.0 * np.eye(2)
+    return kernels.RBF(variance, lengthscales)
+
+def likelihood():
+    variance = 1.0 * np.eye(2)
+    return likelihoods.MOGaussian(variance)
+
+
 if __name__ == '__main__':
     with run.Context('Test', float='float32'):
-        a = np.array([[0.9, -0.5], [-0.5, 0.75]])
-        b = base.Covariance(a)
-        print(b.value)
-        print(b.value)
-        b._cholesky_diagonal.assign([1.0, 1.0])
-        print(b.value)
-        print(b.value)
+        lh = likelihood()
+        gp = models.MOGPR(regression_data(), kernel(), noise_variance=1.0)
