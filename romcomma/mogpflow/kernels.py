@@ -85,7 +85,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         return tf.broadcast_to(tf.reshape(self._covariance.value, self._covariance.shape + (1,)), self._covariance.shape + (tf.shape(X)[-2],))
 
     def K_unit_variance(self, X, X2=None):
-        return self.K_d_unit_variance(self.scaled_difference_matrix(X, X2))
+        return self.K_d_unit_variance(self.scaled_difference_matrix(X, X if X2 is None else X2))
 
     @abstractmethod
     def K_d_unit_variance(self, d):
@@ -131,7 +131,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         self._L = self._covariance.shape[0]
         lengthscales = data_input_to_tensor(lengthscales)
         lengthscales_shape = tuple(tf.shape(lengthscales).numpy())
-        self._M = 1 if lengthscales_shape in((),(self._L,)) else lengthscales_shape[-1]
+        self._M = 1 if lengthscales_shape in((),(1,), (1, 1), (self._L,)) else lengthscales_shape[-1]
         lengthscales = tf.reshape(tf.broadcast_to(lengthscales, (self._L, self._M)), (self._L, 1, self._M))
         self.lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + '.lengthscales')
         self.is_lengthscales_trainable = False

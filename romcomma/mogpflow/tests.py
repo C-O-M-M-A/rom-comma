@@ -53,4 +53,7 @@ def likelihood():
 if __name__ == '__main__':
     with run.Context('Test', float='float32'):
         lh = likelihood()
-        gp = models.MOGPR(regression_data(), kernel(), noise_variance=1.0)
+        X, Y = regression_data()
+        gp = models.MOGPR((X, Y), kernel(), noise_variance=1.0)
+        results = gp.predict_f(X, full_cov=False, full_output_cov=False)
+        print(results)

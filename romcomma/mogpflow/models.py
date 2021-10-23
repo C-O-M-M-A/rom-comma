@@ -60,6 +60,18 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
             \mathcal N(Y \,|\, 0, \mathbf{KXX} + \sigma_n^2 \mathbf{I})
     """
 
+    def kernel_concatenated(self, X, X2=None):
+        """
+
+        Args:
+            X:
+            X2:
+        Returns: self.kernel, concatenated from (L,N1,L,N2) to (L*N1,L*N2).
+        """
+        K = self.kernel(X, X2)
+        shape = K.shape
+        return tf.reshape(K, (shape[-4] * shape[-3], shape[-2] * shape[-1]))
+
     @property
     def M(self):
         """ The input dimensionality."""
@@ -100,8 +112,8 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         """
         Xnew = tf.reshape(data_input_to_tensor(Xnew), (-1, self._M))
         n = Xnew.shape[0]
-        f_mean, f_var = base_conditional(Kmn=self.kernel(self._X, Xnew), Kmm=self._add_noise_cov(self.KXX), Knn=self.kernel(Xnew, full_cov=full_cov),
-                                         f=self._Y - self._mean, full_cov=True, white=False)
+        f_mean, f_var = base_conditional(Kmn=self.kernel_concatenated(self._X, Xnew), Kmm=self.likelihood.add_variance(self.KXX),
+                                         Knn=self.kernel_concatenated(Xnew, full_cov=full_cov), f=self._Y - self._mean, full_cov=True, white=False)
         f_mean += self.mean_function(Xnew)
         f_mean_shape = (self._L, n)
         f_var = tf.reshape(f_var, f_mean_shape * 2)
