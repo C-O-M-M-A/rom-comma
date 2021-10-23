@@ -105,7 +105,7 @@ def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: 
         FileNotFoundError: If store is not a Fold, and contains no Folds.
     """
     if not isinstance(store, Fold):
-        K = range(store.meta['KXX'])
+        K = range(store.meta['K'])
         if not K:
             raise FileNotFoundError(f'Cannot construct a GP in a Store ({store.folder:s}) which is not a Fold.')
         for k in K:
@@ -185,7 +185,7 @@ def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union
             ROMs(module, name, split, source_gp_name, Mu[split_index], Mx[split_index], options, rbf_parameters)
     elif not isinstance(store, Fold):
         start_time = time.time()
-        K_range = range(store.meta['KXX'])
+        K_range = range(store.meta['K'])
         if K_range:
             for k in K_range:
                 ROMs(module, name, Fold(store, k, M=Mx), source_gp_name, Mu, Mx, options, rbf_parameters)
@@ -222,7 +222,7 @@ def collect(store: Store, model_name: str, parameters: Parameters, is_split: boo
     for param in parameters.keys():
         for split in splits:
             split_store = Store(split[-1])
-            K = split_store.meta['KXX']
+            K = split_store.meta['K']
             destination = split_store.folder / model_name
             destination.mkdir(mode=0o777, parents=True, exist_ok=True)
             for k in range(K):
@@ -269,7 +269,7 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
         split_dirs = [store.folder]
     for split_dir in split_dirs:
         split_store = Store(split_dir)
-        K = split_store.meta['KXX']
+        K = split_store.meta['K']
         destination = split_store.folder / model_name
         destination.mkdir(mode=0o777, parents=True, exist_ok=True)
         for k in range(K):

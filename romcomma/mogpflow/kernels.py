@@ -140,7 +140,7 @@ class MOStationary(AnisotropicStationary, Kernel):
 
 class RBF(MOStationary):
     """
-    The radial basis functions (RBF) or squared exponential kernel. The kernel equation is
+    The radial basis function (RBF) or squared exponential kernel. The kernel equation is
 
         k(d) = σ² exp{-½ r²}
 

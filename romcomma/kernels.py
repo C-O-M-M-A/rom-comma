@@ -58,7 +58,7 @@ class Kernel(Model):
     @classmethod
     @property
     def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
-        """ **Do not use, this functions is merely an interface requirement. **"""
+        """ **Do not use, this function is merely an interface requirement. **"""
         return {'A kernel has no use for optimizer options, only its parent GP does.': None}
 
     @classmethod
@@ -127,7 +127,7 @@ class Kernel(Model):
         if variance_shape != self.params.variance.shape:
             self.parameters.broadcast_value(model_name=str(self.folder), field="variance", target_shape=variance_shape, is_diagonal=True, folder=folder)
             self._L = variance_shape[1]
-        if (self._L, M) != self.params.lengthscales_neat.shape:
+        if (self._L, M) != self.params.lengthscales.shape:
             self.parameters.broadcast_value(model_name=str(self.folder), field="lengthscales", target_shape=(self._L, M), is_diagonal=False, folder=folder)
             self._M = M
         return self
@@ -137,7 +137,7 @@ class Kernel(Model):
         pass
 
     def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
-        """ **Do not use, this functions is merely an interface requirement. **
+        """ **Do not use, this function is merely an interface requirement. **
 
         Args:
             method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
@@ -156,7 +156,7 @@ class Kernel(Model):
             **kwargs: The model.parameters fields=values to replace after reading from file/defaults.
         """
         super().__init__(folder, read_parameters, **kwargs)
-        self._L, self._M = self.params.variance.shape[1], self.params.lengthscales_neat.shape[1]
+        self._L, self._M = self.params.variance.shape[1], self.params.lengthscales.shape[1]
         self.broadcast_parameters(self.params.variance.shape, self._M)
 
 
@@ -171,8 +171,8 @@ class RBF(Kernel):
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
         if self.params.variance.shape[0] == 1:
-            ard = (self.params.lengthscales_neat.shape[1] == 1)
-            results = tuple(gf.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales_neat[l])
+            ard = (self.params.lengthscales.shape[1] == 1)
+            results = tuple(gf.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[l])
                             for l in range(self.params.variance.shape[1]))
             # for result in results[:-1]:
             #     gpflow.set_trainable(result, False)

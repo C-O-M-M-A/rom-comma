@@ -256,7 +256,7 @@ class GP(GPInterface):
                                                                                  for gp in self._implementation)).write()
         self._kernel.parameters = self._kernel.parameters.replace(variance=tuple(gp.kernel.variance.numpy()
                                                                                  for gp in self._implementation),
-                                                                  lengthscales=tuple(gp.kernel.lengthscales_neat.numpy()
+                                                                  lengthscales=tuple(gp.kernel.lengthscales.numpy()
                                                                                      for gp in self._implementation)).write()
         self._test = None
 

@@ -88,30 +88,19 @@ class Store:
     These files specify the global dataset to be analyzed. This dataset may be further split into Folds contained within the Store.
     """
 
+    class InitMode(IntEnum):
+        READ_META_ONLY = auto()
+        READ = auto()
+        CREATE = auto()
+
     class Standard:
         """ Encapsulates Specifications for standardizing data as ``classmethods``.
 
-        A Specification is a functions taking an (N,M+L) DataFrame ``df `` (to be standardized) as input and returning a (2,M+L) DataFrame.
+        A Specification is a function taking an (N,M+L) DataFrame ``df `` (to be standardized) as input and returning a (2,M+L) DataFrame.
         The first row of the return contains (,M+L) ``loc`` values, the second row (,M+L) ``scale`` values.
 
         Ultimately the Store class standardizes ``df`` to ``(df - loc)/scale``.
         """
-
-        @classmethod
-        @property
-        def Specification(cls) -> Type[Callable[[DataFrame], DataFrame]]:
-            """ The type of a Standard specification."""
-            return Callable[[DataFrame], DataFrame]
-
-        @classmethod
-        def __mean(cls, df: DataFrame) -> Series:
-            mean = df.mean()
-            mean.name = 'mean'
-            return mean
-
-        @classmethod
-        def __stack_as_rows(cls, top: Series, bottom: Series):
-            return concat([top, bottom], axis=1).T
 
         # noinspection PyUnusedLocal
         @classmethod
@@ -150,60 +139,21 @@ class Store:
             scale.name = 'std'
             return cls.__stack_as_rows(cls.__mean(df), scale)
 
-    class InitMode(IntEnum):
-        READ_META_ONLY = auto()
-        READ = auto()
-        CREATE = auto()
+        @classmethod
+        @property
+        def Specification(cls) -> Type[Callable[[DataFrame], DataFrame]]:
+            """ The type of a Standard specification."""
+            return Callable[[DataFrame], DataFrame]
 
-    @classmethod
-    @property
-    def DEFAULT_META(cls) -> Dict[str, Any]:
-        """ Default meta data for a store."""
-        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'standard': cls.Standard.none.__name__, 'data': {}, 'KXX': 0, 'shuffled before folding': False}
+        @classmethod
+        def __mean(cls, df: DataFrame) -> Series:
+            mean = df.mean()
+            mean.name = 'mean'
+            return mean
 
-    @classmethod
-    @property
-    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
-        """ The default options (kwargs) to pass to pandas.read_csv."""
-        return {'skiprows': None, 'index_col': None}
-
-    @classmethod
-    def from_df(cls, folder: PathLike, df: DataFrame, meta: Dict = DEFAULT_META) -> Store:
-        """ Create a Store from a DataFrame.
-
-        Args:
-            folder: The location (folder) of the Store.
-            df: The data to store in [Return].data_csv.
-            meta: The meta data to store in [Return].meta_json.
-        Returns: A new Store.
-        """
-        store = Store(folder, Store.InitMode.CREATE)
-        store._meta = {**cls.DEFAULT_META, **meta}
-        store._data = Frame(store.data_csv, df)
-        store.meta_data_update()
-        store.standardize(Store.Standard.none)
-        return store
-
-    @classmethod
-    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
-        """ Create a Store from a csv file.
-
-        Args:
-            folder: The location (folder) of the target Store.
-            csv: The file containing the data to store in [Return].data_csv.
-            meta: The meta data to store in [Return].meta_json.
-            skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
-        Keyword Args:
-            kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the csv file, as detailed in
-                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
-        Returns: A new Store located in folder.
-        """
-        csv = Path(csv)
-        _meta = {**Store.DEFAULT_META, **meta}
-        origin_csv_kwargs = {**cls.DEFAULT_CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
-        data = Frame(csv, **origin_csv_kwargs)
-        _meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
-        return cls.from_df(folder, data.df, _meta)
+        @classmethod
+        def __stack_as_rows(cls, top: Series, bottom: Series):
+            return concat([top, bottom], axis=1).T
 
     @property
     def folder(self) -> Path:
@@ -237,9 +187,9 @@ class Store:
         return self._meta
 
     @property
-    def KXX(self) -> int:
+    def K(self) -> int:
         """ The number of folds contained in this Store."""
-        return self._meta['KXX']
+        return self._meta['K']
 
     @property
     def N(self) -> int:
@@ -303,7 +253,7 @@ class Store:
 
     def standardize(self, standard: Standard.Specification) -> Frame:
         """ Standardize this Store, and update ``self.meta``. If ``standard==Standard.none``, nothing else is done.
-        Otherwise, ``standard`` (a functions member of Standard.Specification) is applied to ``self.data.df``, standardizing it,
+        Otherwise, ``standard`` (a function member of Standard.Specification) is applied to ``self.data.df``, standardizing it,
         and writing the files ``[self.standard_csv]`` and ``[self.data_csv]``.
 
         Args:
@@ -318,15 +268,15 @@ class Store:
         return self._standard
 
     def fold_dir(self, k: int) -> Path:
-        """ Returns the path containing each fold between 0 and KXX.
+        """ Returns the path containing each fold between 0 and K.
 
         Args:
-            k: The fold which the functions is creating the path for.
+            k: The fold which the function is creating the path for.
         """
         return self.folder / f'fold.{k:d}'
 
-    def _K_folds_update(self, KXX: int, shuffled_before_folding: bool):
-        self._meta.update({'KXX': K, 'shuffled before folding': shuffled_before_folding})
+    def _K_folds_update(self, K: int, shuffled_before_folding: bool):
+        self._meta.update({'K': K, 'shuffled before folding': shuffled_before_folding})
         self.__write_meta_json()
 
     def split(self):
@@ -356,7 +306,7 @@ class Store:
                     fold = Fold(self, k)
                     fold.split()
 
-    def meta_data_update(self):
+    def meta_update(self):
         """ Update __meta__"""
         self._meta.update({'data': {'X_heading': self._data.df.columns.values[0][0],
                                     'Y_heading': self._data.df.columns.values[-1][0]}})
@@ -381,6 +331,55 @@ class Store:
         else:
             self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
 
+    @classmethod
+    @property
+    def DEFAULT_META(cls) -> Dict[str, Any]:
+        """ Default meta data for a store."""
+        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'standard': cls.Standard.none.__name__, 'data': {}, 'K': 0, 'shuffled before folding': False}
+
+    @classmethod
+    @property
+    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
+        """ The default options (kwargs) to pass to pandas.read_csv."""
+        return {'skiprows': None, 'index_col': None}
+
+    @classmethod
+    def from_df(cls, folder: PathLike, df: DataFrame, meta: Dict = DEFAULT_META) -> Store:
+        """ Create a Store from a DataFrame.
+
+        Args:
+            folder: The location (folder) of the Store.
+            df: The data to store in [Return].data_csv.
+            meta: The meta data to store in [Return].meta_json.
+        Returns: A new Store.
+        """
+        store = Store(folder, Store.InitMode.CREATE)
+        store._meta = {**cls.DEFAULT_META, **meta}
+        store._data = Frame(store.data_csv, df)
+        store.meta_update()
+        store.standardize(Store.Standard.none)
+        return store
+
+    @classmethod
+    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
+        """ Create a Store from a csv file.
+
+        Args:
+            folder: The location (folder) of the target Store.
+            csv: The file containing the data to store in [Return].data_csv.
+            meta: The meta data to store in [Return].meta_json.
+            skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
+        Keyword Args:
+            kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the csv file, as detailed in
+                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
+        Returns: A new Store located in folder.
+        """
+        csv = Path(csv)
+        origin_csv_kwargs = {**cls.DEFAULT_CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
+        data = Frame(csv, **origin_csv_kwargs)
+        meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
+        return cls.from_df(folder, data.df, meta)
+
 
 class Fold(Store):
     """ A Fold is defined as a folder containing a ``__data__.csv``, a ``__meta__.json`` file and a ``__test__.csv`` file.
@@ -393,27 +392,27 @@ class Fold(Store):
     @property
     def DEFAULT_META(cls) -> Dict[str, Any]:
         """ Default meta data for a fold."""
-        return {'parent_dir': '', 'k': -1, 'KXX': -1}
+        return {'parent_dir': '', 'k': -1, 'K': -1}
 
     @classmethod
-    def into_K_folds(cls, parent: Store, KXX: int, shuffled_before_folding: bool = True,
+    def into_K_folds(cls, parent: Store, K: int, shuffled_before_folding: bool = True,
                      standard: Store.Standard.Specification = Store.Standard.mean_and_std, replace_empty_test_with_data_: bool = True):
-        """ Fold parent into KXX Folds for testing.
+        """ Fold parent into K Folds for testing.
 
         Args:
-            parent: The Store to fold into KXX.
+            parent: The Store to fold into K.
             K: The number of Folds, between 1 and N inclusive.
             shuffled_before_folding: Whether to shuffle the samples before sampling.
-            If False, each Fold.test will contain 1 sample from the first KXX samples in parent.__data__, 1 sample from the second KXX samples, and so on.
+            If False, each Fold.test will contain 1 sample from the first K samples in parent.__data__, 1 sample from the second K samples, and so on.
             standard: Specification of Standard, either Standard.none, Standard.mean_and_range or Standard.mean_and_std.
-            replace_empty_test_with_data_: Whether to replace an empty test file with the training data when KXX==1.
+            replace_empty_test_with_data_: Whether to replace an empty test file with the training data when K==1.
 
         Raises:
-            ValueError: Unless 1 &lt= KXX &lt= N.
+            ValueError: Unless 1 &lt= K &lt= N.
         """
         N = len(parent.data.df.index)
         if not (1 <= K <= N):
-            raise ValueError(f'KXX={K:d} does not lie between 1 and N={N:d} inclusive.')
+            raise ValueError(f'K={K:d} does not lie between 1 and N={N:d} inclusive.')
         for k in range(K, parent.K):
             parent.fold_dir(k).mkdir(mode=0o777, parents=False, exist_ok=True)
             parent.fold_dir(k).rmdir()
@@ -425,7 +424,7 @@ class Fold(Store):
         # noinspection PyUnresolvedReferences
         def __fold_from_indices(_k: int, train: List[int], test: List[int]):
             assert len(train) > 0
-            meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.folder), 'k': _k, 'KXX': parent.K}}
+            meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.folder), 'k': _k, 'K': parent.K}}
             fold = Store.from_df(parent.fold_dir(_k), parent.data.df.iloc[train], meta)
             fold.standardize(standard)
             fold.__class__ = cls
@@ -504,7 +503,7 @@ class Fold(Store):
         """
         if not isinstance(parent, Store):
             parent = Store(parent, Store.InitMode.READ_META_ONLY)
-        assert 0 <= k < parent.K, f'Fold k={k:d} is out of bounds 0 <= k < KXX = {self.K:d} in data.Store({parent.folder:s}'
+        assert 0 <= k < parent.K, f'Fold k={k:d} is out of bounds 0 <= k < K = {self.K:d} in data.Store({parent.folder:s}'
         super().__init__(parent.fold_dir(k))
         self._M = M if 0 < M < super().M else super().M
         self._test = Frame(self.test_csv)
