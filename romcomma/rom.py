@@ -220,7 +220,7 @@ class ROM(Model):
 
         self._gp = self._initialize_gp(-1)
         self.calculate()
-        self._gp.test()
+        self._gp.test_data()
         self.write_parameters(self.Parameters(
             concatenate((self.parameters.Mu, atleast_2d(self._sobol.Mu)), axis=0),
             concatenate((self.parameters.D, atleast_2d(self._semi_norm.value(self._sobol.D))), axis=0),
@@ -276,6 +276,6 @@ class ROM(Model):
                                          lengthscales=self._sobol.lengthscales,
                                          log_marginal_likelihood=self._gp.log_marginal_likelihood)
             super().__init__(self._fold.folder / name, parameters)
-            shutil.copy2(self._fold.data_csv, self.folder)
+            shutil.copy2(self._fold.csv, self.folder)
             shutil.copy2(self._fold.test_csv, self.folder)
             self.optimize(self._options[-1])

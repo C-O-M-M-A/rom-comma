@@ -19,7 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" A suite of functions designed to test screening (order reduction) with high-dimensional distributions.
+""" A suite of functions designed to test_data screening (order reduction) with high-dimensional distributions.
 
 All functions herein are precisely as described in https://www.sfu.ca/~ssurjano/screen.html.
 Each function signature follows the format:

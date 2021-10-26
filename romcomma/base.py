@@ -234,7 +234,7 @@ class Model(ABC):
         if self.parameters.fields[0] != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks':
             raise NotImplementedError('base.calculate() must never be called.')
         else:
-            self._test = None   # Remember to reset any test results.
+            self._test = None   # Remember to reset any test_data results.
 
     @abstractmethod
     def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
@@ -253,7 +253,7 @@ class Model(ABC):
             options = {**options, 'result': 'OPTIMIZE HERE !!!'}
             self._write_options(options)
             self.parameters = self._parameters.replace('WITH OPTIMAL PARAMETERS!!!').write(self.folder)   # Remember to write optimization results.
-            self._test = None   # Remember to reset any test results.
+            self._test = None   # Remember to reset any test_data results.
 
     def _read_options(self) -> Dict[str, Any]:
         # noinspection PyTypeChecker

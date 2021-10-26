@@ -28,8 +28,9 @@ from copy import deepcopy
 from itertools import chain
 from random import shuffle
 from pathlib import Path
-from numpy import NaN, append
+from numpy import NaN, append, transpose
 from pandas import DataFrame, Series, read_csv, concat
+from abc import abstractmethod
 from enum import IntEnum, auto
 import json
 
@@ -80,8 +81,102 @@ class Frame:
             self.write()
 
 
+class Normalize:
+    """ Encapsulates Specifications for standardizing data as ``classmethods``.
+
+    A Specification is a function taking an (N,M+L) DataFrame ``df `` (to be standardized) as input and returning a (2,M+L) DataFrame.
+    The first row of the return contains (,M+L) ``loc`` values, the second row (,M+L) ``scale`` values.
+
+    Ultimately the Store class standardizes ``df`` to ``(df - loc)/scale``.
+    """
+
+    @property
+    def owner(self) -> Fold:
+        return self._owner
+
+    @property
+    def csv(self) -> Path:
+        """ The normalization file."""
+        return self._owner.folder / '__normalize__.csv'
+
+    def create_standardized_frame(self, csv: PathLike, df: DataFrame) -> Frame:
+        """ Overwrite ``df`` with its standardized version, saving to csv.
+
+        Args:
+            csv: Locates the return Frame.
+            df: The data to standardize.
+        Returns: A Frame written to csv containing df, standardized.
+        """
+        if self.is_standardized:
+            df = (df - self.standard.df.iloc[0]) / self.standard.df.iloc[1]
+        return Frame(csv, df)
+
+    def standardize(self, standard: Standard.Specification) -> Frame:
+        """ Standardize this Store, and update ``self.meta``. If ``standard==Standard.none``, nothing else is done.
+        Otherwise, ``standard`` (a function member of Standard.Specification) is applied to ``self.data.df``, standardizing it,
+        and writing the files ``[self.standard_csv]`` and ``[self.csv]``.
+
+        Args:
+            standard: Specification of Standard, either Standard.none, Standard.mean_and_range or Standard.mean_and_std.
+        Returns: self.standard.
+        """
+        self._meta['standard'] = standard.__name__
+        self.__write_meta_json()
+        self._standard = Frame(self.standard_csv, standard(self.data.df))
+        if self.is_standardized:
+            self._data = self.create_standardized_frame(self.data_csv, self._data.df)
+        return self._standard
+
+    def _mean(self, data: DataFrame) -> Series:
+        mean = data.mean()
+        mean.name = 'mean'
+        return mean
+
+    @classmethod
+    @abstractmethod
+    def loc_and_scale(cls, df: DataFrame, *args, **kwargs) -> Tuple[Series, Series]:
+        raise NotImplementedError
+
+    def __init__(self, owner: Store, data: Optional[DataFrame] = None, test_data: Optional[DataFrame] = None):
+        self._owner = owner
+        if data is None and test_data is None:
+            self._statistics = Frame(self.csv)
+        elif data is not None and test_data is not None:
+            df = concat(self.loc_and_scale(self._owner.data.df), axis=1)
+            self._frame = Frame(self.csv, df.T)
+        else:
+            raise RuntimeError('Normalize should be initialized with both data and test_data, or neither.')
+
+# noinspection PyUnusedLocal
+class Identity(Standard):
+    """ Standard for un-standardized data."""
+
+    def __init__(self, owner: Store, *args, **kwargs):
+        self._owner = owner
+        self._standard = None
+
+class MeanByRange(Standard):
+    """ Standardizes data by Mean and Range."""
+    def loc_and_scale(cls, df: DataFrame, *args, **kwargs) -> Tuple[Series, Series]:
+        scale = df.max() - df.min()
+        scale.name = 'range'
+        return cls._mean(df), scale
+
+@classmethod
+def mean_and_std(cls, df: DataFrame) -> DataFrame:
+    """ Standard.Specification.
+
+        Args:
+            df: The data to be standardized.
+        Returns: The mean and std (unbiased standard deviation) of data.
+    """
+    scale = df.std()  # pandas std is unbiased (n-1) denominator.
+    scale.name = 'std'
+    return cls.__stack_as_rows(cls.__mean(df), scale)
+
+
 class Store:
-    """ A ``store`` object is defined as a ``store.folder`` containing a ``store.data_csv`` file and a ``store.meta_json`` file.
+    """ A ``store`` object is defined as a ``store.folder`` containing a ``store.csv`` file and a ``store.meta_json`` file.
 
     A Store may also optionally contain a ``store.standard_csv`` file specifying the standardization which has been applied to the data.
 
@@ -93,75 +188,13 @@ class Store:
         READ = auto()
         CREATE = auto()
 
-    class Standard:
-        """ Encapsulates Specifications for standardizing data as ``classmethods``.
-
-        A Specification is a function taking an (N,M+L) DataFrame ``df `` (to be standardized) as input and returning a (2,M+L) DataFrame.
-        The first row of the return contains (,M+L) ``loc`` values, the second row (,M+L) ``scale`` values.
-
-        Ultimately the Store class standardizes ``df`` to ``(df - loc)/scale``.
-        """
-
-        # noinspection PyUnusedLocal
-        @classmethod
-        def none(cls, df: DataFrame) -> DataFrame:
-            """ Standard.Specification for un-standardized data.
-
-            Args:
-                df: The data to be standardized.
-            Returns: An empty DataFrame.
-            """
-            return DataFrame()
-
-        @classmethod
-        def mean_and_range(cls, df: DataFrame) -> DataFrame:
-            """ Standard.Specification.
-
-                Args:
-                    df: The data to be standardized.
-                Returns: The mean and range of data.
-            """
-            # noinspection PyArgumentList,PyArgumentList,PyArgumentList,PyArgumentList
-            scale = df.max() - df.min()
-            scale.name = 'range'
-            result = cls.__stack_as_rows(cls.__mean(df), scale)
-            return result
-
-        @classmethod
-        def mean_and_std(cls, df: DataFrame) -> DataFrame:
-            """ Standard.Specification.
-
-                Args:
-                    df: The data to be standardized.
-                Returns: The mean and std (unbiased standard deviation) of data.
-            """
-            scale = df.std()  # pandas std is unbiased (n-1) denominator.
-            scale.name = 'std'
-            return cls.__stack_as_rows(cls.__mean(df), scale)
-
-        @classmethod
-        @property
-        def Specification(cls) -> Type[Callable[[DataFrame], DataFrame]]:
-            """ The type of a Standard specification."""
-            return Callable[[DataFrame], DataFrame]
-
-        @classmethod
-        def __mean(cls, df: DataFrame) -> Series:
-            mean = df.mean()
-            mean.name = 'mean'
-            return mean
-
-        @classmethod
-        def __stack_as_rows(cls, top: Series, bottom: Series):
-            return concat([top, bottom], axis=1).T
-
     @property
     def folder(self) -> Path:
         """ The Store folder."""
         return self._folder
 
     @property
-    def data_csv(self) -> Path:
+    def csv(self) -> Path:
         """ The Store data file."""
         return self._folder / '__data__.csv'
 
@@ -171,14 +204,9 @@ class Store:
         return self._folder / '__meta__.json'
 
     @property
-    def standard_csv(self) -> Path:
-        """ The Store standardization file."""
-        return self._folder / '__standard__.csv' if self.is_standardized else Path()
-
-    @property
     def data(self) -> Frame:
         """ The Store data."""
-        self._data = Frame(self.data_csv) if self._data is None else self._data
+        self._data = Frame(self.csv) if self._data is None else self._data
         return self._data
 
     @property
@@ -212,16 +240,6 @@ class Store:
         return [(int(split_dir.suffix[1:]), split_dir) for split_dir in self.folder.glob('split.[0-9]*')]
 
     @property
-    def standard(self) -> Frame:
-        """ The Store standard: A (2, M+L) DataFrame consisting of (,M+L) ``loc`` values in the first row, (,M+L) ``scale`` values in the second."""
-        self._standard = Frame(self.standard_csv) if self._standard is None else self._standard
-        return self._standard
-
-    @property
-    def is_standardized(self) -> bool:
-        return self._meta['standard'] != Store.Standard.none.__name__
-
-    @property
     def X(self) -> DataFrame:
         """ The input X, as an (N,M) design Matrix with column headings."""
         return self.data.df[self._meta['data']['X_heading']]
@@ -231,41 +249,13 @@ class Store:
         """ The output Y as an (N,L) Matrix with column headings."""
         return self.data.df[self._meta['data']['Y_heading']]
 
-    def __read_meta_json(self) -> dict:
+    def _read_meta_json(self) -> dict:
         with open(self.meta_json, mode='r') as file:
             return json.load(file)
 
-    def __write_meta_json(self):
+    def _write_meta_json(self):
         with open(self.meta_json, mode='w') as file:
             json.dump(self._meta, file, indent=8)
-
-    def create_standardized_frame(self, csv: PathLike, df: DataFrame) -> Frame:
-        """ Overwrite ``df`` with its standardized version, saving to csv.
-
-        Args:
-            csv: Locates the return Frame.
-            df: The data to standardize.
-        Returns: A Frame written to csv containing df, standardized.
-        """
-        if self.is_standardized:
-            df = (df - self.standard.df.iloc[0]) / self.standard.df.iloc[1]
-        return Frame(csv, df)
-
-    def standardize(self, standard: Standard.Specification) -> Frame:
-        """ Standardize this Store, and update ``self.meta``. If ``standard==Standard.none``, nothing else is done.
-        Otherwise, ``standard`` (a function member of Standard.Specification) is applied to ``self.data.df``, standardizing it,
-        and writing the files ``[self.standard_csv]`` and ``[self.data_csv]``.
-
-        Args:
-            standard: Specification of Standard, either Standard.none, Standard.mean_and_range or Standard.mean_and_std.
-        Returns: self.standard.
-        """
-        self._meta['standard'] = standard.__name__
-        self.__write_meta_json()
-        self._standard = Frame(self.standard_csv, standard(self.data.df))
-        if self.is_standardized:
-            self._data = self.create_standardized_frame(self.data_csv, self._data.df)
-        return self._standard
 
     def fold_dir(self, k: int) -> Path:
         """ Returns the path containing each fold between 0 and K.
@@ -274,10 +264,6 @@ class Store:
             k: The fold which the function is creating the path for.
         """
         return self.folder / f'fold.{k:d}'
-
-    def _K_folds_update(self, K: int, shuffled_before_folding: bool):
-        self._meta.update({'K': K, 'shuffled before folding': shuffled_before_folding})
-        self.__write_meta_json()
 
     def split(self):
         """ Split this Store into L Splits by output. Each Split l is just a Store (whose L=1) containing the lth output only."""
@@ -288,7 +274,7 @@ class Store:
                 destination.mkdir(mode=0o777, parents=True, exist_ok=False)
             indices = append(range(self.M), self.M + l)
             data = self.data.df.take(indices, axis=1, is_copy=True)
-            Frame(destination / self.data_csv.name, data)
+            Frame(destination / self.csv.name, data)
             meta = deepcopy(self._meta)
             meta['data']['L'] = 1
             with open(destination / self.meta_json.name, mode='w') as file:
@@ -314,88 +300,7 @@ class Store:
                                    'L': self.Y.shape[1]})
         self.__write_meta_json()
 
-    def __init__(self, folder: PathLike, init_mode: InitMode = InitMode.READ):
-        """ Initialize Store.
-
-        Args:
-            folder: The location (folder) of the Store.
-            init_mode: The mode to initialize with, variations on READ (an existing Store) and CREATE (a new one).
-        """
-        self._folder = Path(folder)
-        self._data = None
-        self._standard = None
-        if init_mode <= Store.InitMode.READ:
-            self._meta = self.__read_meta_json()
-            if init_mode is Store.InitMode.READ:
-                self._data = Frame(self.data_csv)
-        else:
-            self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
-
-    @classmethod
-    @property
-    def DEFAULT_META(cls) -> Dict[str, Any]:
-        """ Default meta data for a store."""
-        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'standard': cls.Standard.none.__name__, 'data': {}, 'K': 0, 'shuffled before folding': False}
-
-    @classmethod
-    @property
-    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
-        """ The default options (kwargs) to pass to pandas.read_csv."""
-        return {'skiprows': None, 'index_col': None}
-
-    @classmethod
-    def from_df(cls, folder: PathLike, df: DataFrame, meta: Dict = DEFAULT_META) -> Store:
-        """ Create a Store from a DataFrame.
-
-        Args:
-            folder: The location (folder) of the Store.
-            df: The data to store in [Return].data_csv.
-            meta: The meta data to store in [Return].meta_json.
-        Returns: A new Store.
-        """
-        store = Store(folder, Store.InitMode.CREATE)
-        store._meta = {**cls.DEFAULT_META, **meta}
-        store._data = Frame(store.data_csv, df)
-        store.meta_update()
-        store.standardize(Store.Standard.none)
-        return store
-
-    @classmethod
-    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
-        """ Create a Store from a csv file.
-
-        Args:
-            folder: The location (folder) of the target Store.
-            csv: The file containing the data to store in [Return].data_csv.
-            meta: The meta data to store in [Return].meta_json.
-            skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
-        Keyword Args:
-            kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the csv file, as detailed in
-                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
-        Returns: A new Store located in folder.
-        """
-        csv = Path(csv)
-        origin_csv_kwargs = {**cls.DEFAULT_CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
-        data = Frame(csv, **origin_csv_kwargs)
-        meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
-        return cls.from_df(folder, data.df, meta)
-
-
-class Fold(Store):
-    """ A Fold is defined as a folder containing a ``__data__.csv``, a ``__meta__.json`` file and a ``__test__.csv`` file.
-    A Fold is a Store equipped with a test DataFrame backed by ``__test__.csv``.
-
-    Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
-    """
-
-    @classmethod
-    @property
-    def DEFAULT_META(cls) -> Dict[str, Any]:
-        """ Default meta data for a fold."""
-        return {'parent_dir': '', 'k': -1, 'K': -1}
-
-    @classmethod
-    def into_K_folds(cls, parent: Store, K: int, shuffled_before_folding: bool = True,
+    def into_K_folds(self, K: int, shuffled_before_folding: bool = True,
                      standard: Store.Standard.Specification = Store.Standard.mean_and_std, replace_empty_test_with_data_: bool = True):
         """ Fold parent into K Folds for testing.
 
@@ -403,20 +308,21 @@ class Fold(Store):
             parent: The Store to fold into K.
             K: The number of Folds, between 1 and N inclusive.
             shuffled_before_folding: Whether to shuffle the samples before sampling.
-            If False, each Fold.test will contain 1 sample from the first K samples in parent.__data__, 1 sample from the second K samples, and so on.
+            If False, each Fold.test_data will contain 1 sample from the first K samples in parent.__data__, 1 sample from the second K samples, and so on.
             standard: Specification of Standard, either Standard.none, Standard.mean_and_range or Standard.mean_and_std.
-            replace_empty_test_with_data_: Whether to replace an empty test file with the training data when K==1.
+            replace_empty_test_with_data_: Whether to replace an empty test_data file with the training data when K==1.
 
         Raises:
             ValueError: Unless 1 &lt= K &lt= N.
         """
-        N = len(parent.data.df.index)
+        N = len(self.data.df.index)
         if not (1 <= K <= N):
             raise ValueError(f'K={K:d} does not lie between 1 and N={N:d} inclusive.')
-        for k in range(K, parent.K):
-            parent.fold_dir(k).mkdir(mode=0o777, parents=False, exist_ok=True)
-            parent.fold_dir(k).rmdir()
-        parent._K_folds_update(K, shuffled_before_folding)
+        for k in range(K, self.K):
+            self.fold_dir(k).mkdir(mode=0o777, parents=False, exist_ok=True)
+            self.fold_dir(k).rmdir()
+        self._meta.update({'K': K, 'shuffled before folding': shuffled_before_folding})
+        self._write_meta_json()
         indices = list(range(N))
         if shuffled_before_folding:
             shuffle(indices)
@@ -455,45 +361,114 @@ class Fold(Store):
                                     test=[index for index, indicator in zip(indices, indicators) if k == indicator])
         return K
 
+    def __init__(self, folder: PathLike, init_mode: InitMode = InitMode.READ):
+        """ Initialize Store.
+
+        Args:
+            folder: The location (folder) of the Store.
+            init_mode: The mode to initialize with, variations on READ (an existing Store) and CREATE (a new one).
+        """
+        self._folder = Path(folder)
+        self._data = None
+        if init_mode <= Store.InitMode.READ:
+            self._meta = self.__read_meta_json()
+            if init_mode is Store.InitMode.READ:
+                self._data = Frame(self.csv)
+        else:
+            self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
+
+    @classmethod
+    @property
+    def DEFAULT_META(cls) -> Dict[str, Any]:
+        """ Default meta data for a store."""
+        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'standard': cls.Standard.none.__name__, 'data': {}, 'K': 0, 'shuffled before folding': False}
+
+    @classmethod
+    @property
+    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
+        """ The default options (kwargs) to pass to pandas.read_csv."""
+        return {'skiprows': None, 'index_col': None}
+
+    @classmethod
+    def from_df(cls, folder: PathLike, df: DataFrame, meta: Dict = DEFAULT_META) -> Store:
+        """ Create a Store from a DataFrame.
+
+        Args:
+            folder: The location (folder) of the Store.
+            df: The data to store in [Return].csv.
+            meta: The meta data to store in [Return].meta_json.
+        Returns: A new Store.
+        """
+        store = Store(folder, Store.InitMode.CREATE)
+        store._meta = {**cls.DEFAULT_META, **meta}
+        store._data = Frame(store.csv, df)
+        store.meta_update()
+        store.standardize(Store.Standard.none)
+        return store
+
+    @classmethod
+    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
+        """ Create a Store from a csv file.
+
+        Args:
+            folder: The location (folder) of the target Store.
+            csv: The file containing the data to store in [Return].csv.
+            meta: The meta data to store in [Return].meta_json.
+            skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
+        Keyword Args:
+            kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the csv file, as detailed in
+                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
+        Returns: A new Store located in folder.
+        """
+        csv = Path(csv)
+        origin_csv_kwargs = {**cls.DEFAULT_CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
+        data = Frame(csv, **origin_csv_kwargs)
+        meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
+        return cls.from_df(folder, data.df, meta)
+
+
+class Fold(Store):
+    """ A Fold is defined as a folder containing a ``__data__.csv``, a ``__meta__.json`` file and a ``__test__.csv`` file.
+    A Fold is a Store equipped with a test_data DataFrame backed by ``__test__.csv``.
+
+    Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
+    """
+
+    @classmethod
+    @property
+    def DEFAULT_META(cls) -> Dict[str, Any]:
+        """ Default meta data for a fold."""
+        return {'parent_dir': '', 'k': -1, 'K': -1}
+
     @property
     def test_csv(self) -> Path:
-        """ The test data file. Must be identical in format to the self.data_csv file."""
+        """ The test_data data file. Must be identical in format to the self.csv file."""
         return self.folder / '__test__.csv'
 
     @property
-    def test(self) -> Frame:
-        """ The test data."""
-        return self._test
+    def test_data(self) -> Frame:
+        """ The test_data data."""
+        return self._test_data
 
     @property
-    def test_Y(self) -> DataFrame:
-        """ The test output Y as an (N,L) Matrix with column headings."""
-        return self._test.df[self._meta['data']['Y_heading']]
+    def test_y(self) -> DataFrame:
+        """ The test_data output y as an (n,L) Matrix with column headings."""
+        return self._test_data.df[self._meta['data']['Y_heading']]
 
     @property
-    def test_X(self) -> DataFrame:
-        """ The test input X, as an (N,M) design Matrix with column headings."""
-        return self._test.df[self._meta['data']['X_heading']].iloc[:, :self._M]
-
-    @property
-    def M(self) -> int:
-        """ The number of input columns of data. Overrides the 'store.M' property."""
-        return self._M
-
-    @property
-    def X(self) -> DataFrame:
-        """ The input X, as an (N,M) design Matrix with column headings. Overrides the 'store.X' property."""
-        return super().X.iloc[:, 0:self._M]
+    def test_x(self) -> DataFrame:
+        """ The test_data input x, as an (n,M) design Matrix with column headings."""
+        return self._test_data.df[self._meta['data']['X_heading']]
 
     def set_test_data(self, df: DataFrame):
-        """ Set the test data for this Fold.
+        """ Set the test_data data for this Fold.
 
         args:
-            **df**: The test data to be used.
+            **df**: The test_data data to be used.
         """
-        self._test = self.create_standardized_frame(self.test_csv, df)
+        self._test_data = self.create_standardized_frame(self.test_csv, df)
 
-    def __init__(self, parent: Union[Store, PathLike], k: int, M: int = -1):
+    def __init__(self, parent: Union[Store, PathLike], k: int):
         """ Initialize Fold by reading existing files. Creation is handled by the classmethod Fold.into_K_folds.
 
         Args:
@@ -505,5 +480,22 @@ class Fold(Store):
             parent = Store(parent, Store.InitMode.READ_META_ONLY)
         assert 0 <= k < parent.K, f'Fold k={k:d} is out of bounds 0 <= k < K = {self.K:d} in data.Store({parent.folder:s}'
         super().__init__(parent.fold_dir(k))
-        self._M = M if 0 < M < super().M else super().M
-        self._test = Frame(self.test_csv)
+        self._test_data = Frame(self.test_csv)
+        self._normalize = Normalize(self)
+
+    @classmethod
+    def from_df(cls, folder: PathLike, df: DataFrame, test_df: DataFrame, meta: Dict = DEFAULT_META) -> Store:
+        """ Create a Store from a DataFrame.
+
+        Args:
+            folder: The location (folder) of the Store.
+            df: The data to store in [Return].csv.
+            meta: The meta data to store in [Return].meta_json.
+        Returns: A new Store.
+        """
+        store = Store(folder, Store.InitMode.CREATE)
+        store._meta = {**cls.DEFAULT_META, **meta}
+        store._data = Frame(store.csv, df)
+        store.meta_update()
+        store.standardize(Store.Standard.none)
+        return store

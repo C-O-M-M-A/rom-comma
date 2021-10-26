@@ -155,14 +155,14 @@ class GPInterface(Model):
         """
 
     def test(self) -> Frame:
-        """ Tests the GP on the test data in GP.fold.test_csv.
+        """ Tests the GP on the test_data data in GP.fold.test_csv.
 
-        Returns: The test results as a Frame backed by GP.test_result_csv.
+        Returns: The test_data results as a Frame backed by GP.test_result_csv.
         """
         if self._test is None:
-            self._test = Frame(self.test_csv, self._fold.test.df)
+            self._test = Frame(self.test_csv, self._fold.test_data.df)
             Y_heading = self._fold.meta['data']['Y_heading']
-            result = self.predict(self._fold.test_X.values)
+            result = self.predict(self._fold.test_x.values)
             predictive_mean = (self._test.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Mean"}, level=0))
             predictive_mean.iloc[:] = result[0]
             predictive_std = (self._test.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Std"}, level=0))

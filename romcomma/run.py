@@ -96,7 +96,7 @@ def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: 
             If None, the kernel is read from file, or set to the default base.Kernel.Parameters(), according to read_from_file.
         parameters: The GP.parameters fields=values to replace after reading from file/defaults.
         optimize: Whether to optimize each GP.
-        test: Whether to test each GP.
+        test: Whether to test_data each GP.
         sobol: Whether to calculate Sobol' indices for each GP.
         semi_norm: Meta json describing a Sobol.SemiNorm.
         kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.DEFAULT_OPTIMIZER_OPTIONS.
@@ -251,7 +251,7 @@ def collect(store: Store, model_name: str, parameters: Parameters, is_split: boo
 
 
 def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Sequence[Path]:
-    """Service routine to instantiate the collection of test results.
+    """Service routine to instantiate the collection of test_data results.
 
         Args:
             store: The Store containing the global dataset to be analyzed.
@@ -330,7 +330,7 @@ def rotate_inputs(gb_path: PathLike, X_stand: NP.Matrix) -> NP.Matrix:
     Args:
         gb_path: Path to a model.GaussianBundle. The extension of this filename is the number of input dimensions M.
             An extension of 0 or a missing extension means full order, taking M from the training data.
-        X_stand: The standardized input values - an (N,M) numpy array, consisting of N test inputs, each of dimension M.
+        X_stand: The standardized input values - an (N,M) numpy array, consisting of N test_data inputs, each of dimension M.
     Returns:
         U: The rotated inputs that can be used for predicting using a ROM - a numpy array of dimensions (N x Mu).
     """

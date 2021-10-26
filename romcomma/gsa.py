@@ -338,12 +338,12 @@ class Sobol(Model):
         column_headings = MultiIndex.from_product(((self._gp.fold.meta['data']['X_heading'],), ("u{:d}".format(i) for i in range(self.Mu))))
         X = DataFrame(einsum('MK, NK -> NM', self.Theta_old, self._gp.X, optimize=True, dtype=float, order=self.MEMORY_LAYOUT),
                       columns=column_headings, index=self._gp.fold.X.index)
-        test_X = DataFrame(einsum('MK, NK -> NM', self.Theta_old, self._gp.fold.test_X, optimize=True, dtype=float, order=self.MEMORY_LAYOUT),
-                           columns=column_headings, index=self._gp.fold.test_X.index)
+        test_X = DataFrame(einsum('MK, NK -> NM', self.Theta_old, self._gp.fold.test_x, optimize=True, dtype=float, order=self.MEMORY_LAYOUT),
+                           columns=column_headings, index=self._gp.fold.test_x.index)
         self._gp.fold.data.df = concat((X, self._gp.fold.data.df[[self._gp.fold.meta['data']['Y_heading']]].copy(deep=True)), axis='columns')
         self._gp.fold.data.write()
-        self._gp.fold.test.df = concat((test_X, self._gp.fold.test.df[[self._gp.fold.meta['data']['Y_heading']]].copy(deep=True)), axis='columns')
-        self._gp.fold.test.write()
+        self._gp.fold.test_data.df = concat((test_X, self._gp.fold.test_data.df[[self._gp.fold.meta['data']['Y_heading']]].copy(deep=True)), axis='columns')
+        self._gp.fold.test_data.write()
         self._gp.fold.meta_update()
 
     def reorder_data_columns(self, reordering: NP.Array):
@@ -358,8 +358,8 @@ class Sobol(Model):
         columns = columns.reindex(new_columns, level=1)
         self._gp.fold.data.df.reindex(columns=columns, copy=False)
         self._gp.fold.data.write()
-        self._gp.fold.test.df.reindex(columns=columns, copy=False)
-        self._gp.fold.test.write()
+        self._gp.fold.test_data.df.reindex(columns=columns, copy=False)
+        self._gp.fold.test_data.write()
 
     # def exploratory_xi(self, N_explore: int) -> NP.Matrix:
     #     """ Generate a matrix of xi's to explore.
