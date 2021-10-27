@@ -81,7 +81,7 @@ class Frame:
             self.write()
 
 
-class Normalize:
+class Normalization:
     """ Encapsulates Specifications for standardizing data as ``classmethods``.
 
     A Specification is a function taking an (N,M+L) DataFrame ``df `` (to be standardized) as input and returning a (2,M+L) DataFrame.
