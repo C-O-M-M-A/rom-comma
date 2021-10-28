@@ -41,7 +41,7 @@ In case _X_<sub>_i_</sub> ~ CDF[_X_<sub>_i_</sub>] the user should apply the pro
 __prior to any data import__.
 
 #### `Store`
-Data is initially imported into a `Store` object, which handles storage, retrieval and metadata for `store.data`, consisting of `store.X` and `store.Y`.
+Data is initially imported into a `Store` object, which handles storage, retrieval and metadata for `store.data`.
 Every `Store` object writes to and reads from its own `store.folder`.
 
 Every `Store` object crucially exposes a parameter _K_ which triggers 
@@ -59,4 +59,4 @@ Outputs are simultaneously normalized to zero mean and unit variance.
 
 The `store.K` `Folds` are stored under the parent, in `fold.folder=store.folder\fold.k` for `k in range(store.K)`. 
 For the purposes of model integration, an unvalidated, ersatz `fold.K` is included with _N_ datapoints of (training) `data=test_data`, 
-just like the would-be ersatz _K_=_k_+1=1.
+just like the would-be ersatz _K_=1=_k_+1.
