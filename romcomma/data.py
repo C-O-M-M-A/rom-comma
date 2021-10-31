@@ -24,7 +24,6 @@
 from __future__ import annotations
 
 from romcomma.typing_ import *
-from romcomma.test import distributions
 from copy import deepcopy
 from itertools import chain
 from random import shuffle
@@ -32,6 +31,9 @@ from pathlib import Path
 from numpy import NaN, append, transpose, sqrt
 from pandas import DataFrame, Series, read_csv, concat
 from enum import IntEnum, auto
+import scipy.stats
+
+
 import json
 
 
@@ -82,15 +84,10 @@ class Frame:
 
 
 class Store:
-    """ A ``store`` object is defined as a ``store.folder`` containing a ``store.csv`` file and a ``store.meta_json`` file.
+    """ A ``store`` object is defined as a ``store.folder`` containing a ``store.csv`` file and a ``store._meta_json`` file.
 
     These files specify the global dataset to be analyzed. This dataset must be further split into Folds contained within the Store.
     """
-
-    class InitMode(IntEnum):
-        READ_META_ONLY = auto()
-        READ = auto()
-        CREATE = auto()
 
     @property
     def folder(self) -> Path:
@@ -98,14 +95,8 @@ class Store:
         return self._folder
 
     @property
-    def csv(self) -> Path:
-        """ The Store data file."""
-        return self._folder / '__data__.csv'
-
-    @property
     def data(self) -> Frame:
         """ The Store data."""
-        self._data = Frame(self.csv) if self._data is None else self._data
         return self._data
 
     @property
@@ -118,23 +109,18 @@ class Store:
         """ The output Y as an (N,L) Matrix with column headings."""
         return self.data.df.loc[self._meta['data']['Y_heading']]
 
-    @property
-    def meta_json(self) -> Path:
-        """ The Store metadata file."""
-        return self._folder / '__meta__.json'
+    def _read_meta_json(self) -> dict:
+        with open(self._meta_json, mode='r') as file:
+            return json.load(file)
+
+    def _write_meta_json(self):
+        with open(self._meta_json, mode='w') as file:
+            json.dump(self._meta, file, indent=8)
 
     @property
     def meta(self) -> dict:
         """ The Store metadata."""
         return self._meta
-
-    def _read_meta_json(self) -> dict:
-        with open(self.meta_json, mode='r') as file:
-            return json.load(file)
-
-    def _write_meta_json(self):
-        with open(self.meta_json, mode='w') as file:
-            json.dump(self._meta, file, indent=8)
 
     def meta_update(self):
         """ Update __meta__"""
@@ -244,7 +230,7 @@ class Store:
             Frame(destination / self.csv.name, data)
             meta = deepcopy(self._meta)
             meta['data']['L'] = 1
-            with open(destination / self.meta_json.name, mode='w') as file:
+            with open(destination / self._meta_json.name, mode='w') as file:
                 json.dump(meta, file, indent=8)
             if self.is_standardized:
                 standard = self.standard.df.take(indices, axis=1, is_copy=True)
@@ -264,19 +250,26 @@ class Store:
         """ Lists the index and path of every Split in this Store."""
         return [(int(split_dir.suffix[1:]), split_dir) for split_dir in self.folder.glob('split.[0-9]*')]
 
-    def __init__(self, folder: PathLike, init_mode: InitMode = InitMode.READ):
+    class _InitMode(IntEnum):
+        READ_META_ONLY = auto()
+        READ = auto()
+        CREATE = auto()
+
+    def __init__(self, folder: PathLike, **kwargs):
         """ Initialize Store.
 
         Args:
             folder: The location (folder) of the Store.
-            init_mode: The mode to initialize with, variations on READ (an existing Store) and CREATE (a new one).
         """
         self._folder = Path(folder)
+        self._meta_json = self._folder / '__meta__.json'
+        self._csv = self._folder / '__data__.csv'
         self._data = None
-        if init_mode <= Store.InitMode.READ:
+        init_mode = kwargs.get('init_mode', Store._InitMode.READ)
+        if init_mode <= Store._InitMode.READ:
             self._meta = self._read_meta_json()
-            if init_mode is Store.InitMode.READ:
-                self._data = Frame(self.csv)
+            if init_mode is Store._InitMode.READ:
+                self._data = Frame(self._csv)
         else:
             self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
 
@@ -299,12 +292,12 @@ class Store:
         Args:
             folder: The location (folder) of the Store.
             df: The data to store in [Return].csv.
-            meta: The meta data to store in [Return].meta_json.
+            meta: The meta data to store in [Return]._meta_json.
         Returns: A new Store.
         """
-        store = Store(folder, Store.InitMode.CREATE)
+        store = Store(folder, init_mode=Store._InitMode.CREATE)
         store._meta = {**cls.DEFAULT_META, **meta}
-        store._data = Frame(store.csv, df)
+        store._data = Frame(store._csv, df)
         store.meta_update()
         return store
 
@@ -315,7 +308,7 @@ class Store:
         Args:
             folder: The location (folder) of the target Store.
             csv: The file containing the data to store in [Return].csv.
-            meta: The meta data to store in [Return].meta_json.
+            meta: The meta data to store in [Return]._meta_json.
             skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
         Keyword Args:
             kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the csv file, as detailed in
@@ -382,7 +375,7 @@ class Fold(Store):
         Args:
             folder: The location (folder) of the Store.
             df: The data to store in [Return].csv.
-            meta: The meta data to store in [Return].meta_json.
+            meta: The meta data to store in [Return]._meta_json.
         Returns: A new Store.
         """
         fold = Fold(parent, k)
@@ -419,11 +412,11 @@ class Normalization:
 
     def apply_to(self, df: DataFrame) -> DataFrame:
         df = (df - self.frame.df.loc['mean']) / self.frame.df.loc['range']
-        df.loc[self._fold.meta['X_heading']] = self._standard_normal.ppf(df.loc[self._fold.meta['X_heading']])
+        df.loc[self._fold.meta['X_heading']] = scipy.stats.norm.ppf(df.loc[self._fold.meta['X_heading']], loc=0, scale=1)
         return df
 
     def undo_from(self, df: DataFrame) -> DataFrame:
-        df.loc[self._fold.meta['X_heading']] = self._standard_normal.cdf(df.loc[self._fold.meta['X_heading']])
+        df.loc[self._fold.meta['X_heading']] = scipy.stats.norm.cdf(df.loc[self._fold.meta['X_heading']], loc=0, scale=1)
         df = df * self.frame.df.loc['range'] + self.frame.df.loc['mean']
         return df
 
@@ -445,7 +438,6 @@ class Normalization:
         assert ((data is None and test_data is None) or (data is not None and test_data is not None),
                 'Normalize should be initialized with both data and test_data, or neither.')
         self._fold = fold
-        self._standard_normal = distributions.Univariate(name='norm', loc=0, scale=1).parametrized
         if data is None and test_data is None:
             self._frame = Frame(self.csv) if self.csv.exists() else None
         else:

@@ -136,7 +136,7 @@ class GPInterface(Model):
         Returns: ChoSolve(self.KNoisy_Cho, self.Y) """
 
     @abstractmethod
-    def optimize(self, method: str = 'L-BFGS-B', **kwargs: Any):
+    def optimize(self, method: str = 'L-BFGS-B', **kwargs):
         """ Optimize the GP hyper-parameters.
 
         Args:
@@ -236,7 +236,7 @@ class GP(GPInterface):
         return tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None, noise_variance=self.params.noise_variance[0, l])
                      for l, kernel in enumerate(self._kernel.implementation))
 
-    def optimize(self, method: str = 'L-BFGS-B', **kwargs: Any):
+    def optimize(self, method: str = 'L-BFGS-B', **kwargs):
         """ Optimize the GP hyper-parameters.
 
         Args:

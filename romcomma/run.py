@@ -53,7 +53,7 @@ def Timing(name: str):
 
 
 @contextmanager
-def Context(name: str, device: str = '', **kwargs: Any):
+def Context(name: str, device: str = '', **kwargs):
     """ Context Manager for running operations.
 
     Args:
@@ -81,7 +81,7 @@ def Context(name: str, device: str = '', **kwargs: Any):
 
 def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
         kernel_parameters: Optional[kernels.Kernel.Parameters] = None, parameters: Optional[gpr.GP.Parameters] = None,
-        optimize: bool = True, test: bool = True, sobol: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.DEFAULT_META'}, **kwargs: Any):
+        optimize: bool = True, test: bool = True, sobol: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.DEFAULT_META'}, **kwargs):
     """ Service routine to recursively run GPs the Folds in a Store, and on a single Fold.
 
     Args:
