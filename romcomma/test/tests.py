@@ -21,10 +21,12 @@
 
 """ Run this module first thing, to test_data your installation of romcomma. """
 
+from __future__ import annotations
+
 from romcomma.typing_ import *
 from romcomma import run
 from romcomma.data import Fold, Store
-from romcomma.test.functions import Matrix, FunctionWithParameters, functions_of_normal
+from romcomma.test import functions, sampling
 from numpy import eye, savetxt, transpose
 from pathlib import Path
 from scipy.stats import ortho_group
@@ -33,31 +35,30 @@ BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\0.0')
 
 
 # noinspection PyShadowingNames
-def run_gps(name, function_name: Sequence[str], N: int, noise_std: float, random: bool, M: int = 5, K: int = 2):
-    if isinstance(function_name, str):
-        function_name = [function_name]
-    store_dir = '.'.join(function_name) + f'.{M:d}.{noise_std:.3f}.{N:d}'
+def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float], random: bool, M: int = 5, K: int = 2):
+    if isinstance(function_names, str):
+        function_name = [function_names]
+    f = tuple((functions.FunctionWithMeta.DEFAULTS[function_name] for function_name in function_names))
+    store_folder = '.'.join(function_names) + f'.{M:d}.{sum(noise_variance)/len(noise_variance):.3f}.{N:d}'
     if random:
-        lin_trans = ortho_group.rvs(M)
-        input_transform = FunctionWithParameters(function_= Matrix.multiply, parameters_={'matrix': lin_trans})
-        store_dir += '.random'
+        rotation = ortho_group.rvs(M)
+        store_folder += '.random'
     else:
-        lin_trans = eye(M)
-        input_transform = None
-        store_dir += '.rom'
-    store_dir = BASE_PATH / store_dir
-    CDF_loc, CDF_scale, functions = FunctionWithParameters.default(function_name)
-    store = functions_of_normal(store_dir=store_dir, N=N, M=M, CDF_loc=CDF_loc, CDF_scale=CDF_scale,
-                                input_transform=input_transform, functions=functions, noise_std=noise_std)
-    savetxt(store.folder / 'InverseRotation.csv', transpose(lin_trans))
-    Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
-    run.gps(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
-                  optimize=True, test=True)
+        rotation = eye(M)
+        store_folder += '.rom'
+    store_folder = BASE_PATH / store_folder
+    store = functions.sample(f, N, M, noise_variance, store_folder)
+    store.X_rotation = rotation
+    print(store.X_rotation)
+#     Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
+#     run.gps(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+#                   optimize=True, test=True)
 
 
 if __name__ == '__main__':
     with run.Context('Test'):
         for N in (800,):
-            for noise_std in (0,):
-                for random in (False,):
-                    run_gps('initial', ['sin.2', 'sin.1'], N, noise_std, random, M=2)
+            for noise_variance in (0.3,):
+                for random in (True,):
+                    for M in (5,):
+                        run_gps('initial', ['sin.1', 'sin.2'], N, [noise_variance] * 2, random, M)

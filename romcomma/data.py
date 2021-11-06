@@ -25,11 +25,12 @@ from __future__ import annotations
 
 from romcomma.typing_ import *
 from copy import deepcopy
-from itertools import chain
-from random import shuffle
+import itertools
+import random
+import shutil
 from pathlib import Path
-from numpy import NaN, append, transpose, sqrt
-from pandas import DataFrame, Series, read_csv, concat
+import numpy as np
+import pandas as pd
 from enum import IntEnum, auto
 import scipy.stats
 
@@ -38,11 +39,11 @@ import json
 
 
 class Frame:
-    """ Encapsulates a DataFrame (df) backed by a source file."""
+    """ Encapsulates a pd.DataFrame (df) backed by a source file."""
     @classmethod
     @property
     def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
-        """ The default options (kwargs) to pass to pandas.read_csv."""
+        """ The default options (kwargs) to pass to pandas.pd.read_csv."""
         return {'sep': ',', 'header': [0, 1], 'index_col': 0, }
 
     @property
@@ -61,7 +62,7 @@ class Frame:
         self.df.to_csv(path_or_buf=self._csv, sep=Frame.DEFAULT_CSV_OPTIONS['sep'], index=True)
 
     # noinspection PyDefaultArgument
-    def __init__(self, csv: PathLike = Path(), df: DataFrame = DataFrame(), **kwargs):
+    def __init__(self, csv: PathLike = Path(), df: pd.DataFrame = pd.DataFrame(), **kwargs):
         """ Initialize Frame.
 
         Args:
@@ -74,10 +75,10 @@ class Frame:
         """
         self._csv = Path(csv)
         if self.is_empty:
-            assert df.empty, 'csv is an empty path, but df is not an empty DataFrame.'
+            assert df.empty, 'csv is an empty path, but df is not an empty pd.DataFrame.'
             self.df = df
         elif df.empty:
-            self.df = read_csv(self._csv, **{**Frame.DEFAULT_CSV_OPTIONS, **kwargs})
+            self.df = pd.read_csv(self._csv, **{**Frame.DEFAULT_CSV_OPTIONS, **kwargs})
         else:
             self.df = df
             self.write()
@@ -100,14 +101,14 @@ class Store:
         return self._data
 
     @property
-    def X(self) -> DataFrame:
+    def X(self) -> pd.DataFrame:
         """ The input X, as an (N,M) design Matrix with column headings."""
-        return self.data.df.loc[self._meta['data']['X_heading']]
+        return self._data.df[self._meta['data']['X_heading']]
 
     @property
-    def Y(self) -> DataFrame:
+    def Y(self) -> pd.DataFrame:
         """ The output Y as an (N,L) Matrix with column headings."""
-        return self.data.df.loc[self._meta['data']['Y_heading']]
+        return self._data.df[self._meta['data']['Y_heading']]
 
     def _read_meta_json(self) -> dict:
         with open(self._meta_json, mode='r') as file:
@@ -150,64 +151,48 @@ class Store:
         """ The number of folds contained in this Store."""
         return self._meta['K']
 
-    def into_K_folds(self, K: int, shuffle_before_folding: bool = True):
-        """ Fold parent into K Folds for testing.
+    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> int:
+        """ Fold this store into K Folds, indexed by range(K).
+        An additional Fold, indexed by K, takes all the store data for both training and (invalid) testing.
+        To avoid duplication, when K=1 there is no fold.0, as this would be identical to fold.1.
 
         Args:
-            parent: The Store to fold into K.
             K: The number of Folds, between 1 and N inclusive.
-            shuffled_before_folding: Whether to shuffle the samples before sampling.
-            If False, each Fold.test_data will contain 1 sample from the first K samples in parent.__data__, 1 sample from the second K samples, and so on.
-            standard: Specification of Standard, either Standard.none, Standard.mean_and_range or Standard.mean_and_std.
-            replace_empty_test_with_data_: Whether to replace an empty test_data file with the training data when K==1.
+            shuffle_before_folding: Whether to shuffle the data before sampling.
+            normalization: An optional __normalization__.csv file to use.
 
         Raises:
-            ValueError: Unless 1 &lt= K &lt= N.
+            IndexError: Unless 1 &lt= K &lt= N.
         """
-        N = len(self.data.df.index)
+        data = self.data.df
+        N = data.shape[0]
         if not (1 <= K <= N):
-            raise ValueError(f'K={K:d} does not lie between 1 and N={N:d} inclusive.')
-        for k in range(K, self.K):
-            self.fold_folder(k).mkdir(mode=0o777, parents=False, exist_ok=True)
-            self.fold_folder(k).rmdir()
-        self._meta.update({'K': K, 'shuffle before folding': shuffled_before_folding})
+            raise IndexError(f'K={K:d} does not lie between 1 and N={N:d} inclusive.')
+
+        for k in range(K + 1, self.K + 1):
+            shutil.rmtree(self.fold_folder(k))
+
+        self._meta.update({'K': K, 'shuffle before folding': shuffle_before_folding})
         self._write_meta_json()
-        indices = list(range(N))
-        if shuffled_before_folding:
-            shuffle(indices)
 
-        # noinspection PyUnresolvedReferences
-        def __fold_from_indices(_k: int, train: List[int], test: List[int]):
-            assert len(train) > 0
-            meta = {**Fold.DEFAULT_META, **{'parent_dir': str(parent.folder), 'k': _k, 'K': parent.K}}
-            fold = Store.from_df(parent.fold_folder(_k), parent.data.df.iloc[train], meta)
-            fold.standardize(standard)
-            fold.__class__ = cls
-            if len(test) < 1:
-                if replace_empty_test_with_data_:
-                    fold._test = fold.create_standardized_frame(fold.test_csv, parent.data.df.iloc[train])
-                else:
-                    fold._test = Frame(fold.test_csv,
-                                       DataFrame(data=NaN, index=[-1], columns=parent.data.df.columns))
-            else:
-                fold._test = fold.create_standardized_frame(fold.test_csv, parent.data.df.iloc[test])
+        index = list(range(N))
+        if shuffle_before_folding:
+            random.shuffle(index)
 
-        def __indicators():
-            # noinspection PyUnusedLocal
-            K_blocks = [list(range(K)) for i in range(int(N / K))]
+        if K > 1:
+            K_blocks = [list(range(K))] * int(N / K)
             K_blocks.append(list(range(N % K)))
             for K_range in K_blocks:
-                shuffle(K_range)
-            return list(chain(*K_blocks))
+                random.shuffle(K_range)
+            indicator = list(itertools.chain(*K_blocks))
 
-        if 1 == K:
-            __fold_from_indices(_k=0, train=indices, test=[])
-        else:
-            indicators = __indicators()
             for k in range(K):
-                __fold_from_indices(_k=k,
-                                    train=[index for index, indicator in zip(indices, indicators) if k != indicator],
-                                    test=[index for index, indicator in zip(indices, indicators) if k == indicator])
+                indicated = zip(index, indicator)
+                data_index = [index for index, indicator in indicated if k != indicator]
+                test_index = [index for index, indicator in indicated if k == indicator]
+                Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization)
+
+        Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         return K
 
     def fold_folder(self, k: int) -> Path:
@@ -218,37 +203,29 @@ class Store:
         """
         return self.folder / f'fold.{k:d}'
 
-    def split(self):
-        """ Split this Store into L Splits by output. Each Split l is just a Store (whose L=1) containing the lth output only."""
+    def Y_split(self):
+        """Split this Store into L Y_splits. Each Y.l is just a Store containing the lth output only.
+
+        Raises:
+            TypeError: if self is a Fold.
+        """
+        if isinstance(self, Fold):
+            raise TypeError('Cannot Y_split a Fold, only a Store.')
         for l in range(self.L):
-            destination = ((self.folder.parent / f'split.{l:d}') / self.folder.name if self.__class__ == Fold
-                           else self.folder / f'split.{l:d}')
+            destination = self.folder / f'Y.{l:d}'
             if not destination.exists():
                 destination.mkdir(mode=0o777, parents=True, exist_ok=False)
-            indices = append(range(self.M), self.M + l)
+            indices = np.append(range(self.M), self.M + l)
             data = self.data.df.take(indices, axis=1, is_copy=True)
-            Frame(destination / self.csv.name, data)
+            Frame(destination / self._csv.name, data)
             meta = deepcopy(self._meta)
             meta['data']['L'] = 1
-            with open(destination / self._meta_json.name, mode='w') as file:
-                json.dump(meta, file, indent=8)
-            if self.is_standardized:
-                standard = self.standard.df.take(indices, axis=1, is_copy=True)
-                Frame(destination / self.standard_csv.name, standard)
-            if self.__class__ == Fold:
-                # noinspection PyUnresolvedReferences
-                test = self._test.df.take(indices, axis=1, is_copy=True)
-                # noinspection PyUnresolvedReferences
-                Frame(destination / self.test_csv.name, test)
-            else:
-                for k in range(self.K):
-                    fold = Fold(self, k)
-                    fold.split()
+            Store.from_df(destination, data, meta)
 
     @property
-    def splits(self) -> List[Tuple[int, Path]]:
-        """ Lists the index and path of every Split in this Store."""
-        return [(int(split_dir.suffix[1:]), split_dir) for split_dir in self.folder.glob('split.[0-9]*')]
+    def Y_splits(self) -> List[Tuple[int, Path]]:
+        """ Lists the index and path of every Y_split in this Store."""
+        return [(int(Y_dir.suffix[1:]), Y_dir) for Y_dir in self.folder.glob('Y.[0-9]*')]
 
     class _InitMode(IntEnum):
         READ_META_ONLY = auto()
@@ -263,6 +240,7 @@ class Store:
         """
         self._folder = Path(folder)
         self._meta_json = self._folder / '__meta__.json'
+        self._X_rotation = self._folder / '__X_rotation__.csv'
         self._csv = self._folder / '__data__.csv'
         self._data = None
         init_mode = kwargs.get('init_mode', Store._InitMode.READ)
@@ -286,8 +264,8 @@ class Store:
         return {'skiprows': None, 'index_col': None}
 
     @classmethod
-    def from_df(cls, folder: PathLike, df: DataFrame, meta: Dict = DEFAULT_META) -> Store:
-        """ Create a Store from a DataFrame.
+    def from_df(cls, folder: PathLike, df: pd.DataFrame, meta: Dict = DEFAULT_META) -> Store:
+        """ Create a Store from a pd.DataFrame.
 
         Args:
             folder: The location (folder) of the Store.
@@ -296,7 +274,7 @@ class Store:
         Returns: A new Store.
         """
         store = Store(folder, init_mode=Store._InitMode.CREATE)
-        store._meta = {**cls.DEFAULT_META, **meta}
+        store._meta = cls.DEFAULT_META | meta
         store._data = Frame(store._csv, df)
         store.meta_update()
         return store
@@ -312,7 +290,7 @@ class Store:
             skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
         Keyword Args:
             kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the csv file, as detailed in
-                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
+                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html.
         Returns: A new Store located in folder.
         """
         csv = Path(csv)
@@ -324,7 +302,7 @@ class Store:
 
 class Fold(Store):
     """ A Fold is defined as a folder containing a ``__data__.csv``, a ``__meta__.json`` file and a ``__test__.csv`` file.
-    A Fold is a Store equipped with a test_data DataFrame backed by ``__test__.csv``.
+    A Fold is a Store equipped with a test_data pd.DataFrame backed by ``__test__.csv``.
 
     Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
     """
@@ -344,14 +322,24 @@ class Fold(Store):
         return self._test_data
 
     @property
-    def test_y(self) -> DataFrame:
+    def test_x(self) -> pd.DataFrame:
+        """ The test_data input x, as an (n,M) design Matrix with column headings."""
+        return self._test_data.df[self._meta['data']['X_heading']]
+
+    @property
+    def test_y(self) -> pd.DataFrame:
         """ The test_data output y as an (n,L) Matrix with column headings."""
         return self._test_data.df[self._meta['data']['Y_heading']]
 
     @property
-    def test_x(self) -> DataFrame:
-        """ The test_data input x, as an (n,M) design Matrix with column headings."""
-        return self._test_data.df[self._meta['data']['X_heading']]
+    def X_rotation(self) -> NP.Matrix:
+        return Frame(self._X_rotation, header=[0]).df.values if self._X_rotation.exists() else np.eye(self.M)
+
+    @X_rotation.setter
+    def X_rotation(self, value: NP.Matrix):
+        Frame(self._X_rotation, pd.DataFrame(value))
+        self._data.df.iloc[:, :self.M] = np.einsum('Nm,mM->NM', self._data.df.iloc[:, :self.M], value)
+        self._data.write()
 
     def __init__(self, parent: Union[Store, PathLike], k: int):
         """ Initialize Fold by reading existing files. Creation is handled by the classmethod Fold.from_dfs.
@@ -369,40 +357,40 @@ class Fold(Store):
         self._normalization = Normalization(self)
 
     @classmethod
-    def from_dfs(cls, parent: Store, k: int, data: DataFrame, test_data: DataFrame) -> Fold:
-        """ Create a Fold from a DataFrame.
+    def from_dfs(cls, parent: Store, k: int, data: pd.DataFrame, test_data: pd.DataFrame, normalization: Optional[PathLike] = None) -> Fold:
+        """ Create a Fold from a pd.DataFrame.
 
         Args:
-            folder: The location (folder) of the Store.
-            df: The data to store in [Return].csv.
-            meta: The meta data to store in [Return]._meta_json.
-        Returns: A new Store.
+            parent: The parent Store
+            k: The index of the fold to be created.
+            data: Training data.
+            test_data: Test data.
+            normalization: An optional __normalization__.csv file to use.
+
+        Returns: The Fold created.
         """
-        fold = Fold(parent, k)
-        fold._meta = {**parent.meta, **{'k': k}}
-        fold._normalization = Normalization(fold, data)
-        fold._data = Frame(fold.csv, fold.normalization.apply_to(data))
+
+        fold = cls(parent, k)
+        fold._meta = cls.DEFAULT_META | parent.meta | {'k': k}
+        if normalization is None:
+            fold._normalization = Normalization(fold, data)
+        else:
+            fold._normalization = Normalization(fold)
+            shutil.copy(Path(normalization), fold._normalization.csv)
+        fold._data = Frame(fold._csv, fold.normalization.apply_to(data))
         fold._test_data = Frame(fold.test_csv, fold.normalization.apply_to(test_data))
         fold.meta_update()
         return fold
 
 
 class Normalization:
-    """ Encapsulates Specifications for standardizing data as ``classmethods``.
-
-    A Specification is a function taking an (N,M+L) DataFrame ``df `` (to be standardized) as input and returning a (2,M+L) DataFrame.
-    The first row of the return contains (,M+L) ``loc`` values, the second row (,M+L) ``scale`` values.
-
-    Ultimately the Store class standardizes ``df`` to ``(df - loc)/scale``.
+    """ Encapsulates the normalization of data.
+        X data is assumed to follow a Uniform distribution, which is normalized to U[0,1] , then inverse probability transformed to N[0,1].
+        Y data is normalized to zero mean and unit variance.
     """
 
     @property
-    def fold(self) -> Fold:
-        return self._fold
-
-    @property
     def csv(self) -> Path:
-        """ The normalization file."""
         return self._fold.folder / '__normalization__.csv'
 
     @property
@@ -410,35 +398,59 @@ class Normalization:
         """ The normalization frame."""
         return Frame(self.csv) if self._frame is None else self._frame
 
-    def apply_to(self, df: DataFrame) -> DataFrame:
-        df = (df - self.frame.df.loc['mean']) / self.frame.df.loc['range']
-        df.loc[self._fold.meta['X_heading']] = scipy.stats.norm.ppf(df.loc[self._fold.meta['X_heading']], loc=0, scale=1)
+    def apply_to(self, df: pd.DataFrame) -> pd.DataFrame:
+        """ Apply this normalization.
+
+        Args:
+            df: The pd.DataFrame to Normalize.
+
+        Returns: df, Normalized.
+        """
+        X_heading = self._fold.meta['X_heading']
+        Y_heading = self._fold.meta['Y_heading']
+        df.loc[X_heading] = (df.loc[X_heading] - self.frame.df.loc['min', X_heading]) / self.frame.df.loc['rng', df.loc[X_heading]]
+        df.loc[X_heading] = scipy.stats.norm.ppf(df.loc[X_heading], loc=0, scale=1)
+        df.loc[Y_heading] = (df.loc[Y_heading] - self.frame.df.loc['mean', Y_heading]) / self.frame.df.loc['std', df.loc[Y_heading]]
+
         return df
 
-    def undo_from(self, df: DataFrame) -> DataFrame:
-        df.loc[self._fold.meta['X_heading']] = scipy.stats.norm.cdf(df.loc[self._fold.meta['X_heading']], loc=0, scale=1)
-        df = df * self.frame.df.loc['range'] + self.frame.df.loc['mean']
+    def undo_from(self, df: pd.DataFrame) -> pd.DataFrame:
+        """ Undo this normalization.
+
+        Args:
+            df: The (Normalized) pd.DataFrame to UnNormalize.
+
+        Returns: df, UnNormalized.
+        """
+        X_heading = self._fold.meta['X_heading']
+        Y_heading = self._fold.meta['Y_heading']
+        df.loc[X_heading] = df.loc[X_heading] * self.frame.df.loc['rng', df.loc[X_heading]] + self.frame.df.loc['min', X_heading]
+        df.loc[X_heading] = scipy.stats.norm.ppf(df.loc[X_heading], loc=0, scale=1)
+        df.loc[Y_heading] = df.loc[Y_heading] * self.frame.df.loc['std', df.loc[Y_heading]] + self.frame.df.loc['mean', Y_heading]
         return df
 
-    def _create_frame_from(self, data: DataFrame) -> Frame:
-        mean = data.mean()
-        mean.name = 'mean'
-        std = data.std()
-        std.name = 'std'
-        semi_range = std * sqrt(3)
-        semi_range.name = 'rng'
-        mmin = mean - semi_range
-        mmin.name = 'min'
-        mmax = mean + semi_range
-        mmax.name = 'max'
-        df = concat((mean, std, 2 * semi_range, mmin, mmax), axis=1)
-        return Frame(self.csv, df.T)
+    def __init__(self, fold: Fold, data: Optional[pd.DataFrame] = None):
+        """ Initialize this Normalization. If the fold has already been Normalized, that Normalization is returned.
 
-    def __init__(self, fold: Fold, data: Optional[DataFrame] = None, test_data: Optional[DataFrame] = None):
-        assert ((data is None and test_data is None) or (data is not None and test_data is not None),
-                'Normalize should be initialized with both data and test_data, or neither.')
+        Args:
+            fold: The fold to Normalize.
+            data: The data from which to calculate Normalization.
+        """
         self._fold = fold
-        if data is None and test_data is None:
-            self._frame = Frame(self.csv) if self.csv.exists() else None
+        if self.csv.exists():
+            self._frame = Frame(self.csv)
+        elif data is None:
+            self._frame = None
         else:
-            self._frame = self._create_frame_from(data)
+            mean = data.mean()
+            mean.name = 'mean'
+            std = data.std()
+            std.name = 'std'
+            semi_range = std * np.sqrt(3)
+            semi_range.name = 'rng'
+            m_min = mean - semi_range
+            m_min.name = 'min'
+            m_max = mean + semi_range
+            m_max.name = 'max'
+            df = pd.concat((mean, std, 2 * semi_range, m_min, m_max), axis=1)
+            self._frame = Frame(self.csv, df.T)

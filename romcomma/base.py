@@ -135,9 +135,9 @@ class Parameters(ABC):
 
         Returns: ``self``, for chaining calls.
         Raises:
-            AssertionError: If self._csv is not set.
+            AssertionError: If self.csv is not set.
         """
-        assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
+        assert getattr(self, 'csv', None) is not None, 'Cannot perform file operations before self._folder and self.csv are set.'
         self._values = self.Values(**{key: Frame(self._csv[i], header=[0]).df.values for i, key in enumerate(self.fields)})
         return self
 
@@ -148,10 +148,10 @@ class Parameters(ABC):
             folder: The file location is changed to ``folder`` unless ``folder`` is ``None`` (the default).
         Returns: ``self``, for chaining calls.
         Raises:
-            AssertionError: If self._csv is not set.
+            AssertionError: If self.csv is not set.
         """
         self._set_folder(folder)
-        assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
+        assert getattr(self, 'csv', None) is not None, 'Cannot perform file operations before self._folder and self.csv are set.'
         dummy = tuple(Frame(self._csv[i], DataFrame(p)) for i, p in enumerate(self._values))
         return self
 

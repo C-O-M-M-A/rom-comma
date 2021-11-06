@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 from romcomma.typing_ import *
-from numpy import atleast_2d, diagflat
+import numpy as np
 import scipy.stats
 
 
@@ -50,9 +50,11 @@ def multivariate_gaussian_noise(N: int, variance: NP.MatrixLike) -> NP.Matrix:
             A vector is interpreted as a diagonal matrix.
     Returns: An (N,L) noise matrix, where (L,L) is the shape of `variance`.
     """
-    variance = atleast_2d(variance)
+    variance = np.atleast_2d(variance)
     if variance.shape[0] == 1 and len(variance.shape) == 2:
-        variance = diagflat(variance)
+        variance = np.diagflat(variance)
     elif variance.shape[0] != variance.shape[1] or len(variance.shape) > 2:
         raise IndexError(f'variance.shape = {variance.shape} should be (L,) or (L,L).')
-    return scipy.stats.multivariate_normal.rvs(mean=None, cov=variance, size=N)
+    result = scipy.stats.multivariate_normal.rvs(mean=None, cov=variance, size=N)
+    result.shape = (N, variance.shape[1])
+    return result

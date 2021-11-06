@@ -53,7 +53,7 @@ All data analysis is performed on `Fold` objects. A `Fold` is really a kind of `
 * `fold.test_data`, stored in a table (`Frame`) of _N_/_K_ rows. 
 The `test_data` does not overlap the (training) `data` in this `Fold`, except when the parent `store.K=1` and the ersatz `fold.test_data=fold.data` is applied.
 * `Normalization` of inputs: All training and test data inputs are transformed from _X_<sub>_i_</sub> ~ U[_min_<sub>_i_</sub>, _max_<sub>_i_</sub>] 
-the standard normal distribution _X_<sub>_i_</sub> ~ N[0, 1], as demanded by the analyses implemented by `romcomma`.
+to the standard normal distribution _X_<sub>_i_</sub> ~ N[0, 1], as demanded by the analyses implemented by `romcomma`.
 Outputs are simultaneously normalized to zero mean and unit variance.
 `Normalization` exposes an `undo` method to return to the original variables used in the parent `Store`.
 
