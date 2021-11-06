@@ -48,9 +48,7 @@ def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float]
         store_folder += '.rom'
     store_folder = BASE_PATH / store_folder
     store = functions.sample(f, N, M, noise_variance, store_folder)
-    store.X_rotation = rotation
-    print(store.X_rotation)
-#     Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
+    store.into_K_folds(K=2)
 #     run.gps(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
 #                   optimize=True, test=True)
 

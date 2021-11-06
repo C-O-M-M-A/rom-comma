@@ -33,9 +33,9 @@ import numpy as np
 import pandas as pd
 from enum import IntEnum, auto
 import scipy.stats
-
-
 import json
+
+pd.options.mode.chained_assignment = None
 
 
 class Frame:
@@ -180,14 +180,14 @@ class Store:
             random.shuffle(index)
 
         if K > 1:
-            K_blocks = [list(range(K))] * int(N / K)
+            K_blocks = [list(range(K)) for dummy in range(int(N / K))]
             K_blocks.append(list(range(N % K)))
             for K_range in K_blocks:
                 random.shuffle(K_range)
             indicator = list(itertools.chain(*K_blocks))
 
             for k in range(K):
-                indicated = zip(index, indicator)
+                indicated = tuple(zip(index, indicator))
                 data_index = [index for index, indicator in indicated if k != indicator]
                 test_index = [index for index, indicator in indicated if k == indicator]
                 Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization)
@@ -337,31 +337,33 @@ class Fold(Store):
 
     @X_rotation.setter
     def X_rotation(self, value: NP.Matrix):
-        Frame(self._X_rotation, pd.DataFrame(value))
         self._data.df.iloc[:, :self.M] = np.einsum('Nm,mM->NM', self._data.df.iloc[:, :self.M], value)
         self._data.write()
+        old_value = self.X_rotation
+        Frame(self._X_rotation, pd.DataFrame(np.matmul(old_value, value)))
 
-    def __init__(self, parent: Union[Store, PathLike], k: int):
+    def __init__(self, parent: Store, k: int, **kwargs):
         """ Initialize Fold by reading existing files. Creation is handled by the classmethod Fold.from_dfs.
 
         Args:
-            parent: The parent Store, or its folder.
+            parent: The parent Store.
             k: The index of the Fold within parent.
             M: The number of input columns used. If not 0 &lt M &lt self.M, all columns are used.
         """
-        if not isinstance(parent, Store):
-            parent = Store(parent, Store.InitMode.READ_META_ONLY)
-        assert 0 <= k < parent.K, f'Fold k={k:d} is out of bounds 0 <= k < K = {self.K:d} in data.Store({parent.folder:s}'
-        super().__init__(parent.fold_folder(k))
-        self._test_data = Frame(self.test_csv)
-        self._normalization = Normalization(self)
+        init_mode = kwargs.get('init_mode', Store._InitMode.READ)
+        assert 0 <= k <= parent.K, f'Fold k={k:d} is out of bounds 0 <= k <= K = {self.K:d} in data.Store({parent.folder:s}'
+        super().__init__(parent.fold_folder(k), init_mode=init_mode)
+        if init_mode == Store._InitMode.READ:
+            self._test_data = Frame(self.test_csv)
+            self._normalization = Normalization(self)
 
     @classmethod
-    def from_dfs(cls, parent: Store, k: int, data: pd.DataFrame, test_data: pd.DataFrame, normalization: Optional[PathLike] = None) -> Fold:
+    def from_dfs(cls, parent: Store, k: int, data: pd.DataFrame, test_data: pd.DataFrame,
+                 normalization: Optional[PathLike] = None) -> Fold:
         """ Create a Fold from a pd.DataFrame.
 
         Args:
-            parent: The parent Store
+            parent: The parent Store.
             k: The index of the fold to be created.
             data: Training data.
             test_data: Test data.
@@ -370,7 +372,7 @@ class Fold(Store):
         Returns: The Fold created.
         """
 
-        fold = cls(parent, k)
+        fold = cls(parent, k, init_mode=Store._InitMode.CREATE)
         fold._meta = cls.DEFAULT_META | parent.meta | {'k': k}
         if normalization is None:
             fold._normalization = Normalization(fold, data)
@@ -388,6 +390,10 @@ class Normalization:
         X data is assumed to follow a Uniform distribution, which is normalized to U[0,1] , then inverse probability transformed to N[0,1].
         Y data is normalized to zero mean and unit variance.
     """
+    @classmethod
+    @property
+    def UNIFORM_MARGIN(cls) -> float:
+        return 1.0E-12
 
     @property
     def csv(self) -> Path:
@@ -396,7 +402,8 @@ class Normalization:
     @property
     def frame(self) -> Frame:
         """ The normalization frame."""
-        return Frame(self.csv) if self._frame is None else self._frame
+        self._frame = Frame(self.csv) if self._frame is None else self._frame
+        return self._frame
 
     def apply_to(self, df: pd.DataFrame) -> pd.DataFrame:
         """ Apply this normalization.
@@ -406,11 +413,13 @@ class Normalization:
 
         Returns: df, Normalized.
         """
-        X_heading = self._fold.meta['X_heading']
-        Y_heading = self._fold.meta['Y_heading']
-        df.loc[X_heading] = (df.loc[X_heading] - self.frame.df.loc['min', X_heading]) / self.frame.df.loc['rng', df.loc[X_heading]]
-        df.loc[X_heading] = scipy.stats.norm.ppf(df.loc[X_heading], loc=0, scale=1)
-        df.loc[Y_heading] = (df.loc[Y_heading] - self.frame.df.loc['mean', Y_heading]) / self.frame.df.loc['std', df.loc[Y_heading]]
+        X_heading = self._fold.meta['data']['X_heading']
+        Y_heading = self._fold.meta['data']['Y_heading']
+        cunt = df.loc[:, X_heading].sub(self.frame.df.loc['min', X_heading], axis=1).div(self.frame.df.loc['rng', X_heading], axis=1)
+        df[X_heading] = df.loc[:, X_heading].sub(self.frame.df.loc['min', X_heading], axis=1).div(self.frame.df.loc['rng', X_heading], axis=1)
+        df[X_heading] = df.loc[:, X_heading].clip(lower=self.UNIFORM_MARGIN, upper=1-self.UNIFORM_MARGIN)
+        df[X_heading] = scipy.stats.norm.ppf(df.loc[:, X_heading], loc=0, scale=1)
+        df[Y_heading] = df.loc[:, Y_heading].sub(self.frame.df.loc['mean', Y_heading], axis=1).div(self.frame.df.loc['std', Y_heading], axis=1)
 
         return df
 
@@ -422,11 +431,11 @@ class Normalization:
 
         Returns: df, UnNormalized.
         """
-        X_heading = self._fold.meta['X_heading']
-        Y_heading = self._fold.meta['Y_heading']
-        df.loc[X_heading] = df.loc[X_heading] * self.frame.df.loc['rng', df.loc[X_heading]] + self.frame.df.loc['min', X_heading]
-        df.loc[X_heading] = scipy.stats.norm.ppf(df.loc[X_heading], loc=0, scale=1)
-        df.loc[Y_heading] = df.loc[Y_heading] * self.frame.df.loc['std', df.loc[Y_heading]] + self.frame.df.loc['mean', Y_heading]
+        X_heading = self._fold.meta['data']['X_heading']
+        Y_heading = self._fold.meta['data']['Y_heading']
+        df[X_heading] = df.loc[:, X_heading].mul(self.frame.df.loc['rng', X_heading], axis=1).add(self.frame.df.loc['min', X_heading], axis=1)
+        df[X_heading] = scipy.stats.norm.ppf(df.loc[:, X_heading], loc=0, scale=1)
+        df[Y_heading] = df.loc[:, Y_heading].mul(self.frame.df.loc['std', Y_heading], axis=1).add(self.frame.df.loc['mean', Y_heading], axis=1)
         return df
 
     def __init__(self, fold: Fold, data: Optional[pd.DataFrame] = None):
