@@ -32,8 +32,14 @@ release = '0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-              'm2r2'
-]
+              'm2r2',
+              'sphinx.ext.napoleon',
+              ]
+
+# napoleon configuration
+napoleon_google_docstring = True
+napoleon_use_param = False
+napoleon_use_ivar = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
