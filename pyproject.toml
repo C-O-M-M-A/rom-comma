@@ -38,11 +38,8 @@ classifiers = ["Topic :: Scientific/Engineering :: Artificial Intelligence",
 
 python = ">=3.9"
 
-[dependencies]
-numpy = ">"
-
 [build-system]
-requires = [
+dependencies = [
     "setuptools >= 56.0.0",
     "pip >= 21.0.1",
     "pandas >= 1.2.4",
@@ -52,3 +49,7 @@ requires = [
     "gpflow >= 2.2.1",
 ]
 build-backend = "setuptools.build_meta"
+optional-dependencies = [
+    "Sphinx >= 4.2.0",
+    "m2r2 >= 0.3.1"
+]

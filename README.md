@@ -1,6 +1,6 @@
 # rom-comma
 
-###### Reduced Order Modelling software produced by Solomon F. Brown's COMMA Research Group at The University of Sheffield
+###### Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield
 
 ## installation
 Simply place the `romcomma` package in a folder included in `PYTHONPATH` (e.g. `site-packages`). 

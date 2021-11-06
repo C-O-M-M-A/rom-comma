@@ -3,14 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to rom-comma's documentation!
+rom-comma user guide
 =====================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
+   readme
 
 Indices and tables
 ==================
