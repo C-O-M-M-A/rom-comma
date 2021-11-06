@@ -415,7 +415,7 @@ class Normalization:
         """
         X_heading = self._fold.meta['data']['X_heading']
         Y_heading = self._fold.meta['data']['Y_heading']
-        cunt = df.loc[:, X_heading].sub(self.frame.df.loc['min', X_heading], axis=1).div(self.frame.df.loc['rng', X_heading], axis=1)
+        df.iloc[:, self._fold.M] = df.iloc[:, self._fold.M].sub(self.frame.df.loc['max', X_heading], axis=1)
         df[X_heading] = df.loc[:, X_heading].sub(self.frame.df.loc['min', X_heading], axis=1).div(self.frame.df.loc['rng', X_heading], axis=1)
         df[X_heading] = df.loc[:, X_heading].clip(lower=self.UNIFORM_MARGIN, upper=1-self.UNIFORM_MARGIN)
         df[X_heading] = scipy.stats.norm.ppf(df.loc[:, X_heading], loc=0, scale=1)

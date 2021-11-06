@@ -38,7 +38,6 @@ classifiers = ["Topic :: Scientific/Engineering :: Artificial Intelligence",
 
 python = ">=3.9"
 
-[build-system]
 dependencies = [
     "setuptools >= 56.0.0",
     "pip >= 21.0.1",
