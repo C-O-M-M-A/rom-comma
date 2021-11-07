@@ -87,7 +87,7 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
     @property
     def KXX(self):
         K = self.kernel(self._X) if self._K_unit_variance is None else self.kernel.K_d_apply_variance(self._K_unit_variance)
-        return tf.reshape(K, tf.repeat(self._mean.shape, 2))
+        return tf.reshape(K, (self._mean.shape[0],) * 2)
 
     def maximum_log_likelihood_objective(self) -> tf.Tensor:
         return self.log_marginal_likelihood()
@@ -117,9 +117,9 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         Kmn=self.kernel_concatenated(self._X, Xnew)
         Kmm=self.likelihood.add_variance(self.KXX)
         Knn=self.kernel_concatenated(Xnew)
-        f=(self._Y - self._mean)[..., tf.newaxis]
+        f=self._Y - self._mean
         f_mean, f_var = base_conditional(Kmn=self.kernel_concatenated(self._X, Xnew), Kmm=self.likelihood.add_variance(self.KXX),
-                                         Knn=self.kernel_concatenated(Xnew), f=(self._Y - self._mean)[..., tf.newaxis],
+                                         Knn=self.kernel_concatenated(Xnew), f=self._Y-self._mean,
                                          full_cov=True, white=False)
         f_mean += tf.reshape(self.mean_function(Xnew), f_mean.shape)
         f_mean_shape = (self._L, n)
@@ -127,10 +127,8 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         f_var = tf.reshape(f_var, f_mean_shape * 2)
         if full_output_cov:
             einsum = 'LNln -> LlNn'
-            perm =[3, 2, 1, 0]
         else:
             einsum = 'LNLn -> LNn'
-            perm = [2, 1, 0]
         f_var = tf.einsum(einsum, f_var)
         if not full_cov:
             f_var = tf.einsum('...NN->...N', f_var)
@@ -154,7 +152,7 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         self._L = Y.shape[-1]
         if (shape := Y.shape) != (required_shape := (self._N, self._L)):
             raise IndexError(f'Y.shape should be {required_shape} instead of {shape}.')
-        self._Y = tf.reshape(tf.transpose(Y), [-1])   # self_Y is now concatenated into an (LN,)-vector
+        self._Y = tf.reshape(tf.transpose(Y), [-1, 1])   # self_Y is now concatenated into an (LN,)-vector
         if tf.shape(noise_variance) != (self._L, self._L):
             noise_variance = tf.broadcast_to(data_input_to_tensor(noise_variance), (self._L, self._L))
             noise_variance = tf.linalg.band_part(noise_variance, 0, 0)
@@ -162,5 +160,5 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         if mean_function is None:
             mean_function = MOMeanFunction(self._L)
         super().__init__(kernel, likelihood, mean_function, num_latent_gps=1)
-        self._mean = self.mean_function(self._X)
+        self._mean = tf.reshape(self.mean_function(self._X), [-1, 1])
         self._K_unit_variance = None if self.kernel.is_lengthscales_trainable else self.kernel.K_unit_variance(self._X)

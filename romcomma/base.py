@@ -172,7 +172,7 @@ class Parameters(ABC):
 class Model(ABC):
     """ Abstract base class for any model. This base class implements generic file storage and parameter handling.
     The latter is dealt with by each subclass overriding ``Parameters.Values`` with its own ``Type[NamedTuple]``
-    defining the parameter set it takes.``model.parameters.values`` is a ``Values=Type[NamedTuple]`` of NP.Matrices.
+    defining the parameter set it takes. ``model.parameters.values`` is a ``Values=Type[NamedTuple]`` of NP.Matrices.
     """
 
     @staticmethod

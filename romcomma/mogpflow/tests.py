@@ -26,6 +26,8 @@ from __future__ import annotations
 from romcomma import run
 from romcomma.mogpflow import base, kernels, likelihoods, models
 import numpy as np
+import gpflow as gf
+
 
 def covariance():
     a = np.array([[0.9, -0.5], [-0.5, 0.75]])
@@ -59,3 +61,10 @@ if __name__ == '__main__':
         gp = models.MOGPR((X, Y), kernel(), noise_variance=1.0)
         results = gp.predict_f(X, full_cov=False, full_output_cov=False)
         print(results)
+        results = gp.log_marginal_likelihood()
+        print(results)
+        opt = gf.optimizers.Scipy()
+        opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables)
+        results = gp.predict_f(X, full_cov=False, full_output_cov=False)
+        print(results)
+

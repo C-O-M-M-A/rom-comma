@@ -105,10 +105,7 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
         FileNotFoundError: If store is not a Fold, and contains no Folds.
     """
     if not isinstance(store, Fold):
-        K = range(store.meta['K'])
-        if not K:
-            raise FileNotFoundError(f'Cannot construct a GP in a Store ({store.folder:s}) which is not a Fold.')
-        for k in K:
+        for k in range(store.meta['K'] + 1):
             gps(name, Fold(store, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
     else:
         if is_independent is None:

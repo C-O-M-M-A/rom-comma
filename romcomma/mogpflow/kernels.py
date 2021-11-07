@@ -82,7 +82,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         Returns: An (L, N, L, N) Tensor.
         """
         n = tf.shape(X)[-2]
-        assert len(tf.shape(X)) == 2, f'mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
+        # assert tf.rank(X) == 2, f'mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
         return tf.broadcast_to(self._covariance.variance, (self._L, n, self._L, n))
 
     def K_unit_variance(self, X, X2=None):
@@ -112,8 +112,8 @@ class MOStationary(AnisotropicStationary, Kernel):
             K_d_unit_variance: An (L,N,L,N) Tensor.
         Returns: An (L,N,L,N) Tensor
         """
-        assert len(tf.shape(K_d_unit_variance)) == 4, f'mogpflow.kernels.MOStationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
-                                                         f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.'
+        # assert tf.rank(K_d_unit_variance) == 4, f'mogpflow.kernels.MOStationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
+        #                                                  f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.'
         return self._covariance.variance * K_d_unit_variance
 
     def K_d(self, d):
