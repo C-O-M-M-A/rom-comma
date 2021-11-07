@@ -31,8 +31,8 @@ from romcomma.typing_ import *
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
-from numpy import array, atleast_2d, broadcast_to, diag, diagonal
-from pandas import DataFrame
+import numpy as np
+import pandas as pd
 import json
 from romcomma.data import Frame
 
@@ -77,7 +77,7 @@ class Parameters(ABC):
     @values.setter
     def values(self, value: Values):
         """ Gets or Sets the NamedTuple of the Parameters."""
-        self._values = self.Values(*(atleast_2d(val) for val in value))
+        self._values = self.Values(*(np.atleast_2d(val) for val in value))
 
     def as_dict(self) -> Dict[str, Any]:
         """ Wrapper for namedtuple._asdict. See https://docs.python.org/3/library/collections.html#collections.namedtuple."""
@@ -91,7 +91,7 @@ class Parameters(ABC):
         Returns: ``self``, for chaining calls.
         """
         for key, value in kwargs.items():
-            kwargs[key] = atleast_2d(value)
+            kwargs[key] = np.atleast_2d(value)
         self._values = self._values._replace(**kwargs)
         return self
 
@@ -112,12 +112,12 @@ class Parameters(ABC):
         """
         replacement = {field: getattr(self.values, field)}
         try:
-            replacement[field] = array(broadcast_to(replacement[field], target_shape))
+            replacement[field] = np.array(np.broadcast_to(replacement[field], target_shape))
         except ValueError:
             raise IndexError(f'The {model_name} {field} has shape {replacement[field].shape} '
                              f' which cannot be broadcast to {target_shape}.')
         if is_diagonal and target_shape[0] > 1:
-            replacement[field] = diag(diagonal(replacement[field]))
+            replacement[field] = np.diag(np.diagonal(replacement[field]))
         return self.replace(**replacement).write(folder)
 
     def _set_folder(self, folder: Optional[PathLike] = None):
@@ -152,7 +152,7 @@ class Parameters(ABC):
         """
         self._set_folder(folder)
         assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
-        dummy = tuple(Frame(self._csv[i], DataFrame(p)) for i, p in enumerate(self._values))
+        dummy = tuple(Frame(self._csv[i], pd.DataFrame(p)) for i, p in enumerate(self._values))
         return self
 
     def __init__(self, folder: Optional[PathLike] = None, **kwargs: NP.Matrix):
@@ -164,7 +164,7 @@ class Parameters(ABC):
                 that every value is of type NP.Matrix. Missing fields receive their defaults, so Parameters(folder) is the default parameter set.
         """
         for key, value in kwargs.items():
-            kwargs[key] = atleast_2d(value)
+            kwargs[key] = np.atleast_2d(value)
         self._set_folder(folder)
         self._values = self.Values(**kwargs)
 
@@ -207,10 +207,6 @@ class Model(ABC):
     def folder(self) -> Path:
         """ The model folder."""
         return self._folder
-
-    @property
-    def _options_json(self) -> Path:
-        return self._folder / "options.json"
 
     @property
     def parameters(self) -> Parameters:
@@ -275,6 +271,8 @@ class Model(ABC):
             **kwargs: The model.parameters fields=values to replace after reading from file/defaults.
         """
         self._folder = Path(folder)
+        self._options_json = self._folder / "options.json"
+
         if read_parameters:
             self._parameters = self.Parameters(self._folder).read().replace(**kwargs)
         else:
