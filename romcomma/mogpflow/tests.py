@@ -41,7 +41,7 @@ def regression_data():
     return data[:, :3], data[:, 3:]
 
 def kernel():
-    lengthscales = [10 * np.ones(3), 20 * np.ones(3)]
+    lengthscales = [1000 * np.ones(3), 2000 * np.ones(3)]
     variance = 1.0 * np.eye(2)
     return kernels.RBF(variance, lengthscales)
 
@@ -54,6 +54,8 @@ if __name__ == '__main__':
     with run.Context('Test', float='float32'):
         lh = likelihood()
         X, Y = regression_data()
+        print(X)
+        print(Y)
         gp = models.MOGPR((X, Y), kernel(), noise_variance=1.0)
         results = gp.predict_f(X, full_cov=False, full_output_cov=False)
         print(results)

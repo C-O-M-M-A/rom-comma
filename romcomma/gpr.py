@@ -84,7 +84,7 @@ class GPInterface(Model):
 
     @property
     def test_csv(self) -> Path:
-        return self._folder / "__test__.csv"
+        return self._folder / "test.csv"
 
     @property
     def N(self) -> int:
@@ -155,7 +155,7 @@ class GPInterface(Model):
         """
 
     def test(self) -> Frame:
-        """ Tests the GP on the test_data data in GP.fold.test_csv.
+        """ Tests the GP on the test_data data in GP.fold._test_csv.
 
         Returns: The test_data results as a Frame backed by GP.test_result_csv.
         """
@@ -205,10 +205,10 @@ class GPInterface(Model):
         Raises:
             IndexError: If a parameter is mis-shaped.
         """
-        self._fold, self._folder = fold, fold.folder / name
+        self._fold = fold
         self._X, self._Y = self._fold.X.to_numpy(dtype=float, copy=True), self._fold.Y.to_numpy(dtype=float, copy=True)
         self._N, self._M, self._L = self._fold.N, self._fold.M, self._fold.L
-        super().__init__(self._folder, is_read, **kwargs)
+        super().__init__(self._fold.folder / name, is_read, **kwargs)
         if is_read and kernel_parameters is None:
             KernelType = Kernel.TypeFromIdentifier(self.params.values.kernel[0, 0])
             self._kernel = KernelType(self._folder / self.KERNEL_DIR_NAME, is_read)

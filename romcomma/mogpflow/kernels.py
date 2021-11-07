@@ -79,12 +79,20 @@ class MOStationary(AnisotropicStationary, Kernel):
 
         Args:
             X: An (N,M) Tensor.
-        Returns: An (L, L, N) Tensor.
+        Returns: An (L, N, L, N) Tensor.
         """
+        n = tf.shape(X)[-2]
         assert len(tf.shape(X)) == 2, f'mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
-        return tf.broadcast_to(tf.reshape(self._covariance.value, self._covariance.shape + (1,)), self._covariance.shape + (tf.shape(X)[-2],))
+        return tf.broadcast_to(self._covariance.variance, (self._L, n, self._L, n))
 
     def K_unit_variance(self, X, X2=None):
+        """ The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.
+
+        Args:
+            X: An (n,M) Tensor.
+            X2: An (N,M) Tensor.
+        Returns: An (L,N,L,N) Tensor.
+        """
         return self.K_d_unit_variance(self.scaled_difference_matrix(X, X if X2 is None else X2))
 
     @abstractmethod
