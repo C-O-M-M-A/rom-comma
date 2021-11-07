@@ -157,7 +157,7 @@ class Store:
         Args:
             K: The number of Folds, between 1 and N inclusive.
             shuffle_before_folding: Whether to shuffle the data before sampling.
-            normalization: An optional __normalization__.csv file to use.
+            normalization: An optional normalization.csv file to use.
 
         Raises:
             IndexError: Unless 1 &lt= K &lt= N.
@@ -167,8 +167,8 @@ class Store:
         if not (1 <= K <= N):
             raise IndexError(f'K={K:d} does not lie between 1 and N={N:d} inclusive.')
 
-        for k in range(K + 1, self.K + 1):
-            shutil.rmtree(self.fold_folder(k))
+        for k in range(max(K, self.K) + 1):
+            shutil.rmtree(self.fold_folder(k), ignore_errors=True)
 
         self._meta.update({'K': K, 'shuffle before folding': shuffle_before_folding})
         self._write_meta_json()
@@ -238,8 +238,8 @@ class Store:
         """
         self._folder = Path(folder)
         self._meta_json = self._folder / '__meta__.json'
-        self._X_rotation = self._folder / '__X_rotation__.csv'
-        self._csv = self._folder / '__data__.csv'
+        self._X_rotation = self._folder / 'X_rotation.csv'
+        self._csv = self._folder / 'data.csv'
         self._data = None
         init_mode = kwargs.get('init_mode', Store._InitMode.READ)
         if init_mode <= Store._InitMode.READ:
@@ -247,7 +247,8 @@ class Store:
             if init_mode is Store._InitMode.READ:
                 self._data = Frame(self._csv)
         else:
-            self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
+            shutil.rmtree(self._folder, ignore_errors=True)
+            self._folder.mkdir(mode=0o777, parents=True, exist_ok=False)
 
     @classmethod
     @property
@@ -299,8 +300,8 @@ class Store:
 
 
 class Fold(Store):
-    """ A Fold is defined as a folder containing a ``__data__.csv``, a ``__meta__.json`` file and a ``__test__.csv`` file.
-    A Fold is a Store equipped with a test_data pd.DataFrame backed by ``__test__.csv``.
+    """ A Fold is defined as a folder containing a ``data.csv``, a ``__meta__.json`` file and a ``test.csv`` file.
+    A Fold is a Store equipped with a test_data pd.DataFrame backed by ``test.csv``.
 
     Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
     """
@@ -308,11 +309,6 @@ class Fold(Store):
     @property
     def normalization(self) -> Normalization:
         return self._normalization
-
-    @property
-    def test_csv(self) -> Path:
-        """ The test_data data file. Must be identical in format to the self.csv file."""
-        return self.folder / '__test__.csv'
 
     @property
     def test_data(self) -> Frame:
@@ -329,14 +325,25 @@ class Fold(Store):
         """ The test_data output y as an (n,L) Matrix with column headings."""
         return self._test_data.df[self._meta['data']['Y_heading']]
 
+    def _X_rotate(self, frame: Frame, rotation: NP.Matrix):
+        """ Rotate the input variables in a Frame.
+
+        Args:
+            frame: The frame to rotate. Will be written after rotation.
+            rotation: The rotation Matrix.
+        """
+        frame.df.iloc[:, :self.M] = np.einsum('Nm,mM->NM', frame.df.iloc[:, :self.M], rotation)
+        frame.write()
+
     @property
     def X_rotation(self) -> NP.Matrix:
+        """ The rotation matrix applied to the input variables self.X, stored in __X_rotation.csv. Rotations are applied and stored cumulatively."""
         return Frame(self._X_rotation, header=[0]).df.values if self._X_rotation.exists() else np.eye(self.M)
 
     @X_rotation.setter
     def X_rotation(self, value: NP.Matrix):
-        self._data.df.iloc[:, :self.M] = np.einsum('Nm,mM->NM', self._data.df.iloc[:, :self.M], value)
-        self._data.write()
+        self._X_rotate(self._data, value)
+        self._X_rotate(self._test_data, value)
         old_value = self.X_rotation
         Frame(self._X_rotation, pd.DataFrame(np.matmul(old_value, value)))
 
@@ -349,10 +356,10 @@ class Fold(Store):
             M: The number of input columns used. If not 0 &lt M &lt self.M, all columns are used.
         """
         init_mode = kwargs.get('init_mode', Store._InitMode.READ)
-        assert 0 <= k <= parent.K, f'Fold k={k:d} is out of bounds 0 <= k <= K = {self.K:d} in data.Store({parent.folder:s}'
         super().__init__(parent.fold_folder(k), init_mode=init_mode)
+        self._test_csv = self.folder / 'test.csv'
         if init_mode == Store._InitMode.READ:
-            self._test_data = Frame(self.test_csv)
+            self._test_data = Frame(self._test_csv)
             self._normalization = Normalization(self)
 
     @classmethod
@@ -365,7 +372,7 @@ class Fold(Store):
             k: The index of the fold to be created.
             data: Training data.
             test_data: Test data.
-            normalization: An optional __normalization__.csv file to use.
+            normalization: An optional normalization.csv file to use.
 
         Returns: The Fold created.
         """
@@ -378,7 +385,7 @@ class Fold(Store):
             fold._normalization = Normalization(fold)
             shutil.copy(Path(normalization), fold._normalization.csv)
         fold._data = Frame(fold._csv, fold.normalization.apply_to(data))
-        fold._test_data = Frame(fold.test_csv, fold.normalization.apply_to(test_data))
+        fold._test_data = Frame(fold._test_csv, fold.normalization.apply_to(test_data))
         fold.meta_update()
         return fold
 
@@ -395,7 +402,7 @@ class Normalization:
 
     @property
     def csv(self) -> Path:
-        return self._fold.folder / '__normalization__.csv'
+        return self._fold.folder / 'normalization.csv'
 
     @property
     def frame(self) -> Frame:
@@ -428,8 +435,8 @@ class Normalization:
         return df
 =======
         X_min, X_rng, Y_mean, Y_std = self._relevant_stats
-        X = df.iloc[:, :self._fold.M]
-        Y = df.iloc[:, self._fold.M:]
+        X = df.iloc[:, :self._fold.M].copy(deep=True)
+        Y = df.iloc[:, self._fold.M:].copy(deep=True)
         X = X.sub(X_min, axis=1).div(X_rng, axis=1).clip(lower=self.UNIFORM_MARGIN, upper=1-self.UNIFORM_MARGIN)
         X.iloc[:, :] = scipy.stats.norm.ppf(X, loc=0, scale=1)
         Y = Y.sub(Y_mean, axis=1).div(Y_std, axis=1)
@@ -445,8 +452,8 @@ class Normalization:
         Returns: df, UnNormalized.
         """
         X_min, X_rng, Y_mean, Y_std = self._relevant_stats
-        X = df.iloc[:, :self._fold.M]
-        Y = df.iloc[:, self._fold.M:]
+        X = df.iloc[:, :self._fold.M].copy(deep=True)
+        Y = df.iloc[:, self._fold.M:].copy(deep=True)
         X.iloc[:, :] = scipy.stats.norm.cdf(X, loc=0, scale=1)
         X = X.mul(X_rng, axis=1).add(X_min, axis=1)
         Y = Y.mul(Y_std, axis=1).add(Y_mean, axis=1)

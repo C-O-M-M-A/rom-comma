@@ -25,13 +25,24 @@ from __future__ import annotations
 
 from romcomma.typing_ import *
 from romcomma import run
-from romcomma.data import Fold, Store
+from romcomma.data import Fold, Store, Frame
 from romcomma.test import functions, sampling
-from numpy import eye, savetxt, transpose
+import numpy as np
 from pathlib import Path
-from scipy.stats import ortho_group
+import shutil
+import scipy.stats
 
 BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\0.0')
+
+
+def rotate_all_folds(store: Store, rotation: NP.Matrix):
+    for k in range(store.K + 1):
+        fold = Fold(store, k)
+        fold.X_rotation = rotation
+    shutil.copytree(store.fold_folder(store.K), store.folder / f'fold.{store.K + 1}')
+    fold = Fold(store, store.K + 1)
+    fold.X_rotation = np.transpose(rotation)
+    Frame(fold._test_csv, fold.normalization.undo_from(fold._test_data.df))
 
 
 # noinspection PyShadowingNames
@@ -41,22 +52,27 @@ def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float]
     f = tuple((functions.FunctionWithMeta.DEFAULTS[function_name] for function_name in function_names))
     store_folder = '.'.join(function_names) + f'.{M:d}.{sum(noise_variance)/len(noise_variance):.3f}.{N:d}'
     if random:
-        rotation = ortho_group.rvs(M)
+        rotation = scipy.stats.ortho_group.rvs(M)
         store_folder += '.random'
     else:
-        rotation = eye(M)
+        rotation = np.eye(M)
         store_folder += '.rom'
     store_folder = BASE_PATH / store_folder
     store = functions.sample(f, N, M, noise_variance, store_folder)
-    store.into_K_folds(K=2)
-#     run.gps(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
-#                   optimize=True, test=True)
+    store._data.df = store._data.df * 3
+    store._data.write()
+    store.into_K_folds(K)
+    fold = Fold(store, K)
+    Frame(store.folder / 'undone.csv', fold.normalization.undo_from(fold.test_data.df))
+    rotate_all_folds(store, rotation)
+    run.gps(name=name, store=store, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+            optimize=True, test=True)
 
 
 if __name__ == '__main__':
     with run.Context('Test'):
         for N in (800,):
-            for noise_variance in (0.3,):
-                for random in (True,):
+            for noise_variance in (0.0,):
+                for random in (False, True):
                     for M in (5,):
-                        run_gps('initial', ['sin.1', 'sin.2'], N, [noise_variance] * 2, random, M)
+                        run_gps('initial', ['sin.1'], N, [noise_variance], random, M)

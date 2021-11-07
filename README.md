@@ -1,6 +1,6 @@
 # rom-comma
 
-###### Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield
+**Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield**
 
 ## installation
 Simply place the `romcomma` package in a folder included in `PYTHONPATH` (e.g. `site-packages`). 
@@ -22,7 +22,7 @@ The `data` module contains classes for importing and storing the data being anal
 
 Import is from csv file or pandas DataFrame, in any case tabulated with precisely two header rows as
 
-| | Input <br /> _X_<sub>1</sub> | ... <br /> ... | Input <br /> _X_<sub>_M_</sub> | Output <br /> _Y_<sub>1</sub> | ... <br /> ... | Output <br /> _Y_<sub>_L_</sub> |
+| | Input <br /> _X_<sub>1</sub> | ... <br /> ... | Input <br /> _X_<sub>M</sub> | Output <br /> _Y_<sub>1</sub> | ... <br /> ... | Output <br /> _Y_<sub>L</sub> |
 |---| ----- | --- | ----- | ------ | --- | ------ |
 | optional column <br /> of _N_ row indices | _N_ rows of <br /> numeric <br /> data |...| _N_ rows of <br /> numeric <br /> data | _N_ rows of <br /> numeric <br /> data |...| _N_ rows of <br /> numeric <br/> data |
 
@@ -34,10 +34,10 @@ Any second-line headers may be used, without restriction. But internally, the `r
 * An (_N_, _M_)  design matrix of inputs called _X_.
 * An (_N_, _L_)  design matrix of outputs called _Y_.
 
-The key assumption is that each input column is sampled from a uniform distribution _X_<sub>_i_</sub> ~ U[_min_<sub>_i_</sub>, _max_<sub>_i_</sub>].
+The key assumption is that each input column is sampled from a uniform distribution _X_<sub>i</sub> ~ U[_min_<sub>i</sub>, _max_<sub>i</sub>].
 There is no claim that the methods used by this software have any validity at all if this assumption is violated. 
 
-In case _X_<sub>_i_</sub> ~ CDF[_X_<sub>_i_</sub>] the user should apply the probability transform CDF(_X_<sub>_i_</sub>) ~ U[0, 1] to the input column _i_ 
+In case _X_<sub>_i_</sub> ~ CDF[_X_<sub>i</sub>] the user should apply the probability transform CDF(_X_<sub>i</sub>) ~ U[0, 1] to the input column _i_ 
 __prior to any data import__.
 
 #### `Store`
@@ -52,7 +52,7 @@ Setting `store.K=K` generates _K_ `Fold` objects.
 All data analysis is performed on `Fold` objects. A `Fold` is really a kind of `Store`, with the addition of
 * `fold.test_data`, stored in a table (`Frame`) of _N_/_K_ rows. 
 The `test_data` does not overlap the (training) `data` in this `Fold`, except when the parent `store.K=1` and the ersatz `fold.test_data=fold.data` is applied.
-* `Normalization` of inputs: All training and test data inputs are transformed from _X_<sub>_i_</sub> ~ U[_min_<sub>_i_</sub>, _max_<sub>_i_</sub>] 
+* `Normalization` of inputs: All training and test data inputs are transformed from _X_<sub>i</sub> ~ U[_min_<sub>i</sub>, _max_<sub>i</sub>] 
 to the standard normal distribution _X_<sub>_i_</sub> ~ N[0, 1], as demanded by the analyses implemented by `romcomma`.
 Outputs are simultaneously normalized to zero mean and unit variance.
 `Normalization` exposes an `undo` method to return to the original variables used in the parent `Store`.

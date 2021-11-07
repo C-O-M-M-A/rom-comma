@@ -277,5 +277,5 @@ from romcomma.typing_ import *
 #                                          log_marginal_likelihood=self._gp.log_marginal_likelihood)
 #             super().__init__(self._fold.folder / name, parameters)
 #             shutil.copy2(self._fold.csv, self.folder)
-#             shutil.copy2(self._fold.test_csv, self.folder)
+#             shutil.copy2(self._fold._test_csv, self.folder)
 #             self.optimize(self._options[-1])

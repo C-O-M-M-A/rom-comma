@@ -79,14 +79,14 @@ def Context(name: str, device: str = '', **kwargs):
         print('...Running ' + name, end='')
 
 
-def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
+def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
         kernel_parameters: Optional[kernels.Kernel.Parameters] = None, parameters: Optional[gpr.GP.Parameters] = None,
         optimize: bool = True, test: bool = True, sobol: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.DEFAULT_META'}, **kwargs):
     """ Service routine to recursively run GPs the Folds in a Store, and on a single Fold.
 
     Args:
         name: The GP name.
-        store: The source of the training __data__.csv. May be a Fold, or a Store which contains Folds.
+        store: The source of the training data.csv. May be a Fold, or a Store which contains Folds.
         M: The number of input dimensions to use.
         is_read: If True, the GP.kernel.parameters and GP.parameters are read from ``fold.folder/name``, otherwise defaults are used.
             If None, the nearest available GP down the hierarchy is broadcast, constructing from scratch if no nearby GP is available.
@@ -109,16 +109,16 @@ def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: 
         if not K:
             raise FileNotFoundError(f'Cannot construct a GP in a Store ({store.folder:s}) which is not a Fold.')
         for k in K:
-            gps(name, Fold(store, k, M), M, is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+            gps(name, Fold(store, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
     else:
         if is_independent is None:
-            gps(name, store, M, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
-            gps(name, store, M, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+            gps(name, store, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+            gps(name, store, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
         else:
             full_name = name + ('.i' if is_independent else '.d')
             if is_isotropic is None:
-                gps(name, store, M, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
-                gps(name, store, M, None, False, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+                gps(name, store, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+                gps(name, store, None, False, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
             else:
                 full_name = full_name + ('.i' if is_isotropic else '.a')
                 if is_read is None:
@@ -127,11 +127,11 @@ def gps(name: str, store: Store, M: int, is_read: Optional[bool], is_isotropic: 
                         if is_independent or not (store.folder / nearest_name).exists():
                             nearest_name = full_name[:-2] + '.i'
                             if not (store.folder / nearest_name).exists():
-                                gps(name, store, M, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol,
+                                gps(name, store, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol,
                                     semi_norm, **kwargs)
                                 return
                         gpr.GP.copy(src_folder=store.folder/nearest_name, dst_folder=store.folder/full_name)
-                    gps(name, store, M, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+                    gps(name, store, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
                 else:
                     gp = gpr.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
                                 **({} if parameters is None else parameters.as_dict()))
@@ -150,16 +150,16 @@ def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union
     Args:
         module: Sets the implementation to either Module.GPY_ or Module.SCIPY_.
         name: The ROM name.
-        store: The source of the training __data__.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
+        store: The source of the training data.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
             or a Store which contains Splits or Folds.
         source_gp_name: The name of the source GP for the ROM. Must exist in every Fold.
         Mu: The dimensionality of the rotated basis. If a list is given, its length much match the number of Splits in store.
             If Mu is not between 1 and Mx, Mx is used
-            (where Mx is replaced by  the number of input columns in __data__.csv whenever Mx is not between 1 and the number of input columns in
-            __data__.csv).
+            (where Mx is replaced by  the number of input columns in data.csv whenever Mx is not between 1 and the number of input columns in
+            data.csv).
         Mx: The number of input dimensions to use. If a list is given, its length much match the number of Splits in store.
             Fold.M is actually used for the current Fold, but Folds are initialized with Mx
-            (with the usual proviso that Mx is between 1 and the number of input columns in __data__.csv).
+            (with the usual proviso that Mx is between 1 and the number of input columns in data.csv).
         options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.ROM.DEFAULT_OPTIMIZER_OPTIONS.
 
     Raises:
@@ -274,7 +274,7 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
         destination.mkdir(mode=0o777, parents=True, exist_ok=True)
         for k in range(K):
             fold = Fold(split_store, k)
-            source = (fold.folder / model_name) / "__test__.csv"
+            source = (fold.folder / model_name) / "test.csv"
             result = Frame(source).df
             result.insert(0, "Fold", full(result.shape[0], k), True)
             std = result.iloc[:, -1]
@@ -282,7 +282,7 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
             out = result.iloc[:, -3]
             result.iloc[:, -3] = (out - mean) / std
             if k == 0:
-                frame = Frame(destination / "__test__.csv", result.copy(deep=True))
+                frame = Frame(destination / "test.csv", result.copy(deep=True))
             else:
                 frame.df = concat([frame.df, result.copy(deep=True)], axis=0, ignore_index=False)
         frame.write()
@@ -294,7 +294,7 @@ def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Seque
             result.insert(0, "Split", full(result.shape[0], split_index), True)
             result = result.reset_index()
             if split_index == 0:
-                final_frame = Frame(final_destination / "__test__.csv", result.copy(deep=True))
+                final_frame = Frame(final_destination / "test.csv", result.copy(deep=True))
             else:
                 final_frame.df = concat([final_frame.df, result.copy(deep=True)], axis=0, ignore_index=True)
     if is_split:

@@ -60,20 +60,19 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
             \mathcal N(Y \,|\, 0, \mathbf{KXX} + \sigma_n^2 \mathbf{I})
     """
 
-    def kernel_concatenated(self, X, X2=None, full_cov=True):
-        """
+    def kernel_concatenated(self, X, X2=None):
+        """ Concatenate the kernel.
 
         Args:
-            X:
-            X2:
+            X: An (n,M) Tensor.
+            X2: An (N,M) Tensor
             full_cov:
-        Returns: self.kernel, concatenated from (L,N1,L,N2) to (L*N1,L*N2).
+        Returns: self.kernel, concatenated from (L,n,L,N) to (L*n,L*N).
         """
-        assert full_cov or X2 is None, 'X2 must be None if full_cov is False.'
-        K = self.kernel(X, X2, full_cov=full_cov)
+        X2 = X if X2 is None else X2
+        K = self.kernel(X, X2, full_cov=True)
         shape = K.shape
-        return (tf.reshape(K, (shape[-4] * shape[-3], shape[-2] * shape[-1])) if full_cov
-                else tf.reshape(K, (shape[-3], shape[-2] * shape[-1])))
+        return tf.reshape(K, (shape[-4] * shape[-3], shape[-2] * shape[-1]))
 
     @property
     def M(self):
@@ -115,18 +114,28 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         """
         Xnew = tf.reshape(data_input_to_tensor(Xnew), (-1, self._M))
         n = Xnew.shape[0]
+        Kmn=self.kernel_concatenated(self._X, Xnew)
+        Kmm=self.likelihood.add_variance(self.KXX)
+        Knn=self.kernel_concatenated(Xnew)
+        f=(self._Y - self._mean)[..., tf.newaxis]
         f_mean, f_var = base_conditional(Kmn=self.kernel_concatenated(self._X, Xnew), Kmm=self.likelihood.add_variance(self.KXX),
-                                         Knn=self.kernel_concatenated(Xnew, full_cov=full_cov), f=(self._Y - self._mean)[..., tf.newaxis],
+                                         Knn=self.kernel_concatenated(Xnew), f=(self._Y - self._mean)[..., tf.newaxis],
                                          full_cov=True, white=False)
-        f_mean += self.mean_function(Xnew)
+        f_mean += tf.reshape(self.mean_function(Xnew), f_mean.shape)
         f_mean_shape = (self._L, n)
+        f_mean = tf.reshape(f_mean, f_mean_shape)
         f_var = tf.reshape(f_var, f_mean_shape * 2)
-        einsum = 'LNln -> LlNn' if full_output_cov else 'LNLn -> LNn'
+        if full_output_cov:
+            einsum = 'LNln -> LlNn'
+            perm =[3, 2, 1, 0]
+        else:
+            einsum = 'LNLn -> LNn'
+            perm = [2, 1, 0]
         f_var = tf.einsum(einsum, f_var)
         if not full_cov:
             f_var = tf.einsum('...NN->...N', f_var)
-
-        return tf.transpose(tf.reshape(f_mean, f_mean_shape)), f_var
+        perm = tuple(reversed(range(tf.rank(f_var))))
+        return tf.transpose(f_mean), tf.transpose(f_var, perm)
 
     def __init__(self, data: RegressionData, kernel: kernels.MOStationary, mean_function: Optional[MOMeanFunction] = None, noise_variance: float = 1.0):
         """

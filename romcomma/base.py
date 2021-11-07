@@ -151,7 +151,7 @@ class Parameters(ABC):
             AssertionError: If self.csv is not set.
         """
         self._set_folder(folder)
-        assert getattr(self, 'csv', None) is not None, 'Cannot perform file operations before self._folder and self.csv are set.'
+        assert getattr(self, '_csv', None) is not None, 'Cannot perform file operations before self._folder and self._csv are set.'
         dummy = tuple(Frame(self._csv[i], DataFrame(p)) for i, p in enumerate(self._values))
         return self
 
