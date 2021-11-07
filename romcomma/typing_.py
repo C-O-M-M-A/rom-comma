@@ -21,9 +21,8 @@
 
 """ Adds extra Types to the standard library typing package."""
 
-import numpy
-# noinspection PyPep8Naming
-import tensorflow as TF
+import numpy as np
+import tensorflow as tf
 from typing import *
 from pathlib import Path
 
@@ -34,17 +33,14 @@ OneOrMoreInts = Union[int, Sequence[int]]
 ZeroOrMoreInts = Optional[OneOrMoreInts]
 OneOrMoreFloats = Union[float, Sequence[float]]
 ZeroOrMoreFloats = Optional[OneOrMoreFloats]
-Module = type(numpy)
-
 PathLike = Union[str, Path]
-Unused = TF.exp
 
 
 # noinspection PyPep8Naming
 class NP:
     """ Extended numpy types."""
-    Array = numpy.ndarray
-    Tensor = numpy.ndarray  # Generic Tensor.
+    Array = np.ndarray
+    Tensor = np.ndarray  # Generic Tensor.
     Tensor4 = Tensor    # Fourth Order Tensor, ndarray.shape = (i,j,k,l).
     Tensor3 = Tensor    # Third Order Tensor, ndarray.shape = (i,j,k).
     Matrix = Tensor    # Second Order Tensor, ndarray.shape = (i,j)
@@ -55,3 +51,21 @@ class NP:
     CovectorLike = MatrixLike
     ArrayLike = TensorLike = Union[MatrixLike, Sequence[MatrixLike], Sequence[Sequence[MatrixLike]]]
     VectorOrMatrix = TypeVar('VectorOrMatrix', Vector, Matrix)
+
+
+# noinspection PyPep8Naming
+class TF:
+    """ Extended tensorflow types."""
+    Array = tf.Tensor
+    Tensor = tf.Tensor  # Generic Tensor.
+    Tensor4 = Tensor    # Fourth Order Tensor, tf.shape = (i,j,k,l).
+    Tensor3 = Tensor    # Third Order Tensor, tf.shape = (i,j,k).
+    Matrix = Tensor    # Second Order Tensor, tf.shape = (i,j)
+    Vector = Tensor    # First Order Tensor, column vector, tf.shape = (j,1)
+    Covector = Tensor    # First Order Tensor, row vector, tf.shape = (1,j)
+    VectorLike = Union[Numeric, Sequence[Numeric], Array]
+    MatrixLike = Union[VectorLike, Sequence[VectorLike]]
+    CovectorLike = MatrixLike
+    ArrayLike = TensorLike = Union[MatrixLike, Sequence[MatrixLike], Sequence[Sequence[MatrixLike]]]
+    VectorOrMatrix = TypeVar('VectorOrMatrix', Vector, Matrix)
+

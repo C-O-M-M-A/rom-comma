@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-from romcomma.mogpflow.base import Covariance
+from romcomma.mogpflow.base import Variance
 from abc import abstractmethod
 from gpflow.config import default_float
 from gpflow.kernels import Kernel, AnisotropicStationary
@@ -56,11 +56,6 @@ class MOStationary(AnisotropicStationary, Kernel):
         return self._M
 
     @property
-    def covariance(self):
-        """ The covariance matrix as a mogpflow.base.Covariance object."""
-        return self._covariance
-
-    @property
     def lengthscales_neat(self):
         """ The kernel lengthscales as an (L,M) matrix."""
         return tf.reshape(self.lengthscales, (self._L, self._M))
@@ -81,9 +76,9 @@ class MOStationary(AnisotropicStationary, Kernel):
             X: An (N,M) Tensor.
         Returns: An (L, N, L, N) Tensor.
         """
-        n = tf.shape(X)[-2]
-        assert len(tf.shape(X)) == 2, f'mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
-        return tf.broadcast_to(self._covariance.variance, (self._L, n, self._L, n))
+        N = tf.shape(X)[-2]
+        tf.assert_equal(tf.rank(X), 2, f'mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.')
+        return self.variance.broadcast(N)
 
     def K_unit_variance(self, X, X2=None):
         """ The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.
@@ -106,43 +101,48 @@ class MOStationary(AnisotropicStationary, Kernel):
         raise NotImplementedError(f'You must implement K_d_unit_variance(self, d) in {type(self)}.')
 
     def K_d_apply_variance(self, K_d_unit_variance):
-        """ Multiply the unit variance kernel by the kernel variance.
+        """ Multiply the unit variance kernel by the kernel variance, and reshape.
 
         Args:
             K_d_unit_variance: An (L,N,L,N) Tensor.
-        Returns: An (L,N,L,N) Tensor
+        Returns: An (LN,LN) Tensor
         """
-        assert len(tf.shape(K_d_unit_variance)) == 4, f'mogpflow.kernels.MOStationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
-                                                         f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.'
-        return self._covariance.variance * K_d_unit_variance
+        tf.assert_equal(tf.rank(K_d_unit_variance), 4, f'mogpflow.kernels.MOStationary currently only accepts inputs K_d_unit_variance of rank 4, ' +
+                        f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.')
+        shape = K_d_unit_variance.shape
+        return tf.reshape(self.variance.value_to_broadcast * K_d_unit_variance, (shape[-4] * shape[-3], shape[-2] * shape[-1]))
 
     def K_d(self, d):
         """ The kernel.
 
         Args:
             d: An (L,N,L,N,M) Tensor.
-        Returns: An (L,N,L,N) Tensor.
+        Returns: An (LN,LN) Tensor.
         """
         return self.K_d_apply_variance(self.K_d_unit_variance(d))
 
-    def __init__(self, variance, lengthscales, name='kernel', active_dims=None):
+    def __call__(self, X, X2, *, full_cov=True, presliced=False):
+        return super().__call__(X, X2, full_cov=True, presliced=False)
+
+    def __init__(self, variance, lengthscales, is_lengthscales_trainable: bool = False, name='Kernel', active_dims=None):
         """ Kernel Constructor.
 
         Args:
             variance: An (L,L) symmetric, positive definite matrix for the signal variance.
             lengthscales: An (L,M) matrix of positive definite lengthscales.
+            is_lengthscales_trainable: Whether the lengthscales of this kernel are trainable.
             name: The name of this kernel.
             active_dims: Which of the input dimensions are used. The default None means all of them.
         """
         super(AnisotropicStationary, self).__init__(active_dims=active_dims, name=name)  # Do not call gf.kernels.AnisotropicStationary.__init__()!
-        self._covariance = Covariance(value=np.atleast_2d(variance), name=name + '.covariance')
-        self._L = self._covariance.shape[0]
+        self.variance = Variance(value=np.atleast_2d(variance), name=name + 'Variance')
+        self._L = self.variance.shape[0]
         lengthscales = data_input_to_tensor(lengthscales)
         lengthscales_shape = tuple(tf.shape(lengthscales).numpy())
         self._M = 1 if lengthscales_shape in((),(1,), (1, 1), (self._L,)) else lengthscales_shape[-1]
         lengthscales = tf.reshape(tf.broadcast_to(lengthscales, (self._L, self._M)), (self._L, 1, self._M))
-        self.lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + '.lengthscales')
-        self.is_lengthscales_trainable = False
+        self.lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + 'Lengthscales')
+        self.is_lengthscales_trainable = is_lengthscales_trainable
         self._validate_ard_active_dims(self.lengthscales[0, 0])
 
 

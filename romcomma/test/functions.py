@@ -48,7 +48,7 @@ from SALib.test_functions import Ishigami, Sobol_G, linear_model_1, linear_model
 class FunctionWithMeta:
     """ A class for use with functions.sample(...). Encapsulates a function and its parameters."""
 
-    _DEFAULTS = None
+    _DEFAULT = None
 
     @classmethod
     def _default(cls, **kwargs: Any) -> Dict[str, FunctionWithMeta]:
@@ -57,15 +57,15 @@ class FunctionWithMeta:
 
     @classmethod
     @property
-    def DEFAULTS(cls) -> Dict[str, FunctionWithMeta]:
+    def DEFAULT(cls) -> Dict[str, FunctionWithMeta]:
         """ List of Default FunctionsWithMeta."""
-        if cls._DEFAULTS is None:
-            cls._DEFAULTS = {
-                **cls._default(name='sin.1', function=Ishigami.evaluate, loc=-np.pi, scale=2*np.pi, A=0.0, B=0.0),
-                **cls._default(name='sin.2', function=Ishigami.evaluate, loc=-np.pi, scale=2*np.pi, A=2.0, B=0.0),
-                **cls._default(name='ishigami', function=Ishigami.evaluate, loc=-np.pi, scale=2*np.pi, A=7.0, B=0.1),
+        if cls._DEFAULT is None:
+            cls._DEFAULT = {
+                **cls._default(name='sin.1', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=0.0, B=0.0),
+                **cls._default(name='sin.2', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=2.0, B=0.0),
+                **cls._default(name='ishigami', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=7.0, B=0.1),
             }
-        return cls._DEFAULTS
+        return cls._DEFAULT
 
     @property
     def meta(self) -> Dict[str, Any]:
@@ -76,13 +76,12 @@ class FunctionWithMeta:
         return np.reshape(self._function(X * self._meta['scale'] + self._meta['loc'], **kwargs), (X.shape[0], 1))
 
     def __init__(self, **kwargs):
-        """ Construct . """
         self._meta = {key: kwargs.pop(key) for key in ('name', 'loc', 'scale')}
         self._function = kwargs.pop('function')
         self.parameters = kwargs.copy()
 
 
-def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, noise_variance:NP.MatrixLike, folder: PathLike,
+def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_variance: NP.MatrixLike, folder: PathLike,
            sampling_method: Callable[[int, int, Any], NP.Matrix] = sampling.latin_hypercube, **kwargs) -> Store:
     """ Store a sample of test function responses.
 
@@ -90,7 +89,7 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, noise_variance:NP
         functions: A tuple of test functions, of length L.
         N: The number of samples (datapoints), N &gt 0.
         M: The input dimensionality, M &ge 0.
-        noise_variance: A noise (co)variance of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
+        likelihood_variance: A noise (co)variance of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
             Used to generate N random samples of Gaussian noise ~ N(0, noise_variance).
         folder: The Store.folder to create and store the results in.
         sampling_method: A Callable sampling_method(N, M, **kwargs) -> X, which returns an (N,M) matrix.
@@ -98,9 +97,9 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, noise_variance:NP
     Returns: A store containing N rows of M input columns and L output columns. The output is f(X) + noise.
     """
     X = sampling_method(N, M, **kwargs)
-    noise_variance = np.atleast_2d(noise_variance)
-    origin_meta = {'sampling_method': sampling_method.__name__, 'noise_variance': noise_variance.tolist()}
-    noise = sampling.multivariate_gaussian_noise(N, noise_variance)
+    likelihood_variance = np.atleast_2d(likelihood_variance)
+    origin_meta = {'sampling_method': sampling_method.__name__, 'noise_variance': likelihood_variance.tolist()}
+    noise = sampling.multivariate_gaussian_noise(N, likelihood_variance)
     return apply(functions, X, noise, folder, origin_meta=origin_meta)
 
 
@@ -130,6 +129,6 @@ def apply(functions: Tuple[FunctionWithMeta], X: NP.Matrix, noise: NP.Matrix, fo
     meta = {'origin': meta | kwargs.get('origin_meta', {})}
     Y = np.concatenate([f(X) for f in functions], axis=1)
     Y += noise
-    columns = [('X', f'X[{i:d}]') for i in range(X.shape[1])] + [('Y', f'Y[{i:d}]') for i in range(Y.shape[1])]
+    columns = [('X', f'X.{i:d}') for i in range(X.shape[1])] + [('Y', f'Y.{i:d}') for i in range(Y.shape[1])]
     df = pd.DataFrame(np.concatenate((X, Y), axis=1), columns=pd.MultiIndex.from_tuples(columns), dtype=float)
     return Store.from_df(folder=folder, df=df, meta=meta)

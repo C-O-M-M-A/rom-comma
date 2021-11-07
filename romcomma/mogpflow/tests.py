@@ -26,10 +26,11 @@ from __future__ import annotations
 from romcomma import run
 from romcomma.mogpflow import base, kernels, likelihoods, models
 import numpy as np
+import gpflow as gf
 
 def covariance():
     a = np.array([[0.9, -0.5], [-0.5, 0.75]])
-    b = base.Covariance(a)
+    b = base.Variance(a)
     print(b.value)
     print(b.value)
     b._cholesky_diagonal.assign([1.0, 1.0])
@@ -40,13 +41,13 @@ def regression_data():
     data = np.linspace(start=1, stop=50, num=50, dtype='float32').reshape(5, 10).transpose()
     return data[:, :3], data[:, 3:]
 
-def kernel():
-    lengthscales = [1000 * np.ones(3), 2000 * np.ones(3)]
-    variance = 1.0 * np.eye(2)
-    return kernels.RBF(variance, lengthscales)
+def kernel(is_lengthscales_trainable: bool):
+    lengthscales = [0.01 * np.ones(3), 0.03 * np.ones(3)]
+    variance = 0.5 * np.eye(2)
+    return kernels.RBF(variance, lengthscales, is_lengthscales_trainable)
 
 def likelihood():
-    variance = 1.0 * np.eye(2)
+    variance = 0.0001 * np.eye(2)
     return likelihoods.MOGaussian(variance)
 
 
@@ -56,6 +57,17 @@ if __name__ == '__main__':
         X, Y = regression_data()
         print(X)
         print(Y)
-        gp = models.MOGPR((X, Y), kernel(), noise_variance=1.0)
+        gp = models.MOGPR((X, Y), kernel(True), noise_variance=lh.variance.value)
         results = gp.predict_f(X, full_cov=False, full_output_cov=False)
         print(results)
+        results = gp.log_marginal_likelihood()
+        print(results)
+        gp.kernel.is_lengthscales_trainable = True
+        opt = gf.optimizers.Scipy()
+        opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables)
+        results = gp.predict_f(X, full_cov=False, full_output_cov=False)
+        print(gp.log_marginal_likelihood())
+        print(gp.kernel.variance.value)
+        print(gp.likelihood.variance.value)
+        print(results)
+

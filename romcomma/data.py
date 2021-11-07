@@ -46,7 +46,6 @@ class Frame:
 
     @property
     def csv(self) -> Path:
-        """ The csv file."""
         return self._csv
 
     @property
@@ -83,19 +82,17 @@ class Frame:
 
 
 class Store:
-    """ A ``store`` object is defined as a ``store.folder`` containing a ``store.csv`` file and a ``store._meta_json`` file.
+    """ A ``store`` object is defined as a folder containing a ``data.csv`` file and a ``meta.json`` file.
 
     These files specify the global dataset to be analyzed. This dataset must be further split into Folds contained within the Store.
     """
 
     @property
     def folder(self) -> Path:
-        """ The Store folder."""
         return self._folder
 
     @property
     def data(self) -> Frame:
-        """ The Store data."""
         return self._data
 
     @property
@@ -118,11 +115,9 @@ class Store:
 
     @property
     def meta(self) -> dict:
-        """ The Store metadata."""
         return self._meta
 
     def meta_update(self):
-        """ Update __meta__"""
         self._meta.update({'data': {'X_heading': self._data.df.columns.values[0][0],
                                     'Y_heading': self._data.df.columns.values[-1][0]}})
         self._meta['data'].update({'N': self.data.df.shape[0], 'M': self.X.shape[1],
@@ -194,11 +189,6 @@ class Store:
         return K
 
     def fold_folder(self, k: int) -> Path:
-        """ Returns the path containing each fold between 0 and K.
-
-        Args:
-            k: The fold which the function is creating the path for.
-        """
         return self.folder / f'fold.{k:d}'
 
     def Y_split(self):
@@ -231,11 +221,6 @@ class Store:
         CREATE = auto()
 
     def __init__(self, folder: PathLike, **kwargs):
-        """ Initialize Store.
-
-        Args:
-            folder: The location (folder) of the Store.
-        """
         self._folder = Path(folder)
         self._meta_json = self._folder / '__meta__.json'
         self._X_rotation = self._folder / 'X_rotation.csv'
@@ -253,14 +238,7 @@ class Store:
     @classmethod
     @property
     def DEFAULT_META(cls) -> Dict[str, Any]:
-        """ Default meta data for a store."""
         return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'data': {}, 'K': 0, 'shuffle before folding': False}
-
-    @classmethod
-    @property
-    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
-        """ The default options (kwargs) to pass to pandas.read_csv."""
-        return {'skiprows': None, 'index_col': None}
 
     @classmethod
     def from_df(cls, folder: PathLike, df: pd.DataFrame, meta: Dict = DEFAULT_META) -> Store:
@@ -277,6 +255,11 @@ class Store:
         store._data = Frame(store._csv, df)
         store.meta_update()
         return store
+
+    @classmethod
+    @property
+    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
+        return {'skiprows': None, 'index_col': None}
 
     @classmethod
     def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
@@ -312,7 +295,6 @@ class Fold(Store):
 
     @property
     def test_data(self) -> Frame:
-        """ The test_data data."""
         return self._test_data
 
     @property
@@ -342,6 +324,7 @@ class Fold(Store):
 
     @X_rotation.setter
     def X_rotation(self, value: NP.Matrix):
+        """ The rotation matrix applied to the input variables self.X, stored in __X_rotation.csv. Rotations are applied and stored cumulatively."""
         self._X_rotate(self._data, value)
         self._X_rotate(self._test_data, value)
         old_value = self.X_rotation
@@ -406,7 +389,6 @@ class Normalization:
 
     @property
     def frame(self) -> Frame:
-        """ The normalization frame."""
         self._frame = Frame(self.csv) if self._frame is None else self._frame
         return self._frame
 

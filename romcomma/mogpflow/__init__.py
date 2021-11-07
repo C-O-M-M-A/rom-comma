@@ -21,3 +21,6 @@
 
 """ Contains extensions to the GPFlow library."""
 
+from . import kernels
+from . import mean_functions
+from . import models
