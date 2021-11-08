@@ -120,12 +120,16 @@ class MOStationary(AnisotropicStationary, Kernel):
         """
         return self.K_d_apply_variance(self.K_d_unit_variance(d))
 
-    def __init__(self, variance, lengthscales, name='Kernel', active_dims=None):
+    def __call__(self, X, X2, *, full_cov=True, presliced=False):
+        return super().__call__(X, X2, full_cov=True, presliced=False)
+
+    def __init__(self, variance, lengthscales, is_lengthscales_trainable: bool = False, name='Kernel', active_dims=None):
         """ Kernel Constructor.
 
         Args:
             variance: An (L,L) symmetric, positive definite matrix for the signal variance.
             lengthscales: An (L,M) matrix of positive definite lengthscales.
+            is_lengthscales_trainable: Whether the lengthscales of this kernel are trainable.
             name: The name of this kernel.
             active_dims: Which of the input dimensions are used. The default None means all of them.
         """
@@ -137,7 +141,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         self._M = 1 if lengthscales_shape in((),(1,), (1, 1), (self._L,)) else lengthscales_shape[-1]
         lengthscales = tf.reshape(tf.broadcast_to(lengthscales, (self._L, self._M)), (self._L, 1, self._M))
         self.lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + 'Lengthscales')
-        self.is_lengthscales_trainable = False
+        self.is_lengthscales_trainable = is_lengthscales_trainable
         self._validate_ard_active_dims(self.lengthscales[0, 0])
 
 

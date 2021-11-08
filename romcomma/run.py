@@ -141,8 +141,8 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
                     #     module.value.Sobol(gp, semi_norm)
 
 
-def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
-         options: Dict = None, rbf_parameters: Optional[gpr.GP.Parameters] = None):
+# def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
+#          options: Dict = None, rbf_parameters: Optional[gpr.GP.Parameters] = None):
     """ Service routine to recursively run ROMs on the Splits in a Store, the Folds in a Split or Store, and on a single Fold.
 
     Args:
@@ -165,183 +165,183 @@ def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union
         IndexError: If Mx is a list and len(Mu) != len(store.splits).
         FileNotFoundError: If store is not a Fold, and contains neither Splits nor Folds.
     """
-    options = module.value.ROM.DEFAULT_OPTIONS if options is None else options
-    splits = store.splits
-    if splits:
-        if isinstance(Mx, list):
-            if len(Mx) != len(splits):
-                raise IndexError("Mx has {0:d} elements which does not match the number of splits ({1:d}).".format(len(Mx), len(splits)))
-        else:
-            Mx = [Mx] * len(splits)
-        if isinstance(Mu, list):
-            if len(Mu) != len(splits):
-                raise IndexError("Mu has {0:d} elements which does not match the number of splits ({1:d}).".format(len(Mu), len(splits)))
-        else:
-            Mu = [Mu] * len(splits)
-        for split_index, split_dir in splits:
-            split = Store(split_dir)
-            ROMs(module, name, split, source_gp_name, Mu[split_index], Mx[split_index], options, rbf_parameters)
-    elif not isinstance(store, Fold):
-        start_time = time.time()
-        K_range = range(store.meta['K'])
-        if K_range:
-            for k in K_range:
-                ROMs(module, name, Fold(store, k, M=Mx), source_gp_name, Mu, Mx, options, rbf_parameters)
-                print("Fold", k, "has finished")
-        else:
-            raise FileNotFoundError('Cannot construct a GP in a Store ({0:s}) which is not a Fold.'.format(store.folder))
-        elapsed_mins = (time.time() - start_time) / 60
-        print(store.folder.name, "has finished in {:.2f} minutes.".format(elapsed_mins))
-    else:
-        module.value.ROM.from_GP(fold=store, name=name, source_gp_name=source_gp_name, options=options, Mu=Mu,
-                                 rbf_parameters=rbf_parameters)
-
-
-# noinspection PyProtectedMember
-def collect(store: Store, model_name: str, parameters: Parameters, is_split: bool = True) -> Sequence[Path]:
-    """Collect the Parameters of a Model.
-
-        Args:
-            store: The Store containing the global dataset to be analyzed.
-            model_name: The name of the Model where the results are being collected.
-            parameters: An example of the Model parameters that need to be collected.
-            is_split: True or False, whether splits have been used in the Model.
-        Returns: The split directories collected.
-        """
-    parameters = parameters._asdict()
-    final_parameters = parameters.copy()
-    if is_split:
-        final_destination = store.folder / model_name
-        final_destination.mkdir(mode=0o777, parents=True, exist_ok=True)
-        splits = store.splits
-    else:
-        final_destination = None
-        splits = [(None, store.folder)]
-    for param in parameters.keys():
-        for split in splits:
-            split_store = Store(split[-1])
-            K = split_store.meta['K']
-            destination = split_store.folder / model_name
-            destination.mkdir(mode=0o777, parents=True, exist_ok=True)
-            for k in range(K):
-                fold = Fold(split_store, k)
-                source = (fold.folder / model_name) / (param + ".csv")
-                if param == "Theta":
-                    result = Frame(source, **Model.CSV_OPTIONS).df
-                else:
-                    result = Frame(source, **Model.CSV_OPTIONS).df.tail(1)
-                result.insert(0, "Fold", full(result.shape[0], k), True)
-                if k == 0:
-                    parameters[param] = result.copy(deep=True)
-                else:
-                    parameters[param] = concat([parameters[param], result.copy(deep=True)], axis=0, ignore_index=True)
-            frame = Frame(destination / (param + ".csv"), parameters[param])
-            if is_split:
-                result = frame.df
-                result.insert(0, "Split", full(result.shape[0], split[0]), True)
-                if split[0] == 0:
-                    final_parameters[param] = result.copy(deep=True)
-                else:
-                    final_parameters[param] = concat([final_parameters[param], result.copy(deep=True)], axis=0, ignore_index=True)
-        # noinspection PyUnusedLocal
-        frame = Frame(final_destination / (param + ".csv"), final_parameters[param]) if is_split else None
-    return splits
-
-
-def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Sequence[Path]:
-    """Service routine to instantiate the collection of test_data results.
-
-        Args:
-            store: The Store containing the global dataset to be analyzed.
-            model_name: The name of the model where the results are being collected.
-            is_split: True or False, whether splits have been used in the model.
-        Returns: The split directories collected.
-    """
-    final_frame = frame = None
-    if is_split:
-        final_destination = store.folder / model_name
-        final_destination.mkdir(mode=0o777, parents=True, exist_ok=True)
-        split_dirs = store.splits
-    else:
-        final_destination = None
-        split_dirs = [store.folder]
-    for split_dir in split_dirs:
-        split_store = Store(split_dir)
-        K = split_store.meta['K']
-        destination = split_store.folder / model_name
-        destination.mkdir(mode=0o777, parents=True, exist_ok=True)
-        for k in range(K):
-            fold = Fold(split_store, k)
-            source = (fold.folder / model_name) / "test.csv"
-            result = Frame(source).df
-            result.insert(0, "Fold", full(result.shape[0], k), True)
-            std = result.iloc[:, -1]
-            mean = result.iloc[:, -2]
-            out = result.iloc[:, -3]
-            result.iloc[:, -3] = (out - mean) / std
-            if k == 0:
-                frame = Frame(destination / "test.csv", result.copy(deep=True))
-            else:
-                frame.df = concat([frame.df, result.copy(deep=True)], axis=0, ignore_index=False)
-        frame.write()
-        if is_split:
-            split_index = int(split_dir.suffix[1:])
-            result = frame.df
-            rep = dict([(result['Predictive Mean'].columns[0], "Output")])
-            result.rename(columns=rep, level=1, inplace=True)
-            result.insert(0, "Split", full(result.shape[0], split_index), True)
-            result = result.reset_index()
-            if split_index == 0:
-                final_frame = Frame(final_destination / "test.csv", result.copy(deep=True))
-            else:
-                final_frame.df = concat([final_frame.df, result.copy(deep=True)], axis=0, ignore_index=True)
-    if is_split:
-        final_frame.write()
-    return split_dirs
-
-
-def collect_GPs(store: Store, model_name: str, test: bool, sobol: bool, is_split: bool = True, kernelTypeIdentifier: str = "gpy_.ExponentialQuadratic"
-                ) -> Sequence[Path]:
-    """ Collect all the Parameters associated with a GP/Sobol calculation.
-
-    Args:
-        store: The Store containing the global dataset to be analyzed.
-        model_name: The name of the Model where the results are being collected.
-        test: Whether to collect tests or not.
-        sobol: Whether to Sobol indices or not.
-        kernelTypeIdentifier: The KernelTypeIdentifier for the GP.
-        is_split: True or False, whether splits have been used in the Model.
-    Returns: The split directories collected.
-
-    """
-    collect(store, model_name, gpr.GP.DEFAULT_PARAMETERS, is_split)
-    if test:
-        collect_tests(store, model_name, is_split)
-    # if sobol:
-    #     collect(store, model_name + "\\Sobol", base.Sobol.DEFAULT_PARAMETERS, is_split)
-    return collect(store, model_name + "\\Kernel", kernels.Kernel.TypeFromIdentifier(kernelTypeIdentifier).DEFAULT_PARAMETERS, is_split)
-
-
-def rotate_inputs(gb_path: PathLike, X_stand: NP.Matrix) -> NP.Matrix:
-    """ Rotates the standardized inputs by theta to produce the rotated inputs that can be used when predicting with a ROM.
-
-    Args:
-        gb_path: Path to a model.GaussianBundle. The extension of this filename is the number of input dimensions M.
-            An extension of 0 or a missing extension means full order, taking M from the training data.
-        X_stand: The standardized input values - an (N,M) numpy array, consisting of N test_data inputs, each of dimension M.
-    Returns:
-        U: The rotated inputs that can be used for predicting using a ROM - a numpy array of dimensions (N x Mu).
-    """
-    gb_path = Path(gb_path)
-    Mu = int(gb_path.suffix[1:])
-    fold_dir = gb_path.parent
-    sobol = fold_dir / "ROM.optimized" / "sobol"
-    theta_T = transpose(Frame(sobol / "Theta.csv", csv_parameters={'header': [0]}).df.values)
-    k = int(fold_dir.suffix[1:])
-    M = Fold(fold_dir.parent, k, Mu).M +1
-    if 0 < Mu < M:
-        U = X_stand @ theta_T[:, 0:Mu]
-    else:
-        U = X_stand @ theta_T
-    return U
-
+#     options = module.value.ROM.DEFAULT_OPTIONS if options is None else options
+#     splits = store.splits
+#     if splits:
+#         if isinstance(Mx, list):
+#             if len(Mx) != len(splits):
+#                 raise IndexError("Mx has {0:d} elements which does not match the number of splits ({1:d}).".format(len(Mx), len(splits)))
+#         else:
+#             Mx = [Mx] * len(splits)
+#         if isinstance(Mu, list):
+#             if len(Mu) != len(splits):
+#                 raise IndexError("Mu has {0:d} elements which does not match the number of splits ({1:d}).".format(len(Mu), len(splits)))
+#         else:
+#             Mu = [Mu] * len(splits)
+#         for split_index, split_dir in splits:
+#             split = Store(split_dir)
+#             ROMs(module, name, split, source_gp_name, Mu[split_index], Mx[split_index], options, rbf_parameters)
+#     elif not isinstance(store, Fold):
+#         start_time = time.time()
+#         K_range = range(store.meta['K'])
+#         if K_range:
+#             for k in K_range:
+#                 ROMs(module, name, Fold(store, k, M=Mx), source_gp_name, Mu, Mx, options, rbf_parameters)
+#                 print("Fold", k, "has finished")
+#         else:
+#             raise FileNotFoundError('Cannot construct a GP in a Store ({0:s}) which is not a Fold.'.format(store.folder))
+#         elapsed_mins = (time.time() - start_time) / 60
+#         print(store.folder.name, "has finished in {:.2f} minutes.".format(elapsed_mins))
+#     else:
+#         module.value.ROM.from_GP(fold=store, name=name, source_gp_name=source_gp_name, options=options, Mu=Mu,
+#                                  rbf_parameters=rbf_parameters)
+#
+#
+# # noinspection PyProtectedMember
+# def collect(store: Store, model_name: str, parameters: Parameters, is_split: bool = True) -> Sequence[Path]:
+#     """Collect the Parameters of a Model.
+#
+#         Args:
+#             store: The Store containing the global dataset to be analyzed.
+#             model_name: The name of the Model where the results are being collected.
+#             parameters: An example of the Model parameters that need to be collected.
+#             is_split: True or False, whether splits have been used in the Model.
+#         Returns: The split directories collected.
+#         """
+#     parameters = parameters._asdict()
+#     final_parameters = parameters.copy()
+#     if is_split:
+#         final_destination = store.folder / model_name
+#         final_destination.mkdir(mode=0o777, parents=True, exist_ok=True)
+#         splits = store.splits
+#     else:
+#         final_destination = None
+#         splits = [(None, store.folder)]
+#     for param in parameters.keys():
+#         for split in splits:
+#             split_store = Store(split[-1])
+#             K = split_store.meta['K']
+#             destination = split_store.folder / model_name
+#             destination.mkdir(mode=0o777, parents=True, exist_ok=True)
+#             for k in range(K):
+#                 fold = Fold(split_store, k)
+#                 source = (fold.folder / model_name) / (param + ".csv")
+#                 if param == "Theta":
+#                     result = Frame(source, **Model.CSV_OPTIONS).df
+#                 else:
+#                     result = Frame(source, **Model.CSV_OPTIONS).df.tail(1)
+#                 result.insert(0, "Fold", full(result.shape[0], k), True)
+#                 if k == 0:
+#                     parameters[param] = result.copy(deep=True)
+#                 else:
+#                     parameters[param] = concat([parameters[param], result.copy(deep=True)], axis=0, ignore_index=True)
+#             frame = Frame(destination / (param + ".csv"), parameters[param])
+#             if is_split:
+#                 result = frame.df
+#                 result.insert(0, "Split", full(result.shape[0], split[0]), True)
+#                 if split[0] == 0:
+#                     final_parameters[param] = result.copy(deep=True)
+#                 else:
+#                     final_parameters[param] = concat([final_parameters[param], result.copy(deep=True)], axis=0, ignore_index=True)
+#         # noinspection PyUnusedLocal
+#         frame = Frame(final_destination / (param + ".csv"), final_parameters[param]) if is_split else None
+#     return splits
+#
+#
+# def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Sequence[Path]:
+#     """Service routine to instantiate the collection of test_data results.
+#
+#         Args:
+#             store: The Store containing the global dataset to be analyzed.
+#             model_name: The name of the model where the results are being collected.
+#             is_split: True or False, whether splits have been used in the model.
+#         Returns: The split directories collected.
+#     """
+#     final_frame = frame = None
+#     if is_split:
+#         final_destination = store.folder / model_name
+#         final_destination.mkdir(mode=0o777, parents=True, exist_ok=True)
+#         split_dirs = store.splits
+#     else:
+#         final_destination = None
+#         split_dirs = [store.folder]
+#     for split_dir in split_dirs:
+#         split_store = Store(split_dir)
+#         K = split_store.meta['K']
+#         destination = split_store.folder / model_name
+#         destination.mkdir(mode=0o777, parents=True, exist_ok=True)
+#         for k in range(K):
+#             fold = Fold(split_store, k)
+#             source = (fold.folder / model_name) / "test.csv"
+#             result = Frame(source).df
+#             result.insert(0, "Fold", full(result.shape[0], k), True)
+#             std = result.iloc[:, -1]
+#             mean = result.iloc[:, -2]
+#             out = result.iloc[:, -3]
+#             result.iloc[:, -3] = (out - mean) / std
+#             if k == 0:
+#                 frame = Frame(destination / "test.csv", result.copy(deep=True))
+#             else:
+#                 frame.df = concat([frame.df, result.copy(deep=True)], axis=0, ignore_index=False)
+#         frame.write()
+#         if is_split:
+#             split_index = int(split_dir.suffix[1:])
+#             result = frame.df
+#             rep = dict([(result['Predictive Mean'].columns[0], "Output")])
+#             result.rename(columns=rep, level=1, inplace=True)
+#             result.insert(0, "Split", full(result.shape[0], split_index), True)
+#             result = result.reset_index()
+#             if split_index == 0:
+#                 final_frame = Frame(final_destination / "test.csv", result.copy(deep=True))
+#             else:
+#                 final_frame.df = concat([final_frame.df, result.copy(deep=True)], axis=0, ignore_index=True)
+#     if is_split:
+#         final_frame.write()
+#     return split_dirs
+#
+#
+# def collect_GPs(store: Store, model_name: str, test: bool, sobol: bool, is_split: bool = True, kernelTypeIdentifier: str = "gpy_.ExponentialQuadratic"
+#                 ) -> Sequence[Path]:
+#     """ Collect all the Parameters associated with a GP/Sobol calculation.
+#
+#     Args:
+#         store: The Store containing the global dataset to be analyzed.
+#         model_name: The name of the Model where the results are being collected.
+#         test: Whether to collect tests or not.
+#         sobol: Whether to Sobol indices or not.
+#         kernelTypeIdentifier: The KernelTypeIdentifier for the GP.
+#         is_split: True or False, whether splits have been used in the Model.
+#     Returns: The split directories collected.
+#
+#     """
+#     collect(store, model_name, gpr.GP.DEFAULT_PARAMETERS, is_split)
+#     if test:
+#         collect_tests(store, model_name, is_split)
+#     # if sobol:
+#     #     collect(store, model_name + "\\Sobol", base.Sobol.DEFAULT_PARAMETERS, is_split)
+#     return collect(store, model_name + "\\Kernel", kernels.Kernel.TypeFromIdentifier(kernelTypeIdentifier).DEFAULT_PARAMETERS, is_split)
+#
+#
+# def rotate_inputs(gb_path: PathLike, X_stand: NP.Matrix) -> NP.Matrix:
+#     """ Rotates the standardized inputs by theta to produce the rotated inputs that can be used when predicting with a ROM.
+#
+#     Args:
+#         gb_path: Path to a model.GaussianBundle. The extension of this filename is the number of input dimensions M.
+#             An extension of 0 or a missing extension means full order, taking M from the training data.
+#         X_stand: The standardized input values - an (N,M) numpy array, consisting of N test_data inputs, each of dimension M.
+#     Returns:
+#         U: The rotated inputs that can be used for predicting using a ROM - a numpy array of dimensions (N x Mu).
+#     """
+#     gb_path = Path(gb_path)
+#     Mu = int(gb_path.suffix[1:])
+#     fold_dir = gb_path.parent
+#     sobol = fold_dir / "ROM.optimized" / "sobol"
+#     theta_T = transpose(Frame(sobol / "Theta.csv", csv_parameters={'header': [0]}).df.values)
+#     k = int(fold_dir.suffix[1:])
+#     M = Fold(fold_dir.parent, k, Mu).M +1
+#     if 0 < Mu < M:
+#         U = X_stand @ theta_T[:, 0:Mu]
+#     else:
+#         U = X_stand @ theta_T
+#     return U
+#

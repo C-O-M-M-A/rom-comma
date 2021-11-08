@@ -33,8 +33,6 @@ OneOrMoreInts = Union[int, Sequence[int]]
 ZeroOrMoreInts = Optional[OneOrMoreInts]
 OneOrMoreFloats = Union[float, Sequence[float]]
 ZeroOrMoreFloats = Optional[OneOrMoreFloats]
-Module = type(np)
-
 PathLike = Union[str, Path]
 
 

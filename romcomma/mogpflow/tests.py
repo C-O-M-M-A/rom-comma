@@ -44,10 +44,10 @@ def regression_data():
     data = np.linspace(start=1, stop=50, num=50, dtype='float32').reshape(5, 10).transpose()
     return data[:, :3], data[:, 3:]
 
-def kernel():
-    lengthscales = [100.0 * np.ones(3), 200.0 * np.ones(3)]
+def kernel(is_lengthscales_trainable: bool):
+    lengthscales = [0.01 * np.ones(3), 0.03 * np.ones(3)]
     variance = 0.5 * np.eye(2)
-    return kernels.RBF(variance, lengthscales)
+    return kernels.RBF(variance, lengthscales, is_lengthscales_trainable)
 
 def likelihood():
     variance = 0.0001 * np.eye(2)
@@ -60,13 +60,17 @@ if __name__ == '__main__':
         X, Y = regression_data()
         print(X)
         print(Y)
-        gp = models.MOGPR((X, Y), kernel(), likelihood_variance=lh.variance.value)
+        gp = models.MOGPR((X, Y), kernel(True), likelihood_variance=lh.variance.value)
         results = gp.predict_f(X, full_cov=False, full_output_cov=False)
         print(results)
         results = gp.log_marginal_likelihood()
         print(results)
-        # opt = gf.optimizers.Scipy()
-        # opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables)
-        # results = gp.predict_f(X, full_cov=False, full_output_cov=False)
-        # print(results)
+        gp.kernel.is_lengthscales_trainable = True
+        opt = gf.optimizers.Scipy()
+        opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables)
+        results = gp.predict_f(X, full_cov=False, full_output_cov=False)
+        print(gp.log_marginal_likelihood())
+        print(gp.kernel.variance.value)
+        print(gp.likelihood.variance.value)
+        print(results)
 
