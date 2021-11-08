@@ -63,6 +63,7 @@ def Context(name: str, device: str = '', **kwargs):
         **kwargs: Is passed straight to the implementation GPFlow manager. In particular ``float=float32`` sets the dtype for tensorflow ops.
     """
     with Timing(name):
+        tf.config.set_visible_devices([], 'GPU')
         kwargs = {'float': 'float64'} | kwargs
         print(' using GPFlow(' + ', '.join([f'{k}={v!r}' for k, v in kwargs.items()]), end=')')
         device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]

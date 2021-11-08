@@ -56,11 +56,6 @@ class MOStationary(AnisotropicStationary, Kernel):
         return self._M
 
     @property
-    def covariance(self):
-        """ The covariance matrix as a mogpflow.base.Variance object."""
-        return self.variance
-
-    @property
     def lengthscales_neat(self):
         """ The kernel lengthscales as an (L,M) matrix."""
         return tf.reshape(self.lengthscales, (self._L, self._M))
@@ -81,9 +76,9 @@ class MOStationary(AnisotropicStationary, Kernel):
             X: An (N,M) Tensor.
         Returns: An (L, N, L, N) Tensor.
         """
-        n = tf.shape(X)[-2]
-        # assert tf.rank(X) == 2, f'mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
-        return tf.broadcast_to(self.variance.variance, (self._L, n, self._L, n))
+        N = tf.shape(X)[-2]
+        tf.assert_equal(tf.rank(X), 2, f'mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.')
+        return self.variance.broadcast(N)
 
     def K_unit_variance(self, X, X2=None):
         """ The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.
@@ -114,7 +109,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         """
         # assert tf.rank(K_d_unit_variance) == 4, f'mogpflow.kernels.MOStationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
         #                                                  f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.'
-        return self.variance.variance * K_d_unit_variance
+        return self.variance.value_to_broadcast * K_d_unit_variance
 
     def K_d(self, d):
         """ The kernel.

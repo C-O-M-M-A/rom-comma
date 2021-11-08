@@ -28,6 +28,8 @@ from gpflow.utilities import positive
 from gpflow.models.util import data_input_to_tensor
 import tensorflow as tf
 
+from romcomma.typing_ import *
+
 
 class Variance(Module):
     """ A non-diagonal Variance Matrix."""
@@ -35,16 +37,19 @@ class Variance(Module):
     DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND = 1e-3
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple[int, int]:
         """ Returns (L,L), which is the shape of self.value and self.cholesky."""
         return self._shape
 
     @property
-    def cholesky(self):
+    def _c_l_t(self) -> TF.Matrix:
         """ The (lower triangular) Cholesky decomposition of the covariance matrix."""
-        result = tf.RaggedTensor.from_row_lengths(self._cholesky_lower_triangle, self._row_lengths).to_tensor(default_value=0, shape=self._shape)
-        result = tf.linalg.set_diag(result, self._cholesky_diagonal)
-        return result
+        return tf.RaggedTensor.from_row_lengths(self._cholesky_lower_triangle, self._row_lengths).to_tensor(default_value=0, shape=self._shape)
+
+    @property
+    def cholesky(self) -> TF.Matrix:
+        """ The (lower triangular) Cholesky decomposition of the covariance matrix."""
+        return tf.linalg.set_diag(self._c_l_t, self._cholesky_diagonal)
 
     @property
     def value(self):
@@ -52,9 +57,18 @@ class Variance(Module):
         return tf.matmul(self.cholesky, self.cholesky, transpose_b=True)
 
     @property
-    def variance(self):
+    def value_to_broadcast(self):
         """ The covariance matrix, shape (L,1,L,1) ready to broadcast."""
-        return tf.reshape(self.value, self._variance_shape)
+        return tf.reshape(self.value, self._broadcast_shape)
+
+    def value_times_eye(self, N: int) -> TF.Tensor4:
+        """ The cartesian product variance[:L, :L] * eye[:N, :N], transposed.
+
+        Args:
+            N: The dimension of the identity matrix we are multiplying by.
+        Returns: An [:L, :N, :L, :N] Tensor, after transposition.
+        """
+        return self.value_to_broadcast * tf.eye(N)[tf.newaxis, :, tf.newaxis, :]
 
     def __init__(self, value, name: str = 'Variance', cholesky_diagonal_lower_bound: float = DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND):
         """ Construct a non-diagonal covariance matrix. Mutable only through it's properties cholesky_diagonal and cholesky_lower_triangle.
@@ -66,7 +80,7 @@ class Variance(Module):
         super().__init__(name=name)
         value = data_input_to_tensor(value)
         self._shape = (value.shape[-1], value.shape[-1])
-        self._variance_shape = (value.shape[-1], 1, value.shape[-1], 1)
+        self._broadcast_shape = (value.shape[-1], 1, value.shape[-1], 1)
         if value.shape != self._shape:
             raise ValueError('Variance must have shape (L,L).')
 

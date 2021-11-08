@@ -28,6 +28,8 @@ from romcomma.mogpflow import base, kernels, likelihoods, models
 import numpy as np
 import gpflow as gf
 
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 def covariance():
     a = np.array([[0.9, -0.5], [-0.5, 0.75]])
@@ -43,12 +45,12 @@ def regression_data():
     return data[:, :3], data[:, 3:]
 
 def kernel():
-    lengthscales = [1 * np.ones(3), 1 * np.ones(3)]
+    lengthscales = [100.0 * np.ones(3), 200.0 * np.ones(3)]
     variance = 0.5 * np.eye(2)
     return kernels.RBF(variance, lengthscales)
 
 def likelihood():
-    variance = 0.001 * np.eye(2)
+    variance = 0.0001 * np.eye(2)
     return likelihoods.MOGaussian(variance)
 
 
@@ -58,13 +60,13 @@ if __name__ == '__main__':
         X, Y = regression_data()
         print(X)
         print(Y)
-        gp = models.MOGPR((X, Y), kernel(), likelihood_variance=1.0)
+        gp = models.MOGPR((X, Y), kernel(), likelihood_variance=lh.variance.value)
         results = gp.predict_f(X, full_cov=False, full_output_cov=False)
         print(results)
         results = gp.log_marginal_likelihood()
         print(results)
-        opt = gf.optimizers.Scipy()
-        opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables)
-        results = gp.predict_f(X, full_cov=False, full_output_cov=False)
-        print(results)
+        # opt = gf.optimizers.Scipy()
+        # opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables)
+        # results = gp.predict_f(X, full_cov=False, full_output_cov=False)
+        # print(results)
 

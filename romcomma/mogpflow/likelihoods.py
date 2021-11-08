@@ -63,9 +63,8 @@ class MOGaussian(QuadratureLikelihood):
         return self.latent_dim, self.N(data)
 
     def add_to(self, Fvar) -> tf.Tensor:
-        # assert tf.rank(Fvar) == 2, f'mogpflow.Likelihood only accepts Fvar of rank 2 at present, provided Fvar of rank {tf.rank(Fvar)}.'
-        split_axis_shape = self.split_axis_shape(Fvar)
-        noise = tf.broadcast_to(self.variance.variance, split_axis_shape * 2)   # noise.shape = (L,N,L,N)
+        tf.assert_equal(tf.rank(Fvar), 2, f'mogpflow.Likelihood only accepts Fvar of rank 2 at present, provided Fvar of rank {tf.rank(Fvar)}.')
+        noise = self.variance.value_times_eye(self.N(Fvar))
         return Fvar + tf.reshape(noise, Fvar.shape)
 
     def _log_prob(self, F, Y):
