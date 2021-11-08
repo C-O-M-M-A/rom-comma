@@ -23,7 +23,7 @@
 
 from __future__ import annotations
 
-from romcomma.mogpflow.base import Covariance
+from romcomma.mogpflow.base import Variance
 from abc import abstractmethod
 from gpflow.config import default_float
 from gpflow.kernels import Kernel, AnisotropicStationary
@@ -57,8 +57,8 @@ class MOStationary(AnisotropicStationary, Kernel):
 
     @property
     def covariance(self):
-        """ The covariance matrix as a mogpflow.base.Covariance object."""
-        return self._covariance
+        """ The covariance matrix as a mogpflow.base.Variance object."""
+        return self.variance
 
     @property
     def lengthscales_neat(self):
@@ -83,7 +83,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         """
         n = tf.shape(X)[-2]
         # assert tf.rank(X) == 2, f'mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape={tf.shape(X)} does not obey.'
-        return tf.broadcast_to(self._covariance.variance, (self._L, n, self._L, n))
+        return tf.broadcast_to(self.variance.variance, (self._L, n, self._L, n))
 
     def K_unit_variance(self, X, X2=None):
         """ The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.
@@ -114,7 +114,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         """
         # assert tf.rank(K_d_unit_variance) == 4, f'mogpflow.kernels.MOStationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
         #                                                  f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.'
-        return self._covariance.variance * K_d_unit_variance
+        return self.variance.variance * K_d_unit_variance
 
     def K_d(self, d):
         """ The kernel.
@@ -125,7 +125,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         """
         return self.K_d_apply_variance(self.K_d_unit_variance(d))
 
-    def __init__(self, variance, lengthscales, name='kernel', active_dims=None):
+    def __init__(self, variance, lengthscales, name='Kernel', active_dims=None):
         """ Kernel Constructor.
 
         Args:
@@ -135,13 +135,13 @@ class MOStationary(AnisotropicStationary, Kernel):
             active_dims: Which of the input dimensions are used. The default None means all of them.
         """
         super(AnisotropicStationary, self).__init__(active_dims=active_dims, name=name)  # Do not call gf.kernels.AnisotropicStationary.__init__()!
-        self._covariance = Covariance(value=np.atleast_2d(variance), name=name + '.covariance')
-        self._L = self._covariance.shape[0]
+        self.variance = Variance(value=np.atleast_2d(variance), name=name + 'Variance')
+        self._L = self.variance.shape[0]
         lengthscales = data_input_to_tensor(lengthscales)
         lengthscales_shape = tuple(tf.shape(lengthscales).numpy())
         self._M = 1 if lengthscales_shape in((),(1,), (1, 1), (self._L,)) else lengthscales_shape[-1]
         lengthscales = tf.reshape(tf.broadcast_to(lengthscales, (self._L, self._M)), (self._L, 1, self._M))
-        self.lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + '.lengthscales')
+        self.lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + 'Lengthscales')
         self.is_lengthscales_trainable = False
         self._validate_ard_active_dims(self.lengthscales[0, 0])
 

@@ -46,7 +46,7 @@ def multivariate_gaussian_noise(N: int, variance: NP.MatrixLike) -> NP.Matrix:
 
     Args:
         N: Number of samples (datapoints).
-        variance: Covariance matrix. The given matrix must be symmetric positive-definite.
+        variance: Variance matrix. The given matrix must be symmetric positive-definite.
             A vector is interpreted as a diagonal matrix.
     Returns: An (N,L) noise matrix, where (L,L) is the shape of `variance`.
     """

@@ -23,14 +23,14 @@
 
 from __future__ import annotations
 
-from gpflow import Parameter
+from gpflow import Parameter, Module
 from gpflow.utilities import positive
 from gpflow.models.util import data_input_to_tensor
 import tensorflow as tf
 
 
-class Covariance:
-    """ A non-diagonal Covariance Matrix."""
+class Variance(Module):
+    """ A non-diagonal Variance Matrix."""
 
     DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND = 1e-3
 
@@ -56,18 +56,19 @@ class Covariance:
         """ The covariance matrix, shape (L,1,L,1) ready to broadcast."""
         return tf.reshape(self.value, self._variance_shape)
 
-    def __init__(self, value, name: str = 'Covariance', cholesky_diagonal_lower_bound: float = DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND):
+    def __init__(self, value, name: str = 'Variance', cholesky_diagonal_lower_bound: float = DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND):
         """ Construct a non-diagonal covariance matrix. Mutable only through it's properties cholesky_diagonal and cholesky_lower_triangle.
 
         Args:
             value: A symmetric, positive definite matrix, expressed in tensorflow or numpy.
             cholesky_diagonal_lower_bound: Lower bound on the diagonal of the Cholesky decomposition.
         """
+        super().__init__(name=name)
         value = data_input_to_tensor(value)
         self._shape = (value.shape[-1], value.shape[-1])
         self._variance_shape = (value.shape[-1], 1, value.shape[-1], 1)
         if value.shape != self._shape:
-            raise ValueError('Covariance must have shape (L,L).')
+            raise ValueError('Variance must have shape (L,L).')
 
         cholesky = tf.linalg.cholesky(value)
 

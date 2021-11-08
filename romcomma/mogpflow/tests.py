@@ -31,7 +31,7 @@ import gpflow as gf
 
 def covariance():
     a = np.array([[0.9, -0.5], [-0.5, 0.75]])
-    b = base.Covariance(a)
+    b = base.Variance(a)
     print(b.value)
     print(b.value)
     b._cholesky_diagonal.assign([1.0, 1.0])
@@ -43,12 +43,12 @@ def regression_data():
     return data[:, :3], data[:, 3:]
 
 def kernel():
-    lengthscales = [1000 * np.ones(3), 2000 * np.ones(3)]
-    variance = 1.0 * np.eye(2)
+    lengthscales = [1 * np.ones(3), 1 * np.ones(3)]
+    variance = 0.5 * np.eye(2)
     return kernels.RBF(variance, lengthscales)
 
 def likelihood():
-    variance = 1.0 * np.eye(2)
+    variance = 0.001 * np.eye(2)
     return likelihoods.MOGaussian(variance)
 
 
@@ -58,7 +58,7 @@ if __name__ == '__main__':
         X, Y = regression_data()
         print(X)
         print(Y)
-        gp = models.MOGPR((X, Y), kernel(), noise_variance=1.0)
+        gp = models.MOGPR((X, Y), kernel(), likelihood_variance=1.0)
         results = gp.predict_f(X, full_cov=False, full_output_cov=False)
         print(results)
         results = gp.log_marginal_likelihood()

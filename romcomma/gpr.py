@@ -54,13 +54,13 @@ class GPInterface(Model):
                 """ Abstraction of the parameters of a GP.
 
                 Attributes:
-                    noise_variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
+                    likelihood_variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
                     kernel (NP.Matrix): A numpy [[str]] identifying the type of Kernel, as returned by gp.kernel.TypeIdentifier(). This is never set externally.
                         The kernel parameter, when provided, must be a [[Kernel.Parameters]] storing the desired kernel parameters.
                         The kernel is constructed and its type inferred from these parameters.
                     log_marginal_likelihood (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
                 """
-                noise_variance: NP.Matrix = atleast_2d(0.9)
+                likelihood_variance: NP.Matrix = atleast_2d(0.9)
                 kernel: NP.Matrix = atleast_2d(None)
                 log_marginal_likelihood: NP.Matrix = atleast_2d(1.0)
             return Values
@@ -185,7 +185,7 @@ class GPInterface(Model):
         Returns: ``self``, for chaining calls.
         """
         target_shape = (1, self._L) if is_independent else (self._L, self._L)
-        self._parameters.broadcast_value(model_name=self.folder, field="noise_variance", target_shape=target_shape, is_diagonal=is_independent, folder=folder)
+        self._parameters.broadcast_value(model_name=self.folder, field="likelihood_variance", target_shape=target_shape, is_diagonal=is_independent, folder=folder)
         self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
 
     @abstractmethod
@@ -233,7 +233,7 @@ class GP(GPInterface):
 
     @property
     def implementation(self) -> Tuple[Any, ...]:
-        return tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None, noise_variance=self.params.noise_variance[0, l])
+        return tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None, noise_variance=self.params.likelihood_variance[0, l])
                      for l, kernel in enumerate(self._kernel.implementation))
 
     def optimize(self, method: str = 'L-BFGS-B', **kwargs):
@@ -251,7 +251,7 @@ class GP(GPInterface):
         options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
                                                   for gp in self._implementation))})
         self._write_options(options)
-        self.parameters = self._parameters.replace(noise_variance=tuple(gp.likelihood.variance.numpy() for gp in self._implementation),
+        self.parameters = self._parameters.replace(likelihood_variance=tuple(gp.likelihood.variance.numpy() for gp in self._implementation),
                                                    log_marginal_likelihood=tuple(gp.log_marginal_likelihood()
                                                                                  for gp in self._implementation)).write()
         self._kernel.parameters = self._kernel.parameters.replace(variance=tuple(gp.kernel.variance.numpy()

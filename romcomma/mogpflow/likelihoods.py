@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 from typing import Tuple
-from romcomma.mogpflow.base import Covariance
+from romcomma.mogpflow.base import Variance
 
 from gpflow.config import default_float
 from gpflow.likelihoods import QuadratureLikelihood
@@ -41,7 +41,7 @@ class MOGaussian(QuadratureLikelihood):
 
     Very small uncertainties can lead to numerical instability during the
     optimization process. A lower bound of 1e-3 is therefore imposed on the
-    likelihood Covariance.cholesky_diagonal elements by default.
+    likelihood Variance.cholesky_diagonal elements by default.
     """
 
     def __init__(self, variance, **kwargs):
@@ -51,13 +51,8 @@ class MOGaussian(QuadratureLikelihood):
             variance: The covariance matrix of the likelihood, expressed in tensorflow or numpy. Is checked for symmetry and positive definiteness.
             **kwargs: Keyword arguments forwarded to :class:`Likelihood`.
         """
-        self._covariance = Covariance(variance)
-        super().__init__(*(self._covariance.shape))
-
-    @property
-    def covariance(self):
-        """ A mogpflow.base.Covariance, which is the covariance matrix of the likelihood distribution."""
-        return self._covariance
+        self.variance = Variance(variance, name='LikelihoodVariance')
+        super().__init__(*(self.variance.shape))
 
     def N(self, data) -> int:
         """ The number of datapoints in data, assuming the last 2 dimensions have been concatenated to LN. """
@@ -67,29 +62,28 @@ class MOGaussian(QuadratureLikelihood):
         """ Split the final data axis length LN into the pair (L,N). """
         return self.latent_dim, self.N(data)
 
-    def add_variance(self, Fvar) -> tf.Tensor:
+    def add_to(self, Fvar) -> tf.Tensor:
         # assert tf.rank(Fvar) == 2, f'mogpflow.Likelihood only accepts Fvar of rank 2 at present, provided Fvar of rank {tf.rank(Fvar)}.'
         split_axis_shape = self.split_axis_shape(Fvar)
-        noise = tf.broadcast_to(self._covariance.value[..., tf.newaxis], split_axis_shape[:-1] + split_axis_shape)   # noise.shape = (L,L,N)
-        noise = tf.transpose(tf.linalg.diag(noise, k=0), [0, 2, 1, 3])                              # noise.shape = (L,N,L,N)
+        noise = tf.broadcast_to(self.variance.variance, split_axis_shape * 2)   # noise.shape = (L,N,L,N)
         return Fvar + tf.reshape(noise, Fvar.shape)
 
     def _log_prob(self, F, Y):
         return tf.reduce_sum(multivariate_normal(tf.reshape(Y, self.split_axis_shape(Y)),
                                                  tf.reshape(F, self.split_axis_shape(F)),
-                                                 self._covariance.cholesky))
+                                                 self.variance.cholesky))
 
     def _conditional_mean(self, F):  # pylint: disable=R0201
         return tf.identity(F)
 
     def _conditional_variance(self, F):
-        return tf.reshape(tf.broadcast_to(self._covariance.variance, self.split_axis_shape(F) * 2), F.shape * 2)
+        return tf.reshape(tf.broadcast_to(self.variance.variance, self.split_axis_shape(F) * 2), F.shape * 2)
 
     def _predict_mean_and_var(self, Fmu, Fvar):
-        return tf.identity(Fmu), self.add_variance(Fvar)
+        return tf.identity(Fmu), self.add_to(Fvar)
 
     def _predict_log_density(self, Fmu, Fvar, Y):
-        return tf.reduce_sum(multivariate_normal(Y, Fmu, tf.linalg.cholesky(self.add_variance(Fvar))))
+        return tf.reduce_sum(multivariate_normal(Y, Fmu, tf.linalg.cholesky(self.add_to(Fvar))))
 
     def _variational_expectations(self, Fmu, Fvar, Y):
         tr = tf.linalg.cholesky_solve(tf.linalg.cholesky(self._conditional_variance(Fmu)), Fvar)

@@ -82,7 +82,7 @@ class FunctionWithMeta:
         self.parameters = kwargs.copy()
 
 
-def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, noise_variance:NP.MatrixLike, folder: PathLike,
+def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_variance:NP.MatrixLike, folder: PathLike,
            sampling_method: Callable[[int, int, Any], NP.Matrix] = sampling.latin_hypercube, **kwargs) -> Store:
     """ Store a sample of test function responses.
 
@@ -90,17 +90,17 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, noise_variance:NP
         functions: A tuple of test functions, of length L.
         N: The number of samples (datapoints), N &gt 0.
         M: The input dimensionality, M &ge 0.
-        noise_variance: A noise (co)variance of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
-            Used to generate N random samples of Gaussian noise ~ N(0, noise_variance).
+        likelihood_variance: A noise (co)variance of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
+            Used to generate N random samples of Gaussian noise ~ N(0, likelihood_variance).
         folder: The Store.folder to create and store the results in.
         sampling_method: A Callable sampling_method(N, M, **kwargs) -> X, which returns an (N,M) matrix.
         kwargs: Passed directly to sampling_method.
     Returns: A store containing N rows of M input columns and L output columns. The output is f(X) + noise.
     """
     X = sampling_method(N, M, **kwargs)
-    noise_variance = np.atleast_2d(noise_variance)
-    origin_meta = {'sampling_method': sampling_method.__name__, 'noise_variance': noise_variance.tolist()}
-    noise = sampling.multivariate_gaussian_noise(N, noise_variance)
+    likelihood_variance = np.atleast_2d(likelihood_variance)
+    origin_meta = {'sampling_method': sampling_method.__name__, 'likelihood_variance': likelihood_variance.tolist()}
+    noise = sampling.multivariate_gaussian_noise(N, likelihood_variance)
     return apply(functions, X, noise, folder, origin_meta=origin_meta)
 
 
