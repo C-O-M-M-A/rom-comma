@@ -76,7 +76,7 @@ class MOGaussian(QuadratureLikelihood):
         return tf.identity(F)
 
     def _conditional_variance(self, F):
-        return tf.reshape(tf.broadcast_to(self.variance.variance, self.split_axis_shape(F) * 2), F.shape * 2)
+        return self.variance.value_times_eye(self.N(F))
 
     def _predict_mean_and_var(self, Fmu, Fvar):
         return tf.identity(Fmu), self.add_to(Fvar)

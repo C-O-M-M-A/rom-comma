@@ -26,7 +26,7 @@ from __future__ import annotations
 from romcomma.typing_ import *
 from abc import abstractmethod
 from romcomma.base import Parameters, Model
-from numpy import atleast_2d
+import numpy as np
 import gpflow as gf
 
 
@@ -34,7 +34,7 @@ class Kernel(Model):
     """ Abstract interface to a Kernel. Essentially this is the code contract with the GP interface."""
 
     class Parameters(Parameters):
-        """ Abstraction of the parameters of a Kernel."""
+        """ The Parameters set of a Kernel."""
 
         @classmethod
         @property
@@ -42,7 +42,7 @@ class Kernel(Model):
             """ The NamedTuple underpinning this Parameters set."""
 
             class Values(NamedTuple):
-                """ Abstraction of the parameters of a Kernel.
+                """ The parameters set of a Kernel.
 
                 Attributes:
                     variance: An (L,L) or (1,L) Matrix of kernel variances. (1,L) represents a diagonal (L,L) variance matrix.
@@ -50,8 +50,8 @@ class Kernel(Model):
                     lengthscales: A (V,M) Matrix of anisotropic lengthscales, or a (V,1) Vector of isotropic lengthscales,
                         where V=1 or V=variance.shape[1]*(variance.shape[0]+ 1)/2.
                 """
-                variance: NP.Matrix = atleast_2d(0.1)
-                lengthscales: NP.Matrix = atleast_2d(0.2)
+                variance: NP.Matrix = np.atleast_2d(0.1)
+                lengthscales: NP.Matrix = np.atleast_2d(0.2)
 
             return Values
 

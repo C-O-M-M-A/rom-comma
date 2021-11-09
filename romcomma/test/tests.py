@@ -49,7 +49,7 @@ def rotate_all_folds(store: Store, rotation: NP.Matrix):
 def run_gps(name, function_names: Sequence[str], N: int, likelihood_variance: [float], random: bool, M: int = 5, K: int = 2):
     if isinstance(function_names, str):
         function_names = [function_names]
-    f = tuple((functions.FunctionWithMeta.DEFAULTS[function_name] for function_name in function_names))
+    f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
     store_folder = '.'.join(function_names) + f'.{M:d}.{sum(likelihood_variance)/len(likelihood_variance):.3f}.{N:d}'
     if random:
         rotation = scipy.stats.ortho_group.rvs(M)

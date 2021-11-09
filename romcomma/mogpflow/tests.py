@@ -28,9 +28,6 @@ from romcomma.mogpflow import base, kernels, likelihoods, models
 import numpy as np
 import gpflow as gf
 
-import os
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
 def covariance():
     a = np.array([[0.9, -0.5], [-0.5, 0.75]])
     b = base.Variance(a)
