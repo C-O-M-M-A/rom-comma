@@ -28,7 +28,7 @@ from abc import abstractmethod
 from romcomma.base import Parameters, Model
 import numpy as np
 import gpflow as gf
-
+import romcomma.mogpflow as mf
 
 class Kernel(Model):
     """ Abstract interface to a Kernel. Essentially this is the code contract with the GP interface."""
@@ -54,12 +54,6 @@ class Kernel(Model):
                 lengthscales: NP.Matrix = np.atleast_2d(0.2)
 
             return Values
-
-    @classmethod
-    @property
-    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
-        """ **Do not use, this function is merely an interface requirement. **"""
-        return {'A kernel has no use for optimizer options, only its parent GP does.': None}
 
     @classmethod
     @property
@@ -108,7 +102,7 @@ class Kernel(Model):
     @property
     @abstractmethod
     def implementation(self) -> Tuple[Any, ...]:
-        """ The implementation in_??? version of this Kernel, for use in the in_??? GP.
+        """ The implementation of this Kernel, for use in GP.implementation.
             If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
@@ -133,19 +127,7 @@ class Kernel(Model):
         return self
 
     def calculate(self):
-        """ Calculate the kernel."""
         pass
-
-    def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
-        """ **Do not use, this function is merely an interface requirement. **
-
-        Args:
-            method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
-            options: Dict of implementation-dependent optimizer options. options = None indicates that options should be read from JSON file.
-        Raises:
-            NotImplementedError:
-        """
-        raise NotImplementedError('A kernel cannot be implemented.')
 
     def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
         """ Construct a Kernel. This must be called as a matter of priority by all implementations.
@@ -171,12 +153,7 @@ class RBF(Kernel):
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
         if self.params.variance.shape[0] == 1:
-            ard = (self.params.lengthscales.shape[1] == 1)
-            results = tuple(gf.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[l])
+            return tuple(gf.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[l])
                             for l in range(self.params.variance.shape[1]))
-            # for result in results[:-1]:
-            #     gpflow.set_trainable(result, False)
         else:
-            raise NotImplementedError(f'Kernel.RBF is not implemented_in_gpflow for variance.shape={self.params.variance.shape}, ' +
-                                      f'only for variance.shape=(1,{self.params.variance.shape[1]}) using independent gps.')
-        return results
+            return (mf.kernels.RBF(variance=self.params.variance, lengthscales=self.params.lengthscales), )

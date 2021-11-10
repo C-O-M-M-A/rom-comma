@@ -131,28 +131,27 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         perm = tuple(reversed(range(tf.rank(f_var))))
         return tf.transpose(f_mean), tf.transpose(f_var, perm)
 
-    def __init__(self, data: RegressionData, kernel: kernels.MOStationary, mean_function: Optional[MOMeanFunction] = None, likelihood_variance: float = 1.0):
+    def __init__(self, data: RegressionData, kernel: kernels.MOStationary, mean_function: Optional[MOMeanFunction] = None, noise_variance: float = 1.0):
         """
 
         Args:
             data: Tuple[InputData, OutputData], which determines L, M and N. Both InputData and OutputData must be of rank 2.
             kernel: Must be well-formed, with an (L,L) variance and an (L,M) lengthscales matrix.
             mean_function: Defaults to Zero.
-            likelihood_variance: Broadcast to (diagonal) (L,L) if necessary.
+            noise_variance: Broadcast to (diagonal) (L,L) if necessary.
         """
-        self._X = data_input_to_tensor(data[0])
+        self._X, self._Y = self.data = data_input_to_tensor(data)
         if (rank := tf.rank(self._X)) != (required_rank := 2):
             raise IndexError(f'X should be of rank {required_rank} instead of {rank}.')
         self._N, self._M = self._X.shape
-        Y = data_input_to_tensor(data[1])
-        self._L = Y.shape[-1]
-        if (shape := Y.shape) != (required_shape := (self._N, self._L)):
+        self._L = self._Y.shape[-1]
+        if (shape := self._Y.shape) != (required_shape := (self._N, self._L)):
             raise IndexError(f'Y.shape should be {required_shape} instead of {shape}.')
-        self._Y = tf.reshape(tf.transpose(Y), [-1, 1])   # self_Y is now concatenated into an (LN,)-vector
-        if tf.shape(likelihood_variance).numpy != (self._L, self._L):
-            likelihood_variance = tf.broadcast_to(data_input_to_tensor(likelihood_variance), (self._L, self._L))
-            likelihood_variance = tf.linalg.band_part(likelihood_variance, 0, 0)
-        likelihood = likelihoods.MOGaussian(likelihood_variance)
+        self._Y = tf.reshape(tf.transpose(self._Y), [-1, 1])   # self_Y is now concatenated into an (LN,)-vector
+        if tf.shape(noise_variance).numpy != (self._L, self._L):
+            noise_variance = tf.broadcast_to(data_input_to_tensor(noise_variance), (self._L, self._L))
+            noise_variance = tf.linalg.band_part(noise_variance, 0, 0)
+        likelihood = likelihoods.MOGaussian(noise_variance)
         if mean_function is None:
             mean_function = MOMeanFunction(self._L)
         super().__init__(kernel, likelihood, mean_function, num_latent_gps=1)

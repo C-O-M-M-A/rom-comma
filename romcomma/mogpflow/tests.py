@@ -57,7 +57,7 @@ if __name__ == '__main__':
         X, Y = regression_data()
         print(X)
         print(Y)
-        gp = models.MOGPR((X, Y), kernel(True), likelihood_variance=lh.variance.value)
+        gp = models.MOGPR((X, Y), kernel(True), noise_variance=lh.variance.value)
         results = gp.predict_f(X, full_cov=False, full_output_cov=False)
         print(results)
         results = gp.log_marginal_likelihood()

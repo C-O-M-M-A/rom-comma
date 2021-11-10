@@ -35,9 +35,38 @@ from romcomma.base import Parameters, Model
 from romcomma. kernels import Kernel
 from numpy import atleast_2d, zeros, sqrt, transpose
 import gpflow as gf
-import romcomma.mogpflow as mogf
+import romcomma.mogpflow as mf
 import tensorflow as tf
 from contextlib import suppress
+
+
+class Likelihood(Model):
+
+    class Parameters(Parameters):
+        """ The Parameters set of a GP."""
+
+        @classmethod
+        @property
+        def Values(cls) -> Type[NamedTuple]:
+            """ The NamedTuple underpinning this Parameters set."""
+
+            class Values(NamedTuple):
+                """ The parameters set of a GP.
+
+                Attributes:
+                    variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
+                    log_marginal (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
+                """
+                variance: NP.Matrix = atleast_2d(0.9)
+                log_marginal: NP.Matrix = atleast_2d(1.0)
+
+            return Values
+
+    def calculate(self):
+        pass
+
+    def __init__(self, parent: GPInterface, read_parameters: bool = False, **kwargs: NP.Matrix):
+        super().__init__(parent.folder / 'likelihood', read_parameters, **kwargs)
 
 
 # noinspection PyPep8Naming
@@ -55,15 +84,11 @@ class GPInterface(Model):
                 """ The parameters set of a GP.
 
                 Attributes:
-                    likelihood_variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
                     kernel (NP.Matrix): A numpy [[str]] identifying the type of Kernel, as returned by gp.kernel.TypeIdentifier(). This is never set externally.
                         The kernel parameter, when provided, must be a ``[[Kernel.Parameters]]`` set storing the desired kernel parameters.
                         The kernel is constructed by inferring its type from the type of Kernel.Parameters.
-                    log_marginal_likelihood (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
                 """
-                likelihood_variance: NP.Matrix = atleast_2d(0.9)
                 kernel: NP.Matrix = atleast_2d(None)
-                log_marginal_likelihood: NP.Matrix = atleast_2d(1.0)
             return Values
 
     @classmethod
@@ -89,16 +114,45 @@ class GPInterface(Model):
 
     @property
     def kernel(self) -> Kernel:
-        """ The GP Kernel. """
         return self._kernel
+
+    @property
+    def likelihood(self) -> Likelihood:
+        return self._likelihood
 
     @property
     @abstractmethod
     def implementation(self) -> Tuple[Any, ...]:
         """ The implementation of this GP in GPFlow.
-            If ``likelihood_variance.shape == (1,L)`` an L-tuple of kernels is returned.
-            If ``likelihood_variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
+            If ``noise_variance.shape == (1,L)`` an L-tuple of kernels is returned.
+            If ``noise_variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
+
+    @property
+    def L(self) -> int:
+        """ The output (Y) dimensionality."""
+        return self._L
+
+    @property
+    def M(self) -> int:
+        """ The input (X) dimensionality."""
+        return self._M
+
+    @property
+    def N(self) -> int:
+        """ The the number of training samples."""
+        return self._M
+
+
+    @property
+    @abstractmethod
+    def X(self) -> Any:
+        """ The implementation training inputs."""
+
+    @property
+    @abstractmethod
+    def Y(self) -> Any:
+        """ The implementation training outputs."""
 
     @property
     @abstractmethod
@@ -139,7 +193,7 @@ class GPInterface(Model):
             predictive_std = (self._test.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Std"}, level=0))
             predictive_std.iloc[:] = result[1]
             predictive_error = (self._test.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Error"}, level=0))
-            predictive_error.iloc[:] -= predictive_mean.iloc[:]
+            predictive_error.iloc[:] -= predictive_mean.to_numpy(dtype=float, copy=False)
             self._test.df = self._test.df.join([predictive_mean, predictive_std, predictive_error])
             self._test.write()
         return self._test
@@ -159,7 +213,8 @@ class GPInterface(Model):
         Returns: ``self``, for chaining calls.
         """
         target_shape = (1, self._L) if is_independent else (self._L, self._L)
-        self._parameters.broadcast_value(model_name=self.folder, field="likelihood_variance", target_shape=target_shape, is_diagonal=is_independent, folder=folder)
+        self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance", target_shape=target_shape, is_diagonal=is_independent,
+                                                    folder=folder)
         self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
 
     @abstractmethod
@@ -183,6 +238,7 @@ class GPInterface(Model):
         self._X, self._Y = self._fold.X.to_numpy(dtype=float, copy=True), self._fold.Y.to_numpy(dtype=float, copy=True)
         self._N, self._M, self._L = self._fold.N, self._fold.M, self._fold.L
         super().__init__(self._fold.folder / name, is_read, **kwargs)
+        self._likelihood = Likelihood(self, is_read, **kwargs)
         if is_read and kernel_parameters is None:
             KernelType = Kernel.TypeFromIdentifier(self.params.values.kernel[0, 0])
             self._kernel = KernelType(self._folder / self.KERNEL_FOLDER_NAME, is_read)
@@ -207,12 +263,12 @@ class GP(GPInterface):
 
     @property
     def implementation(self) -> Tuple[Any, ...]:
-        if self.params.likelihood_variance.shape[0] == 1:
-            return tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None, noise_variance=self.params.likelihood_variance[0, l])
+        if self._likelihood.params.variance.shape[0] == 1:
+            return tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None, noise_variance=self._likelihood.params.variance[0, l])
                          for l, kernel in enumerate(self._kernel.implementation))
         else:
-            return tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None, noise_variance=self.params.likelihood_variance[0, l])
-                         for l, kernel in enumerate(self._kernel.implementation))
+            return tuple(mf.models.MOGPR(data=(self._X, self._Y), kernel=kernel, mean_function=None, noise_variance=self._likelihood.params.variance)
+                         for kernel in self._kernel.implementation)
 
     def optimize(self, method: str = 'L-BFGS-B', **kwargs):
         """ Optimize the GP hyper-parameters.
@@ -229,13 +285,20 @@ class GP(GPInterface):
         options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
                                                   for gp in self._implementation))})
         self._write_options(options)
-        self.parameters = self._parameters.replace(likelihood_variance=tuple(gp.likelihood.variance.numpy() for gp in self._implementation),
-                                                   log_marginal_likelihood=tuple(gp.log_marginal_likelihood()
-                                                                                 for gp in self._implementation)).write()
-        self._kernel.parameters = self._kernel.parameters.replace(variance=tuple(gp.kernel.variance.numpy()
-                                                                                 for gp in self._implementation),
-                                                                  lengthscales=tuple(gp.kernel.lengthscales.numpy()
-                                                                                     for gp in self._implementation)).write()
+        if self._likelihood.params.variance.shape[0] == 1:
+            self._likelihood.parameters = self._likelihood.parameters.replace(variance=tuple(gp.likelihood.variance.numpy() for gp in self._implementation),
+                                                                              log_marginal=tuple(gp.log_marginal_likelihood() for gp in self._implementation)
+                                                                              ).write()
+            self._kernel.parameters = self._kernel.parameters.replace(variance=tuple(gp.kernel.variance.numpy() for gp in self._implementation),
+                                                                      lengthscales=tuple(gp.kernel.lengthscales.numpy() for gp in self._implementation)
+                                                                      ).write()
+        else:
+            self._likelihood.parameters = self._likelihood.parameters.replace(variance=self._implementation[0].likelihood.variance.numpy(),
+                                                                              log_marginal=self._implementation[0].log_marginal_likelihood()
+                                                                              ).write()
+            self._kernel.parameters = self._kernel.parameters.replace(variance=self._implementation[0].kernel.variance.numpy(),
+                                                                      lengthscales=self._implementation[0].kernel.lengthscales.numpy()
+                                                                      ).write()
         self._test = None
 
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
@@ -244,19 +307,33 @@ class GP(GPInterface):
         return atleast_2d(results[0]), atleast_2d(sqrt(results[1]))
 
     @property
+    def X(self) -> TF.Matrix:
+        return self._implementation[0].data[0]
+
+    @property
+    def Y(self) -> TF.Matrix:
+        return self._implementation[0].data[1]
+
+    @property
     def KNoisy_Cho(self) -> TF.Tensor:
-        result = zeros(shape=(self._L * self._N, self._L * self._N))
-        for l, gp in enumerate(self._implementation):
-            X_data = gp.data[0]
-            K = gp.kernel(X_data)
-            K_diag = tf.linalg.diag_part(K)
-            result[l*self._N:(l+1)*self._N, l*self._N:(l+1)*self._N] = tf.linalg.set_diag(K, K_diag + tf.fill(tf.shape(K_diag), gp.likelihood.variance))
+        if self._likelihood.params.variance.shape[0] == 1:
+            result = zeros(shape=(self._L * self._N, self._L * self._N))
+            for l, gp in enumerate(self._implementation):
+                K = gp.kernel(self.X)
+                K_diag = tf.linalg.diag_part(K)
+                result[l*self._N:(l+1)*self._N, l*self._N:(l+1)*self._N] = tf.linalg.set_diag(K, K_diag + tf.fill(tf.shape(K_diag), gp.likelihood.variance))
+        else:
+            gp = self._implementation[0]
+            result = gp.likelihood.add_to(gp.KXX)
         return tf.linalg.cholesky(result)
 
     @property
     def KNoisyInv_Y(self) -> TF.Tensor:
-        Y_data = self._Y.transpose().flatten()
-        return tf.linalg.cholesky_solve(tf.linalg.cholesky(self.KNoisy_Cho), Y_data)
+        if self._likelihood.params.variance.shape[0] == 1:
+            Y = self._Y.transpose().flatten()
+        else:
+            Y = tf.reshape(tf.transpose(self.Y), [-1, 1])
+        return tf.linalg.cholesky_solve(tf.linalg.cholesky(self.KNoisy_Cho), Y)
 
     def _check_KNoisyInv_Y(self, x: NP.Matrix) -> TF.Tensor:
         """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance).

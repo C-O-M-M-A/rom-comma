@@ -170,7 +170,6 @@ class Model(ABC):
 
     @classmethod
     @property
-    @abstractmethod
     def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
         raise NotImplementedError
 
@@ -198,7 +197,6 @@ class Model(ABC):
         else:
             self._test = None   # Remember to reset any test_data results.
 
-    @abstractmethod
     def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
         if method != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks.':
             raise NotImplementedError('base.optimize() must never be called.')

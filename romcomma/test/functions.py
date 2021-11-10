@@ -90,7 +90,7 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_varian
         N: The number of samples (datapoints), N &gt 0.
         M: The input dimensionality, M &ge 0.
         likelihood_variance: A noise (co)variance of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
-            Used to generate N random samples of Gaussian noise ~ N(0, likelihood_variance).
+            Used to generate N random samples of Gaussian noise ~ N(0, noise_variance).
         folder: The Store.folder to create and store the results in.
         sampling_method: A Callable sampling_method(N, M, **kwargs) -> X, which returns an (N,M) matrix.
         kwargs: Passed directly to sampling_method.
@@ -98,7 +98,7 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_varian
     """
     X = sampling_method(N, M, **kwargs)
     likelihood_variance = np.atleast_2d(likelihood_variance)
-    origin_meta = {'sampling_method': sampling_method.__name__, 'likelihood_variance': likelihood_variance.tolist()}
+    origin_meta = {'sampling_method': sampling_method.__name__, 'noise_variance': likelihood_variance.tolist()}
     noise = sampling.multivariate_gaussian_noise(N, likelihood_variance)
     return apply(functions, X, noise, folder, origin_meta=origin_meta)
 
