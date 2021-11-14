@@ -35,8 +35,10 @@ import scipy.stats
 BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\1.1')
 
 
-def test_rotation_and_normalization(store: Store, rotation: NP.Matrix):
-    rotate_all_folds(store, rotation)
+def fold_and_rotate_with_tests(store: Store, K: int, rotation: NP.Matrix):
+    store._data.df = store._data.df * 3
+    store._data.write()
+    fold_and_rotate(store, K, rotation)
     shutil.copytree(store.fold_folder(store.K), store.folder / f'fold.{store.K + 1}')
     fold = Fold(store, store.K + 1)
     fold.X_rotation = np.transpose(rotation)
@@ -45,7 +47,8 @@ def test_rotation_and_normalization(store: Store, rotation: NP.Matrix):
     Frame(store.folder / 'undone.csv', fold.normalization.undo_from(fold.test_data.df))
 
 
-def rotate_all_folds(store: Store, rotation: NP.Matrix):
+def fold_and_rotate(store: Store, K: int, rotation: NP.Matrix):
+    store.into_K_folds(K)
     for k in range(store.K + 1):
         fold = Fold(store, k)
         fold.X_rotation = rotation
@@ -65,12 +68,10 @@ def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float]
         store_folder += '.rom'
     store_folder = BASE_PATH / store_folder
     store = functions.sample(f, N, M, noise_variance, store_folder)
-    store._data.df = store._data.df * 3
-    store._data.write()
-    store.into_K_folds(K)
-    rotate_all_folds(store, rotation)
-    run.gps(name=name, store=store, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
-            optimize=True, test=True)
+    fold_and_rotate_with_tests(store, K, rotation)
+    # fold_and_rotate(store, K, rotation)
+    # run.gps(name=name, store=store, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+    #         optimize=True, test=True)
 
 
 # noinspection PyShadowingNames

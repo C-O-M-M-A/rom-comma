@@ -39,7 +39,6 @@ class Kernel(Model):
         @classmethod
         @property
         def Values(cls) -> Type[NamedTuple]:
-            """ The NamedTuple underpinning this Parameters set."""
 
             class Values(NamedTuple):
                 """ The parameters set of a Kernel.
@@ -126,9 +125,6 @@ class Kernel(Model):
             self._M = M
         return self
 
-    def calculate(self):
-        pass
-
     def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
         """ Construct a Kernel. This must be called as a matter of priority by all implementations.
 
@@ -143,7 +139,6 @@ class Kernel(Model):
 
 
 class RBF(Kernel):
-    """ Implements the RBF kernel_parameters for use with romcomma.implemented_in_gpflow."""
 
     @property
     def implementation(self) -> Tuple[Any, ...]:

@@ -40,7 +40,10 @@ from romcomma.data import Frame
 # noinspection PyProtectedMember
 class Parameters(ABC):
     """ Abstraction of the parameters of a Model. Essentially a NamedTuple backed by files in a folder.
-    Note that file writing is lazy, it must be called explicitly, but the Parameters are designed for chained calls."""
+    Note that file writing is lazy, it must be called explicitly, but the Parameters are designed for chained calls.
+
+    Most Parameters methods are simple wrappers for annoyingly underscored methods of `NamedTuple
+    <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_."""
 
     @classmethod
     @property
@@ -157,6 +160,8 @@ class Model(ABC):
     """ Abstract base class for any model. This base class implements generic file storage and parameter handling.
     The latter is dealt with by each subclass overriding ``Parameters.Values`` with its own ``Type[NamedTuple]``
     defining the parameter set it takes. ``model.parameters.values`` is a ``Model.Parameters.Values`` of NP.Matrices.
+
+    A Model also may include an optimize method taking options stored in an options.json file, which default to cls.DEFAULT_OPTIONS.
     """
 
     @staticmethod
@@ -184,18 +189,14 @@ class Model(ABC):
     @parameters.setter
     def parameters(self, value: Parameters):
         self._parameters = value
-        self.calculate()
 
     @property
     def params(self) -> Parameters.Values:
-        return self._parameters.values
+        """ A shorthand to save typing.
 
-    @abstractmethod
-    def calculate(self):
-        if self.parameters.fields[0] != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks.':
-            raise NotImplementedError('base.calculate() must never be called.')
-        else:
-            self._test = None   # Remember to reset any test_data results.
+        Returns: ``self._parameters.values``
+        """
+        return self._parameters.values
 
     def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
         if method != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks.':
@@ -207,7 +208,6 @@ class Model(ABC):
             options = {**options, 'result': 'OPTIMIZE HERE !!!'}
             self._write_options(options)
             self.parameters = self._parameters.replace('WITH OPTIMAL PARAMETERS!!!').write(self.folder)   # Remember to write optimization results.
-            self._test = None   # Remember to reset any test_data results.
 
     def _read_options(self) -> Dict[str, Any]:
         # noinspection PyTypeChecker

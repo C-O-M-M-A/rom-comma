@@ -101,22 +101,23 @@ class MOStationary(AnisotropicStationary, Kernel):
         raise NotImplementedError(f'You must implement K_d_unit_variance(self, d) in {type(self)}.')
 
     def K_d_apply_variance(self, K_d_unit_variance):
-        """ Multiply the unit variance kernel by the kernel variance.
+        """ Multiply the unit variance kernel by the kernel variance, and reshape.
 
         Args:
             K_d_unit_variance: An (L,N,L,N) Tensor.
-        Returns: An (L,N,L,N) Tensor
+        Returns: An (LN,LN) Tensor
         """
-        # assert tf.rank(K_d_unit_variance) == 4, f'mogpflow.kernels.MOStationary currently only accepts inputs K_d_unit_variance of rank 4, ' \
-        #                                                  f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.'
-        return self.variance.value_to_broadcast * K_d_unit_variance
+        tf.assert_equal(tf.rank(K_d_unit_variance), 4, f'mogpflow.kernels.MOStationary currently only accepts inputs K_d_unit_variance of rank 4, ' +
+                        f'which K_d_unit_variance.shape={tf.shape(K_d_unit_variance)} does not obey.')
+        shape = K_d_unit_variance.shape
+        return tf.reshape(self.variance.value_to_broadcast * K_d_unit_variance, (shape[-4] * shape[-3], shape[-2] * shape[-1]))
 
     def K_d(self, d):
         """ The kernel.
 
         Args:
             d: An (L,N,L,N,M) Tensor.
-        Returns: An (L,N,L,N) Tensor.
+        Returns: An (LN,LN) Tensor.
         """
         return self.K_d_apply_variance(self.K_d_unit_variance(d))
 
