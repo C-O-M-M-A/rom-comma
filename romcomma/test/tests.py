@@ -26,17 +26,17 @@ from __future__ import annotations
 from romcomma.typing_ import *
 from romcomma import run
 from romcomma.data import Fold, Store, Frame
-from romcomma.test import functions, sampling
+from romcomma.test import functions
 import numpy as np
 from pathlib import Path
 import shutil
 import scipy.stats
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\1.1')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\1.2')
 
 
 def fold_and_rotate_with_tests(store: Store, K: int, rotation: NP.Matrix):
-    store._data.df = store._data.df * 3
+    store._data.df = store._data.df * 5
     store._data.write()
     fold_and_rotate(store, K, rotation)
     shutil.copytree(store.fold_folder(store.K), store.folder / f'fold.{store.K + 1}')
@@ -68,10 +68,10 @@ def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float]
         store_folder += '.rom'
     store_folder = BASE_PATH / store_folder
     store = functions.sample(f, N, M, noise_variance, store_folder)
-    fold_and_rotate_with_tests(store, K, rotation)
-    # fold_and_rotate(store, K, rotation)
-    # run.gps(name=name, store=store, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
-    #         optimize=True, test=True)
+    # fold_and_rotate_with_tests(store, K, rotation)
+    fold_and_rotate(store, K, rotation)
+    run.gps(name=name, store=store, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+            optimize=True, test=True)
 
 
 # noinspection PyShadowingNames
@@ -92,7 +92,7 @@ def compare_gps(name, function_names: Sequence[str], N: int, noise_variance: [fl
 if __name__ == '__main__':
     with run.Context('Test'):
         for N in (800,):
-            for noise_variance in (0.001,):
+            for noise_variance in (0,):
                 for random in (False, True):
                     for M in (5,):
                         run_gps('initial', ['sin.1', 'sin.1'], N, [noise_variance] * 2, random, M)
