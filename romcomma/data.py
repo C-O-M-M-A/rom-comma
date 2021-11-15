@@ -222,7 +222,7 @@ class Store:
 
     def __init__(self, folder: PathLike, **kwargs):
         self._folder = Path(folder)
-        self._meta_json = self._folder / '__meta__.json'
+        self._meta_json = self._folder / 'meta.json'
         self._X_rotation = self._folder / 'X_rotation.csv'
         self._csv = self._folder / 'data.csv'
         self._data = None
@@ -283,7 +283,7 @@ class Store:
 
 
 class Fold(Store):
-    """ A Fold is defined as a folder containing a ``data.csv``, a ``__meta__.json`` file and a ``test.csv`` file.
+    """ A Fold is defined as a folder containing a ``data.csv``, a ``meta.json`` file and a ``test.csv`` file.
     A Fold is a Store equipped with a test_data pd.DataFrame backed by ``test.csv``.
 
     Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.

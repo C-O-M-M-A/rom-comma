@@ -100,6 +100,11 @@ class GPInterface(Model):
         """ The name of the folder where kernel parameters are stored."""
         return "kernel"
 
+    @classmethod
+    @property
+    def float(cls) -> Type:
+        return gf.config.config().float
+
     @property
     def fold(self) -> Fold:
         """ The parent fold. """
@@ -194,7 +199,7 @@ class GPInterface(Model):
         result.write()
         return result
 
-    def broadcast_parameters(self, is_independent: bool, is_isotropic: bool, folder: Optional[PathLike] = None) -> GP:
+    def broadcast_parameters(self, is_independent: bool, is_isotropic: bool, folder: Optional[PathLike] = None) -> GPInterface:
         """ Broadcast the parameters of the GP (including kernels) to higher dimensions.
         Shrinkage raises errors, unchanged dimensions silently do nothing.
 
@@ -208,6 +213,7 @@ class GPInterface(Model):
         self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance", target_shape=target_shape, is_diagonal=is_independent,
                                                     folder=folder)
         self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
+        return self
 
     @abstractmethod
     def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
@@ -227,7 +233,7 @@ class GPInterface(Model):
             IndexError: If a parameter is mis-shaped.
         """
         self._fold = fold
-        self._X, self._Y = self._fold.X.to_numpy(dtype=float, copy=True), self._fold.Y.to_numpy(dtype=float, copy=True)
+        self._X, self._Y = self._fold.X.to_numpy(dtype=self.float, copy=True), self._fold.Y.to_numpy(dtype=self.float, copy=True)
         self._N, self._M, self._L = self._fold.N, self._fold.M, self._fold.L
         super().__init__(self._fold.folder / name, is_read, **kwargs)
         self._likelihood = Likelihood(self, is_read, **kwargs)
@@ -293,6 +299,7 @@ class GP(GPInterface):
                                                                       ).write()
 
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
+        X = X.astype(dtype=self.float)
         results = tuple(gp.predict_y(X) if y_instead_of_f else gp.predict_f(X) for gp in self._implementation)
         results = tuple(np.transpose(result) for result in zip(*results))
         return np.atleast_2d(results[0]), np.atleast_2d(np.sqrt(results[1]))

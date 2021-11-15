@@ -63,7 +63,6 @@ def Context(name: str, device: str = '', **kwargs):
         **kwargs: Is passed straight to the implementation GPFlow manager. In particular ``float=float32`` sets the dtype for tensorflow ops.
     """
     with Timing(name):
-        tf.config.set_visible_devices([], 'GPU')
         kwargs = {'float': 'float64'} | kwargs
         print(' using GPFlow(' + ', '.join([f'{k}={v!r}' for k, v in kwargs.items()]), end=')')
         device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
@@ -134,6 +133,7 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
                     gp = gpr.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
                                 **({} if parameters is None else parameters.as_dict()))
                     if optimize:
+                        bum = gp.implementation[0].maximum_log_likelihood_objective()
                         gp.optimize(**kwargs)
                     if test:
                         gp.test()
