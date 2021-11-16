@@ -2,14 +2,21 @@ version: 2
 
 sphinx:
   configuration: doc/source/conf.py
+<<<<<<< HEAD
 #  fail_on_warning: true
+=======
+>>>>>>> 56fcdd9 (another try with docs)
 
 python:
   version: "3.8"
   install:
+<<<<<<< HEAD
     - requirements: doc/requirements.txt
     - method: pip
       path: .
 
 formats:
   - pdf
+=======
+    - requirements: doc/requirements.txt
+>>>>>>> 56fcdd9 (another try with docs)
