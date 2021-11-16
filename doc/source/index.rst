@@ -10,7 +10,7 @@ rom-comma user guide
    :maxdepth: 2
    :caption: Contents:
 
-   readme
+   Quick Start <readme>
 
 Indices and tables
 ==================

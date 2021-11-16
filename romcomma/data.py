@@ -405,6 +405,11 @@ class Normalization:
         self._frame = Frame(self.csv) if self._frame is None else self._frame
         return self._frame
 
+    @property
+    def _relevant_stats(self) -> Tuple[pd.Series, pd.Series, pd.Series, pd.Series]:
+        return (self.frame.df.iloc[self.frame.df.index.get_loc('min'), :self._fold.M], self.frame.df.iloc[self.frame.df.index.get_loc('rng'), :self._fold.M],
+                self.frame.df.iloc[self.frame.df.index.get_loc('mean'), self._fold.M:], self.frame.df.iloc[self.frame.df.index.get_loc('std'), self._fold.M:])
+
     def apply_to(self, df: pd.DataFrame) -> pd.DataFrame:
         """ Apply this normalization.
 
@@ -413,15 +418,25 @@ class Normalization:
 
         Returns: df, Normalized.
         """
+<<<<<<< HEAD
         X_heading = self._fold.meta['data']['X_heading']
         Y_heading = self._fold.meta['data']['Y_heading']
-        cunt = df.loc[:, X_heading].sub(self.frame.df.loc['min', X_heading], axis=1).div(self.frame.df.loc['rng', X_heading], axis=1)
+        df.iloc[:, self._fold.M] = df.iloc[:, self._fold.M].sub(self.frame.df.loc['max', X_heading], axis=1)
         df[X_heading] = df.loc[:, X_heading].sub(self.frame.df.loc['min', X_heading], axis=1).div(self.frame.df.loc['rng', X_heading], axis=1)
         df[X_heading] = df.loc[:, X_heading].clip(lower=self.UNIFORM_MARGIN, upper=1-self.UNIFORM_MARGIN)
         df[X_heading] = scipy.stats.norm.ppf(df.loc[:, X_heading], loc=0, scale=1)
         df[Y_heading] = df.loc[:, Y_heading].sub(self.frame.df.loc['mean', Y_heading], axis=1).div(self.frame.df.loc['std', Y_heading], axis=1)
 
         return df
+=======
+        X_min, X_rng, Y_mean, Y_std = self._relevant_stats
+        X = df.iloc[:, :self._fold.M]
+        Y = df.iloc[:, self._fold.M:]
+        X = X.sub(X_min, axis=1).div(X_rng, axis=1).clip(lower=self.UNIFORM_MARGIN, upper=1-self.UNIFORM_MARGIN)
+        X.iloc[:, :] = scipy.stats.norm.ppf(X, loc=0, scale=1)
+        Y = Y.sub(Y_mean, axis=1).div(Y_std, axis=1)
+        return pd.concat((X, Y), axis=1)
+>>>>>>> 52ea540 (doc)
 
     def undo_from(self, df: pd.DataFrame) -> pd.DataFrame:
         """ Undo this normalization.
@@ -431,12 +446,13 @@ class Normalization:
 
         Returns: df, UnNormalized.
         """
-        X_heading = self._fold.meta['data']['X_heading']
-        Y_heading = self._fold.meta['data']['Y_heading']
-        df[X_heading] = df.loc[:, X_heading].mul(self.frame.df.loc['rng', X_heading], axis=1).add(self.frame.df.loc['min', X_heading], axis=1)
-        df[X_heading] = scipy.stats.norm.ppf(df.loc[:, X_heading], loc=0, scale=1)
-        df[Y_heading] = df.loc[:, Y_heading].mul(self.frame.df.loc['std', Y_heading], axis=1).add(self.frame.df.loc['mean', Y_heading], axis=1)
-        return df
+        X_min, X_rng, Y_mean, Y_std = self._relevant_stats
+        X = df.iloc[:, :self._fold.M]
+        Y = df.iloc[:, self._fold.M:]
+        X.iloc[:, :] = scipy.stats.norm.cdf(X, loc=0, scale=1)
+        X = X.mul(X_rng, axis=1).add(X_min, axis=1)
+        Y = Y.mul(Y_std, axis=1).add(Y_mean, axis=1)
+        return pd.concat((X, Y), axis=1)
 
     def __init__(self, fold: Fold, data: Optional[pd.DataFrame] = None):
         """ Initialize this Normalization. If the fold has already been Normalized, that Normalization is returned.
