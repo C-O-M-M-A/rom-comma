@@ -33,9 +33,12 @@ release = '0.1'
 # ones.
 extensions = ['sphinx.ext.autodoc',
 <<<<<<< HEAD
+<<<<<<< HEAD
               'myst_parser'
 ]
 =======
+=======
+>>>>>>> de2f290d0d786f1a810bd38b52e92ed99a2f9b02
               'm2r2',
               'sphinx.ext.napoleon',
               ]
@@ -44,7 +47,10 @@ extensions = ['sphinx.ext.autodoc',
 napoleon_google_docstring = True
 napoleon_use_param = False
 napoleon_use_ivar = True
+<<<<<<< HEAD
 >>>>>>> 8807c78 (readthedocs warnings)
+=======
+>>>>>>> de2f290d0d786f1a810bd38b52e92ed99a2f9b02
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
