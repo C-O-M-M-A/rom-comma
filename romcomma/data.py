@@ -35,8 +35,6 @@ from enum import IntEnum, auto
 import scipy.stats
 import json
 
-pd.options.mode.chained_assignment = None
-
 
 class Frame:
     """ Encapsulates a pd.DataFrame (df) backed by a source file."""
