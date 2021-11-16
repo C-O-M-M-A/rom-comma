@@ -3,9 +3,13 @@ version: 2
 sphinx:
   configuration: doc/source/conf.py
 <<<<<<< HEAD
+<<<<<<< HEAD
 #  fail_on_warning: true
 =======
 >>>>>>> 56fcdd9 (another try with docs)
+=======
+  fail_on_warning: true
+>>>>>>> fa0f850 (Data should be all done)
 
 python:
   version: "3.8"
