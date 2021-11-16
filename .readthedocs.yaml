@@ -15,9 +15,13 @@ python:
   version: "3.8"
   install:
 <<<<<<< HEAD
+<<<<<<< HEAD
     - requirements: doc/requirements.txt
+=======
+>>>>>>> afa2419 (doc again)
     - method: pip
       path: .
+    - requirements: doc/requirements.txt
 
 formats:
   - pdf
