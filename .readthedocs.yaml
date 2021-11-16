@@ -2,39 +2,15 @@ version: 2
 
 sphinx:
   configuration: doc/source/conf.py
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-#  fail_on_warning: true
-=======
->>>>>>> 56fcdd9 (another try with docs)
-=======
   fail_on_warning: true
->>>>>>> fa0f850 (Data should be all done)
-=======
-  fail_on_warning: true
->>>>>>> de2f290d0d786f1a810bd38b52e92ed99a2f9b02
 
 python:
   version: "3.8"
   install:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     - requirements: doc/requirements.txt
-=======
->>>>>>> afa2419 (doc again)
-=======
->>>>>>> de2f290d0d786f1a810bd38b52e92ed99a2f9b02
     - method: pip
       path: .
     - requirements: doc/requirements.txt
 
 formats:
   - pdf
-<<<<<<< HEAD
-=======
-    - requirements: doc/requirements.txt
->>>>>>> 56fcdd9 (another try with docs)
-=======
->>>>>>> de2f290d0d786f1a810bd38b52e92ed99a2f9b02

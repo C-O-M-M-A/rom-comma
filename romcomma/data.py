@@ -405,20 +405,6 @@ class Normalization:
 
         Returns: df, Normalized.
         """
-<<<<<<< HEAD
-<<<<<<< HEAD
-        X_heading = self._fold.meta['data']['X_heading']
-        Y_heading = self._fold.meta['data']['Y_heading']
-        df.iloc[:, self._fold.M] = df.iloc[:, self._fold.M].sub(self.frame.df.loc['max', X_heading], axis=1)
-        df[X_heading] = df.loc[:, X_heading].sub(self.frame.df.loc['min', X_heading], axis=1).div(self.frame.df.loc['rng', X_heading], axis=1)
-        df[X_heading] = df.loc[:, X_heading].clip(lower=self.UNIFORM_MARGIN, upper=1-self.UNIFORM_MARGIN)
-        df[X_heading] = scipy.stats.norm.ppf(df.loc[:, X_heading], loc=0, scale=1)
-        df[Y_heading] = df.loc[:, Y_heading].sub(self.frame.df.loc['mean', Y_heading], axis=1).div(self.frame.df.loc['std', Y_heading], axis=1)
-
-        return df
-=======
-=======
->>>>>>> de2f290d0d786f1a810bd38b52e92ed99a2f9b02
         X_min, X_rng, Y_mean, Y_std = self._relevant_stats
         X = df.iloc[:, :self._fold.M].copy(deep=True)
         Y = df.iloc[:, self._fold.M:].copy(deep=True)
@@ -426,10 +412,6 @@ class Normalization:
         X.iloc[:, :] = scipy.stats.norm.ppf(X, loc=0, scale=1)
         Y = Y.sub(Y_mean, axis=1).div(Y_std, axis=1)
         return pd.concat((X, Y), axis=1)
-<<<<<<< HEAD
->>>>>>> 52ea540 (doc)
-=======
->>>>>>> de2f290d0d786f1a810bd38b52e92ed99a2f9b02
 
     def undo_from(self, df: pd.DataFrame) -> pd.DataFrame:
         """ Undo this normalization.
