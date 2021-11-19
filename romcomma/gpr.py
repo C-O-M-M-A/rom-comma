@@ -100,11 +100,6 @@ class GPInterface(Model):
         """ The name of the folder where kernel parameters are stored."""
         return "kernel"
 
-    @classmethod
-    @property
-    def float(cls) -> Type:
-        return gf.config.config().float
-
     @property
     def fold(self) -> Fold:
         """ The parent fold. """
@@ -233,12 +228,12 @@ class GPInterface(Model):
             IndexError: If a parameter is mis-shaped.
         """
         self._fold = fold
-        self._X, self._Y = self._fold.X.to_numpy(dtype=self.float, copy=True), self._fold.Y.to_numpy(dtype=self.float, copy=True)
+        self._X, self._Y = self._fold.X.to_numpy(dtype=gf.config.default_float(), copy=True), self._fold.Y.to_numpy(dtype=gf.config.default_float(), copy=True)
         self._N, self._M, self._L = self._fold.N, self._fold.M, self._fold.L
         super().__init__(self._fold.folder / name, is_read, **kwargs)
         self._likelihood = Likelihood(self, is_read, **kwargs)
         if is_read and kernel_parameters is None:
-            KernelType = Kernel.TypeFromIdentifier(self.params.values.kernel[0, 0])
+            KernelType = Kernel.TypeFromIdentifier(self.params.kernel[0, 0])
             self._kernel = KernelType(self._folder / self.KERNEL_FOLDER_NAME, is_read)
         else:
             if kernel_parameters is None:
@@ -291,17 +286,21 @@ class GP(GPInterface):
                                                                       lengthscales=tuple(gp.kernel.lengthscales.numpy() for gp in self._implementation)
                                                                       ).write()
         else:
-            self._likelihood.parameters = self._likelihood.parameters.replace(variance=self._implementation[0].likelihood.variance.numpy(),
-                                                                              log_marginal=self._implementation[0].log_marginal_likelihood()
+            self._likelihood.parameters = self._likelihood.parameters.replace(variance=self._implementation[0].likelihood.variance.value.numpy(),
+                                                                              log_marginal=self._implementation[0].log_marginal_likelihood().numpy()
                                                                               ).write()
-            self._kernel.parameters = self._kernel.parameters.replace(variance=self._implementation[0].kernel.variance.numpy(),
-                                                                      lengthscales=self._implementation[0].kernel.lengthscales.numpy()
+            self._kernel.parameters = self._kernel.parameters.replace(variance=self._implementation[0].kernel.variance.value.numpy(),
+                                                                      lengthscales=tf.squeeze(self._implementation[0].kernel.lengthscales),
                                                                       ).write()
 
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
-        X = X.astype(dtype=self.float)
-        results = tuple(gp.predict_y(X) if y_instead_of_f else gp.predict_f(X) for gp in self._implementation)
-        results = tuple(np.transpose(result) for result in zip(*results))
+        X = X.astype(dtype=gf.config.default_float())
+        if self._likelihood.params.variance.shape[0] == 1:
+            results = tuple(gp.predict_y(X) if y_instead_of_f else gp.predict_f(X) for gp in self._implementation)
+            results = tuple(np.transpose(result) for result in zip(*results))
+        else:
+            gp = self.implementation[0]
+            results = gp.predict_y(X) if y_instead_of_f else gp.predict_f(X)
         return np.atleast_2d(results[0]), np.atleast_2d(np.sqrt(results[1]))
 
     @property

@@ -79,7 +79,15 @@ class MOGaussian(QuadratureLikelihood):
         return self.variance.value_times_eye(self.N(F))
 
     def _predict_mean_and_var(self, Fmu, Fvar):
-        return tf.identity(Fmu), self.add_to(Fvar)
+        if tf.rank(Fvar) == 4:
+            lhvar = tf.reshape(self.variance.value, (1, 1, self.latent_dim, self.latent_dim))
+        elif tf.rank(Fvar) == 3:
+            lhvar = tf.reshape(self.variance.value, (1, self.latent_dim, self.latent_dim))
+        elif tf.rank(Fvar) == 2:
+            lhvar = tf.reshape(tf.linalg.diag_part(self.variance.value), (1, self.latent_dim))
+        else:
+            raise IndexError(f'Fvar has {Fvar.ndims} dimensions, when it should have 2,3, or 4.')
+        return tf.identity(Fmu), Fvar + lhvar
 
     def _predict_log_density(self, Fmu, Fvar, Y):
         return tf.reduce_sum(multivariate_normal(Y, Fmu, tf.linalg.cholesky(self.add_to(Fvar))))

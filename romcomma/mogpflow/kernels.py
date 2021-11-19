@@ -30,6 +30,7 @@ from gpflow.kernels import Kernel, AnisotropicStationary
 from gpflow import Parameter, set_trainable
 from gpflow.utilities import positive
 from gpflow.models.util import data_input_to_tensor
+from gpflow.config import default_float
 import tensorflow as tf
 import numpy as np
 
@@ -144,6 +145,8 @@ class MOStationary(AnisotropicStationary, Kernel):
         self.lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + 'Lengthscales')
         self.is_lengthscales_trainable = is_lengthscales_trainable
         self._validate_ard_active_dims(self.lengthscales[0, 0])
+
+        set_trainable(self.variance, False)  # TODO: Refactor to somewhere more appropriate.
 
 
 class RBF(MOStationary):

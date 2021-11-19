@@ -74,10 +74,10 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
     def KXX(self):
         return self.kernel(self._X, self._X) if self._K_unit_variance is None else self.kernel.K_d_apply_variance(self._K_unit_variance)
 
-    def maximum_log_likelihood_objective(self) -> tf.Tensor:
+    def maximum_log_likelihood_objective(self) -> TF.Tensor:
         return self.log_marginal_likelihood()
 
-    def log_marginal_likelihood(self) -> tf.Tensor:
+    def log_marginal_likelihood(self) -> TF.Tensor:
         r"""
         Computes the log marginal likelihood.
 
@@ -96,12 +96,13 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
             p(F* | Y)
 
         where F* are points on the GP at new data points, Y are noisy observations at training data points.
+        Note that full_cov => full_output_cov (regardless of the value given for full_output_cov), to avoid ambiguity.
         """
+        full_output_cov = True if full_cov else full_output_cov
         Xnew = tf.reshape(data_input_to_tensor(Xnew), (-1, self._M))
         n = Xnew.shape[0]
-        f_mean, f_var = base_conditional(Kmn=self.kernel(self._X, Xnew), Kmm=self.likelihood.add_to(self.KXX),
-                                         Knn=self.kernel(Xnew), f=self._Y-self._mean,
-                                         full_cov=True, white=False)
+        f_mean, f_var = base_conditional(Kmn=self.kernel(self._X, Xnew), Kmm=self.likelihood.add_to(self.KXX), Knn=self.kernel(Xnew, Xnew),
+                                         f=self._Y-self._mean, full_cov=True, white=False)
         f_mean += tf.reshape(self.mean_function(Xnew), f_mean.shape)
         f_mean_shape = (self._L, n)
         f_mean = tf.reshape(f_mean, f_mean_shape)

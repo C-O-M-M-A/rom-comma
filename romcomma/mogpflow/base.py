@@ -26,6 +26,7 @@ from __future__ import annotations
 from gpflow import Parameter, Module
 from gpflow.utilities import positive
 from gpflow.models.util import data_input_to_tensor
+from gpflow.config import default_float
 import tensorflow as tf
 
 from romcomma.typing_ import *
@@ -34,7 +35,7 @@ from romcomma.typing_ import *
 class Variance(Module):
     """ A non-diagonal Variance Matrix."""
 
-    DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND = 1e-3
+    DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND = 1e-4
 
     @property
     def shape(self) -> Tuple[int, int]:
@@ -68,7 +69,7 @@ class Variance(Module):
             N: The dimension of the identity matrix we are multiplying by.
         Returns: An [:L, :N, :L, :N] Tensor, after transposition.
         """
-        return self.value_to_broadcast * tf.eye(N)[tf.newaxis, :, tf.newaxis, :]
+        return self.value_to_broadcast * tf.eye(N, dtype=default_float())[tf.newaxis, :, tf.newaxis, :]
 
     def __init__(self, value, name: str = 'Variance', cholesky_diagonal_lower_bound: float = DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND):
         """ Construct a non-diagonal covariance matrix. Mutable only through it's properties cholesky_diagonal and cholesky_lower_triangle.

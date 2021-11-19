@@ -32,7 +32,7 @@ from pathlib import Path
 import shutil
 import scipy.stats
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\1.2')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\2.2')
 
 
 def fold_and_rotate_with_tests(store: Store, K: int, rotation: NP.Matrix):
@@ -75,7 +75,7 @@ def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float]
 
 
 # noinspection PyShadowingNames
-def compare_gps(name, function_names: Sequence[str], N: int, noise_variance: [float], random: bool, M: int = 5, K: int = 2):
+def compare_gps(name, function_names: Sequence[str], N: int, noise_variance: [float], random: bool, M: int = 5):
     if isinstance(function_names, str):
         function_names = [function_names]
     store_folder = '.'.join(function_names) + f'.{M:d}.{sum(noise_variance)/len(noise_variance):.3f}.{N:d}'
@@ -85,14 +85,26 @@ def compare_gps(name, function_names: Sequence[str], N: int, noise_variance: [fl
         store_folder += '.rom'
     store_folder = BASE_PATH / store_folder
     store = Store(store_folder)
-    run.gps(name=name, store=store, is_read=False, is_isotropic=False, is_independent=False, kernel_parameters=None, parameters=None,
+    run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=False, kernel_parameters=None, parameters=None,
             optimize=True, test=True)
+
+
+def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = False):
+    if diagonal:
+        result = np.eye(L)
+    elif random:
+        result = np.random.random_sample((2, 2))
+        result = np.matmul(result, result.transpose())
+    else:
+        result = np.ones(shape=(L,L))/2 + np.eye(L)/2
+    return scale * result
 
 
 if __name__ == '__main__':
     with run.Context('Test'):
         for N in (800,):
-            for noise_variance in (0,):
+            for noise_variance in (0.001,):
                 for random in (False, True):
                     for M in (5,):
                         run_gps('initial', ['sin.1', 'sin.1'], N, [noise_variance] * 2, random, M)
+                        compare_gps('initial', ['sin.1', 'sin.1'], N, [noise_variance] * 2, random, M)
