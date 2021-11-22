@@ -142,4 +142,4 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
             mean_function = MOMeanFunction(self._L)
         super().__init__(kernel, likelihood, mean_function, num_latent_gps=1)
         self._mean = tf.reshape(self.mean_function(self._X), [-1, 1])
-        self._K_unit_variance = None if self.kernel.is_lengthscales_trainable else self.kernel.K_unit_variance(self._X)
+        self._K_unit_variance = None if self.kernel.lengthscales.trainable else self.kernel.K_unit_variance(self._X)

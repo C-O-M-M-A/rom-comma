@@ -32,7 +32,7 @@ from pathlib import Path
 import shutil
 import scipy.stats
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\2.2')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\3.2')
 
 
 def fold_and_rotate_with_tests(store: Store, K: int, rotation: NP.Matrix):
@@ -55,37 +55,35 @@ def fold_and_rotate(store: Store, K: int, rotation: NP.Matrix):
 
 
 # noinspection PyShadowingNames
-def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float], random: bool, M: int = 5, K: int = 2):
+def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5, K: int = 2):
     if isinstance(function_names, str):
         function_names = [function_names]
     f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
-    store_folder = '.'.join(function_names) + f'.{M:d}.{sum(noise_variance)/len(noise_variance):.3f}.{N:d}'
+    store_folder = '.'.join(function_names) + f'.{M:d}.{noise_label}.{N:d}'
     if random:
         rotation = scipy.stats.ortho_group.rvs(M)
-        store_folder += '.random'
+        store_folder += '.rotated'
     else:
         rotation = np.eye(M)
-        store_folder += '.rom'
     store_folder = BASE_PATH / store_folder
     store = functions.sample(f, N, M, noise_variance, store_folder)
     # fold_and_rotate_with_tests(store, K, rotation)
     fold_and_rotate(store, K, rotation)
-    run.gps(name=name, store=store, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+    run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=True, test=True)
 
 
 # noinspection PyShadowingNames
-def compare_gps(name, function_names: Sequence[str], N: int, noise_variance: [float], random: bool, M: int = 5):
+def compare_gps(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5):
     if isinstance(function_names, str):
         function_names = [function_names]
-    store_folder = '.'.join(function_names) + f'.{M:d}.{sum(noise_variance)/len(noise_variance):.3f}.{N:d}'
+    f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
+    store_folder = '.'.join(function_names) + f'.{M:d}.{noise_label}.{N:d}'
     if random:
-        store_folder += '.random'
-    else:
-        store_folder += '.rom'
+        store_folder += '.rotated'
     store_folder = BASE_PATH / store_folder
     store = Store(store_folder)
-    run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=False, kernel_parameters=None, parameters=None,
+    run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=True, test=True)
 
 
@@ -95,16 +93,31 @@ def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = 
     elif random:
         result = np.random.random_sample((2, 2))
         result = np.matmul(result, result.transpose())
+        print(scale * scale * result)
     else:
-        result = np.ones(shape=(L,L))/2 + np.eye(L)/2
-    return scale * result
+        result = np.ones(shape=(L, L))/2 + np.eye(L)/2
+    return scale * scale * result
 
 
 if __name__ == '__main__':
-    with run.Context('Test'):
+    with run.Context('Test', float='float64'):
         for N in (800,):
-            for noise_variance in (0.001,):
-                for random in (False, True):
+            for noise_magnitude in (0.05,):
+                noise_label = f'{noise_magnitude:.3f}'
+                for random in (False, ):
                     for M in (5,):
-                        run_gps('initial', ['sin.1', 'sin.1'], N, [noise_variance] * 2, random, M)
-                        compare_gps('initial', ['sin.1', 'sin.1'], N, [noise_variance] * 2, random, M)
+                        BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\4.0')
+                        run_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
+                                noise_label=noise_label, random=random, M=M)
+                        # compare_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
+                        #             noise_label=noise_label, random=random, M=M)
+                        BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\4.1')
+                        run_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
+                                noise_label=noise_label, random=random, M=M)
+                        # compare_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
+                        #             noise_label=noise_label, random=random, M=M)
+                        BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\4.2')
+                        run_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False, random=True),
+                                noise_label=noise_label, random=random, M=M)
+                        # compare_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False, random=True),
+                        #             noise_label=noise_label, random=random, M=M)

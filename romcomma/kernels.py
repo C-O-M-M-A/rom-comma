@@ -56,6 +56,18 @@ class Kernel(Model):
 
     @classmethod
     @property
+    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+        return {'variance': True, 'lengthscales': False}
+
+    def optimize(self, **kwargs: Any):
+        """ Merely sets which parameters are trainable. """
+        if self.params.variance.shape[0] > 1:
+            options = self.DEFAULT_OPTIONS | kwargs
+            gf.set_trainable(self._implementation[0].variance, options['variance'])
+            gf.set_trainable(self._implementation[0].lengthscales, options['lengthscales'])
+
+    @classmethod
+    @property
     def TYPE_IDENTIFIER(cls) -> str:
         """ The type of this Kernel object or class as '__module__.Kernel.__name__'."""
         return cls.__module__.split('.')[-1] + '.' + cls.__name__
@@ -123,6 +135,8 @@ class Kernel(Model):
         if (self._L, M) != self.params.lengthscales.shape:
             self.parameters.broadcast_value(model_name=str(self.folder), field="lengthscales", target_shape=(self._L, M), is_diagonal=False, folder=folder)
             self._M = M
+        self._implementation = None
+        self._implementation = self.implementation
         return self
 
     def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
@@ -147,8 +161,10 @@ class RBF(Kernel):
             If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
-        if self.params.variance.shape[0] == 1:
-            return tuple(gf.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[l])
-                            for l in range(self.params.variance.shape[1]))
-        else:
-            return (mf.kernels.RBF(variance=self.params.variance, lengthscales=self.params.lengthscales), )
+        if self._implementation is None:
+            if self.params.variance.shape[0] == 1:
+                self._implementation = tuple(gf.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[l])
+                                for l in range(self.params.variance.shape[1]))
+            else:
+                self._implementation = (mf.kernels.RBF(variance=self.params.variance, lengthscales=self.params.lengthscales), )
+        return self._implementation

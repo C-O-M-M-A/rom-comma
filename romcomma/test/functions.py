@@ -109,7 +109,7 @@ def apply(functions: Tuple[FunctionWithMeta], X: NP.Matrix, noise: NP.Matrix, fo
     Args:
         functions: A tuple of test functions, of length L.
         X: An (N,M) design matrix of inputs.
-        noise: An (N,L) design matrix of output noise.
+        noise: An (N,L) design matrix of fractional output noise per unit Y.
         folder: The Store.folder to create and store the results in.
     Returns: A store containing N rows of M input columns and L output columns. The output is f(X) + noise.
     Raises: IndexError if dimensions are incompatible.
@@ -128,7 +128,8 @@ def apply(functions: Tuple[FunctionWithMeta], X: NP.Matrix, noise: NP.Matrix, fo
     meta = {'N': X.shape[0], 'functions': [f.meta for f in functions]}
     meta = {'origin': meta | kwargs.get('origin_meta', {})}
     Y = np.concatenate([f(X) for f in functions], axis=1)
-    Y += noise
+    std = np.reshape(np.std(Y, axis=0), (1, -1))
+    Y += noise * std
     columns = [('X', f'X.{i:d}') for i in range(X.shape[1])] + [('Y', f'Y.{i:d}') for i in range(Y.shape[1])]
     df = pd.DataFrame(np.concatenate((X, Y), axis=1), columns=pd.MultiIndex.from_tuples(columns), dtype=float)
     return Store.from_df(folder=folder, df=df, meta=meta)

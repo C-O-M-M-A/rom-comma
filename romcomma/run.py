@@ -60,10 +60,10 @@ def Context(name: str, device: str = '', **kwargs):
         name: The name of this context, this appears as what is being run.
         device: The device to run on. If this ends in the regex ``[C,G]PU*`` then the logical device ``/[C,G]*`` is used,
             otherwise device allocation is automatic.
-        **kwargs: Is passed straight to the implementation GPFlow manager. In particular ``float=float32`` sets the dtype for tensorflow ops.
+        **kwargs: Is passed straight to the implementation GPFlow manager. Note, however, that ``float=float32`` is inoperative due to sicpy.
     """
     with Timing(name):
-        kwargs = {'float': 'float64'} | kwargs
+        kwargs = kwargs | {'float': 'float64'}
         print(' using GPFlow(' + ', '.join([f'{k}={v!r}' for k, v in kwargs.items()]), end=')')
         device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
         if len(device) > 3:
@@ -133,7 +133,6 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
                     gp = gpr.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
                                 **({} if parameters is None else parameters.as_dict()))
                     if optimize:
-                        bum = gp.implementation[0].maximum_log_likelihood_objective()
                         gp.optimize(**kwargs)
                     if test:
                         gp.test()

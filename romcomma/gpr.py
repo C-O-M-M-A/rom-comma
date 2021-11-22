@@ -62,8 +62,20 @@ class Likelihood(Model):
 
             return Values
 
+    @classmethod
+    @property
+    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+        return {'variance': True}
+
+    def optimize(self, **kwargs):
+        """ Merely set the trainable parameters."""
+        if self.params.variance.shape[0] > 1:
+            options = self.DEFAULT_OPTIONS | kwargs
+            gf.set_trainable(self._parent.implementation[0].likelihood.variance, options['variance'])
+
     def __init__(self, parent: GPInterface, read_parameters: bool = False, **kwargs: NP.Matrix):
         super().__init__(parent.folder / 'likelihood', read_parameters, **kwargs)
+        self._parent = parent
 
 
 # noinspection PyPep8Naming
@@ -208,6 +220,8 @@ class GPInterface(Model):
         self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance", target_shape=target_shape, is_diagonal=is_independent,
                                                     folder=folder)
         self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
+        self._implementation = None
+        self._implementation = self.implementation
         return self
 
     @abstractmethod
@@ -242,7 +256,6 @@ class GPInterface(Model):
             self._kernel = KernelType(self._folder / self.KERNEL_FOLDER_NAME, is_read, **kernel_parameters.as_dict())
             self._parameters.replace(kernel=np.atleast_2d(KernelType.TYPE_IDENTIFIER)).write()
         self.broadcast_parameters(is_independent, is_isotropic)
-        self._implementation = self.implementation
 
 
 # noinspection PyPep8Naming
@@ -256,12 +269,16 @@ class GP(GPInterface):
 
     @property
     def implementation(self) -> Tuple[Any, ...]:
-        if self._likelihood.params.variance.shape[0] == 1:
-            return tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None, noise_variance=self._likelihood.params.variance[0, l])
-                         for l, kernel in enumerate(self._kernel.implementation))
-        else:
-            return tuple(mf.models.MOGPR(data=(self._X, self._Y), kernel=kernel, mean_function=None, noise_variance=self._likelihood.params.variance)
-                         for kernel in self._kernel.implementation)
+        if self._implementation is None:
+            if self._likelihood.params.variance.shape[0] == 1:
+                self._implementation = tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None,
+                                                            noise_variance=self._likelihood.params.variance[0, l])
+                                            for l, kernel in enumerate(self._kernel.implementation))
+            else:
+                self._implementation = tuple(mf.models.MOGPR(data=(self._X, self._Y), kernel=kernel, mean_function=None,
+                                                             noise_variance=self._likelihood.params.variance)
+                                             for kernel in self._kernel.implementation)
+        return self._implementation
 
     def optimize(self, method: str = 'L-BFGS-B', **kwargs):
         """ Optimize the GP hyper-parameters.
@@ -272,8 +289,11 @@ class GP(GPInterface):
         """
         options = (self._read_options() if self._options_json.exists() else self.DEFAULT_OPTIONS)
         options.update(kwargs)
-        with suppress(KeyError):
-            options.pop('result')
+        options.pop('result', None)
+        kernel_options = options.pop('kernel', {})
+        likelihood_options = options.pop('likelihood', {})
+        self._kernel.optimize(**kernel_options)
+        self._likelihood.optimize(**likelihood_options)
         opt = gf.optimizers.Scipy()
         options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
                                                   for gp in self._implementation))})

@@ -198,10 +198,11 @@ class Model(ABC):
         """
         return self._parameters.values
 
-    def optimize(self, method: str, options: Optional[Dict] = DEFAULT_OPTIONS):
+    def optimize(self, method: str, **kwargs):
         if method != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks.':
             raise NotImplementedError('base.optimize() must never be called.')
         else:
+            options = self.DEFAULT_OPTIONS | kwargs
             options = (options if options is not None
                        else self._read_options() if self._options_json.exists() else self.DEFAULT_OPTIONS)
             options.pop('result', default=None)
@@ -237,4 +238,4 @@ class Model(ABC):
             self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
             self._parameters = self.Parameters(self._folder).replace(**kwargs)
         self._parameters.write()
-        self._test = None
+        self._implementation = None
