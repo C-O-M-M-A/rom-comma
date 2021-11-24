@@ -136,8 +136,8 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
                         gp.optimize(**kwargs)
                     if test:
                         gp.test()
-                    # if sobol:
-                    #     module.value.Sobol(gp, semi_norm)
+                    if sobol:
+                        print(gp.check_KNoisyInv_Y(store.test_x.to_numpy(), store.test_y.to_numpy()))
 
 
 # def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,

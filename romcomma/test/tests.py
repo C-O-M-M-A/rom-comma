@@ -32,7 +32,7 @@ from pathlib import Path
 import shutil
 import scipy.stats
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\3.2')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.0')
 
 
 def fold_and_rotate_with_tests(store: Store, K: int, rotation: NP.Matrix):
@@ -106,18 +106,5 @@ if __name__ == '__main__':
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     for M in (5,):
-                        BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\4.0')
-                        run_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
+                        run_gps('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
                                 noise_label=noise_label, random=random, M=M)
-                        # compare_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
-                        #             noise_label=noise_label, random=random, M=M)
-                        BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\4.1')
-                        run_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
-                                noise_label=noise_label, random=random, M=M)
-                        # compare_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
-                        #             noise_label=noise_label, random=random, M=M)
-                        BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\4.2')
-                        run_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False, random=True),
-                                noise_label=noise_label, random=random, M=M)
-                        # compare_gps('other', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False, random=True),
-                        #             noise_label=noise_label, random=random, M=M)

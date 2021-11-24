@@ -24,7 +24,20 @@
 from __future__ import annotations
 
 from romcomma.typing_ import *
+import gpflow as gf
+import tensorflow as tf
+from romcomma.base import Model, Parameters
 
+class Sobol(Model, gf.Module):
+    """ """
+
+    @property
+    def Theta(self):
+        return
+
+    @Theta.setter
+    def Theta(self, value):
+        pass
 
 # noinspection PyPep8Naming
 # class Sobol(Model):

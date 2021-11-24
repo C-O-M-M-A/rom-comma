@@ -318,6 +318,7 @@ class GP(GPInterface):
         if self._likelihood.params.variance.shape[0] == 1:
             results = tuple(gp.predict_y(X) if y_instead_of_f else gp.predict_f(X) for gp in self._implementation)
             results = tuple(np.transpose(result) for result in zip(*results))
+            results = tuple(results[i][0] for i in range(len(results)))
         else:
             gp = self.implementation[0]
             results = gp.predict_y(X) if y_instead_of_f else gp.predict_f(X)
@@ -330,7 +331,7 @@ class GP(GPInterface):
 
     @property
     def Y(self) -> TF.Matrix:
-        """ The implementation training outputs as an (L,N) design matrix. """
+        """ The implementation training outputs as an (N,L) design matrix. """
         return self._implementation[0].data[1]
 
     @property
@@ -349,16 +350,17 @@ class GP(GPInterface):
     @property
     def KNoisyInv_Y(self) -> TF.Tensor:
         if self._likelihood.params.variance.shape[0] == 1:
-            Y = self._Y.transpose().flatten()
+            Y = np.reshape(self._Y.transpose().flatten(), [-1, 1])
         else:
             Y = tf.reshape(tf.transpose(self.Y), [-1, 1])
-        return tf.linalg.cholesky_solve(tf.linalg.cholesky(self.KNoisy_Cho), Y)
+        return tf.linalg.cholesky_solve(self.KNoisy_Cho, Y)
 
-    def _check_KNoisyInv_Y(self, x: NP.Matrix) -> TF.Tensor:
+    def check_KNoisyInv_Y(self, x: NP.Matrix, y: NP.Matrix) -> NP.Matrix:
         """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance).
 
         Args:
             x: An (o, M) matrix of inputs.
+            y: An (o, L) matrix of outputs.
         Returns: Should return zeros((Lo)) (to within numerical error tolerance)
 
         """
@@ -367,12 +369,15 @@ class GP(GPInterface):
             kernel = np.zeros(shape=(self._L * o, self._L * self._N))
             for l, gp in enumerate(self._implementation):
                 X = gp.data[0]
-                kernel[l*o:(l+1)*o, l*self._N:(l+1)*self._N] = gp.kernel(X, x)
-            else:
-                gp = self._implementation[0]
-                kernel = gp.kernel(X, x)
+                kernel[l*o:(l+1)*o, l*self._N:(l+1)*self._N] = gp.kernel(x, X)
+        else:
+            gp = self._implementation[0]
+            kernel = gp.kernel(x, self.X)
         predicted = self.predict(x)[0]
-        return predicted - tf.einsum('on, n -> o', kernel, self.KNoisyInv_Y)
+        print(np.sqrt(np.sum((y-predicted)**2)/o))
+        result = tf.transpose(tf.reshape(tf.einsum('on, ni -> o', kernel, self.KNoisyInv_Y), (-1, o)))
+        result = result - predicted
+        return np.sqrt(np.sum(result * result)/o)
 
     def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
                  kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):

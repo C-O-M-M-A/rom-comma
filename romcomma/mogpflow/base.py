@@ -27,7 +27,6 @@ from gpflow import Parameter, Module
 from gpflow.utilities import positive
 from gpflow.models.util import data_input_to_tensor
 from gpflow.config import default_float
-import tensorflow as tf
 
 from romcomma.typing_ import *
 
