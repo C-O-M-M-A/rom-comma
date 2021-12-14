@@ -300,14 +300,14 @@ class GP(GPInterface):
         self._write_options(options)
         if self._likelihood.params.variance.shape[0] == 1:
             self._likelihood.parameters = self._likelihood.parameters.replace(variance=tuple(gp.likelihood.variance.numpy() for gp in self._implementation),
-                                                                              log_marginal=tuple(gp.log_marginal_likelihood() for gp in self._implementation)
+                                                                              log_marginal=tuple(-gp.log_marginal_likelihood() for gp in self._implementation)
                                                                               ).write()
             self._kernel.parameters = self._kernel.parameters.replace(variance=tuple(gp.kernel.variance.numpy() for gp in self._implementation),
                                                                       lengthscales=tuple(gp.kernel.lengthscales.numpy() for gp in self._implementation)
                                                                       ).write()
         else:
             self._likelihood.parameters = self._likelihood.parameters.replace(variance=self._implementation[0].likelihood.variance.value.numpy(),
-                                                                              log_marginal=self._implementation[0].log_marginal_likelihood().numpy()
+                                                                              log_marginal=-self._implementation[0].log_marginal_likelihood().numpy()
                                                                               ).write()
             self._kernel.parameters = self._kernel.parameters.replace(variance=self._implementation[0].kernel.variance.value.numpy(),
                                                                       lengthscales=tf.squeeze(self._implementation[0].kernel.lengthscales),

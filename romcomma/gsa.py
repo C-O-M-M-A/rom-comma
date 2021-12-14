@@ -23,21 +23,77 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
+
 from romcomma.typing_ import *
 import gpflow as gf
 import tensorflow as tf
 from romcomma.base import Model, Parameters
+from romcomma.gpr import GPInterface
 
-class Sobol(Model, gf.Module):
-    """ """
+class GSAInterface(Model, gf.Module):
+    """ Interface encapsulating a Global Sensitivity Analysis. """
+
+    class Parameters(Parameters):
+        """ The Parameters set of a GSA."""
+
+        @classmethod
+        @property
+        def Values(cls) -> Type[NamedTuple]:
+            """ The NamedTuple underpinning this Parameters set."""
+
+            class Values(NamedTuple):
+                """ The parameters set of a GSA.
+
+                Attributes:
+                    theta (NP.Matrix): An (M,M) rotation matrix.
+                    result (NP.Matrix): An (L, L, M) tensor result, flattened into an (L*L, M) matrix.
+                    covariance (NP.Matrix): An (L, L, L, L, M, M) tensor covariance of result, flattened into an (L*L*L*L, M*M) matrix.
+                """
+                theta: NP.Matrix = np.atleast_2d(0.0)
+                result: NP.Matrix = np.atleast_2d(0.0)
+                covariance: NP.Matrix = np.atleast_2d(0.0)
+
+            return Values
 
     @property
     def Theta(self):
-        return
+        return self._Theta
 
     @Theta.setter
     def Theta(self, value):
-        pass
+        self._Theta = value
+        self.calculate()
+
+    def __init__(self, name: str, gp: GPInterface, Theta: TF.Matrix = None,
+                 is_result_diagonal: bool = True, is_covariance_partial: bool = True, is_covariance_diagonal: bool = True):
+        """ Construct a GSA object.
+
+        Args:
+            gp: The gp to analyze.
+            read_parameters: Whether to read Theta from file.
+            Theta: (M,M) input rotation matrix.
+            is_result_diagonal: False to calculate L diagonal elements, True to calculate all LxL elements.
+            is_covariance_partial:
+            is_covariance_diagonal: False to calculate L diagonal elements, True to calculate all LxLxLxL elements.
+        """
+        self._gp = gp
+        self._folder = self._gp.folder / 'gsa' / name
+        self._is_result_diagonal, self._is_covariance_partial, self._is_covariance_diagonal = is_result_diagonal, is_covariance_partial, is_covariance_diagonal
+        if Theta is None and self._folder.exists():
+            super().__init__(folder=self._folder, read_parameters=True)
+            self._Theta = tf.constant(self.params.Theta, dtype=gf.config.default_float())
+        else:
+            if Theta is None:
+                Theta = tf.eye(self._gp.M, dtype = gf.config.default_float())
+
+
+                self._Theta = tf.constant(Theta, dtype=gf.config.default_float())
+            super().__init__(folder=self._folder, read_parameters=False)
+        elif not self._folder.exists():
+            super().__init__(folder=self._folder, read_parameters=False)
+        else:
+
 
 # noinspection PyPep8Naming
 # class Sobol(Model):
