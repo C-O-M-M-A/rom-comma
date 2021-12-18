@@ -95,6 +95,8 @@ class GSAInterface(Model, gf.Module):
         self._E = tf.constant(self._gp.likelihood.params.variance, dtype=gf.config.default_float())
         self._F = tf.constant(self._gp.kernel.params.variance, dtype=gf.config.default_float())
         self._Lambda = tf.constant(self._gp.kernel.params.lengthscales, dtype=gf.config.default_float())
+        pass
+
 
 class GSA(GSAInterface):
     """ Implementation of Global Sensitivity Analysis. """
