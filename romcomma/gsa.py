@@ -56,59 +56,64 @@ class GSAInterface(Model, gf.Module):
 
             return Values
 
+    @classmethod
     @property
-    def Theta(self):
+    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+        """ Calculation options"""
+        return {'is_result_diagonal': True, 'is_covariance_partial': True, 'is_covariance_diagonal': True}
+
+    @property
+    def theta(self):
         return self._Theta
 
-    @Theta.setter
-    def Theta(self, value):
+    @theta.setter
+    def theta(self, value):
         self._Theta = value
         self.calculate()
 
-    def __init__(self, name: str, gp: GPInterface, Theta: TF.Matrix = None,
-                 is_result_diagonal: bool = True, is_covariance_partial: bool = True, is_covariance_diagonal: bool = True):
+    def __init__(self, name: str, gp: GPInterface, theta: TF.Matrix = None, **kwargs: Any):
         """ Construct a GSA object.
 
         Args:
+            name: The name of the GSA.
             gp: The gp to analyze.
-            read_parameters: Whether to read Theta from file.
-            Theta: (M,M) input rotation matrix.
-            is_result_diagonal: False to calculate L diagonal elements, True to calculate all LxL elements.
-            is_covariance_partial:
-            is_covariance_diagonal: False to calculate L diagonal elements, True to calculate all LxLxLxL elements.
+            theta: (M,M) input rotation matrix.
+            **kwargs: Set calculation options, by updating DEFAULT_OPTIONS.
         """
+        super(Model, self).__init__(name=name)
         self._gp = gp
         self._folder = self._gp.folder / 'gsa' / name
-        self._is_result_diagonal, self._is_covariance_partial, self._is_covariance_diagonal = is_result_diagonal, is_covariance_partial, is_covariance_diagonal
-        if Theta is None and self._folder.exists():
+        self.options = self.DEFAULT_OPTIONS | kwargs
+        if theta is None and self._folder.exists():
             super().__init__(folder=self._folder, read_parameters=True)
-            self._Theta = tf.constant(self.params.Theta, dtype=gf.config.default_float())
         else:
-            if Theta is None:
-                Theta = tf.eye(self._gp.M, dtype = gf.config.default_float())
+            theta = np.eye(self._gp.M, dtype = gf.config.default_float()) if theta is None else theta
+            super().__init__(folder=self._folder, read_parameters=False, theta=theta)
+        self._theta = tf.constant(self.params.theta, dtype=gf.config.default_float())
 
+        # Unwrap parameters
+        self._E = tf.constant(self._gp.likelihood.params.variance, dtype=gf.config.default_float())
+        self._F = tf.constant(self._gp.kernel.params.variance, dtype=gf.config.default_float())
+        self._Lambda = tf.constant(self._gp.kernel.params.lengthscales, dtype=gf.config.default_float())
 
-                self._Theta = tf.constant(Theta, dtype=gf.config.default_float())
-            super().__init__(folder=self._folder, read_parameters=False)
-        elif not self._folder.exists():
-            super().__init__(folder=self._folder, read_parameters=False)
-        else:
+class GSA(GSAInterface):
+    """ Implementation of Global Sensitivity Analysis. """
 
 
 # noinspection PyPep8Naming
 # class Sobol(Model):
 #     """ Interface to a Sobol' Index Calculator and Optimizer.
 #
-#     Internal quantities are called variant if they depend on Theta, invariant otherwise.
-#     Invariants are calculated in the constructor. Variants are calculated in Theta.setter."""
+#     Internal quantities are called variant if they depend on theta, invariant otherwise.
+#     Invariants are calculated in the constructor. Variants are calculated in theta.setter."""
 #
 #     """ Required overrides."""
 #
 #     MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
 #
-#     Parameters = NamedTuple("Parameters", [('Theta', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix), ('ST', NP.Matrix)])
+#     Parameters = NamedTuple("Parameters", [('theta', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix), ('ST', NP.Matrix)])
 #     """
-#         **Theta** -- The (Mu, M) rotation matrix ``U = X Theta.T`` (in design matrix terms), so u = Theta x (in column vector terms).
+#         **theta** -- The (Mu, M) rotation matrix ``U = X theta.T`` (in design matrix terms), so u = theta x (in column vector terms).
 #
 #         **D** -- An (L L, M) Matrix of cumulative conditional variances D[l,k,m] = S[l,k,m] D[l,k,M].
 #
@@ -203,7 +208,7 @@ class GSAInterface(Model, gf.Module):
 #             If N_exploit < 1, only re-ordering of the input basis is allowed.
 #
 #         **N_explore** -- The number of random_sgn xi vectors to explore in search of the global optimum.
-#             If N_explore <= 1, gradient descent is initialized from Theta = Identity Matrix.
+#             If N_explore <= 1, gradient descent is initialized from theta = Identity Matrix.
 #
 #         **options** -- A Dict of options passed directly to the underlying optimizer.
 #     """
@@ -247,49 +252,49 @@ class GSAInterface(Model, gf.Module):
 #
 #     # @property
 #     # def Theta_old(self) -> NP.Matrix:
-#     #     """ Sets or gets the (M, M) rotation Matrix, prior to updates by xi. Setting automatically updates Theta, triggering Sobol' recalculation."""
+#     #     """ Sets or gets the (M, M) rotation Matrix, prior to updates by xi. Setting automatically updates theta, triggering Sobol' recalculation."""
 #     #     return self._Theta_old
 #     #
 #     # @Theta_old.setter
 #     # def Theta_old(self, value: NP.Matrix):
 #     #     assert value.shape == (self._M, self._M)
 #     #     self._Theta_old = value
-#     #     self.Theta = self.Theta_old[:self._m + 1, :].copy(order=self.MEMORY_LAYOUT)
+#     #     self.theta = self.Theta_old[:self._m + 1, :].copy(order=self.MEMORY_LAYOUT)
 #     #
 #     # @property
-#     # def Theta(self) -> NP.Matrix:
+#     # def theta(self) -> NP.Matrix:
 #     #     """ Sets or gets the (m+1, Mx) rotation Matrix which has been updated by xi. Setting triggers Sobol' recalculation."""
 #     #     return self._Theta
 #     #
 #     # # noinspection PyAttributeOutsideInit
-#     # @Theta.setter
-#     # def Theta(self, value: NP.Matrix):
+#     # @theta.setter
+#     # def theta(self, value: NP.Matrix):
 #     #     """ Complete calculation of variants and Sobol' indices (conditional variances _D actually) is found here and here only."""
 #     #
 #     #     assert value.shape == (self._m + 1, self._M)
 #     #     self._Theta = value
 #     #
 #     #     """ Calculate variants related to Sigma. """
-#     #     self._Sigma_partial = einsum('M, kM -> Mk', self._Sigma_diagonal, self.Theta, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-#     #     Sigma = einsum('mM, Mk -> mk', self.Theta, self._Sigma_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
+#     #     self._Sigma_partial = einsum('M, kM -> Mk', self._Sigma_diagonal, self.theta, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
+#     #     Sigma = einsum('mM, Mk -> mk', self.theta, self._Sigma_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 #     #     self._Sigma_cho = cho_factor(Sigma, lower=False, overwrite_a=False, check_finite=False)
 #     #     Sigma_cho_det = prod(diag(self._Sigma_cho[0]))
-#     #     self._2I_minus_Sigma_partial = einsum('M, kM -> Mk', 2 - self._Sigma_diagonal, self.Theta, optimize=True, dtype=float,
+#     #     self._2I_minus_Sigma_partial = einsum('M, kM -> Mk', 2 - self._Sigma_diagonal, self.theta, optimize=True, dtype=float,
 #     #                                           order=self.MEMORY_LAYOUT)
-#     #     _2I_minus_Sigma = einsum('mM, Mk -> mk', self.Theta, self._2I_minus_Sigma_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
+#     #     _2I_minus_Sigma = einsum('mM, Mk -> mk', self.theta, self._2I_minus_Sigma_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 #     #     self._2I_minus_Sigma_cho = cho_factor(_2I_minus_Sigma, lower=False, overwrite_a=False, check_finite=False)
 #     #     _2I_minus_Sigma_cho_det = prod(diag(self._2I_minus_Sigma_cho[0]))
-#     #     self._inv_Sigma_Theta = cho_solve(self._Sigma_cho, self.Theta, overwrite_b=False, check_finite=False)
-#     #     T_inv_Sigma_T = atleast_2d(einsum('NM, mM, mK, NK -> N', self._FBold, self.Theta, self._inv_Sigma_Theta, self._FBold,
+#     #     self._inv_Sigma_Theta = cho_solve(self._Sigma_cho, self.theta, overwrite_b=False, check_finite=False)
+#     #     T_inv_Sigma_T = atleast_2d(einsum('NM, mM, mK, NK -> N', self._FBold, self.theta, self._inv_Sigma_Theta, self._FBold,
 #     #                                       optimize=True, dtype=float, order=self.MEMORY_LAYOUT))
 #     #     self._D_const = (_2I_minus_Sigma_cho_det * Sigma_cho_det) ** (-1)
 #     #
 #     #     """ Calculate variants related to Phi. """
-#     #     self._Phi_partial = einsum('M, kM -> Mk', self._Psi_diagonal, self.Theta, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-#     #     Phi = einsum('mM, Mk -> mk', self.Theta, self._Phi_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
+#     #     self._Phi_partial = einsum('M, kM -> Mk', self._Psi_diagonal, self.theta, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
+#     #     Phi = einsum('mM, Mk -> mk', self.theta, self._Phi_partial, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 #     #     self._Phi_cho = cho_factor(Phi, lower=False, overwrite_a=False, check_finite=False)
 #     #     self._inv_Phi_inv_Sigma_Theta = cho_solve(self._Phi_cho, self._inv_Sigma_Theta, overwrite_b=False, check_finite=False)
-#     #     T_inv_Phi_inv_Sigma_T = einsum('NOM, mM, mK, NOK -> NO', self._V_pre_outer_square, self.Theta, self._inv_Phi_inv_Sigma_Theta,
+#     #     T_inv_Phi_inv_Sigma_T = einsum('NOM, mM, mK, NOK -> NO', self._V_pre_outer_square, self.theta, self._inv_Phi_inv_Sigma_Theta,
 #     #                                     self._V_pre_outer_square, optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 #     #
 #     #     """ Finally calculate conditional variances _D."""
@@ -300,7 +305,7 @@ class GSAInterface(Model, gf.Module):
 #     #
 #     # @property
 #     # def xi(self) -> NP.Array:
-#     #     """ Sets or gets the (Mx-m-1) Array which is the row m update to Theta. Setting updates Theta, so triggers Sobol' recalculation."""
+#     #     """ Sets or gets the (Mx-m-1) Array which is the row m update to theta. Setting updates theta, so triggers Sobol' recalculation."""
 #     #     return self._xi
 #     #
 #     # @xi.setter
@@ -311,12 +316,12 @@ class GSAInterface(Model, gf.Module):
 #     #         value *= sqrt((1-EFFECTIVELY_ZERO)/(1-norm))
 #     #         norm = EFFECTIVELY_ZERO
 #     #     self._xi = append(sqrt(norm), value)
-#     #     self.Theta[self._m, :] = einsum('k, kM -> M', self._xi, self.Theta_old[self._m:, :],
+#     #     self.theta[self._m, :] = einsum('k, kM -> M', self._xi, self.Theta_old[self._m:, :],
 #     #                                    optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-#     #     self.Theta = self.Theta[:self._m + 1, :]
+#     #     self.theta = self.theta[:self._m + 1, :]
 #
 #     def optimize(self, **kwargs):
-#         """ Optimize ``Theta`` to maximize ``semi_norm(D[:,:,m])`` for ``m=0,1,..(Mu-1)``.
+#         """ Optimize ``theta`` to maximize ``semi_norm(D[:,:,m])`` for ``m=0,1,..(Mu-1)``.
 #
 #         Args:
 #             options: A Dict similar to (and documented in) Sobol.DEFAULT_OPTIMIZER_OPTIONS.
@@ -339,7 +344,7 @@ class GSAInterface(Model, gf.Module):
 #         #     """ Maps ``xi`` to the optimization objective (a conditional variance ``D'').
 #         #
 #         #     Args:
-#         #         xi: The Theta row update.
+#         #         xi: The theta row update.
 #         #     Returns: The scalar (float) -semi_norm(D[:, :, m]).
 #         #     """
 #         #     self.xi = xi
@@ -349,7 +354,7 @@ class GSAInterface(Model, gf.Module):
 #         #     """ Maps ``xi`` to an ``(Mx-m,) Array``, the optimization objective jacobian.
 #         #
 #         #     Args:
-#         #         xi: The Theta row update.
+#         #         xi: The theta row update.
 #         #     Returns: The (Mx-m,) jacobian Array -d(semi_norm(D[:, :, m])) / (d xi).
 #         #     """
 #         #     self.xi = xi
@@ -364,7 +369,7 @@ class GSAInterface(Model, gf.Module):
 #         #         if q is not None:
 #         #             self.Theta_old = transpose(q)
 #         #         self.xi = self._optimal_rotating_xi(options['N_explore'], options['N_exploit'], options['options'])
-#         #         q, r = qr(transpose(self.Theta), check_finite=False)
+#         #         q, r = qr(transpose(self.theta), check_finite=False)
 #         #         sign_correction = sign(diag(r))
 #         #         q *= concatenate((sign_correction, ones(self._M - len(sign_correction), dtype=int)))
 #         #     self.Theta_old = transpose(q)
@@ -373,11 +378,11 @@ class GSAInterface(Model, gf.Module):
 #         #     if q is not None:
 #         #         self.Theta_old = transpose(q)
 #         #     self.xi = self._optimal_reordering_xi()
-#         #     q, r = qr(transpose(self.Theta), check_finite=False)
+#         #     q, r = qr(transpose(self.theta), check_finite=False)
 #         #     # sign_correction = sign(diag(r))
 #         #     # q *= concatenate((sign_correction, ones(self._M - len(sign_correction), dtype=int)))
 #         # self.Theta_old = transpose(q)
-#         # self.write_parameters(self.Parameters(Mu=self.Mu, Theta=self._Theta_old, D=self.Tensor3AsMatrix(self._D), S1=None,
+#         # self.write_parameters(self.Parameters(Mu=self.Mu, theta=self._Theta_old, D=self.Tensor3AsMatrix(self._D), S1=None,
 #         #                                       S=self.Tensor3AsMatrix(self.S)))
 #         # self.replace_X_with_U()
 #
@@ -435,7 +440,7 @@ class GSAInterface(Model, gf.Module):
 #     #
 #     #     Args:
 #     #         N_explore: The maximum number of xi's to explore. If N_explore &le 1 the zero vector is returned.
-#     #             This is tantamount to taking Theta = I (the identity matrix).
+#     #             This is tantamount to taking theta = I (the identity matrix).
 #     #         xi_len: The length of each xi (row) Array.
 #     #     Returns: An (N_explore, xi_len) Matrix where 1 &le N_explore &le max(N_explore,1).
 #     #     """
@@ -465,7 +470,7 @@ class GSAInterface(Model, gf.Module):
 #     #     """
 #     #
 #     # def _optimal_rotating_xi(self, N_explore: int, N_exploit: int, options: Dict) -> NP.Array:
-#     #     """ Optimizes the ``Theta`` row update ``xi`` by allowing general rotation.
+#     #     """ Optimizes the ``theta`` row update ``xi`` by allowing general rotation.
 #     #
 #     #     Args:
 #     #         N_explore: The number of random_sgn xi vectors to explore in search of the global optimum.
@@ -491,7 +496,7 @@ class GSAInterface(Model, gf.Module):
 #     #     return best[0][1]
 #     #
 #     # def _optimal_reordering_xi(self) -> NP.Array:
-#     #     """ Optimizes the ``Theta`` row update ``xi`` by allowing re-ordering only.
+#     #     """ Optimizes the ``theta`` row update ``xi`` by allowing re-ordering only.
 #     #
 #     #     Returns:
 #     #         The Array xi consisting of all zeros except at most one 1.0 which maximizes self.optimization_objective(xi).
@@ -537,18 +542,18 @@ class GSAInterface(Model, gf.Module):
 #     #         log_D_const_jac[j] = (sum(diag(inv_2I_minus_Sigma_jac_2I_minus_Sigma[:, :, j])) + sum(diag(inv_Sigma_jac_Sigma[:, :, j])))
 #     #
 #     #     """ Calculate self._V, a Tensor3(N, N, M-m,) known in the literature as V. """
-#     #     Sigma_factor_transpose = Theta_jac - einsum('kmj, kM -> mMj', inv_Sigma_jac_Sigma, self.Theta,
+#     #     Sigma_factor_transpose = Theta_jac - einsum('kmj, kM -> mMj', inv_Sigma_jac_Sigma, self.theta,
 #     #                                                       optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 #     #     Theta_inv_Sigma_Theta_jac = einsum('mMj, mK -> MKj', Sigma_factor_transpose, self._inv_Sigma_Theta,
 #     #                                        optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 #     #     T_inv_Sigma_T_jac = einsum('NM, MKj, NK -> Nj', self._FBold, Theta_inv_Sigma_Theta_jac, self._FBold,
 #     #                                optimize=True, dtype=float, order=self.MEMORY_LAYOUT).reshape((1, self._N, self._xi_len + 1),
 #     #                                                                                               order=self.MEMORY_LAYOUT)
-#     #     Phi_factor_transpose = Theta_jac - einsum('kmj, kM -> mMj', inv_Phi_jac_Phi, self.Theta,
+#     #     Phi_factor_transpose = Theta_jac - einsum('kmj, kM -> mMj', inv_Phi_jac_Phi, self.theta,
 #     #                                               optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 #     #     Theta_inv_Phi_inv_Sigma_Theta_jac = einsum('mMj, mK -> MKj', Phi_factor_transpose, self._inv_Phi_inv_Sigma_Theta,
 #     #                                                optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
-#     #     Theta_inv_Phi_inv_Sigma_Theta_jac -= einsum('kM, kmj, mK -> MKj', self.Theta, inv_Phi_inv_Sigma_jac_Sigma, self._inv_Sigma_Theta,
+#     #     Theta_inv_Phi_inv_Sigma_Theta_jac -= einsum('kM, kmj, mK -> MKj', self.theta, inv_Phi_inv_Sigma_jac_Sigma, self._inv_Sigma_Theta,
 #     #                                                 optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 #     #     T_inv_Phi_inv_Sigma_T_jac = einsum('NOM, MKj, NOK -> NOj',
 #     #                                        self._V_pre_outer_square, Theta_inv_Phi_inv_Sigma_Theta_jac, self._V_pre_outer_square,

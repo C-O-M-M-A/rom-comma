@@ -32,7 +32,7 @@ from pathlib import Path
 import shutil
 import scipy.stats
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.0')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.1')
 
 
 def fold_and_rotate_with_tests(store: Store, K: int, rotation: NP.Matrix):
@@ -70,7 +70,7 @@ def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float]
     # fold_and_rotate_with_tests(store, K, rotation)
     fold_and_rotate(store, K, rotation)
     run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
-            optimize=True, test=True)
+            optimize=True, test=True, analyze=False)
 
 
 # noinspection PyShadowingNames
@@ -84,7 +84,22 @@ def compare_gps(name, function_names: Sequence[str], N: int, noise_variance: [fl
     store_folder = BASE_PATH / store_folder
     store = Store(store_folder)
     run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
-            optimize=True, test=True)
+            optimize=True, test=True, analyze=False)
+
+
+def run_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5):
+    if isinstance(function_names, str):
+        function_names = [function_names]
+    f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
+    store_folder = '.'.join(function_names) + f'.{M:d}.{noise_label}.{N:d}'
+    if random:
+        store_folder += '.rotated'
+    store_folder = BASE_PATH / store_folder
+    store = Store(store_folder)
+    run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+            optimize=False, test=False, analyze=True)
+
+
 
 
 def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = False):
@@ -106,5 +121,5 @@ if __name__ == '__main__':
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     for M in (5,):
-                        run_gps('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
+                        run_gsa('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
                                 noise_label=noise_label, random=random, M=M)

@@ -355,14 +355,13 @@ class GP(GPInterface):
             Y = tf.reshape(tf.transpose(self.Y), [-1, 1])
         return tf.linalg.cholesky_solve(self.KNoisy_Cho, Y)
 
-    def check_KNoisyInv_Y(self, x: NP.Matrix, y: NP.Matrix) -> NP.Matrix:
+    def check_KNoisyInv_Y(self, x: NP.Matrix) -> NP.Matrix:
         """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance).
 
         Args:
             x: An (o, M) matrix of inputs.
             y: An (o, L) matrix of outputs.
-        Returns: Should return zeros((Lo)) (to within numerical error tolerance)
-
+        Returns: Should return zeros((Lo)) (to within numerical error tolerance).
         """
         o = x.shape[0]
         if self._likelihood.params.variance.shape[0] == 1:
@@ -374,9 +373,8 @@ class GP(GPInterface):
             gp = self._implementation[0]
             kernel = gp.kernel(x, self.X)
         predicted = self.predict(x)[0]
-        print(np.sqrt(np.sum((y-predicted)**2)/o))
         result = tf.transpose(tf.reshape(tf.einsum('on, ni -> o', kernel, self.KNoisyInv_Y), (-1, o)))
-        result = result - predicted
+        result -= predicted
         return np.sqrt(np.sum(result * result)/o)
 
     def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,

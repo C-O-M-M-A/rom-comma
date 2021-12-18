@@ -25,4 +25,5 @@ from . import test
 from . import data, kernels, run
 from . import mogpflow
 from .base import Model, Parameters
-from .gpr import GP
+from .gpr import Likelihood, GP
+from .gsa import GSA

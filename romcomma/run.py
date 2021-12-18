@@ -25,8 +25,8 @@ import gpflow.config
 
 from romcomma.typing_ import *
 from romcomma.base import Parameters, Model
-from romcomma.data import Store, Fold, Frame
-from romcomma import kernels, gpr
+from romcomma.data import Store, Fold
+from romcomma import kernels, gpr, gsa
 from numpy import full, transpose
 from pandas import concat
 from pathlib import Path
@@ -81,7 +81,7 @@ def Context(name: str, device: str = '', **kwargs):
 
 def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
         kernel_parameters: Optional[kernels.Kernel.Parameters] = None, parameters: Optional[gpr.GP.Parameters] = None,
-        optimize: bool = True, test: bool = True, sobol: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.DEFAULT_META'}, **kwargs):
+        optimize: bool = True, test: bool = True, analyze: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.DEFAULT_META'}, **kwargs):
     """ Service routine to recursively run GPs the Folds in a Store, and on a single Fold.
 
     Args:
@@ -97,7 +97,7 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
         parameters: The GP.parameters fields=values to replace after reading from file/defaults.
         optimize: Whether to optimize each GP.
         test: Whether to test_data each GP.
-        sobol: Whether to calculate Sobol' indices for each GP.
+        analyze: Whether to calculate Sobol' indices for each GP.
         semi_norm: Meta json describing a Sobol.SemiNorm.
         kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.DEFAULT_OPTIMIZER_OPTIONS.
 
@@ -106,16 +106,16 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
     """
     if not isinstance(store, Fold):
         for k in range(store.meta['K'] + 1):
-            gps(name, Fold(store, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+            gps(name, Fold(store, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
     else:
         if is_independent is None:
-            gps(name, store, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
-            gps(name, store, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+            gps(name, store, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+            gps(name, store, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
         else:
             full_name = name + ('.i' if is_independent else '.d')
             if is_isotropic is None:
-                gps(name, store, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
-                gps(name, store, None, False, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+                gps(name, store, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+                gps(name, store, None, False, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
             else:
                 full_name = full_name + ('.i' if is_isotropic else '.a')
                 if is_read is None:
@@ -124,11 +124,11 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
                         if is_independent or not (store.folder / nearest_name).exists():
                             nearest_name = full_name[:-2] + '.i'
                             if not (store.folder / nearest_name).exists():
-                                gps(name, store, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol,
+                                gps(name, store, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze,
                                     semi_norm, **kwargs)
                                 return
                         gpr.GP.copy(src_folder=store.folder/nearest_name, dst_folder=store.folder/full_name)
-                    gps(name, store, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, sobol, semi_norm, **kwargs)
+                    gps(name, store, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
                 else:
                     gp = gpr.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
                                 **({} if parameters is None else parameters.as_dict()))
@@ -136,8 +136,8 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
                         gp.optimize(**kwargs)
                     if test:
                         gp.test()
-                    if sobol:
-                        print(gp.check_KNoisyInv_Y(store.test_x.to_numpy(), store.test_y.to_numpy()))
+                    if analyze:
+                        sa = gsa.GSA(name, gp, None)
 
 
 # def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
@@ -299,7 +299,7 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #     return split_dirs
 #
 #
-# def collect_GPs(store: Store, model_name: str, test: bool, sobol: bool, is_split: bool = True, kernelTypeIdentifier: str = "gpy_.ExponentialQuadratic"
+# def collect_GPs(store: Store, model_name: str, test: bool, analyze: bool, is_split: bool = True, kernelTypeIdentifier: str = "gpy_.ExponentialQuadratic"
 #                 ) -> Sequence[Path]:
 #     """ Collect all the Parameters associated with a GP/Sobol calculation.
 #
@@ -307,7 +307,7 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #         store: The Store containing the global dataset to be analyzed.
 #         model_name: The name of the Model where the results are being collected.
 #         test: Whether to collect tests or not.
-#         sobol: Whether to Sobol indices or not.
+#         analyze: Whether to Sobol indices or not.
 #         kernelTypeIdentifier: The KernelTypeIdentifier for the GP.
 #         is_split: True or False, whether splits have been used in the Model.
 #     Returns: The split directories collected.
@@ -316,7 +316,7 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #     collect(store, model_name, gpr.GP.DEFAULT_PARAMETERS, is_split)
 #     if test:
 #         collect_tests(store, model_name, is_split)
-#     # if sobol:
+#     # if analyze:
 #     #     collect(store, model_name + "\\Sobol", base.Sobol.DEFAULT_PARAMETERS, is_split)
 #     return collect(store, model_name + "\\Kernel", kernels.Kernel.TypeFromIdentifier(kernelTypeIdentifier).DEFAULT_PARAMETERS, is_split)
 #
@@ -334,8 +334,8 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #     gb_path = Path(gb_path)
 #     Mu = int(gb_path.suffix[1:])
 #     fold_dir = gb_path.parent
-#     sobol = fold_dir / "ROM.optimized" / "sobol"
-#     theta_T = transpose(Frame(sobol / "Theta.csv", csv_parameters={'header': [0]}).df.values)
+#     analyze = fold_dir / "ROM.optimized" / "analyze"
+#     theta_T = transpose(Frame(analyze / "Theta.csv", csv_parameters={'header': [0]}).df.values)
 #     k = int(fold_dir.suffix[1:])
 #     M = Fold(fold_dir.parent, k, Mu).M +1
 #     if 0 < Mu < M:
