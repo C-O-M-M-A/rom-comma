@@ -31,6 +31,29 @@ import tensorflow as tf
 from romcomma.base import Model, Parameters
 from romcomma.gpr import GPInterface
 
+def gaussian(mean: TF.Tensor, variance: TF.Tensor, value: TF.Tensor = tf.constant(0)) -> TF.Tensor:
+    pass
+
+def diagonal_gaussian(mean: TF.Tensor, variance: TF.Tensor, value: TF.Tensor = tf.constant(0)) -> TF.Tensor:
+    m = mean.shape[-1]
+    value = value - mean if value.shape else mean
+    normalization = (tf.constant(2 * np.pi, dtype=gf.config.default_float())**m + tf.reduce_prod(variance))**(-0.5)
+    result = tf.einsum('...m, ...m -> ...')
+
+    
+class Samples(NamedTuple):
+    """ The Samples set of a GSA.
+
+    Attributes:
+        M
+        m
+        O
+    """
+    M = None
+    m = None
+    O = None
+
+
 class GSAInterface(Model, gf.Module):
     """ Interface encapsulating a Global Sensitivity Analysis. """
 
@@ -64,12 +87,31 @@ class GSAInterface(Model, gf.Module):
 
     @property
     def theta(self):
-        return self._Theta
+        return self._theta
 
     @theta.setter
     def theta(self, value):
-        self._Theta = value
+        self._theta = value
         self.calculate()
+
+    def _calc_lambda2(self) -> Dict[int, Dict[int, TF.Tensor]]:
+        lambda2 = self._lambda**2 if self._gp.likelihood.is_independent else tf.einsum('LM,lM -> LlM', self._lambda, self._lambda)
+        lambda2 = {j: lambda2 + j for j in range(2)}
+        return {1: lambda2, -1: {key: value**(-1) for key,value in lambda2.items()}}
+
+    def _calc_f(self, m: int = 0):
+        if 0 < m < self._M:
+            # Calculate samples.m only
+            raise NotImplementedError
+        else:
+            if self._gp.likelihood.is_independent:
+                pass
+            else:
+                self._Phi.M = self._lambda2[-1][1]
+                self._Gamma.M = self._lambda2[1][0] * self._lambda2[-1][1]
+                self._G.M = tf.einsum('LlM, NM -> LlNM', self._lambda2[-1][1], self._gp.X)
+                self._g.O = 1
+
 
     def __init__(self, name: str, gp: GPInterface, theta: TF.Matrix = None, **kwargs: Any):
         """ Construct a GSA object.
@@ -94,8 +136,15 @@ class GSAInterface(Model, gf.Module):
         # Unwrap parameters
         self._E = tf.constant(self._gp.likelihood.params.variance, dtype=gf.config.default_float())
         self._F = tf.constant(self._gp.kernel.params.variance, dtype=gf.config.default_float())
-        self._Lambda = tf.constant(self._gp.kernel.params.lengthscales, dtype=gf.config.default_float())
-        pass
+        self._lambda = tf.constant(self._gp.kernel.params.lengthscales, dtype=gf.config.default_float())
+        self._lambda2 = self._calc_lambda2()
+
+        # Cache the training data kernel
+        self._KNoisy_Cho = self._gp.KNoisy_Cho
+        self._KNoisyInv_Y = self._gp.KNoisyInv_Y
+
+        # Set quantities to calculate f
+        self._f, self._g, self._G, self._Gamma, self._Phi = tuple((Samples() for dummy in range(5)))
 
 
 class GSA(GSAInterface):

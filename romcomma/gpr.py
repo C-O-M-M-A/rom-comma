@@ -67,9 +67,13 @@ class Likelihood(Model):
     def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
         return {'variance': True}
 
+    @property
+    def is_independent(self) -> bool:
+        return self.params.variance.shape[0] == 1
+
     def optimize(self, **kwargs):
         """ Merely set the trainable parameters."""
-        if self.params.variance.shape[0] > 1:
+        if not self.is_independent:
             options = self.DEFAULT_OPTIONS | kwargs
             gf.set_trainable(self._parent.implementation[0].likelihood.variance, options['variance'])
 
@@ -270,7 +274,7 @@ class GP(GPInterface):
     @property
     def implementation(self) -> Tuple[Any, ...]:
         if self._implementation is None:
-            if self._likelihood.params.variance.shape[0] == 1:
+            if self._likelihood.is_independent:
                 self._implementation = tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None,
                                                             noise_variance=self._likelihood.params.variance[0, l])
                                             for l, kernel in enumerate(self._kernel.implementation))
@@ -298,7 +302,7 @@ class GP(GPInterface):
         options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
                                                   for gp in self._implementation))})
         self._write_options(options)
-        if self._likelihood.params.variance.shape[0] == 1:
+        if self._likelihood.is_independent:
             self._likelihood.parameters = self._likelihood.parameters.replace(variance=tuple(gp.likelihood.variance.numpy() for gp in self._implementation),
                                                                               log_marginal=tuple(-gp.log_marginal_likelihood() for gp in self._implementation)
                                                                               ).write()
@@ -315,7 +319,7 @@ class GP(GPInterface):
 
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
         X = X.astype(dtype=gf.config.default_float())
-        if self._likelihood.params.variance.shape[0] == 1:
+        if self._likelihood.is_independent:
             results = tuple(gp.predict_y(X) if y_instead_of_f else gp.predict_f(X) for gp in self._implementation)
             results = tuple(np.transpose(result) for result in zip(*results))
             results = tuple(results[i][0] for i in range(len(results)))
@@ -336,7 +340,7 @@ class GP(GPInterface):
 
     @property
     def KNoisy_Cho(self) -> TF.Tensor:
-        if self._likelihood.params.variance.shape[0] == 1:
+        if self._likelihood.is_independent:
             result = np.zeros(shape=(self._L * self._N, self._L * self._N))
             for l, gp in enumerate(self._implementation):
                 K = gp.kernel(self.X)
@@ -349,8 +353,8 @@ class GP(GPInterface):
 
     @property
     def KNoisyInv_Y(self) -> TF.Tensor:
-        if self._likelihood.params.variance.shape[0] == 1:
-            Y = np.reshape(self._Y.transpose().flatten(), [-1, 1])
+        if self._likelihood.is_independent:
+            Y = np.reshape(np.transpose(self._Y), [-1, 1])
         else:
             Y = tf.reshape(tf.transpose(self.Y), [-1, 1])
         return tf.linalg.cholesky_solve(self.KNoisy_Cho, Y)
@@ -364,11 +368,10 @@ class GP(GPInterface):
         Returns: Should return zeros((Lo)) (to within numerical error tolerance).
         """
         o = x.shape[0]
-        if self._likelihood.params.variance.shape[0] == 1:
+        if self._likelihood.is_independent:
             kernel = np.zeros(shape=(self._L * o, self._L * self._N))
             for l, gp in enumerate(self._implementation):
-                X = gp.data[0]
-                kernel[l*o:(l+1)*o, l*self._N:(l+1)*self._N] = gp.kernel(x, X)
+                kernel[l*o:(l+1)*o, l*self._N:(l+1)*self._N] = gp.kernel(x, self.X)
         else:
             gp = self._implementation[0]
             kernel = gp.kernel(x, self.X)
