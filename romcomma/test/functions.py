@@ -89,7 +89,7 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_varian
         functions: A tuple of test functions, of length L.
         N: The number of samples (datapoints), N &gt 0.
         M: The input dimensionality, M &ge 0.
-        likelihood_variance: A noise (co)variance of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
+        likelihood_variance: A noise (co)variance_cho of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
             Used to generate N random samples of Gaussian noise ~ N(0, noise_variance).
         folder: The Store.folder to create and store the results in.
         sampling_method: A Callable sampling_method(N, M, **kwargs) -> X, which returns an (N,M) matrix.

@@ -54,7 +54,7 @@ class Likelihood(Model):
                 """ The parameters set of a GP.
 
                 Attributes:
-                    variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
+                    variance_cho (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance_cho matrix. (1,L) represents an (L,L) diagonal matrix.
                     log_marginal (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
                 """
                 variance: NP.Matrix = np.atleast_2d(0.9)
@@ -65,7 +65,7 @@ class Likelihood(Model):
     @classmethod
     @property
     def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
-        return {'variance': True}
+        return {'variance_cho': True}
 
     @property
     def is_independent(self) -> bool:
@@ -75,7 +75,7 @@ class Likelihood(Model):
         """ Merely set the trainable parameters."""
         if not self.is_independent:
             options = self.DEFAULT_OPTIONS | kwargs
-            gf.set_trainable(self._parent.implementation[0].likelihood.variance, options['variance'])
+            gf.set_trainable(self._parent.implementation[0].likelihood.variance, options['variance_cho'])
 
     def __init__(self, parent: GPInterface, read_parameters: bool = False, **kwargs: NP.Matrix):
         super().__init__(parent.folder / 'likelihood', read_parameters, **kwargs)
@@ -170,7 +170,7 @@ class GPInterface(Model):
     @property
     @abstractmethod
     def KNoisy_Cho(self) -> Union[NP.Matrix, TF.Tensor]:
-        """ The Cholesky decomposition of the LNxLN noisy kernel kernel(X, X) + likelihood.variance. """
+        """ The Cholesky decomposition of the LNxLN noisy kernel kernel(X, X) + likelihood.variance_cho. """
 
     @property
     @abstractmethod
@@ -188,7 +188,7 @@ class GPInterface(Model):
 
         Args:
             X: An (o, M) design Matrix of inputs.
-            y_instead_of_f: True to include noise in the variance of the result.
+            y_instead_of_f: True to include noise in the variance_cho of the result.
         Returns: The distribution of Y or f, as a pair (mean (o, L) Matrix, std (o, L) Matrix).
         """
 
@@ -221,7 +221,7 @@ class GPInterface(Model):
         Returns: ``self``, for chaining calls.
         """
         target_shape = (1, self._L) if is_independent else (self._L, self._L)
-        self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance", target_shape=target_shape, is_diagonal=is_independent,
+        self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance_cho", target_shape=target_shape, is_diagonal=is_independent,
                                                     folder=folder)
         self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
         self._implementation = None

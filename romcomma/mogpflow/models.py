@@ -51,7 +51,7 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
             \mathcal N(Y \,|\, 0, \sigma_n^2 \mathbf{I})
 
     To train the model, we maximise the log _marginal_ likelihood
-    w.r.t. the likelihood variance and kernel hyperparameters theta.
+    w.r.t. the likelihood variance_cho and kernel hyperparameters theta.
     The marginal likelihood is found by integrating the likelihood
     over the prior, and has the form
 
@@ -96,7 +96,7 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
             p(F* | Y)
 
         where F* are points on the GP at new data points, Y are noisy observations at training data points.
-        Note that full_cov => full_output_cov (regardless of the value given for full_output_cov), to avoid ambiguity.
+        Note that full_cov => full_output_cov (regardless of the ordinate given for full_output_cov), to avoid ambiguity.
         """
         full_output_cov = True if full_cov else full_output_cov
         Xnew = tf.reshape(data_input_to_tensor(Xnew), (-1, self._M))
@@ -122,7 +122,7 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
 
         Args:
             data: Tuple[InputData, OutputData], which determines L, M and N. Both InputData and OutputData must be of rank 2.
-            kernel: Must be well-formed, with an (L,L) variance and an (L,M) lengthscales matrix.
+            kernel: Must be well-formed, with an (L,L) variance_cho and an (L,M) lengthscales matrix.
             mean_function: Defaults to Zero.
             noise_variance: Broadcast to (diagonal) (L,L) if necessary.
         """

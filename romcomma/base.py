@@ -94,11 +94,11 @@ class Parameters(ABC):
 
     def broadcast_value(self, model_name: str, field: str, target_shape: Tuple[int, int], is_diagonal: bool = True,
                         folder: Optional[PathLike] = None) -> Parameters:
-        """ Broadcast a parameter value.
+        """ Broadcast a parameter ordinate.
 
         Args:
             model_name: Used only in error reporting.
-            field: The name of the field whose value we are broadcasting.
+            field: The name of the field whose ordinate we are broadcasting.
             target_shape: The shape to broadcast to.
             is_diagonal: Whether to zero the off-diagonal elements of a square matrix.
             folder:
@@ -147,8 +147,8 @@ class Parameters(ABC):
 
         Args:
             folder: The folder to store the parameters.
-            **kwargs: key=value initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs). It is the caller's responsibility to ensure
-                that every value is of type NP.Matrix. Missing fields receive their defaults, so Parameters(folder) is the default parameter set.
+            **kwargs: key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs). It is the caller's responsibility to ensure
+                that every ordinate is of type NP.Matrix. Missing fields receive their defaults, so Parameters(folder) is the default parameter set.
         """
         for key, value in kwargs.items():
             kwargs[key] = np.atleast_2d(value)

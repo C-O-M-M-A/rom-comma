@@ -376,7 +376,7 @@ class Fold(Store):
 class Normalization:
     """ Encapsulates the normalization of data.
         X data is assumed to follow a Uniform distribution, which is normalized to U[0,1] , then inverse probability transformed to N[0,1].
-        Y data is normalized to zero mean and unit variance.
+        Y data is normalized to zero mean and unit variance_cho.
     """
     @classmethod
     @property

@@ -207,9 +207,9 @@ from romcomma.typing_ import *
 #             self.calculate()
 #             self.write_parameters(self.Parameters(
 #                 concatenate((self.parameters.Mu, atleast_2d(self._sobol.Mu)), axis=0),
-#                 concatenate((self.parameters.D, atleast_2d(self._semi_norm.value(self._sobol.D))), axis=0),
-#                 concatenate((self.parameters.S1, atleast_2d(self._semi_norm.value(self._sobol.S1))), axis=0),
-#                 concatenate((self.parameters.S, atleast_2d(self._semi_norm.value(self._sobol.S))), axis=0),
+#                 concatenate((self.parameters.D, atleast_2d(self._semi_norm.ordinate(self._sobol.D))), axis=0),
+#                 concatenate((self.parameters.S1, atleast_2d(self._semi_norm.ordinate(self._sobol.S1))), axis=0),
+#                 concatenate((self.parameters.S, atleast_2d(self._semi_norm.ordinate(self._sobol.S))), axis=0),
 #                 concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
 #                 concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
 #             if iteration < guess_identity_after_iteration:
@@ -223,9 +223,9 @@ from romcomma.typing_ import *
 #         self._gp.test_data()
 #         self.write_parameters(self.Parameters(
 #             concatenate((self.parameters.Mu, atleast_2d(self._sobol.Mu)), axis=0),
-#             concatenate((self.parameters.D, atleast_2d(self._semi_norm.value(self._sobol.D))), axis=0),
-#             concatenate((self.parameters.S1, atleast_2d(self._semi_norm.value(self._sobol.S1))), axis=0),
-#             concatenate((self.parameters.S, atleast_2d(self._semi_norm.value(self._sobol.S))), axis=0),
+#             concatenate((self.parameters.D, atleast_2d(self._semi_norm.ordinate(self._sobol.D))), axis=0),
+#             concatenate((self.parameters.S1, atleast_2d(self._semi_norm.ordinate(self._sobol.S1))), axis=0),
+#             concatenate((self.parameters.S, atleast_2d(self._semi_norm.ordinate(self._sobol.S))), axis=0),
 #             concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
 #             concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
 #         column_headings = ("x{:d}".format(i) for i in range(self._sobol.Mu))
@@ -270,9 +270,9 @@ from romcomma.typing_ import *
 #             self._semi_norm = Sobol.SemiNorm.from_meta(self._options[-1]['sobol_options']['semi_norm'])
 #             self._sobol_reordering_options['semi_norm'] = self._semi_norm
 #             parameters = self.Parameters(Mu=self._sobol.Mu,
-#                                          D=self._semi_norm.value(self._sobol.D),
-#                                          S1=self._semi_norm.value(self._sobol.S1),
-#                                          S=self._semi_norm.value(self._sobol.S),
+#                                          D=self._semi_norm.ordinate(self._sobol.D),
+#                                          S1=self._semi_norm.ordinate(self._sobol.S1),
+#                                          S=self._semi_norm.ordinate(self._sobol.S),
 #                                          lengthscales=self._sobol.lengthscales,
 #                                          log_marginal_likelihood=self._gp.log_marginal_likelihood)
 #             super().__init__(self._fold.folder / name, parameters)

@@ -38,7 +38,7 @@ class Variance(Module):
 
     @property
     def shape(self) -> Tuple[int, int]:
-        """ Returns (L,L), which is the shape of self.value and self.cholesky."""
+        """ Returns (L,L), which is the shape of self.ordinate and self.cholesky."""
         return self._shape
 
     @property
@@ -62,7 +62,7 @@ class Variance(Module):
         return tf.reshape(self.value, self._broadcast_shape)
 
     def value_times_eye(self, N: int) -> TF.Tensor4:
-        """ The cartesian product variance[:L, :L] * eye[:N, :N], transposed.
+        """ The cartesian product variance_cho[:L, :L] * eye[:N, :N], transposed.
 
         Args:
             N: The dimension of the identity matrix we are multiplying by.

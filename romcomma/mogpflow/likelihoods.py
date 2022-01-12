@@ -37,7 +37,7 @@ class MOGaussian(QuadratureLikelihood):
 
     The Gaussian likelihood is appropriate where uncertainties associated with
     the data are believed to follow a normal distribution, with constant
-    variance.
+    variance_cho.
 
     Very small uncertainties can lead to numerical instability during the
     optimization process. A lower bound of 1e-3 is therefore imposed on the
@@ -45,7 +45,7 @@ class MOGaussian(QuadratureLikelihood):
     """
 
     def __init__(self, variance, **kwargs):
-        """ Constructor, which passes the Cholesky decomposition of the variance matrix.
+        """ Constructor, which passes the Cholesky decomposition of the variance_cho matrix.
 
         Args:
             variance: The covariance matrix of the likelihood, expressed in tensorflow or numpy. Is checked for symmetry and positive definiteness.

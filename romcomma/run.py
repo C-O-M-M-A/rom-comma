@@ -164,7 +164,7 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
         IndexError: If Mx is a list and len(Mu) != len(store.splits).
         FileNotFoundError: If store is not a Fold, and contains neither Splits nor Folds.
     """
-#     options = module.value.ROM.DEFAULT_OPTIONS if options is None else options
+#     options = module.ordinate.ROM.DEFAULT_OPTIONS if options is None else options
 #     splits = store.splits
 #     if splits:
 #         if isinstance(Mx, list):
@@ -192,7 +192,7 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #         elapsed_mins = (time.time() - start_time) / 60
 #         print(store.folder.name, "has finished in {:.2f} minutes.".format(elapsed_mins))
 #     else:
-#         module.value.ROM.from_GP(fold=store, name=name, source_gp_name=source_gp_name, options=options, Mu=Mu,
+#         module.ordinate.ROM.from_GP(fold=store, name=name, source_gp_name=source_gp_name, options=options, Mu=Mu,
 #                                  rbf_parameters=rbf_parameters)
 #
 #

@@ -31,16 +31,26 @@ import tensorflow as tf
 from romcomma.base import Model, Parameters
 from romcomma.gpr import GPInterface
 
-def gaussian(mean: TF.Tensor, variance: TF.Tensor, value: TF.Tensor = tf.constant(0)) -> TF.Tensor:
-    pass
+LOG2PI = tf.math.log(tf.constant(2 * np.pi, dtype=gf.config.default_float()))
 
-def diagonal_gaussian(mean: TF.Tensor, variance: TF.Tensor, value: TF.Tensor = tf.constant(0)) -> TF.Tensor:
-    m = mean.shape[-1]
-    value = value - mean if value.shape else mean
-    normalization = (tf.constant(2 * np.pi, dtype=gf.config.default_float())**m + tf.reduce_prod(variance))**(-0.5)
-    result = tf.einsum('...m, ...m -> ...')
+def gaussian(mean: TF.Tensor, variance_cho: TF.Tensor, is_variance_diagonal: bool,
+             ordinate: TF.Tensor = tf.constant(0, dtype=gf.config.default_float())) -> TF.Tensor:
+    """ Computes the gaussian probability density.
 
-    
+    Args:
+        mean: Gaussian population mean.
+        variance_cho: The lower triangular Cholesky decomposition of the Gaussian population variance_cho.
+        is_variance_diagonal: True if variance_cho is an m-vector
+        ordinate: The ordinate (z-value) to calculate the Gaussian density for.
+    Returns:
+    """
+    ordinate = ordinate - mean if ordinate.shape else mean
+    result = ordinate / variance_cho if is_variance_diagonal else tf.linalg.triangular_solve(variance_cho, ordinate, lower=True)
+    result = tf.reduce_sum(tf.square(result), axis=-1)
+    result = result + tf.reduce_prod(variance_cho) if is_variance_diagonal else tf.reduce_prod(tf.linalg.diag_part(variance_cho))
+    return tf.math.exp(-0.5 * (LOG2PI * ordinate.shape[-1] + result))
+
+
 class Samples(NamedTuple):
     """ The Samples set of a GSA.
 
@@ -94,10 +104,10 @@ class GSAInterface(Model, gf.Module):
         self._theta = value
         self.calculate()
 
-    def _calc_lambda2(self) -> Dict[int, Dict[int, TF.Tensor]]:
+    def _calc_lambda2(self) -> Dict[int, Tuple[TF.Tensor]]:
         lambda2 = self._lambda**2 if self._gp.likelihood.is_independent else tf.einsum('LM,lM -> LlM', self._lambda, self._lambda)
-        lambda2 = {j: lambda2 + j for j in range(2)}
-        return {1: lambda2, -1: {key: value**(-1) for key,value in lambda2.items()}}
+        lambda2 = tuple(lambda2 + j for j in range(2))
+        return {1: lambda2, -1: tuple(value**(-1) for value in lambda2)}
 
     def _calc_f(self, m: int = 0):
         if 0 < m < self._M:

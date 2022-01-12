@@ -44,10 +44,10 @@ class Kernel(Model):
                 """ The parameters set of a Kernel.
 
                 Attributes:
-                    variance: An (L,L) or (1,L) Matrix of kernel variances. (1,L) represents a diagonal (L,L) variance matrix.
+                    variance_cho: An (L,L) or (1,L) Matrix of kernel variances. (1,L) represents a diagonal (L,L) variance_cho matrix.
                         (1,1) means a single kernel shared by all outputs.
                     lengthscales: A (V,M) Matrix of anisotropic lengthscales, or a (V,1) Vector of isotropic lengthscales,
-                        where V=1 or V=variance.shape[1]*(variance.shape[0]+ 1)/2.
+                        where V=1 or V=variance_cho.shape[1]*(variance_cho.shape[0]+ 1)/2.
                 """
                 variance: NP.Matrix = np.atleast_2d(0.1)
                 lengthscales: NP.Matrix = np.atleast_2d(0.2)
@@ -57,13 +57,13 @@ class Kernel(Model):
     @classmethod
     @property
     def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
-        return {'variance': True, 'lengthscales': False}
+        return {'variance_cho': True, 'lengthscales': False}
 
     def optimize(self, **kwargs: Any):
         """ Merely sets which parameters are trainable. """
         if self.params.variance.shape[0] > 1:
             options = self.DEFAULT_OPTIONS | kwargs
-            gf.set_trainable(self._implementation[0].variance, options['variance'])
+            gf.set_trainable(self._implementation[0].variance, options['variance_cho'])
             gf.set_trainable(self._implementation[0].lengthscales, options['lengthscales'])
 
     @classmethod
@@ -114,15 +114,15 @@ class Kernel(Model):
     @abstractmethod
     def implementation(self) -> Tuple[Any, ...]:
         """ The implementation of this Kernel, for use in GP.implementation.
-            If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
-            If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
+            If ``self.variance_cho.shape == (1,L)`` an L-tuple of kernels is returned.
+            If ``self.variance_cho.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
 
     def broadcast_parameters(self, variance_shape: Tuple[int, int], M, folder: Optional[PathLike] = None) -> Kernel:
         """ Broadcast this kernel to higher dimensions. Shrinkage raises errors, unchanged dimensions silently nop.
-        A diagonal variance matrix broadcast to a square matrix is initially diagonal. All other expansions are straightforward broadcasts.
+        A diagonal variance_cho matrix broadcast to a square matrix is initially diagonal. All other expansions are straightforward broadcasts.
         Args:
-            variance_shape: The new shape for the variance, must be (1, L) or (L, L).
+            variance_shape: The new shape for the variance_cho, must be (1, L) or (L, L).
             M: The number of input Lengthscales per output.
             folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
         Returns: ``self``, for chaining calls.
@@ -130,7 +130,7 @@ class Kernel(Model):
             IndexError: If an attempt is made to shrink a parameter.
         """
         if variance_shape != self.params.variance.shape:
-            self.parameters.broadcast_value(model_name=str(self.folder), field="variance", target_shape=variance_shape, is_diagonal=True, folder=folder)
+            self.parameters.broadcast_value(model_name=str(self.folder), field="variance_cho", target_shape=variance_shape, is_diagonal=True, folder=folder)
             self._L = variance_shape[1]
         if (self._L, M) != self.params.lengthscales.shape:
             self.parameters.broadcast_value(model_name=str(self.folder), field="lengthscales", target_shape=(self._L, M), is_diagonal=False, folder=folder)
@@ -157,9 +157,9 @@ class RBF(Kernel):
     @property
     def implementation(self) -> Tuple[Any, ...]:
         """ The implemented_in_??? version of this Kernel, for use in the implemented_in_??? GP.
-            If ``self.variance.shape == (1,1)`` a 1-tuple of kernels is returned.
-            If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
-            If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
+            If ``self.variance_cho.shape == (1,1)`` a 1-tuple of kernels is returned.
+            If ``self.variance_cho.shape == (1,L)`` an L-tuple of kernels is returned.
+            If ``self.variance_cho.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
         if self._implementation is None:
             if self.params.variance.shape[0] == 1:

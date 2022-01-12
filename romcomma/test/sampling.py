@@ -34,7 +34,7 @@ def latin_hypercube(N: int, M: int, is_centered: bool = False):
     Args:
         N: The number of samples (datapoints).
         M: The dimensionality of the hypercube.
-        is_centered: Boolean value whether to centre each sample in its Latin Hypercube cell.
+        is_centered: Boolean ordinate whether to centre each sample in its Latin Hypercube cell.
             Default is False, which locates the sample randomly within its cell.
     Returns: An (N,M) matrix of N datapoints of dimension M.
     """
@@ -42,19 +42,19 @@ def latin_hypercube(N: int, M: int, is_centered: bool = False):
 
 
 def multivariate_gaussian_noise(N: int, variance: NP.MatrixLike) -> NP.Matrix:
-    """ Generate N datapoints of L-dimensional Gaussian noise, sampled from N[0, variance].
+    """ Generate N datapoints of L-dimensional Gaussian noise, sampled from N[0, variance_cho].
 
     Args:
         N: Number of samples (datapoints).
         variance: Variance matrix. The given matrix must be symmetric positive-definite.
             A vector is interpreted as a diagonal matrix.
-    Returns: An (N,L) noise matrix, where (L,L) is the shape of `variance`.
+    Returns: An (N,L) noise matrix, where (L,L) is the shape of `variance_cho`.
     """
     variance = np.atleast_2d(variance)
     if variance.shape[0] == 1 and len(variance.shape) == 2:
         variance = np.diagflat(variance)
     elif variance.shape[0] != variance.shape[1] or len(variance.shape) > 2:
-        raise IndexError(f'variance.shape = {variance.shape} should be (L,) or (L,L).')
+        raise IndexError(f'variance_cho.shape = {variance.shape} should be (L,) or (L,L).')
     result = scipy.stats.multivariate_normal.rvs(mean=None, cov=variance, size=N)
     result.shape = (N, variance.shape[1])
     return result
