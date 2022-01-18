@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -21,7 +21,6 @@
 
 """ Contains extensions to gpflow.likelihoods."""
 
-from __future__ import annotations
 
 from typing import Tuple
 from romcomma.mogpflow.base import Variance
@@ -37,7 +36,7 @@ class MOGaussian(QuadratureLikelihood):
 
     The Gaussian likelihood is appropriate where uncertainties associated with
     the data are believed to follow a normal distribution, with constant
-    variance_cho.
+    variance.
 
     Very small uncertainties can lead to numerical instability during the
     optimization process. A lower bound of 1e-3 is therefore imposed on the
@@ -45,7 +44,7 @@ class MOGaussian(QuadratureLikelihood):
     """
 
     def __init__(self, variance, **kwargs):
-        """ Constructor, which passes the Cholesky decomposition of the variance_cho matrix.
+        """ Constructor, which passes the Cholesky decomposition of the variance matrix.
 
         Args:
             variance: The covariance matrix of the likelihood, expressed in tensorflow or numpy. Is checked for symmetry and positive definiteness.

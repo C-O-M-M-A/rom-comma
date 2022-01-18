@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -21,6 +21,8 @@
 
 """ Contains extensions to the GPFlow library."""
 
+from . import base
 from . import kernels
+from . import likelihoods
 from . import mean_functions
 from . import models

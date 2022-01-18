@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -21,18 +21,11 @@
 
 """ Contains routines for running models. """
 
-import gpflow.config
-
-from romcomma.typing_ import *
-from romcomma.base import Parameters, Model
+from romcomma._common_definitions import *
 from romcomma.data import Store, Fold
 from romcomma import kernels, gpr, gsa
-from numpy import full, transpose
-from pandas import concat
-from pathlib import Path
 from time import time
 from datetime import timedelta
-
 from contextlib import contextmanager
 
 
@@ -71,7 +64,7 @@ def Context(name: str, device: str = '', **kwargs):
             print(f' on {device}', end='')
         else:
             device_manager = Timing('')
-        implementation_manager = gpflow.config.as_context(gpflow.config.Config(**kwargs))
+        implementation_manager = gf.config.as_context(gf.config.Config(**kwargs))
         print('...')
         with device_manager:
             with implementation_manager:
@@ -81,7 +74,7 @@ def Context(name: str, device: str = '', **kwargs):
 
 def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
         kernel_parameters: Optional[kernels.Kernel.Parameters] = None, parameters: Optional[gpr.GP.Parameters] = None,
-        optimize: bool = True, test: bool = True, analyze: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.DEFAULT_META'}, **kwargs):
+        optimize: bool = True, test: bool = True, analyze: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.META'}, **kwargs):
     """ Service routine to recursively run GPs the Folds in a Store, and on a single Fold.
 
     Args:
@@ -99,7 +92,7 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
         test: Whether to test_data each GP.
         analyze: Whether to calculate Sobol' indices for each GP.
         semi_norm: Meta json describing a Sobol.SemiNorm.
-        kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.DEFAULT_OPTIMIZER_OPTIONS.
+        kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.OPTIMIZER_OPTIONS.
 
     Raises:
         FileNotFoundError: If store is not a Fold, and contains no Folds.
@@ -157,14 +150,14 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
         Mx: The number of input dimensions to use. If a list is given, its length much match the number of Splits in store.
             Fold.M is actually used for the current Fold, but Folds are initialized with Mx
             (with the usual proviso that Mx is between 1 and the number of input columns in data.csv).
-        options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.ROM.DEFAULT_OPTIMIZER_OPTIONS.
+        options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.ROM.OPTIMIZER_OPTIONS.
 
     Raises:
         IndexError: If Mu is a list and len(Mu) != len(store.splits).
         IndexError: If Mx is a list and len(Mu) != len(store.splits).
         FileNotFoundError: If store is not a Fold, and contains neither Splits nor Folds.
     """
-#     options = module.ordinate.ROM.DEFAULT_OPTIONS if options is None else options
+#     options = module.ordinate.ROM.OPTIONS if options is None else options
 #     splits = store.splits
 #     if splits:
 #         if isinstance(Mx, list):
@@ -313,12 +306,12 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #     Returns: The split directories collected.
 #
 #     """
-#     collect(store, model_name, gpr.GP.DEFAULT_PARAMETERS, is_split)
+#     collect(store, model_name, gpr.GP.PARAMETERS, is_split)
 #     if test:
 #         collect_tests(store, model_name, is_split)
 #     # if analyze:
-#     #     collect(store, model_name + "\\Sobol", base.Sobol.DEFAULT_PARAMETERS, is_split)
-#     return collect(store, model_name + "\\Kernel", kernels.Kernel.TypeFromIdentifier(kernelTypeIdentifier).DEFAULT_PARAMETERS, is_split)
+#     #     collect(store, model_name + "\\Sobol", base.Sobol.PARAMETERS, is_split)
+#     return collect(store, model_name + "\\Kernel", kernels.Kernel.TypeFromIdentifier(kernelTypeIdentifier).PARAMETERS, is_split)
 #
 #
 # def rotate_inputs(gb_path: PathLike, X_stand: NP.Matrix) -> NP.Matrix:

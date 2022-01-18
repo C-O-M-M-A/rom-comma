@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 #
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
@@ -21,10 +21,8 @@
 
 # Contains Sampling and Design of Experiments functionality. #
 
-from __future__ import annotations
 
-from romcomma.typing_ import *
-import numpy as np
+from romcomma._common_definitions import *
 import scipy.stats
 
 
@@ -42,19 +40,19 @@ def latin_hypercube(N: int, M: int, is_centered: bool = False):
 
 
 def multivariate_gaussian_noise(N: int, variance: NP.MatrixLike) -> NP.Matrix:
-    """ Generate N datapoints of L-dimensional Gaussian noise, sampled from N[0, variance_cho].
+    """ Generate N datapoints of L-dimensional Gaussian noise, sampled from N[0, variance].
 
     Args:
         N: Number of samples (datapoints).
         variance: Variance matrix. The given matrix must be symmetric positive-definite.
             A vector is interpreted as a diagonal matrix.
-    Returns: An (N,L) noise matrix, where (L,L) is the shape of `variance_cho`.
+    Returns: An (N,L) noise matrix, where (L,L) is the shape of `variance`.
     """
     variance = np.atleast_2d(variance)
     if variance.shape[0] == 1 and len(variance.shape) == 2:
         variance = np.diagflat(variance)
     elif variance.shape[0] != variance.shape[1] or len(variance.shape) > 2:
-        raise IndexError(f'variance_cho.shape = {variance.shape} should be (L,) or (L,L).')
+        raise IndexError(f'variance.shape = {variance.shape} should be (L,) or (L,L).')
     result = scipy.stats.multivariate_normal.rvs(mean=None, cov=variance, size=N)
     result.shape = (N, variance.shape[1])
     return result

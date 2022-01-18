@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 #
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
@@ -22,7 +22,7 @@
 [project]
 name = "rom-comma"
 version = "1.0.0"
-description = "Reduced Order Modelling software, implementing Global Sensitivity Analysis of Gaussian Processes."
+description = "Reduced Order Modelling software, implementing Global Sensitivity Analysis using Gaussian Processes."
 authors = ["Robert Milton <r.a.milton@sheffield.ac.uk>"]
 license = "BSD 3-Clause"
 

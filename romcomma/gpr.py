@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -28,16 +28,10 @@ A GPFlow implementation of Gaussian Process Regression.
 
 from __future__ import annotations
 
-from abc import abstractmethod
-from romcomma.typing_ import *
+from romcomma._common_definitions import *
 from romcomma.data import Fold, Frame
 from romcomma.base import Parameters, Model
 from romcomma. kernels import Kernel
-import numpy as np
-import gpflow as gf
-import romcomma.mogpflow as mf
-import tensorflow as tf
-from contextlib import suppress
 
 
 class Likelihood(Model):
@@ -54,7 +48,7 @@ class Likelihood(Model):
                 """ The parameters set of a GP.
 
                 Attributes:
-                    variance_cho (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance_cho matrix. (1,L) represents an (L,L) diagonal matrix.
+                    variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
                     log_marginal (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
                 """
                 variance: NP.Matrix = np.atleast_2d(0.9)
@@ -64,8 +58,8 @@ class Likelihood(Model):
 
     @classmethod
     @property
-    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
-        return {'variance_cho': True}
+    def OPTIONS(cls) -> Dict[str, Any]:
+        return {'variance': True}
 
     @property
     def is_independent(self) -> bool:
@@ -74,8 +68,8 @@ class Likelihood(Model):
     def optimize(self, **kwargs):
         """ Merely set the trainable parameters."""
         if not self.is_independent:
-            options = self.DEFAULT_OPTIONS | kwargs
-            gf.set_trainable(self._parent.implementation[0].likelihood.variance, options['variance_cho'])
+            options = self.OPTIONS | kwargs
+            gf.set_trainable(self._parent.implementation[0].likelihood.variance, options['variance'])
 
     def __init__(self, parent: GPInterface, read_parameters: bool = False, **kwargs: NP.Matrix):
         super().__init__(parent.folder / 'likelihood', read_parameters, **kwargs)
@@ -107,7 +101,7 @@ class GPInterface(Model):
     @classmethod
     @property
     @abstractmethod
-    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+    def OPTIONS(cls) -> Dict[str, Any]:
         """ Hyper-parameter optimizer options"""
 
     @classmethod
@@ -170,7 +164,7 @@ class GPInterface(Model):
     @property
     @abstractmethod
     def KNoisy_Cho(self) -> Union[NP.Matrix, TF.Tensor]:
-        """ The Cholesky decomposition of the LNxLN noisy kernel kernel(X, X) + likelihood.variance_cho. """
+        """ The Cholesky decomposition of the LNxLN noisy kernel kernel(X, X) + likelihood.variance. """
 
     @property
     @abstractmethod
@@ -188,7 +182,7 @@ class GPInterface(Model):
 
         Args:
             X: An (o, M) design Matrix of inputs.
-            y_instead_of_f: True to include noise in the variance_cho of the result.
+            y_instead_of_f: True to include noise in the variance of the result.
         Returns: The distribution of Y or f, as a pair (mean (o, L) Matrix, std (o, L) Matrix).
         """
 
@@ -221,7 +215,7 @@ class GPInterface(Model):
         Returns: ``self``, for chaining calls.
         """
         target_shape = (1, self._L) if is_independent else (self._L, self._L)
-        self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance_cho", target_shape=target_shape, is_diagonal=is_independent,
+        self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance", target_shape=target_shape, is_diagonal=is_independent,
                                                     folder=folder)
         self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
         self._implementation = None
@@ -246,7 +240,7 @@ class GPInterface(Model):
             IndexError: If a parameter is mis-shaped.
         """
         self._fold = fold
-        self._X, self._Y = self._fold.X.to_numpy(dtype=gf.config.default_float(), copy=True), self._fold.Y.to_numpy(dtype=gf.config.default_float(), copy=True)
+        self._X, self._Y = self._fold.X.to_numpy(dtype=FLOAT(), copy=True), self._fold.Y.to_numpy(dtype=FLOAT(), copy=True)
         self._N, self._M, self._L = self._fold.N, self._fold.M, self._fold.L
         super().__init__(self._fold.folder / name, is_read, **kwargs)
         self._likelihood = Likelihood(self, is_read, **kwargs)
@@ -268,7 +262,7 @@ class GP(GPInterface):
 
     @classmethod
     @property
-    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+    def OPTIONS(cls) -> Dict[str, Any]:
         return {'maxiter': 5000, 'gtol': 1E-16}
 
     @property
@@ -289,9 +283,9 @@ class GP(GPInterface):
 
         Args:
             method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
-            kwargs: A Dict of implementation-dependent optimizer options, following the format of GPInterface.DEFAULT_OPTIONS.
+            kwargs: A Dict of implementation-dependent optimizer options, following the format of GPInterface.OPTIONS.
         """
-        options = (self._read_options() if self._options_json.exists() else self.DEFAULT_OPTIONS)
+        options = (self._read_options() if self._options_json.exists() else self.OPTIONS)
         options.update(kwargs)
         options.pop('result', None)
         kernel_options = options.pop('kernel', {})
@@ -318,7 +312,7 @@ class GP(GPInterface):
                                                                       ).write()
 
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
-        X = X.astype(dtype=gf.config.default_float())
+        X = X.astype(dtype=FLOAT())
         if self._likelihood.is_independent:
             results = tuple(gp.predict_y(X) if y_instead_of_f else gp.predict_f(X) for gp in self._implementation)
             results = tuple(np.transpose(result) for result in zip(*results))

@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -21,16 +21,14 @@
 
 """ Run this module first thing, to test_data your installation of romcomma. """
 
-from __future__ import annotations
 
-from romcomma.typing_ import *
+from romcomma._common_definitions import *
 from romcomma import run
 from romcomma.data import Fold, Store, Frame
 from romcomma.test import functions
-import numpy as np
-from pathlib import Path
 import shutil
 import scipy.stats
+
 
 BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.1')
 
@@ -67,8 +65,8 @@ def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float]
         rotation = np.eye(M)
     store_folder = BASE_PATH / store_folder
     store = functions.sample(f, N, M, noise_variance, store_folder)
-    # fold_and_rotate_with_tests(store, K, rotation)
-    fold_and_rotate(store, K, rotation)
+    fold_and_rotate_with_tests(store, K, rotation)
+    # fold_and_rotate(store, K, rotation)
     run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=True, test=True, analyze=False)
 
@@ -100,8 +98,6 @@ def run_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float]
             optimize=False, test=False, analyze=True)
 
 
-
-
 def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = False):
     if diagonal:
         result = np.eye(L)
@@ -121,5 +117,5 @@ if __name__ == '__main__':
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     for M in (5,):
-                        run_gsa('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
+                        run_gps('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
                                 noise_label=noise_label, random=random, M=M)

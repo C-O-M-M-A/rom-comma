@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -23,14 +23,11 @@
 
 from __future__ import annotations
 
-from romcomma.typing_ import *
+from romcomma._common_definitions import *
 from copy import deepcopy
 import itertools
 import random
 import shutil
-from pathlib import Path
-import numpy as np
-import pandas as pd
 from enum import IntEnum, auto
 import scipy.stats
 import json
@@ -40,7 +37,7 @@ class Frame:
     """ Encapsulates a pd.DataFrame (df) backed by a source file."""
     @classmethod
     @property
-    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
+    def CSV_OPTIONS(cls) -> Dict[str, Any]:
         """ The default options (kwargs) to pass to pandas.pd.read_csv."""
         return {'sep': ',', 'header': [0, 1], 'index_col': 0, }
 
@@ -54,9 +51,9 @@ class Frame:
         return 0 == len(self._csv.parts)
 
     def write(self):
-        """ Write to csv, according to Frame.DEFAULT_CSV_OPTIONS."""
+        """ Write to csv, according to Frame.CSV_OPTIONS."""
         assert not self.is_empty, 'Cannot write when frame.is_empty.'
-        self.df.to_csv(path_or_buf=self._csv, sep=Frame.DEFAULT_CSV_OPTIONS['sep'], index=True)
+        self.df.to_csv(path_or_buf=self._csv, sep=Frame.CSV_OPTIONS['sep'], index=True)
 
     # noinspection PyDefaultArgument
     def __init__(self, csv: PathLike = Path(), df: pd.DataFrame = pd.DataFrame(), **kwargs):
@@ -66,16 +63,16 @@ class Frame:
             csv: The csv file.
             df: The initial data. If this is empty, it is read from csv, otherwise it overwrites (or creates) csv.
         Keyword Args:
-            kwargs: Updates Frame.DEFAULT_CSV_OPTIONS for csv reading as detailed in
+            kwargs: Updates Frame.CSV_OPTIONS for csv reading as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
-                This is not relevant to writing, which just uses Frame.DEFAULT_CSV_OPTIONS.
+                This is not relevant to writing, which just uses Frame.CSV_OPTIONS.
         """
         self._csv = Path(csv)
         if self.is_empty:
             assert df.empty, 'csv is an empty path, but df is not an empty pd.DataFrame.'
             self.df = df
         elif df.empty:
-            self.df = pd.read_csv(self._csv, **{**Frame.DEFAULT_CSV_OPTIONS, **kwargs})
+            self.df = pd.read_csv(self._csv, **{**Frame.CSV_OPTIONS, **kwargs})
         else:
             self.df = df
             self.write()
@@ -237,11 +234,11 @@ class Store:
 
     @classmethod
     @property
-    def DEFAULT_META(cls) -> Dict[str, Any]:
-        return {'csv_kwargs': Frame.DEFAULT_CSV_OPTIONS, 'data': {}, 'K': 0, 'shuffle before folding': False}
+    def META(cls) -> Dict[str, Any]:
+        return {'csv_kwargs': Frame.CSV_OPTIONS, 'data': {}, 'K': 0, 'shuffle before folding': False}
 
     @classmethod
-    def from_df(cls, folder: PathLike, df: pd.DataFrame, meta: Dict = DEFAULT_META) -> Store:
+    def from_df(cls, folder: PathLike, df: pd.DataFrame, meta: Dict = META) -> Store:
         """ Create a Store from a pd.DataFrame.
 
         Args:
@@ -251,18 +248,18 @@ class Store:
         Returns: A new Store.
         """
         store = Store(folder, init_mode=Store._InitMode.CREATE)
-        store._meta = cls.DEFAULT_META | meta
+        store._meta = cls.META | meta
         store._data = Frame(store._csv, df)
         store.meta_update()
         return store
 
     @classmethod
     @property
-    def DEFAULT_CSV_OPTIONS(cls) -> Dict[str, Any]:
+    def CSV_OPTIONS(cls) -> Dict[str, Any]:
         return {'skiprows': None, 'index_col': None}
 
     @classmethod
-    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = DEFAULT_META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
+    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
         """ Create a Store from a csv file.
 
         Args:
@@ -271,12 +268,12 @@ class Store:
             meta: The meta data to store in [Return]._meta_json.
             skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
         Keyword Args:
-            kwargs: Updates Store.DEFAULT_CSV_OPTIONS for reading the csv file, as detailed in
+            kwargs: Updates Store.CSV_OPTIONS for reading the csv file, as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html.
         Returns: A new Store located in folder.
         """
         csv = Path(csv)
-        origin_csv_kwargs = {**cls.DEFAULT_CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
+        origin_csv_kwargs = {**cls.CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
         data = Frame(csv, **origin_csv_kwargs)
         meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
         return cls.from_df(folder, data.df, meta)
@@ -361,7 +358,7 @@ class Fold(Store):
         """
 
         fold = cls(parent, k, init_mode=Store._InitMode.CREATE)
-        fold._meta = cls.DEFAULT_META | parent.meta | {'k': k}
+        fold._meta = cls.META | parent.meta | {'k': k}
         if normalization is None:
             fold._normalization = Normalization(fold, data)
         else:
@@ -376,7 +373,7 @@ class Fold(Store):
 class Normalization:
     """ Encapsulates the normalization of data.
         X data is assumed to follow a Uniform distribution, which is normalized to U[0,1] , then inverse probability transformed to N[0,1].
-        Y data is normalized to zero mean and unit variance_cho.
+        Y data is normalized to zero mean and unit variance.
     """
     @classmethod
     @property

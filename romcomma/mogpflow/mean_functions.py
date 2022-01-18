@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 #
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
@@ -23,10 +23,9 @@
 
 from __future__ import annotations
 
-from typing import Sequence, Optional, Union
-from gpflow.config import default_float
-from gpflow.mean_functions import MeanFunction, Zero
 import tensorflow as tf
+from typing import Sequence, Union
+from gpflow.mean_functions import MeanFunction, Zero
 
 class MOMeanFunction(MeanFunction):
     """ Mean functions for MOGPR. Basically a wrapper for a Sequence of gpflow.mean_functions.MeanFunctions, one for each output_dim.

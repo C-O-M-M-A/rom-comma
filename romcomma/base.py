@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -27,14 +27,11 @@ Because implementation may involve parallelization, these classes should only co
 
 from __future__ import annotations
 
-from romcomma.typing_ import *
-import shutil
-from abc import ABC, abstractmethod
-from pathlib import Path
-import numpy as np
-import pandas as pd
-import json
+from romcomma._common_definitions import *
 from romcomma.data import Frame
+import shutil
+import json
+from abc import ABC
 
 
 # noinspection PyProtectedMember
@@ -161,7 +158,7 @@ class Model(ABC):
     The latter is dealt with by each subclass overriding ``Parameters.Values`` with its own ``Type[NamedTuple]``
     defining the parameter set it takes. ``model.parameters.values`` is a ``Model.Parameters.Values`` of NP.Matrices.
 
-    A Model also may include an optimize method taking options stored in an options.json file, which default to cls.DEFAULT_OPTIONS.
+    A Model also may include an optimize method taking options stored in an options.json file, which default to cls.OPTIONS.
     """
 
     @staticmethod
@@ -175,7 +172,7 @@ class Model(ABC):
 
     @classmethod
     @property
-    def DEFAULT_OPTIONS(cls) -> Dict[str, Any]:
+    def OPTIONS(cls) -> Dict[str, Any]:
         raise NotImplementedError
 
     @property
@@ -202,9 +199,9 @@ class Model(ABC):
         if method != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks.':
             raise NotImplementedError('base.optimize() must never be called.')
         else:
-            options = self.DEFAULT_OPTIONS | kwargs
+            options = self.OPTIONS | kwargs
             options = (options if options is not None
-                       else self._read_options() if self._options_json.exists() else self.DEFAULT_OPTIONS)
+                       else self._read_options() if self._options_json.exists() else self.OPTIONS)
             options.pop('result', default=None)
             options = {**options, 'result': 'OPTIMIZE HERE !!!'}
             self._write_options(options)

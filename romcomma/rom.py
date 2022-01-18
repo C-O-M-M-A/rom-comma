@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -21,9 +21,8 @@
 
 """ Contains Reduced Order Modelling tools."""
 
-from __future__ import annotations
 
-from romcomma.typing_ import *
+from romcomma._common_definitions import *
 
 
 # # noinspection PyPep8Naming
@@ -59,23 +58,23 @@ from romcomma.typing_ import *
 #
 #         **log_marginal_likelihood** -- A numpy [[float]] used to record the log marginal likelihood.
 #     """
-#     DEFAULT_PARAMETERS = Parameters(*(atleast_2d(None),) * 6)
+#     PARAMETERS = Parameters(*(atleast_2d(None),) * 6)
 #
-#     DEFAULT_OPTIMIZER_OPTIONS = {'iterations': 1, 'guess_identity_after_iteration': 1, 'sobol_options': Sobol.DEFAULT_OPTIMIZER_OPTIONS,
+#     OPTIMIZER_OPTIONS = {'iterations': 1, 'guess_identity_after_iteration': 1, 'sobol_options': Sobol.OPTIMIZER_OPTIONS,
 #                                  'gp_initializer': GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE,
-#                                  'gp_options': GP.DEFAULT_OPTIONS}
+#                                  'gp_options': GP.OPTIONS}
 #     """
 #         **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(options['sobol_options'])
 #             followed by GP.optimize(options['gp_options'])).
 #
-#         **sobol_options*** -- A Dict of Sobol optimizer options, similar to (and documented in) Sobol.DEFAULT_OPTIMIZER_OPTIONS.
+#         **sobol_options*** -- A Dict of Sobol optimizer options, similar to (and documented in) Sobol.OPTIMIZER_OPTIONS.
 #
 #         **guess_identity_after_iteration** -- After this many ROM iterations, Sobol.optimize does no exploration,
 #             just gradient descending from Theta = Identity Matrix.
 #
 #         **reuse_original_gp** -- True if GP.optimize is initialized each time from the GP originally provided.
 #
-#         **gp_options** -- A Dict of GP optimizer options, similar to (and documented in) GP.DEFAULT_OPTIMIZER_OPTIONS.
+#         **gp_options** -- A Dict of GP optimizer options, similar to (and documented in) GP.OPTIMIZER_OPTIONS.
 #     """
 #
 #     @classmethod
@@ -179,7 +178,7 @@ from romcomma.typing_ import *
 #         """ Optimize the model parameters. Do not call super().optimize, this interface only contains suggestions for implementation.
 #
 #         Args:
-#             options: A Dict of implementation-dependent optimizer options, following the format of ROM.DEFAULT_OPTIMIZER_OPTIONS.
+#             options: A Dict of implementation-dependent optimizer options, following the format of ROM.OPTIMIZER_OPTIONS.
 #         """
 #         if options is not self._options[-1]:
 #             self._options.append(options)
@@ -246,19 +245,19 @@ from romcomma.typing_ import *
 #         self._gp.optimize(**self._options[-1]['gp_options'])
 #         self._sobol = self.SobolType(self._gp)
 #
-#     def __init__(self, name: str, sobol: Sobol, options: Dict = DEFAULT_OPTIMIZER_OPTIONS,
+#     def __init__(self, name: str, sobol: Sobol, options: Dict = OPTIMIZER_OPTIONS,
 #                  rbf_parameters: Optional[GP.Parameters] = None):
 #         """ Initialize ROM object.
 #
 #         Args:
 #             sobol: The Sobol object to construct the ROM from.
-#             options: A List[Dict] similar to (and documented in) ROM.DEFAULT_OPTIMIZER_OPTIONS.
+#             options: A List[Dict] similar to (and documented in) ROM.OPTIMIZER_OPTIONS.
 #         """
 #         self._rbf_parameters = rbf_parameters
 #         self._sobol = sobol
 #         self._gp = sobol.gp
 #         self._original_parameters = self._gp.parameters._replace(kernel=self._gp.kernel.parameters)
-#         self._sobol_reordering_options = deepcopy(Sobol.DEFAULT_OPTIMIZER_OPTIONS)
+#         self._sobol_reordering_options = deepcopy(Sobol.OPTIMIZER_OPTIONS)
 #         self._fold = Fold(self._gp.fold.folder.parent, self._gp.fold.meta['k'], self._sobol.Mu)
 #         self.SobolType = deepcopy(type(self._sobol))
 #         self.GPType = deepcopy(type(self._gp))

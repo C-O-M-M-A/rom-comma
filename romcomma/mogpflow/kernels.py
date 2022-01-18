@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -21,7 +21,6 @@
 
 """ Contains extensions to gpflow.kernels."""
 
-from __future__ import annotations
 
 from romcomma.mogpflow.base import Variance
 from abc import abstractmethod
@@ -73,7 +72,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         return self.variance.broadcast(N)
 
     def K_unit_variance(self, X, X2=None):
-        """ The kernel with variance_cho=ones(). This can be cached during optimisations where only the variance_cho is trainable.
+        """ The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.
 
         Args:
             X: An (n,M) Tensor.
@@ -84,7 +83,7 @@ class MOStationary(AnisotropicStationary, Kernel):
 
     @abstractmethod
     def K_d_unit_variance(self, d):
-        """ The kernel with variance_cho=ones(). This can be cached during optimisations where only the variance_cho is trainable.
+        """ The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.
 
         Args:
             d: An (L,N,L,N,M) Tensor.
@@ -93,7 +92,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         raise NotImplementedError(f'You must implement K_d_unit_variance(self, d) in {type(self)}.')
 
     def K_d_apply_variance(self, K_d_unit_variance):
-        """ Multiply the unit variance_cho kernel by the kernel variance_cho, and reshape.
+        """ Multiply the unit variance kernel by the kernel variance, and reshape.
 
         Args:
             K_d_unit_variance: An (L,N,L,N) Tensor.
@@ -120,7 +119,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         """ Kernel Constructor.
 
         Args:
-            variance: An (L,L) symmetric, positive definite matrix for the signal variance_cho.
+            variance: An (L,L) symmetric, positive definite matrix for the signal variance.
             lengthscales: An (L,M) matrix of positive definite lengthscales.
             is_lengthscales_trainable: Whether the lengthscales of this kernel are trainable.
             name: The name of this kernel.
@@ -136,7 +135,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         self.lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + 'Lengthscales')
         self._validate_ard_active_dims(self.lengthscales[0, 0])
 
-        # set_trainable(self.variance_cho, False)  # TODO: Refactor to somewhere more appropriate.
+        # set_trainable(self.variance, False)  # TODO: Refactor to somewhere more appropriate.
 
 
 class RBF(MOStationary):
@@ -147,7 +146,7 @@ class RBF(MOStationary):
 
     where:
     r   is the Euclidean distance between the input points, scaled by the lengthscales parameter ℓ.
-    σ²  is the variance_cho parameter
+    σ²  is the variance parameter
 
     Functions drawn from a GP with this kernel are infinitely differentiable!
     """

@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -37,9 +37,7 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 
 from __future__ import annotations
 
-from romcomma.typing_ import *
-import numpy as np
-import pandas as pd
+from romcomma._common_definitions import *
 from romcomma.data import Store
 from romcomma.test import sampling
 from SALib.test_functions import Ishigami, Sobol_G, linear_model_1, linear_model_2, lake_problem
@@ -89,7 +87,7 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_varian
         functions: A tuple of test functions, of length L.
         N: The number of samples (datapoints), N &gt 0.
         M: The input dimensionality, M &ge 0.
-        likelihood_variance: A noise (co)variance_cho of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
+        likelihood_variance: A noise (co)variance of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
             Used to generate N random samples of Gaussian noise ~ N(0, noise_variance).
         folder: The Store.folder to create and store the results in.
         sampling_method: A Callable sampling_method(N, M, **kwargs) -> X, which returns an (N,M) matrix.

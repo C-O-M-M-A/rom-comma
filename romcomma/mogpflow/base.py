@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -21,33 +21,31 @@
 
 """ Contains extensions to gpflow.base."""
 
-from __future__ import annotations
-
+import tensorflow as tf
+from typing import Tuple
 from gpflow import Parameter, Module
 from gpflow.utilities import positive
 from gpflow.models.util import data_input_to_tensor
 from gpflow.config import default_float
 
-from romcomma.typing_ import *
-
 
 class Variance(Module):
     """ A non-diagonal Variance Matrix."""
 
-    DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND = 1e-4
+    CHOLESKY_DIAGONAL_LOWER_BOUND = 1e-4
 
     @property
     def shape(self) -> Tuple[int, int]:
-        """ Returns (L,L), which is the shape of self.ordinate and self.cholesky."""
+        """ Returns (L,L), which is the shape of self.value and self.cholesky."""
         return self._shape
 
     @property
-    def _c_l_t(self) -> TF.Matrix:
+    def _c_l_t(self) -> tf.Tensor:
         """ The (lower triangular) Cholesky decomposition of the covariance matrix."""
         return tf.RaggedTensor.from_row_lengths(self._cholesky_lower_triangle, self._row_lengths).to_tensor(default_value=0, shape=self._shape)
 
     @property
-    def cholesky(self) -> TF.Matrix:
+    def cholesky(self) -> tf.Tensor:
         """ The (lower triangular) Cholesky decomposition of the covariance matrix."""
         return tf.linalg.set_diag(self._c_l_t, self._cholesky_diagonal)
 
@@ -61,8 +59,8 @@ class Variance(Module):
         """ The covariance matrix, shape (L,1,L,1) ready to broadcast."""
         return tf.reshape(self.value, self._broadcast_shape)
 
-    def value_times_eye(self, N: int) -> TF.Tensor4:
-        """ The cartesian product variance_cho[:L, :L] * eye[:N, :N], transposed.
+    def value_times_eye(self, N: int) -> tf.Tensor:
+        """ The cartesian product variance[:L, :L] * eye[:N, :N], transposed.
 
         Args:
             N: The dimension of the identity matrix we are multiplying by.
@@ -70,7 +68,7 @@ class Variance(Module):
         """
         return self.value_to_broadcast * tf.eye(N, dtype=default_float())[tf.newaxis, :, tf.newaxis, :]
 
-    def __init__(self, value, name: str = 'Variance', cholesky_diagonal_lower_bound: float = DEFAULT_CHOLESKY_DIAGONAL_LOWER_BOUND):
+    def __init__(self, value, name: str = 'Variance', cholesky_diagonal_lower_bound: float = CHOLESKY_DIAGONAL_LOWER_BOUND):
         """ Construct a non-diagonal covariance matrix. Mutable only through it's properties cholesky_diagonal and cholesky_lower_triangle.
 
         Args:

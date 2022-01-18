@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -21,7 +21,7 @@
 
 """ Run this module first thing, to test_data your installation of romcomma. """
 
-from romcomma.typing_ import *
+from romcomma._common_definitions import *
 from romcomma import model
 from romcomma.data import Fold, Store
 from test.functions import Matrix, FunctionWithParameters, functions_of_normal

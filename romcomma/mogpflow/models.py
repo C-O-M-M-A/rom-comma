@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2021 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -21,21 +21,14 @@
 
 """ Contains extensions to gpflow.models."""
 
-from __future__ import annotations
-
-import self as self
-
-from romcomma.typing_ import *
 import tensorflow as tf
-from gpflow.config import default_float
+from typing import Optional
 from gpflow.models.training_mixins import InternalDataTrainingLossMixin
 from gpflow.logdensities import multivariate_normal
-from gpflow.mean_functions import Zero
 from gpflow.models.model import GPModel, InputData, MeanAndVariance, RegressionData
 from gpflow.models.util import data_input_to_tensor
 from gpflow.conditionals import base_conditional
-from romcomma.mogpflow import base, kernels, likelihoods
-from romcomma.mogpflow.mean_functions import MOMeanFunction
+import romcomma.mogpflow as mf
 
 class MOGPR(GPModel, InternalDataTrainingLossMixin):
     r"""
@@ -51,7 +44,7 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
             \mathcal N(Y \,|\, 0, \sigma_n^2 \mathbf{I})
 
     To train the model, we maximise the log _marginal_ likelihood
-    w.r.t. the likelihood variance_cho and kernel hyperparameters theta.
+    w.r.t. the likelihood variance and kernel hyperparameters theta.
     The marginal likelihood is found by integrating the likelihood
     over the prior, and has the form
 
@@ -74,10 +67,10 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
     def KXX(self):
         return self.kernel(self._X, self._X) if self._K_unit_variance is None else self.kernel.K_d_apply_variance(self._K_unit_variance)
 
-    def maximum_log_likelihood_objective(self) -> TF.Tensor:
+    def maximum_log_likelihood_objective(self) -> tf.Tensor:
         return self.log_marginal_likelihood()
 
-    def log_marginal_likelihood(self) -> TF.Tensor:
+    def log_marginal_likelihood(self) -> tf.Tensor:
         r"""
         Computes the log marginal likelihood.
 
@@ -117,12 +110,13 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         perm = tuple(reversed(range(tf.rank(f_var))))
         return tf.transpose(f_mean), tf.transpose(f_var, perm)
 
-    def __init__(self, data: RegressionData, kernel: kernels.MOStationary, mean_function: Optional[MOMeanFunction] = None, noise_variance: float = 1.0):
+    def __init__(self, data: RegressionData, kernel: mf.kernels.MOStationary, mean_function: Optional[mf.mean_functions.MOMeanFunction] = None,
+                 noise_variance: float = 1.0):
         """
 
         Args:
             data: Tuple[InputData, OutputData], which determines L, M and N. Both InputData and OutputData must be of rank 2.
-            kernel: Must be well-formed, with an (L,L) variance_cho and an (L,M) lengthscales matrix.
+            kernel: Must be well-formed, with an (L,L) variance and an (L,M) lengthscales matrix.
             mean_function: Defaults to Zero.
             noise_variance: Broadcast to (diagonal) (L,L) if necessary.
         """
@@ -137,9 +131,9 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         if tf.shape(noise_variance).numpy != (self._L, self._L):
             noise_variance = tf.broadcast_to(data_input_to_tensor(noise_variance), (self._L, self._L))
             noise_variance = tf.linalg.band_part(noise_variance, 0, 0)
-        likelihood = likelihoods.MOGaussian(noise_variance)
+        likelihood = mf.likelihoods.MOGaussian(noise_variance)
         if mean_function is None:
-            mean_function = MOMeanFunction(self._L)
+            mean_function = mf.mean_functions.MOMeanFunction(self._L)
         super().__init__(kernel, likelihood, mean_function, num_latent_gps=1)
         self._mean = tf.reshape(self.mean_function(self._X), [-1, 1])
         self._K_unit_variance = None if self.kernel.lengthscales.trainable else self.kernel.K_unit_variance(self._X)
