@@ -130,7 +130,8 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
                     if test:
                         gp.test()
                     if analyze:
-                        sa = gsa.GSA(name, gp, None)
+                        sa = gsa.GSA(name, gp)
+                        sa.m = tf.constant(1, dtype=INT())
 
 
 # def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,

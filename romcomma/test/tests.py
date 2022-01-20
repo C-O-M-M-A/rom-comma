@@ -65,8 +65,8 @@ def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float]
         rotation = np.eye(M)
     store_folder = BASE_PATH / store_folder
     store = functions.sample(f, N, M, noise_variance, store_folder)
-    fold_and_rotate_with_tests(store, K, rotation)
-    # fold_and_rotate(store, K, rotation)
+    # fold_and_rotate_with_tests(store, K, rotation)
+    fold_and_rotate(store, K, rotation)
     run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=True, test=True, analyze=False)
 
@@ -117,5 +117,5 @@ if __name__ == '__main__':
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     for M in (5,):
-                        run_gps('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
+                        run_gsa('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
                                 noise_label=noise_label, random=random, M=M)
