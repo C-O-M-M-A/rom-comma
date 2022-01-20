@@ -19,15 +19,19 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains Global Sensitivity Analysis tools."""
+""" Contains the calculation of a single coefficient of determination (closed Sobol index) without storing it."""
 
-from romcomma._common_definitions import *
-from romcomma.base import Model, Parameters
-from romcomma.gpr import GPInterface
+from __future__ import annotations
+
+from romcomma.base.definitions import *
+from romcomma.base.classes import Parameters
+from romcomma.gpr.models import GPInterface
+
 
 LOG2PI = tf.math.log(tf.constant(2 * np.pi, dtype=FLOAT()))
 Triad = Dict[str, TF.Tensor]
 TriadOfTriads = Dict[str, Triad]
+
 
 def gaussian(mean: TF.Tensor, variance: TF.Tensor, is_variance_diagonal: bool,
              ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT())) -> TF.Tensor:
@@ -38,16 +42,16 @@ def gaussian(mean: TF.Tensor, variance: TF.Tensor, is_variance_diagonal: bool,
         variance: The lower triangular Cholesky decomposition of the Gaussian population variance.
         is_variance_diagonal: True if variance is an m-vector
         ordinate: The ordinate (z-value) to calculate the Gaussian density for.
-    Returns:
+    Returns: The Gaussian pdf.
     """
     ordinate = ordinate - mean if ordinate.shape else mean
     result = ordinate / variance if is_variance_diagonal else tf.linalg.triangular_solve(variance, ordinate, lower=True)
-    result = tf.reduce_sum(tf.square(result), axis=-1)
+    result = tf.einsum('...o, ...o -> ...', result, result)
     result = result + tf.reduce_prod(variance) if is_variance_diagonal else tf.reduce_prod(tf.linalg.diag_part(variance))
     return tf.math.exp(-0.5 * (LOG2PI * ordinate.shape[-1] + result))
 
 
-class GSAInterface(Model, gf.Module):
+class GSAInterface(gf.Module):
     """ Interface encapsulating a Global Sensitivity Analysis."""
 
     class Parameters(Parameters):
@@ -237,28 +241,19 @@ class GSAInterface(Model, gf.Module):
             gp: The gp to analyze.
             **kwargs: Set calculation options, by updating OPTIONS.
         """
-        super(Model, self).__init__(name=name)
+        super(GSAInterface, self).__init__(name=name)
         self._gp = gp
         self._folder = self._gp.folder / 'gsa' / name
         self.options = self.OPTIONS | kwargs
-        # if Theta is None and self._folder.exists():
-        #     super().__init__(folder=self._folder, read_parameters=True)
-        # else:
-        #     Theta = np.eye(self.M, dtype=FLOAT()) if Theta is None else Theta
-        #     super().__init__(folder=self._folder, read_parameters=False, Theta=Theta)
-        # Theta = tf.constant(self.params.Theta, dtype=FLOAT())
-
         # Unwrap parameters
         self._L, self._N = self._gp.L, self._gp.N
         self._E = tf.constant(self._gp.likelihood.params.variance, dtype=FLOAT())
         self._F = tf.constant(self._gp.kernel.params.variance, dtype=FLOAT())
         self._lambda = tf.constant(self._gp.kernel.params.lengthscales, dtype=FLOAT())
         self._Lambda2 = self._Lambda2_()
-
         # Cache the training data kernel
         self._KNoisy_Cho = self._gp.KNoisy_Cho
         self._KNoisyInv_Y = self._gp.KNoisyInv_Y
-
         # Calculate the initial values
         self._Theta = GSA.NaN
         self._m = tf.constant(0, dtype=INT())

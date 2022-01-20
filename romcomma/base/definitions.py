@@ -19,8 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Adds extra Types to the standard library typing package, and houses common imports.
-Every source file under ``romcomma`` will ``import * from romcomma._common_definitions.`` """
+""" Contains universal imports, constants and type hints. Every source file under ``romcomma`` will ``import * from romcomma.base.definitions``. """
 
 from __future__ import annotations
 
@@ -29,18 +28,12 @@ from pathlib import Path
 import numpy as np
 import tensorflow as tf
 import gpflow as gf
-import romcomma.mogpflow as mf
+import romcomma.gpf as mf
 import pandas as pd
 from abc import abstractmethod
 
-EFFECTIVELY_ZERO = 1.0E-64
 
-Numeric = Union[int, float]
-OneOrMoreInts = Union[int, Sequence[int]]
-ZeroOrMoreInts = Optional[OneOrMoreInts]
-OneOrMoreFloats = Union[float, Sequence[float]]
-ZeroOrMoreFloats = Optional[OneOrMoreFloats]
-PathLike = Union[str, Path]
+EFFECTIVELY_ZERO = 1.0E-64
 
 
 def INT() -> Type:
@@ -49,6 +42,14 @@ def INT() -> Type:
 
 def FLOAT() -> Type:
     return gf.config.default_float()
+
+
+Numeric = Union[int, float]
+OneOrMoreInts = Union[int, Sequence[int]]
+ZeroOrMoreInts = Optional[OneOrMoreInts]
+OneOrMoreFloats = Union[float, Sequence[float]]
+ZeroOrMoreFloats = Optional[OneOrMoreFloats]
+PathLike = Union[str, Path]
 
 
 # noinspection PyPep8Naming

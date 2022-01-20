@@ -21,10 +21,6 @@
 
 """ Contains Reduced Order Modelling tools."""
 
-
-from romcomma._common_definitions import *
-
-
 # # noinspection PyPep8Naming
 # class ROM(Model):
 #     """ Reduced Order Model (ROM) Calculator and optimizer.

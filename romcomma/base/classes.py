@@ -19,16 +19,12 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Contains base classes for various models.
-
-Because implementation may involve parallelization, these classes should only contain pre-processing and post-processing.
-
-"""
+""" Contains base classes for romcomma Models and Parameters."""
 
 from __future__ import annotations
 
-from romcomma._common_definitions import *
-from romcomma.data import Frame
+from romcomma.base.definitions import *
+from romcomma.data.storage import Frame
 import shutil
 import json
 from abc import ABC

@@ -37,10 +37,10 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 
 from __future__ import annotations
 
-from romcomma._common_definitions import *
-from romcomma.data import Store
+from romcomma.base.definitions import *
+from romcomma.data.storage import Store
 from romcomma.test import sampling
-from SALib.test_functions import Ishigami, Sobol_G, linear_model_1, linear_model_2, lake_problem
+from SALib.test_functions import Ishigami
 
 
 class FunctionWithMeta:

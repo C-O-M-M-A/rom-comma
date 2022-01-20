@@ -19,7 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Mean functions for mogpflow - i.e. Gaussian prior predictions."""
+""" Mean functions for gpf - i.e. Gaussian prior predictions."""
 
 from __future__ import annotations
 

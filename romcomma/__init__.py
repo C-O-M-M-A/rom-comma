@@ -22,8 +22,11 @@
 """ Contains the romcomma library."""
 
 from . import test
-from . import data, kernels, run
-from . import mogpflow
-from .base import Model, Parameters
-from .gpr import Likelihood, GP
-from .gsa import GSA
+from . import base
+from . import run
+from .data import storage
+from .gpr import kernels
+from . import gpf
+from romcomma.base.classes import Model, Parameters
+from romcomma.gpr.models import Likelihood, GP
+from romcomma.gsa.calculate import GSA

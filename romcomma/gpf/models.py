@@ -28,7 +28,7 @@ from gpflow.logdensities import multivariate_normal
 from gpflow.models.model import GPModel, InputData, MeanAndVariance, RegressionData
 from gpflow.models.util import data_input_to_tensor
 from gpflow.conditionals import base_conditional
-import romcomma.mogpflow as mf
+import romcomma.gpf as mf
 
 class MOGPR(GPModel, InternalDataTrainingLossMixin):
     r"""

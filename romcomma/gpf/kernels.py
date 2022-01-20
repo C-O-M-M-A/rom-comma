@@ -22,7 +22,7 @@
 """ Contains extensions to gpflow.kernels."""
 
 
-from romcomma.mogpflow.base import Variance
+from romcomma.gpf.base import Variance
 from abc import abstractmethod
 from gpflow.config import default_float
 from gpflow.kernels import Kernel, AnisotropicStationary

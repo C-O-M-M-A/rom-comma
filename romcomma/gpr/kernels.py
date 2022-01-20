@@ -19,12 +19,13 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains Kernel base class and GPFlow implementations of kernels required for Gaussian Process Regression."""
+""" Contains Kernel classes for gpr. """
 
 from __future__ import annotations
 
-from romcomma._common_definitions import *
-from romcomma.base import Parameters, Model
+from romcomma.base.definitions import *
+from romcomma.base.classes import Parameters, Model
+
 
 class Kernel(Model):
     """ Abstract interface to a Kernel. Essentially this is the code contract with the GP interface."""

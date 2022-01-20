@@ -23,7 +23,7 @@
 
 
 from typing import Tuple
-from romcomma.mogpflow.base import Variance
+from romcomma.gpf.base import Variance
 
 from gpflow.config import default_float
 from gpflow.likelihoods import QuadratureLikelihood

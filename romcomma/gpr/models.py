@@ -19,19 +19,14 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains:
-
-A GPInterface base class - Anyone wishing to implement their own GPs should inherit from this).
-
-A GPFlow implementation of Gaussian Process Regression.
-"""
+""" Contains the GPR class implementing gpr. """
 
 from __future__ import annotations
 
-from romcomma._common_definitions import *
-from romcomma.data import Fold, Frame
-from romcomma.base import Parameters, Model
-from romcomma. kernels import Kernel
+from romcomma.base.definitions import *
+from romcomma.data.storage import Fold, Frame
+from romcomma.base.classes import Parameters, Model
+from romcomma.gpr.kernels import Kernel
 
 
 class Likelihood(Model):
@@ -66,7 +61,7 @@ class Likelihood(Model):
         return self.params.variance.shape[0] == 1
 
     def optimize(self, **kwargs):
-        """ Merely set the trainable parameters."""
+        """ Merely sets the trainable parameters."""
         if not self.is_independent:
             options = self.OPTIONS | kwargs
             gf.set_trainable(self._parent.implementation[0].likelihood.variance, options['variance'])

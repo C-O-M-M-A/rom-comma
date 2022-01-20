@@ -21,11 +21,10 @@
 
 """ Run this module first thing, to test_data your installation of romcomma. """
 
-from romcomma._common_definitions import *
-from romcomma import model
-from romcomma.data import Fold, Store
+from romcomma.base.definitions import *
+from romcomma.data.storage import Fold, Store
 from test.functions import Matrix, FunctionWithParameters, functions_of_normal
-from numpy import eye, savetxt, transpose, full, atleast_2d
+from numpy import eye, savetxt, transpose
 from pathlib import Path
 from scipy.stats import ortho_group
 

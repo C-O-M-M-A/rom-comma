@@ -21,9 +21,9 @@
 
 """ Contains routines for running models. """
 
-from romcomma._common_definitions import *
-from romcomma.data import Store, Fold
-from romcomma import kernels, gpr, gsa
+from romcomma.base.definitions import *
+from romcomma.data.storage import Store, Fold
+from romcomma import gpr, gsa
 from time import time
 from datetime import timedelta
 from contextlib import contextmanager
@@ -38,7 +38,7 @@ def Timing(name: str):
     """
     _enter = time()
     if name != '':
-        print (f'Running {name}', end='')
+        print(f'Running {name}', end='')
     yield
     if name != '':
         _exit = time()
@@ -60,7 +60,7 @@ def Context(name: str, device: str = '', **kwargs):
         print(' using GPFlow(' + ', '.join([f'{k}={v!r}' for k, v in kwargs.items()]), end=')')
         device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
         if len(device) > 3:
-            device_manager = gpr.tf.device(device)
+            device_manager = tf.device(device)
             print(f' on {device}', end='')
         else:
             device_manager = Timing('')
@@ -73,14 +73,13 @@ def Context(name: str, device: str = '', **kwargs):
 
 
 def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
-        kernel_parameters: Optional[kernels.Kernel.Parameters] = None, parameters: Optional[gpr.GP.Parameters] = None,
+        kernel_parameters: Optional[gpr.kernels.Kernel.Parameters] = None, parameters: Optional[gpr.models.GP.Parameters] = None,
         optimize: bool = True, test: bool = True, analyze: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.META'}, **kwargs):
     """ Service routine to recursively run GPs the Folds in a Store, and on a single Fold.
 
     Args:
         name: The GP name.
         store: The source of the training data.csv. May be a Fold, or a Store which contains Folds.
-        M: The number of input dimensions to use.
         is_read: If True, the GP.kernel.parameters and GP.parameters are read from ``fold.folder/name``, otherwise defaults are used.
             If None, the nearest available GP down the hierarchy is broadcast, constructing from scratch if no nearby GP is available.
         is_isotropic: Whether to coerce the kernel to be isotropic. If None, isotropic is run, then broadcast to run anisotropic.
@@ -120,17 +119,17 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
                                 gps(name, store, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze,
                                     semi_norm, **kwargs)
                                 return
-                        gpr.GP.copy(src_folder=store.folder/nearest_name, dst_folder=store.folder/full_name)
+                        gpr.models.GP.copy(src_folder=store.folder/nearest_name, dst_folder=store.folder/full_name)
                     gps(name, store, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
                 else:
-                    gp = gpr.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
-                                **({} if parameters is None else parameters.as_dict()))
+                    gp = gpr.models.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
+                                       **({} if parameters is None else parameters.as_dict()))
                     if optimize:
                         gp.optimize(**kwargs)
                     if test:
                         gp.test()
                     if analyze:
-                        sa = gsa.GSA(name, gp)
+                        sa = gsa.calculate.GSA(name, gp)
                         sa.m = tf.constant(1, dtype=INT())
 
 

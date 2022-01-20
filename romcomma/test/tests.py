@@ -22,9 +22,9 @@
 """ Run this module first thing, to test_data your installation of romcomma. """
 
 
-from romcomma._common_definitions import *
+from romcomma.base.definitions import *
 from romcomma import run
-from romcomma.data import Fold, Store, Frame
+from romcomma.data.storage import Fold, Store, Frame
 from romcomma.test import functions
 import shutil
 import scipy.stats
@@ -53,7 +53,7 @@ def fold_and_rotate(store: Store, K: int, rotation: NP.Matrix):
 
 
 # noinspection PyShadowingNames
-def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5, K: int = 2):
+def run_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5, K: int = 2):
     if isinstance(function_names, str):
         function_names = [function_names]
     f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
@@ -72,7 +72,7 @@ def run_gps(name, function_names: Sequence[str], N: int, noise_variance: [float]
 
 
 # noinspection PyShadowingNames
-def compare_gps(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5):
+def compare_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5):
     if isinstance(function_names, str):
         function_names = [function_names]
     f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
@@ -117,5 +117,5 @@ if __name__ == '__main__':
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     for M in (5,):
-                        run_gsa('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
+                        run_gpr('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
                                 noise_label=noise_label, random=random, M=M)

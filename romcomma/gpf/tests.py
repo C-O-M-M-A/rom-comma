@@ -19,11 +19,11 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains tests of the mogpflow package."""
+""" Contains tests of the gpf package."""
 
 
 from romcomma import run
-from romcomma.mogpflow import base, kernels, likelihoods, models
+from romcomma.gpf import base, kernels, likelihoods, models
 import numpy as np
 import gpflow as gf
 
