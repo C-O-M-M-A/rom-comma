@@ -40,23 +40,23 @@ There is no claim that the methods used by this software have any validity at al
 In case _X_<sub>_i_</sub> ~ CDF[_X_<sub>i</sub>] the user should apply the probability transform CDF(_X_<sub>i</sub>) ~ U[0, 1] to the input column _i_ 
 __prior to any data import__.
 
-#### `Store`
-Data is initially imported into a `Store` object, which handles storage, retrieval and metadata for `store.data`.
-Every `Store` object writes to and reads from its own `store.folder`.
+#### `Repository`
+Data is initially imported into a `Repository` object, which handles storage, retrieval and metadata for `repo.data`.
+Every `Repository` object writes to and reads from its own `repo.folder`.
 
-Every `Store` object crucially exposes a parameter _K_ which triggers 
-[k-fold cross-validation](https://en.wikipedia.org/wiki/Cross-validation_(statistics)#k-fold_cross-validation) for this `store`.
-Setting `store.K=K` generates _K_ `Fold` objects.
+Every `Repository` object crucially exposes a parameter _K_ which triggers 
+[k-fold cross-validation](https://en.wikipedia.org/wiki/Cross-validation_(statistics)#k-fold_cross-validation) for this `repo`.
+Setting `repo.K=K` generates _K_ `Fold` objects.
 
 #### `Fold`
-All data analysis is performed on `Fold` objects. A `Fold` is really a kind of `Store`, with the addition of
+All data analysis is performed on `Fold` objects. A `Fold` is really a kind of `Repository`, with the addition of
 * `fold.test_data`, stored in a table (`Frame`) of _N_/_K_ rows. 
-The `test_data` does not overlap the (training) `data` in this `Fold`, except when the parent `store.K=1` and the ersatz `fold.test_data=fold.data` is applied.
+The `test_data` does not overlap the (training) `data` in this `Fold`, except when the parent `repo.K=1` and the ersatz `fold.test_data=fold.data` is applied.
 * `Normalization` of inputs: All training and test data inputs are transformed from _X_<sub>i</sub> ~ U[_min_<sub>i</sub>, _max_<sub>i</sub>] 
 to the standard normal distribution _X_<sub>_i_</sub> ~ N[0, 1], as demanded by the analyses implemented by `romcomma`.
 Outputs are simultaneously normalized to zero mean and unit variance.
-`Normalization` exposes an `undo` method to return to the original variables used in the parent `Store`.
+`Normalization` exposes an `undo` method to return to the original variables used in the parent `Repository`.
 
-The `store.K` `Folds` are stored under the parent, in `fold.folder=store.folder\fold.k` for `k in range(store.K)`. 
+The `repo.K` `Folds` are stored under the parent, in `fold.folder=repo.folder\fold.k` for `k in range(repo.K)`. 
 For the purposes of model integration, an unvalidated, ersatz `fold.K` is included with _N_ datapoints of (training) `data=test_data`, 
 just like the would-be ersatz _K_=1=_k_+1.

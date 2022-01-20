@@ -78,10 +78,10 @@ class Frame:
             self.write()
 
 
-class Store:
-    """ A ``store`` object is defined as a folder containing a ``data.csv`` file and a ``meta.json`` file.
+class Repository:
+    """ A ``repo`` object is defined as a folder containing a ``data.csv`` file and a ``meta.json`` file.
 
-    These files specify the global dataset to be analyzed. This dataset must be further split into Folds contained within the Store.
+    These files specify the global dataset to be analyzed. This dataset must be further split into Folds contained within the Repository.
     """
 
     @property
@@ -138,12 +138,12 @@ class Store:
 
     @property
     def K(self) -> int:
-        """ The number of folds contained in this Store."""
+        """ The number of folds contained in this Repository."""
         return self._meta['K']
 
     def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> int:
-        """ Fold this store into K Folds, indexed by range(K).
-        An additional Fold, indexed by K, takes all the store data for both training and (invalid) testing.
+        """ Fold this repo into K Folds, indexed by range(K).
+        An additional Fold, indexed by K, takes all the repo data for both training and (invalid) testing.
         To avoid duplication, when K=1 there is no fold.0, as this would be identical to fold.1.
 
         Args:
@@ -189,13 +189,13 @@ class Store:
         return self.folder / f'fold.{k:d}'
 
     def Y_split(self):
-        """Split this Store into L Y_splits. Each Y.l is just a Store containing the lth output only.
+        """Split this Repository into L Y_splits. Each Y.l is just a Repository containing the lth output only.
 
         Raises:
             TypeError: if self is a Fold.
         """
         if isinstance(self, Fold):
-            raise TypeError('Cannot Y_split a Fold, only a Store.')
+            raise TypeError('Cannot Y_split a Fold, only a Repository.')
         for l in range(self.L):
             destination = self.folder / f'Y.{l:d}'
             if not destination.exists():
@@ -205,11 +205,11 @@ class Store:
             Frame(destination / self._csv.name, data)
             meta = deepcopy(self._meta)
             meta['data']['L'] = 1
-            Store.from_df(destination, data, meta)
+            Repository.from_df(destination, data, meta)
 
     @property
     def Y_splits(self) -> List[Tuple[int, Path]]:
-        """ Lists the index and path of every Y_split in this Store."""
+        """ Lists the index and path of every Y_split in this Repository."""
         return [(int(Y_dir.suffix[1:]), Y_dir) for Y_dir in self.folder.glob('Y.[0-9]*')]
 
     class _InitMode(IntEnum):
@@ -223,10 +223,10 @@ class Store:
         self._X_rotation = self._folder / 'X_rotation.csv'
         self._csv = self._folder / 'data.csv'
         self._data = None
-        init_mode = kwargs.get('init_mode', Store._InitMode.READ)
-        if init_mode <= Store._InitMode.READ:
+        init_mode = kwargs.get('init_mode', Repository._InitMode.READ)
+        if init_mode <= Repository._InitMode.READ:
             self._meta = self._read_meta_json()
-            if init_mode is Store._InitMode.READ:
+            if init_mode is Repository._InitMode.READ:
                 self._data = Frame(self._csv)
         else:
             shutil.rmtree(self._folder, ignore_errors=True)
@@ -238,20 +238,20 @@ class Store:
         return {'csv_kwargs': Frame.CSV_OPTIONS, 'data': {}, 'K': 0, 'shuffle before folding': False}
 
     @classmethod
-    def from_df(cls, folder: PathLike, df: pd.DataFrame, meta: Dict = META) -> Store:
-        """ Create a Store from a pd.DataFrame.
+    def from_df(cls, folder: PathLike, df: pd.DataFrame, meta: Dict = META) -> Repository:
+        """ Create a Repository from a pd.DataFrame.
 
         Args:
-            folder: The location (folder) of the Store.
-            df: The data to store in [Return].csv.
-            meta: The meta data to store in [Return]._meta_json.
-        Returns: A new Store.
+            folder: The location (folder) of the Repository.
+            df: The data to record in [Return].csv.
+            meta: The meta data to record in [Return]._meta_json.
+        Returns: A new Repository.
         """
-        store = Store(folder, init_mode=Store._InitMode.CREATE)
-        store._meta = cls.META | meta
-        store._data = Frame(store._csv, df)
-        store.meta_update()
-        return store
+        repo = Repository(folder, init_mode=Repository._InitMode.CREATE)
+        repo._meta = cls.META | meta
+        repo._data = Frame(repo._csv, df)
+        repo.meta_update()
+        return repo
 
     @classmethod
     @property
@@ -259,18 +259,18 @@ class Store:
         return {'skiprows': None, 'index_col': None}
 
     @classmethod
-    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Store:
-        """ Create a Store from a csv file.
+    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Repository:
+        """ Create a Repository from a csv file.
 
         Args:
-            folder: The location (folder) of the target Store.
-            csv: The file containing the data to store in [Return].csv.
-            meta: The meta data to store in [Return]._meta_json.
+            folder: The location (folder) of the target Repository.
+            csv: The file containing the data to record in [Return].csv.
+            meta: The meta data to record in [Return]._meta_json.
             skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
         Keyword Args:
-            kwargs: Updates Store.CSV_OPTIONS for reading the csv file, as detailed in
+            kwargs: Updates Repository.CSV_OPTIONS for reading the csv file, as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html.
-        Returns: A new Store located in folder.
+        Returns: A new Repository located in folder.
         """
         csv = Path(csv)
         origin_csv_kwargs = {**cls.CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
@@ -279,9 +279,9 @@ class Store:
         return cls.from_df(folder, data.df, meta)
 
 
-class Fold(Store):
+class Fold(Repository):
     """ A Fold is defined as a folder containing a ``data.csv``, a ``meta.json`` file and a ``test.csv`` file.
-    A Fold is a Store equipped with a test_data pd.DataFrame backed by ``test.csv``.
+    A Fold is a Repository equipped with a test_data pd.DataFrame backed by ``test.csv``.
 
     Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
     """
@@ -327,28 +327,28 @@ class Fold(Store):
         old_value = self.X_rotation
         Frame(self._X_rotation, pd.DataFrame(np.matmul(old_value, value)))
 
-    def __init__(self, parent: Store, k: int, **kwargs):
+    def __init__(self, parent: Repository, k: int, **kwargs):
         """ Initialize Fold by reading existing files. Creation is handled by the classmethod Fold.from_dfs.
 
         Args:
-            parent: The parent Store.
+            parent: The parent Repository.
             k: The index of the Fold within parent.
             M: The number of input columns used. If not 0 &lt M &lt self.M, all columns are used.
         """
-        init_mode = kwargs.get('init_mode', Store._InitMode.READ)
+        init_mode = kwargs.get('init_mode', Repository._InitMode.READ)
         super().__init__(parent.fold_folder(k), init_mode=init_mode)
         self._test_csv = self.folder / 'test.csv'
-        if init_mode == Store._InitMode.READ:
+        if init_mode == Repository._InitMode.READ:
             self._test_data = Frame(self._test_csv)
             self._normalization = Normalization(self)
 
     @classmethod
-    def from_dfs(cls, parent: Store, k: int, data: pd.DataFrame, test_data: pd.DataFrame,
+    def from_dfs(cls, parent: Repository, k: int, data: pd.DataFrame, test_data: pd.DataFrame,
                  normalization: Optional[PathLike] = None) -> Fold:
         """ Create a Fold from a pd.DataFrame.
 
         Args:
-            parent: The parent Store.
+            parent: The parent Repository.
             k: The index of the fold to be created.
             data: Training data.
             test_data: Test data.
@@ -357,7 +357,7 @@ class Fold(Store):
         Returns: The Fold created.
         """
 
-        fold = cls(parent, k, init_mode=Store._InitMode.CREATE)
+        fold = cls(parent, k, init_mode=Repository._InitMode.CREATE)
         fold._meta = cls.META | parent.meta | {'k': k}
         if normalization is None:
             fold._normalization = Normalization(fold, data)

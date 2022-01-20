@@ -19,7 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" A suite of functions designed to test_data screening (order reduction) with high-dimensional distributions.
+""" Contains a suite of functions designed to test_data screening (order reduction) with high-dimensional distributions.
 
 All functions herein are taken from https://salib.readthedocs.io.
 Each function signature follows the format:
@@ -38,7 +38,7 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 from __future__ import annotations
 
 from romcomma.base.definitions import *
-from romcomma.data.storage import Store
+from romcomma.data.storage import Repository
 from romcomma.test import sampling
 from SALib.test_functions import Ishigami
 
@@ -80,8 +80,8 @@ class FunctionWithMeta:
 
 
 def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_variance: NP.MatrixLike, folder: PathLike,
-           sampling_method: Callable[[int, int, Any], NP.Matrix] = sampling.latin_hypercube, **kwargs) -> Store:
-    """ Store a sample of test function responses.
+           sampling_method: Callable[[int, int, Any], NP.Matrix] = sampling.latin_hypercube, **kwargs) -> Repository:
+    """ Record a sample of test function responses.
 
     Args:
         functions: A tuple of test functions, of length L.
@@ -89,10 +89,10 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_varian
         M: The input dimensionality, M &ge 0.
         likelihood_variance: A noise (co)variance of shape (L,L) or (L,). The latter is interpreted as an (L,L) diagonal matrix.
             Used to generate N random samples of Gaussian noise ~ N(0, noise_variance).
-        folder: The Store.folder to create and store the results in.
+        folder: The Repository.folder to create and record the results in.
         sampling_method: A Callable sampling_method(N, M, **kwargs) -> X, which returns an (N,M) matrix.
         kwargs: Passed directly to sampling_method.
-    Returns: A store containing N rows of M input columns and L output columns. The output is f(X) + noise.
+    Returns: A Repository containing N rows of M input columns and L output columns. The output is f(X) + noise.
     """
     X = sampling_method(N, M, **kwargs)
     likelihood_variance = np.atleast_2d(likelihood_variance)
@@ -101,15 +101,15 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_varian
     return apply(functions, X, noise, folder, origin_meta=origin_meta)
 
 
-def apply(functions: Tuple[FunctionWithMeta], X: NP.Matrix, noise: NP.Matrix, folder: PathLike, **kwargs) -> Store:
-    """ Store a sample of test function responses.
+def apply(functions: Tuple[FunctionWithMeta], X: NP.Matrix, noise: NP.Matrix, folder: PathLike, **kwargs) -> Repository:
+    """ Record a sample of test function responses.
 
     Args:
         functions: A tuple of test functions, of length L.
         X: An (N,M) design matrix of inputs.
         noise: An (N,L) design matrix of fractional output noise per unit Y.
-        folder: The Store.folder to create and store the results in.
-    Returns: A store containing N rows of M input columns and L output columns. The output is f(X) + noise.
+        folder: The Repository.folder to create and record the results in.
+    Returns: A repo containing N rows of M input columns and L output columns. The output is f(X) + noise.
     Raises: IndexError if dimensions are incompatible.
     """
     X, noise = np.atleast_2d(X), np.atleast_2d(noise)
@@ -130,4 +130,4 @@ def apply(functions: Tuple[FunctionWithMeta], X: NP.Matrix, noise: NP.Matrix, fo
     Y += noise * std
     columns = [('X', f'X.{i:d}') for i in range(X.shape[1])] + [('Y', f'Y.{i:d}') for i in range(Y.shape[1])]
     df = pd.DataFrame(np.concatenate((X, Y), axis=1), columns=pd.MultiIndex.from_tuples(columns), dtype=float)
-    return Store.from_df(folder=folder, df=df, meta=meta)
+    return Repository.from_df(folder=folder, df=df, meta=meta)

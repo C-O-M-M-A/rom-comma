@@ -19,12 +19,12 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Run this module first thing, to test_data your installation of romcomma. """
+""" Contains developer tests of romcomma. """
 
 
 from romcomma.base.definitions import *
 from romcomma import run
-from romcomma.data.storage import Fold, Store, Frame
+from romcomma.data.storage import Fold, Repository, Frame
 from romcomma.test import functions
 import shutil
 import scipy.stats
@@ -33,22 +33,22 @@ import scipy.stats
 BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.1')
 
 
-def fold_and_rotate_with_tests(store: Store, K: int, rotation: NP.Matrix):
-    store._data.df = store._data.df * 5
-    store._data.write()
-    fold_and_rotate(store, K, rotation)
-    shutil.copytree(store.fold_folder(store.K), store.folder / f'fold.{store.K + 1}')
-    fold = Fold(store, store.K + 1)
+def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
+    repo._data.df = repo._data.df * 5
+    repo._data.write()
+    fold_and_rotate(repo, K, rotation)
+    shutil.copytree(repo.fold_folder(repo.K), repo.folder / f'fold.{repo.K + 1}')
+    fold = Fold(repo, repo.K + 1)
     fold.X_rotation = np.transpose(rotation)
     Frame(fold._test_csv, fold.normalization.undo_from(fold._test_data.df))
-    fold = Fold(store, store.K)
-    Frame(store.folder / 'undone.csv', fold.normalization.undo_from(fold.test_data.df))
+    fold = Fold(repo, repo.K)
+    Frame(repo.folder / 'undone.csv', fold.normalization.undo_from(fold.test_data.df))
 
 
-def fold_and_rotate(store: Store, K: int, rotation: NP.Matrix):
-    store.into_K_folds(K)
-    for k in range(store.K + 1):
-        fold = Fold(store, k)
+def fold_and_rotate(repo: Repository, K: int, rotation: NP.Matrix):
+    repo.into_K_folds(K)
+    for k in range(repo.K + 1):
+        fold = Fold(repo, k)
         fold.X_rotation = rotation
 
 
@@ -64,10 +64,10 @@ def run_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float]
     else:
         rotation = np.eye(M)
     store_folder = BASE_PATH / store_folder
-    store = functions.sample(f, N, M, noise_variance, store_folder)
-    # fold_and_rotate_with_tests(store, K, rotation)
-    fold_and_rotate(store, K, rotation)
-    run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+    repo = functions.sample(f, N, M, noise_variance, store_folder)
+    # fold_and_rotate_with_tests(repo, K, rotation)
+    fold_and_rotate(repo, K, rotation)
+    run.gps(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=True, test=True, analyze=False)
 
 
@@ -80,8 +80,8 @@ def compare_gpr(name, function_names: Sequence[str], N: int, noise_variance: [fl
     if random:
         store_folder += '.rotated'
     store_folder = BASE_PATH / store_folder
-    store = Store(store_folder)
-    run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+    repo = Repository(store_folder)
+    run.gps(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=True, test=True, analyze=False)
 
 
@@ -93,8 +93,8 @@ def run_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float]
     if random:
         store_folder += '.rotated'
     store_folder = BASE_PATH / store_folder
-    store = Store(store_folder)
-    run.gps(name=name, store=store, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+    repo = Repository(store_folder)
+    run.gps(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=False, test=False, analyze=True)
 
 

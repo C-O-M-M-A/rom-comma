@@ -139,7 +139,7 @@ class Parameters(ABC):
         """ Parameters Constructor. Shouldn't need to be overridden. Does not write to file.
 
         Args:
-            folder: The folder to store the parameters.
+            folder: The folder to record the parameters.
             **kwargs: key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs). It is the caller's responsibility to ensure
                 that every ordinate is of type NP.Matrix. Missing fields receive their defaults, so Parameters(folder) is the default parameter set.
         """

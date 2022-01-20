@@ -22,7 +22,7 @@
 """ Contains routines for running models. """
 
 from romcomma.base.definitions import *
-from romcomma.data.storage import Store, Fold
+from romcomma.data.storage import Repository, Fold
 from romcomma import gpr, gsa
 from time import time
 from datetime import timedelta
@@ -72,14 +72,14 @@ def Context(name: str, device: str = '', **kwargs):
         print('...Running ' + name, end='')
 
 
-def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
+def gps(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
         kernel_parameters: Optional[gpr.kernels.Kernel.Parameters] = None, parameters: Optional[gpr.models.GP.Parameters] = None,
         optimize: bool = True, test: bool = True, analyze: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.META'}, **kwargs):
-    """ Service routine to recursively run GPs the Folds in a Store, and on a single Fold.
+    """ Service routine to recursively run GPs the Folds in a Repository, and on a single Fold.
 
     Args:
         name: The GP name.
-        store: The source of the training data.csv. May be a Fold, or a Store which contains Folds.
+        repo: The source of the training data.csv. May be a Fold, or a Repository which contains Folds.
         is_read: If True, the GP.kernel.parameters and GP.parameters are read from ``fold.folder/name``, otherwise defaults are used.
             If None, the nearest available GP down the hierarchy is broadcast, constructing from scratch if no nearby GP is available.
         is_isotropic: Whether to coerce the kernel to be isotropic. If None, isotropic is run, then broadcast to run anisotropic.
@@ -94,35 +94,35 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
         kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.OPTIMIZER_OPTIONS.
 
     Raises:
-        FileNotFoundError: If store is not a Fold, and contains no Folds.
+        FileNotFoundError: If repo is not a Fold, and contains no Folds.
     """
-    if not isinstance(store, Fold):
-        for k in range(store.meta['K'] + 1):
-            gps(name, Fold(store, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+    if not isinstance(repo, Fold):
+        for k in range(repo.meta['K'] + 1):
+            gps(name, Fold(repo, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
     else:
         if is_independent is None:
-            gps(name, store, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
-            gps(name, store, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+            gps(name, repo, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+            gps(name, repo, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
         else:
             full_name = name + ('.i' if is_independent else '.d')
             if is_isotropic is None:
-                gps(name, store, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
-                gps(name, store, None, False, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+                gps(name, repo, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+                gps(name, repo, None, False, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
             else:
                 full_name = full_name + ('.i' if is_isotropic else '.a')
                 if is_read is None:
-                    if not (store.folder / full_name).exists():
+                    if not (repo.folder / full_name).exists():
                         nearest_name = name + '.i' + full_name[-2:]
-                        if is_independent or not (store.folder / nearest_name).exists():
+                        if is_independent or not (repo.folder / nearest_name).exists():
                             nearest_name = full_name[:-2] + '.i'
-                            if not (store.folder / nearest_name).exists():
-                                gps(name, store, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze,
+                            if not (repo.folder / nearest_name).exists():
+                                gps(name, repo, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze,
                                     semi_norm, **kwargs)
                                 return
-                        gpr.models.GP.copy(src_folder=store.folder/nearest_name, dst_folder=store.folder/full_name)
-                    gps(name, store, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+                        gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
+                    gps(name, repo, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
                 else:
-                    gp = gpr.models.GP(full_name, store, is_read, is_isotropic, is_independent, kernel_parameters,
+                    gp = gpr.models.GP(full_name, repo, is_read, is_isotropic, is_independent, kernel_parameters,
                                        **({} if parameters is None else parameters.as_dict()))
                     if optimize:
                         gp.optimize(**kwargs)
@@ -133,32 +133,32 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
                         sa.m = tf.constant(1, dtype=INT())
 
 
-# def ROMs(module: Module, name: str, store: Store, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
+# def ROMs(module: Module, name: str, repo: Repository, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
 #          options: Dict = None, rbf_parameters: Optional[gpr.GP.Parameters] = None):
-    """ Service routine to recursively run ROMs on the Splits in a Store, the Folds in a Split or Store, and on a single Fold.
+    """ Service routine to recursively run ROMs on the Splits in a Repository, the Folds in a Split or Repository, and on a single Fold.
 
     Args:
         module: Sets the implementation to either Module.GPY_ or Module.SCIPY_.
         name: The ROM name.
-        store: The source of the training data.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
-            or a Store which contains Splits or Folds.
+        repo: The source of the training data.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
+            or a Repository which contains Splits or Folds.
         source_gp_name: The name of the source GP for the ROM. Must exist in every Fold.
-        Mu: The dimensionality of the rotated basis. If a list is given, its length much match the number of Splits in store.
+        Mu: The dimensionality of the rotated basis. If a list is given, its length much match the number of Splits in repo.
             If Mu is not between 1 and Mx, Mx is used
             (where Mx is replaced by  the number of input columns in data.csv whenever Mx is not between 1 and the number of input columns in
             data.csv).
-        Mx: The number of input dimensions to use. If a list is given, its length much match the number of Splits in store.
+        Mx: The number of input dimensions to use. If a list is given, its length much match the number of Splits in repo.
             Fold.M is actually used for the current Fold, but Folds are initialized with Mx
             (with the usual proviso that Mx is between 1 and the number of input columns in data.csv).
         options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.ROM.OPTIMIZER_OPTIONS.
 
     Raises:
-        IndexError: If Mu is a list and len(Mu) != len(store.splits).
-        IndexError: If Mx is a list and len(Mu) != len(store.splits).
-        FileNotFoundError: If store is not a Fold, and contains neither Splits nor Folds.
+        IndexError: If Mu is a list and len(Mu) != len(repo.splits).
+        IndexError: If Mx is a list and len(Mu) != len(repo.splits).
+        FileNotFoundError: If repo is not a Fold, and contains neither Splits nor Folds.
     """
 #     options = module.ordinate.ROM.OPTIONS if options is None else options
-#     splits = store.splits
+#     splits = repo.splits
 #     if splits:
 #         if isinstance(Mx, list):
 #             if len(Mx) != len(splits):
@@ -171,30 +171,30 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #         else:
 #             Mu = [Mu] * len(splits)
 #         for split_index, split_dir in splits:
-#             split = Store(split_dir)
+#             split = Repository(split_dir)
 #             ROMs(module, name, split, source_gp_name, Mu[split_index], Mx[split_index], options, rbf_parameters)
-#     elif not isinstance(store, Fold):
+#     elif not isinstance(repo, Fold):
 #         start_time = time.time()
-#         K_range = range(store.meta['K'])
+#         K_range = range(repo.meta['K'])
 #         if K_range:
 #             for k in K_range:
-#                 ROMs(module, name, Fold(store, k, M=Mx), source_gp_name, Mu, Mx, options, rbf_parameters)
+#                 ROMs(module, name, Fold(repo, k, M=Mx), source_gp_name, Mu, Mx, options, rbf_parameters)
 #                 print("Fold", k, "has finished")
 #         else:
-#             raise FileNotFoundError('Cannot construct a GP in a Store ({0:s}) which is not a Fold.'.format(store.folder))
+#             raise FileNotFoundError('Cannot construct a GP in a Repository ({0:s}) which is not a Fold.'.format(repo.folder))
 #         elapsed_mins = (time.time() - start_time) / 60
-#         print(store.folder.name, "has finished in {:.2f} minutes.".format(elapsed_mins))
+#         print(repo.folder.name, "has finished in {:.2f} minutes.".format(elapsed_mins))
 #     else:
-#         module.ordinate.ROM.from_GP(fold=store, name=name, source_gp_name=source_gp_name, options=options, Mu=Mu,
+#         module.ordinate.ROM.from_GP(fold=repo, name=name, source_gp_name=source_gp_name, options=options, Mu=Mu,
 #                                  rbf_parameters=rbf_parameters)
 #
 #
 # # noinspection PyProtectedMember
-# def collect(store: Store, model_name: str, parameters: Parameters, is_split: bool = True) -> Sequence[Path]:
+# def collect(repo: Repository, model_name: str, parameters: Parameters, is_split: bool = True) -> Sequence[Path]:
 #     """Collect the Parameters of a Model.
 #
 #         Args:
-#             store: The Store containing the global dataset to be analyzed.
+#             repo: The Repository containing the global dataset to be analyzed.
 #             model_name: The name of the Model where the results are being collected.
 #             parameters: An example of the Model parameters that need to be collected.
 #             is_split: True or False, whether splits have been used in the Model.
@@ -203,15 +203,15 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #     parameters = parameters._asdict()
 #     final_parameters = parameters.copy()
 #     if is_split:
-#         final_destination = store.folder / model_name
+#         final_destination = repo.folder / model_name
 #         final_destination.mkdir(mode=0o777, parents=True, exist_ok=True)
-#         splits = store.splits
+#         splits = repo.splits
 #     else:
 #         final_destination = None
-#         splits = [(None, store.folder)]
+#         splits = [(None, repo.folder)]
 #     for param in parameters.keys():
 #         for split in splits:
-#             split_store = Store(split[-1])
+#             split_store = Repository(split[-1])
 #             K = split_store.meta['K']
 #             destination = split_store.folder / model_name
 #             destination.mkdir(mode=0o777, parents=True, exist_ok=True)
@@ -240,25 +240,25 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #     return splits
 #
 #
-# def collect_tests(store: Store, model_name: str, is_split: bool = True) -> Sequence[Path]:
+# def collect_tests(repo: Repository, model_name: str, is_split: bool = True) -> Sequence[Path]:
 #     """Service routine to instantiate the collection of test_data results.
 #
 #         Args:
-#             store: The Store containing the global dataset to be analyzed.
+#             repo: The Repository containing the global dataset to be analyzed.
 #             model_name: The name of the model where the results are being collected.
 #             is_split: True or False, whether splits have been used in the model.
 #         Returns: The split directories collected.
 #     """
 #     final_frame = frame = None
 #     if is_split:
-#         final_destination = store.folder / model_name
+#         final_destination = repo.folder / model_name
 #         final_destination.mkdir(mode=0o777, parents=True, exist_ok=True)
-#         split_dirs = store.splits
+#         split_dirs = repo.splits
 #     else:
 #         final_destination = None
-#         split_dirs = [store.folder]
+#         split_dirs = [repo.folder]
 #     for split_dir in split_dirs:
-#         split_store = Store(split_dir)
+#         split_store = Repository(split_dir)
 #         K = split_store.meta['K']
 #         destination = split_store.folder / model_name
 #         destination.mkdir(mode=0o777, parents=True, exist_ok=True)
@@ -292,12 +292,12 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #     return split_dirs
 #
 #
-# def collect_GPs(store: Store, model_name: str, test: bool, analyze: bool, is_split: bool = True, kernelTypeIdentifier: str = "gpy_.ExponentialQuadratic"
+# def collect_GPs(repo: Repository, model_name: str, test: bool, analyze: bool, is_split: bool = True, kernelTypeIdentifier: str = "gpy_.ExponentialQuadratic"
 #                 ) -> Sequence[Path]:
 #     """ Collect all the Parameters associated with a GP/Sobol calculation.
 #
 #     Args:
-#         store: The Store containing the global dataset to be analyzed.
+#         repo: The Repository containing the global dataset to be analyzed.
 #         model_name: The name of the Model where the results are being collected.
 #         test: Whether to collect tests or not.
 #         analyze: Whether to Sobol indices or not.
@@ -306,12 +306,12 @@ def gps(name: str, store: Store, is_read: Optional[bool], is_isotropic: Optional
 #     Returns: The split directories collected.
 #
 #     """
-#     collect(store, model_name, gpr.GP.PARAMETERS, is_split)
+#     collect(repo, model_name, gpr.GP.PARAMETERS, is_split)
 #     if test:
-#         collect_tests(store, model_name, is_split)
+#         collect_tests(repo, model_name, is_split)
 #     # if analyze:
-#     #     collect(store, model_name + "\\Sobol", base.Sobol.PARAMETERS, is_split)
-#     return collect(store, model_name + "\\Kernel", kernels.Kernel.TypeFromIdentifier(kernelTypeIdentifier).PARAMETERS, is_split)
+#     #     collect(repo, model_name + "\\Sobol", base.Sobol.PARAMETERS, is_split)
+#     return collect(repo, model_name + "\\Kernel", kernels.Kernel.TypeFromIdentifier(kernelTypeIdentifier).PARAMETERS, is_split)
 #
 #
 # def rotate_inputs(gb_path: PathLike, X_stand: NP.Matrix) -> NP.Matrix:
