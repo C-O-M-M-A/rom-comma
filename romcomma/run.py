@@ -129,7 +129,7 @@ def gps(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                     if test:
                         gp.test()
                     if analyze:
-                        sa = gsa.calculate.GSA(name, gp)
+                        sa = gsa.calculate.ClosedSobol(name, gp)
                         sa.m = tf.constant(1, dtype=INT())
 
 

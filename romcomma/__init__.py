@@ -21,12 +21,11 @@
 
 """ Contains the romcomma library."""
 
-from . import test
 from . import base
-from . import run
-from .data import storage
-from .gpr import kernels
+from . import data
 from . import gpf
-from romcomma.base.classes import Model, Parameters
-from romcomma.gpr.models import Likelihood, GP
-from romcomma.gsa.calculate import GSA
+from . import gpr
+from . import gsa
+from . import rom
+from . import test
+from . import run

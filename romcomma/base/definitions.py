@@ -96,3 +96,9 @@ class TF:
     CovectorLike = MatrixLike
     ArrayLike = TensorLike = Union[MatrixLike, Sequence[MatrixLike], Sequence[Sequence[MatrixLike]]]
     VectorOrMatrix = TypeVar('VectorOrMatrix', Vector, Matrix)
+
+    @classmethod
+    @property
+    def NaN(cls) -> TF.Tensor:
+        return tf.constant(np.NaN, dtype=FLOAT())
+

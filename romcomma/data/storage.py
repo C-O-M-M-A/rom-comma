@@ -244,7 +244,7 @@ class Repository:
         Args:
             folder: The location (folder) of the Repository.
             df: The data to record in [Return].csv.
-            meta: The meta data to record in [Return]._meta_json.
+            meta: The meta data to record in [Return].meta.json.
         Returns: A new Repository.
         """
         repo = Repository(folder, init_mode=Repository._InitMode.CREATE)
@@ -265,7 +265,7 @@ class Repository:
         Args:
             folder: The location (folder) of the target Repository.
             csv: The file containing the data to record in [Return].csv.
-            meta: The meta data to record in [Return]._meta_json.
+            meta: The meta data to record in [Return].meta.json.
             skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
         Keyword Args:
             kwargs: Updates Repository.CSV_OPTIONS for reading the csv file, as detailed in
