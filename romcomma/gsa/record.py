@@ -19,6 +19,39 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Contains  #TODO: Describe contents
+# Contains classes to calculate and record a variety of Global Sensitivity Analyses (GSAs).
 
 from __future__ import annotations
+
+from romcomma.base.definitions import *
+from romcomma.base.classes import Model, Parameters
+from romcomma.gpr.models import GPInterface
+from romcomma.gsa import calculate
+
+
+class SobolInterface(Model):
+    """ Interface encapsulating a general GSA, with calculation and recording facilities. """
+
+    class Parameters(Parameters):
+        """ The Parameters set of a GSA."""
+
+        @classmethod
+        @property
+        def Values(cls) -> Type[NamedTuple]:
+            """ The NamedTuple underpinning this Parameters set."""
+            class Values(NamedTuple):
+                """ The parameters set of a GSA.
+
+                    Attributes:
+                        S (NP.Matrix): The Sobol index/indices.
+                """
+                S = np.atleast_2d(None)
+            return Values
+
+    @classmethod
+    def OPTIONS(cls) -> Dict[str, Any]:
+        pass
+
+    def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
+        pass
+

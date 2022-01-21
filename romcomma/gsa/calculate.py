@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 from romcomma.base.definitions import *
-from romcomma import gpr
+from romcomma.gpr.models import GPInterface
 
 
 LOG2PI = tf.math.log(tf.constant(2 * np.pi, dtype=FLOAT()))
@@ -205,7 +205,7 @@ class ClosedSobolInterface(gf.Module):
         Lambda2 = tuple(Lambda2 + j for j in range(2))
         return {1: Lambda2, -1: tuple(value**(-1) for value in Lambda2)}
 
-    def __init__(self, name: str, gp: gpr.models.GPInterface, **kwargs: Any):
+    def __init__(self, name: str, gp: GPInterface, **kwargs: Any):
         """ Construct a ClosedSobol object.
 
         Args:
