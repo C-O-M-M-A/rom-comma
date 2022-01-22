@@ -50,7 +50,7 @@ def gaussian(mean: TF.Tensor, variance: TF.Tensor, is_variance_diagonal: bool,
     return tf.math.exp(-0.5 * (LOG2PI * ordinate.shape[-1] + result))
 
 
-class ClosedSobolInterface(gf.Module):
+class ClosedIndexInterface(gf.Module):
     """ Interface encapsulating calculation of a single closed Sobol index."""
 
     @classmethod
@@ -94,27 +94,28 @@ class ClosedSobolInterface(gf.Module):
     @property
     def V(self) -> Triad:
         """ The conditional variance Triad. Each element is shaped (L,) if ``is_S_diagonal`` else (L, L)."""
-        return self._V if self._m > 0 else ClosedSobol.Triad()
+        return self._V if self._m > 0 else ClosedIndex.Triad()
 
+    @property
     def W(self) -> TriadOfTriads:
         """ The cross covariance of V. Each element is shaped (L,) (if ``is_S_diagonal and is_T_diagonal``),
         (L,L)  (if ``is_S_diagonal xor is_T_diagonal``), or (L,L,L,L)  (if ``is_S_diagonal nor is_T_diagonal``). """
-        return self._W if self._m > 0 else ClosedSobol.Triad()
+        return self._W if self._m > 0 else ClosedIndex.Triad()
 
     @property
     def Theta(self) -> TF.Matrix:
         """ The input rotation matrix."""
-        return tf.eye(self.M, dtype=FLOAT()) if self._Theta == TF.NaN else self._Theta
+        return tf.eye(self.M, dtype=FLOAT()) if tf.reduce_any(self._Theta == TF.NaN) else self._Theta
 
     @Theta.setter
     def Theta(self, value: TF.Matrix):
         self._Theta = value
-        self._calculate_without_marginalizing(**self.options)
+        self._calculate_without_marginalizing(**self._options)
         self._m = 0
 
     @property
     def m(self) -> TF.Tensor:
-        """ The number of input dimensions for this ClosedSobol, 0 <= m <= self.M.
+        """ The number of input dimensions for this ClosedIndex, 0 <= m <= self.M.
 
         Raises:
             AssertionError: Unless 0 < m <= self.M.
@@ -129,7 +130,7 @@ class ClosedSobolInterface(gf.Module):
         tf.assert_less(value, self.M + 1, f'm={value} must be between 0 and M+1={self.M+1}.')
         if self._m != value:
             self._m = value
-            self._marginalize(**self.options)
+            self._marginalize(**self._options)
 
     @abstractmethod
     def _marginalize_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
@@ -159,7 +160,7 @@ class ClosedSobolInterface(gf.Module):
 
     @abstractmethod
     def _calculate_without_marginalizing_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        """ Calculate all quantities up to marginalization. Essentially, this calculates all the means and variances of all Gaussians behind the ClosedSobol,
+        """ Calculate all quantities up to marginalization. Essentially, this calculates all the means and variances of all Gaussians behind the ClosedIndex,
         but stops short of calculating the (marginalized) Gaussians.
 
         Args:
@@ -173,7 +174,7 @@ class ClosedSobolInterface(gf.Module):
 
     @abstractmethod
     def _calculate_without_marginalizing(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        """ Calculate all quantities up to marginalization. Essentially, this calculates all the means and variances of all Gaussians behind the ClosedSobol,
+        """ Calculate all quantities up to marginalization. Essentially, this calculates all the means and variances of all Gaussians behind the ClosedIndex,
         but stops short of calculating the (marginalized) Gaussians.
 
         Args:
@@ -186,7 +187,7 @@ class ClosedSobolInterface(gf.Module):
         raise NotImplementedError
 
     def _calculate_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        """ Calculate all quantities for m=M and m=0, setting Theta=None and m=0 for this ClosedSobol.
+        """ Calculate all quantities for m=M and m=0, setting Theta=None and m=0 for this ClosedIndex.
 
         Args:
             is_S_diagonal: If True, only the L-diagonal (variance) elements of S and V are calculated.
@@ -196,8 +197,8 @@ class ClosedSobolInterface(gf.Module):
             is_T_partial: If True this effectively forces W[`m`][`M`] = W[`M`][`M`] = 0, as if the full ['M'] model is variance free.
         """
         self._Theta = None
-        self._calculate_without_marginalizing_M0(**self.options)
-        self._marginalize_M0(**self.options)
+        self._calculate_without_marginalizing_M0(**self._options)
+        self._marginalize_M0(**self._options)
         self._m = tf.constant(0, dtype=INT())
 
     def _Lambda2_(self) -> Dict[int, Tuple[TF.Tensor]]:
@@ -205,18 +206,16 @@ class ClosedSobolInterface(gf.Module):
         Lambda2 = tuple(Lambda2 + j for j in range(2))
         return {1: Lambda2, -1: tuple(value**(-1) for value in Lambda2)}
 
-    def __init__(self, name: str, gp: GPInterface, **kwargs: Any):
-        """ Construct a ClosedSobol object.
+    def __init__(self, gp: GPInterface, **kwargs: Any):
+        """ Construct a ClosedIndex object.
 
         Args:
-            name: The name of the ClosedSobol.
             gp: The gp to analyze.
-            **kwargs: Set calculation options, by updating OPTIONS.
+            **kwargs: The calculation options to override OPTIONS.
         """
-        super(ClosedSobolInterface, self).__init__(name=name)
+        super(ClosedIndexInterface, self).__init__()
         self._gp = gp
-        self._folder = self._gp.folder / 'gsa' / name
-        self.options = self.OPTIONS | kwargs
+        self._options = self.OPTIONS | kwargs
         # Unwrap parameters
         self._L, self._N = self._gp.L, self._gp.N
         self._E = tf.constant(self._gp.likelihood.params.variance, dtype=FLOAT())
@@ -229,26 +228,26 @@ class ClosedSobolInterface(gf.Module):
         # Calculate the initial values
         self._Theta = TF.NaN
         self._m = tf.constant(0, dtype=INT())
-        self._calculate_M0(**self.options)
+        self._calculate_M0(**self._options)
 
         
-class ClosedSobol(ClosedSobolInterface):
+class ClosedIndex(ClosedIndexInterface):
     """ Implements calculation of a single closed Sobol index."""
 
     def _marginalize_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
         self._m = self.M
         self._V_M0(is_S_diagonal, is_T_calculated, is_T_diagonal, is_T_partial)
-        self._S = ClosedSobol.Triad()
+        self._S = ClosedIndex.Triad()
         self._S['0'] = tf.zeros_like(self._V['0'])
         self._S['M'] = tf.ones_like(self._V['M'])
-        self._T = ClosedSobol.Triad()
+        self._T = ClosedIndex.Triad()
         self._W_M0(is_S_diagonal, is_T_calculated, is_T_diagonal, is_T_partial)
         if is_T_calculated:
             self._T['0'] = tf.zeros_like(self._W['M'])
             self._T['M'] = tf.zeros_like(self._W['M'])
 
     def _V_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        self._V = ClosedSobol.Triad()
+        self._V = ClosedIndex.Triad()
         if is_S_diagonal:
             self._V['0'] = tf.zeros(shape=(self.L,), dtype=FLOAT())
             self._V['M'] = 0.5 * tf.ones(shape=(self.L,), dtype=FLOAT())
@@ -259,7 +258,7 @@ class ClosedSobol(ClosedSobolInterface):
             self._V_ein = tf.constant(['Ll', 'Jj'])
 
     def _W_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        self._W = ClosedSobol.Triad()
+        self._W = ClosedIndex.Triad()
         if is_T_calculated:
             if is_T_diagonal:
                 shape = self._V['M'].shape
@@ -268,8 +267,8 @@ class ClosedSobol(ClosedSobolInterface):
                 shape = tf.concat([self._V['M'].shape, self._V['M'].shape], 0)
                 self._VV_ein = tf.strings.join([self._V_ein[0], ',', self._V_ein[1], '->', self._V_ein[0], self._V_ein[1]])
             self._W['M'] = 0.5 * tf.ones(shape=shape, dtype=FLOAT())
-            self._VV = ClosedSobol.Triad()
-            self._VV['m'] = ClosedSobol.Triad()
+            self._VV = ClosedIndex.Triad()
+            self._VV['m'] = ClosedIndex.Triad()
             self._VV['M'] = tf.einsum(self._VV_ein.numpy().decode(), self._V['M'], self._V['M'])
 
 
@@ -289,7 +288,7 @@ class ClosedSobol(ClosedSobolInterface):
         self._V['m'] = 0.5 * tf.ones_like(self._V['M'])
 
     def _W_m(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        self._W['m'] = ClosedSobol.Triad()
+        self._W['m'] = ClosedIndex.Triad()
         self._W['m']['m'] = tf.ones_like(self._W['M'])
         self._W['m']['M'] = tf.ones_like(self._W['M'])
 
@@ -297,4 +296,4 @@ class ClosedSobol(ClosedSobolInterface):
         pass
 
     def _calculate_without_marginalizing(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        raise NotImplementedError
+        pass

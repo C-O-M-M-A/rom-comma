@@ -75,7 +75,7 @@ def Context(name: str, device: str = '', **kwargs):
 def gps(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
         kernel_parameters: Optional[gpr.kernels.Kernel.Parameters] = None, parameters: Optional[gpr.models.GP.Parameters] = None,
         optimize: bool = True, test: bool = True, analyze: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.META'}, **kwargs):
-    """ Service routine to recursively run GPs the Folds in a Repository, and on a single Fold.
+    """ Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.
 
     Args:
         name: The GP name.
@@ -129,34 +129,33 @@ def gps(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                     if test:
                         gp.test()
                     if analyze:
-                        sa = gsa.calculate.ClosedSobol(name, gp)
-                        sa.m = tf.constant(1, dtype=INT())
+                        gsa.perform.GSA(gp, gsa.perform.GSA.Kind.CLOSED, m=1)
 
 
 # def ROMs(module: Module, name: str, repo: Repository, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
 #          options: Dict = None, rbf_parameters: Optional[gpr.GP.Parameters] = None):
-    """ Service routine to recursively run ROMs on the Splits in a Repository, the Folds in a Split or Repository, and on a single Fold.
-
-    Args:
-        module: Sets the implementation to either Module.GPY_ or Module.SCIPY_.
-        name: The ROM name.
-        repo: The source of the training data.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
-            or a Repository which contains Splits or Folds.
-        source_gp_name: The name of the source GP for the ROM. Must exist in every Fold.
-        Mu: The dimensionality of the rotated basis. If a list is given, its length much match the number of Splits in repo.
-            If Mu is not between 1 and Mx, Mx is used
-            (where Mx is replaced by  the number of input columns in data.csv whenever Mx is not between 1 and the number of input columns in
-            data.csv).
-        Mx: The number of input dimensions to use. If a list is given, its length much match the number of Splits in repo.
-            Fold.M is actually used for the current Fold, but Folds are initialized with Mx
-            (with the usual proviso that Mx is between 1 and the number of input columns in data.csv).
-        options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.ROM.OPTIMIZER_OPTIONS.
-
-    Raises:
-        IndexError: If Mu is a list and len(Mu) != len(repo.splits).
-        IndexError: If Mx is a list and len(Mu) != len(repo.splits).
-        FileNotFoundError: If repo is not a Fold, and contains neither Splits nor Folds.
-    """
+#     """ Service routine to recursively run ROMs on the Splits in a Repository, the Folds in a Split or Repository, and on a single Fold.
+#
+#     Args:
+#         module: Sets the implementation to either Module.GPY_ or Module.SCIPY_.
+#         name: The ROM name.
+#         repo: The source of the training data.csv. May be a Fold, or a Split (whose Folds are to be analyzed),
+#             or a Repository which contains Splits or Folds.
+#         source_gp_name: The name of the source GP for the ROM. Must exist in every Fold.
+#         Mu: The dimensionality of the rotated basis. If a list is given, its length much match the number of Splits in repo.
+#             If Mu is not between 1 and Mx, Mx is used
+#             (where Mx is replaced by  the number of input columns in data.csv whenever Mx is not between 1 and the number of input columns in
+#             data.csv).
+#         Mx: The number of input dimensions to use. If a list is given, its length much match the number of Splits in repo.
+#             Fold.M is actually used for the current Fold, but Folds are initialized with Mx
+#             (with the usual proviso that Mx is between 1 and the number of input columns in data.csv).
+#         options: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.ROM.OPTIMIZER_OPTIONS.
+#
+#     Raises:
+#         IndexError: If Mu is a list and len(Mu) != len(repo.splits).
+#         IndexError: If Mx is a list and len(Mu) != len(repo.splits).
+#         FileNotFoundError: If repo is not a Fold, and contains neither Splits nor Folds.
+#     """
 #     options = module.ordinate.ROM.OPTIONS if options is None else options
 #     splits = repo.splits
 #     if splits:
