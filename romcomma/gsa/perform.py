@@ -23,6 +23,9 @@
 
 from __future__ import annotations
 
+import columns as columns
+import pandas as pd
+
 from romcomma.base.definitions import *
 from romcomma.base.classes import Model, Parameters
 from romcomma.gpr.models import GPInterface
@@ -74,8 +77,11 @@ class GSA(Model):
         """ Calculation options. ``is_T_partial`` forces ``WmM = 0``."""
         return calculate.ClosedIndex.OPTIONS
 
-    def _calculate(self, kind: GSA.Kind, Theta: TF.Tensor, m_range: tf.data.Dataset, calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
-        results = self.parameters.as_dict()
+    @classmethod
+    def _calculate(cls, kind: GSA.Kind, Theta: TF.Tensor, m_range: tf.data.Dataset, calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
+        results = cls.Parameters().as_dict()
+        del results['Theta']
+        del results['m']
         first_iteration = tf.constant(True)
         for m in m_range:
             if kind == GSA.Kind.FIRST_ORDER:
@@ -88,7 +94,6 @@ class GSA(Model):
                     calculate.Theta = Theta
                 calculate.m = m
             if first_iteration:
-                results['Theta'] = calculate.Theta
                 results['V'] = calculate.V['0'][..., tf.newaxis]
                 results['S'] = calculate.S[..., tf.newaxis]
                 results['T'] = calculate.T[..., tf.newaxis]
@@ -102,13 +107,31 @@ class GSA(Model):
                 results['V'] = tf.concat([results['V'], calculate.V['m'][..., tf.newaxis]], axis=-1)
                 results['Wmm'] = tf.concat([results['Wmm'], calculate.W['m']['m'][..., tf.newaxis]], axis=-1)
                 results['WmM'] = tf.concat([results['WmM'], calculate.W['m']['M'][..., tf.newaxis]], axis=-1)
+        if kind == GSA.Kind.TOTAL:
+            results['S'] = 1 - results['S']
         if m_range.cardinality() == 1:
             results['V'] = tf.concat([results['V'], calculate.V['M'][..., tf.newaxis]], axis=-1)
             results['WmM'] = tf.concat([results['WmM'], calculate.W['M'][..., tf.newaxis]], axis=-1)
         return results
 
-    def _compose(self, results: Dict[str, TF.Tensor]):
-        pass
+    @classmethod
+    def _compose_and_save(cls, path: Path, value: TF.Tensor, m_list: List[int], M: int, L: int):
+        m_cols = value.shape[-1]
+        rank = tf.rank(value).numpy() - 1
+        df = pd.DataFrame(tf.reshape(value, [-1, m_cols]).numpy(), columns=cls._columns(M, m_cols, m_list), index=cls._index(L, rank))
+        df.to_csv(path, float_format='%.6f')
+
+    @classmethod
+    def _columns(cls, M: int, m_cols: int, m_list: List[int]):
+        if m_cols > len(m_list):
+            m_list = m_list + [M]
+        if m_cols > len(m_list):
+            m_list = [0] + m_list
+        return pd.MultiIndex.from_product([['m'], m_list])
+
+    @classmethod
+    def _index(cls, L: int, rank: int):
+        return pd.MultiIndex.from_product([list(range(L))] * rank, names=['L'] * rank)
 
     def __init__(self, gp: GPInterface, kind: GSA.Kind, name: str = '', Theta: Optional[NP.Matrix] = None, m: int = -1, **kwargs: Any):
         """ Perform a Sobol GSA. The object created is single use and disposable: the constructor performs and records the entire GSA and the
@@ -134,9 +157,14 @@ class GSA(Model):
         options = self.OPTIONS() | kwargs
         self._write_options(options)
         # Prepare and calculate results
+        m_list = list(range(1, gp.M + 1)) if m < 0 else list(range(m, m + 1))
+        if kind == GSA.Kind.TOTAL:
+            Theta = np.flip(Theta, axis=0)
+            m_list = [gp.M - i for i in m_list]
         Theta = tf.constant(Theta, dtype=FLOAT())
-        m_range = list(range(1, gp.M + 1)) if m < 0 else list(range(m, m + 1))
-        m_range = tf.data.Dataset.from_tensor_slices(reversed(m_range)) if kind == GSA.Kind.TOTAL else tf.data.Dataset.from_tensor_slices(m_range)
+        m_range = tf.data.Dataset.from_tensor_slices(m_list)
         results = self._calculate(kind, Theta, m_range, calculate.ClosedIndex(gp, **options))
-        results['m'] = m
+        if kind == GSA.Kind.TOTAL:
+            m_list = [gp.M - i for i in m_list]
         # Compose and save results
+        results = {key: self._compose_and_save(self.parameters.csv(key), value, m_list, gp.M, gp.L) for key, value in results.items()}

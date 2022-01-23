@@ -251,7 +251,7 @@ class ClosedIndex(ClosedIndexInterface):
         if is_S_diagonal:
             self._V['0'] = tf.zeros(shape=(self.L,), dtype=FLOAT())
             self._V['M'] = 0.5 * tf.ones(shape=(self.L,), dtype=FLOAT())
-            self._V_ein = tf.constant(['L','J'])
+            self._V_ein = tf.constant(['L', 'J'])
         else:
             self._V['0'] = tf.zeros(shape=(self.L, self.L), dtype=FLOAT())
             self._V['M'] = 0.5 * tf.ones(shape=(self.L, self.L), dtype=FLOAT()) - self._V['0']

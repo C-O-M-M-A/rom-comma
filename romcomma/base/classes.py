@@ -77,6 +77,11 @@ class Parameters(ABC):
             self._folder = Path(value)
             self._csvs = tuple((self._folder / field).with_suffix(".csv") for field in self.fields)
 
+    def csv(self, field: str) -> Path:
+        assert getattr(self, '_csvs', None) is not None, 'Cannot perform file operations before self._folder and self._csvs are set.'
+        i = self.fields.index(field)
+        return self._csvs[i]
+
     @property
     def values(self) -> Values:
         return self._values
