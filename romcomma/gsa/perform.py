@@ -115,23 +115,32 @@ class GSA(Model):
         return results
 
     @classmethod
-    def _compose_and_save(cls, path: Path, value: TF.Tensor, m_list: List[int], M: int, L: int):
-        m_cols = value.shape[-1]
-        rank = tf.rank(value).numpy() - 1
-        df = pd.DataFrame(tf.reshape(value, [-1, m_cols]).numpy(), columns=cls._columns(M, m_cols, m_list), index=cls._index(L, rank))
+    def _compose_and_save(cls, path: Path, value: TF.Tensor, m_list: List[int], M: int):
+        shape = value.shape.as_list()
+        df = pd.DataFrame(tf.reshape(value, [-1, shape[-1]]).numpy(), columns=cls._columns(M, shape[-1], m_list), index=cls._index(shape))
         df.to_csv(path, float_format='%.6f')
 
     @classmethod
-    def _columns(cls, M: int, m_cols: int, m_list: List[int]):
+    def _columns(cls, M: int, m_cols: int, m_list: List[int]) -> pd.Index:
         if m_cols > len(m_list):
             m_list = m_list + [M]
         if m_cols > len(m_list):
             m_list = [0] + m_list
-        return pd.MultiIndex.from_product([['m'], m_list])
+        return pd.Index(m_list, name='m')
 
     @classmethod
-    def _index(cls, L: int, rank: int):
-        return pd.MultiIndex.from_product([list(range(L))] * rank, names=['l'] * rank)
+    def _index(cls, shape: List[int]) -> pd.MultiIndex:
+        indices = [list(range(l)) for l in shape[:-1]]
+        # Because of the options is_S_diagonal and is_T_diagonal, a bit of work is required to get the index correct.
+        df = pd.MultiIndex.from_product(indices).to_frame(index=False)
+        if shape[0] == 1:
+            df.iloc[:, 0] = df.iloc[:, 1]
+        if len(indices) >= 4:
+            if shape[-2] == 1:
+                df.iloc[:, -2:] = df.iloc[:, :2]
+            elif shape[-3] == 1:
+                df.iloc[:, -2] = df.iloc[:, -1]
+        return pd.MultiIndex.from_frame(df, names=['l'] * len(indices))
 
     def __init__(self, gp: GPInterface, kind: GSA.Kind, name: str = '', Theta: Optional[NP.Matrix] = None, m: int = -1, **kwargs: Any):
         """ Perform a Sobol GSA. The object created is single use and disposable: the constructor performs and records the entire GSA and the
@@ -167,4 +176,4 @@ class GSA(Model):
         if kind == GSA.Kind.TOTAL:
             m_list = [gp.M - i for i in m_list]
         # Compose and save results
-        results = {key: self._compose_and_save(self.parameters.csv(key), value, m_list, gp.M, gp.L) for key, value in results.items()}
+        results = {key: self._compose_and_save(self.parameters.csv(key), value, m_list, gp.M) for key, value in results.items()}
