@@ -57,7 +57,7 @@ class ClosedIndexInterface(gf.Module):
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
         """ Calculation options. ``is_T_partial`` forces W[`m`][`M`] = W[`M`][`M`] = 0."""
-        return {'is_S_diagonal': False, 'is_T_calculated': True, 'is_T_diagonal': False, 'is_T_partial': False}
+        return {'is_S_diagonal': False, 'is_T_calculated': True, 'is_T_diagonal': True, 'is_T_partial': False}
 
     @classmethod
     def Triad(cls) -> Dict[str, Union[Triad, TF.Tensor]]:
@@ -67,18 +67,6 @@ class ClosedIndexInterface(gf.Module):
     @property
     def gp(self):
         return self._gp
-
-    @property
-    def L(self):
-        return self._gp.L
-
-    @property
-    def M(self):
-        return self._gp.M
-
-    @property
-    def N(self):
-        return self._gp.N
 
     @property
     def S(self) -> TF.Tensor:
@@ -105,7 +93,7 @@ class ClosedIndexInterface(gf.Module):
     @property
     def Theta(self) -> TF.Matrix:
         """ The input rotation matrix."""
-        return tf.eye(self.M, dtype=FLOAT()) if tf.reduce_any(self._Theta == TF.NaN) else self._Theta
+        return tf.eye(self._M, dtype=FLOAT()) if tf.reduce_any(self._Theta == TF.NaN) else self._Theta
 
     @Theta.setter
     def Theta(self, value: TF.Matrix):
@@ -115,10 +103,10 @@ class ClosedIndexInterface(gf.Module):
 
     @property
     def m(self) -> TF.Tensor:
-        """ The number of input dimensions for this ClosedIndex, 0 <= m <= self.M.
+        """ The number of input dimensions for this ClosedIndex, 0 <= m <= self._M.
 
         Raises:
-            AssertionError: Unless 0 < m <= self.M.
+            AssertionError: Unless 0 < m <= self._M.
             TypeError: Unless dtype is INT().
         """
         return self._m
@@ -126,8 +114,8 @@ class ClosedIndexInterface(gf.Module):
     @m.setter
     def m(self, value: TF.Tensor):
         tf.debugging.assert_type(value, INT())
-        tf.assert_greater(value, 0, f'm={value} must be between 0 and M+1={self.M+1}.')
-        tf.assert_less(value, self.M + 1, f'm={value} must be between 0 and M+1={self.M+1}.')
+        tf.assert_greater(value, 0, f'm={value} must be between 0 and M+1={self._M+1}.')
+        tf.assert_less(value, self._M + 1, f'm={value} must be between 0 and M+1={self._M+1}.')
         if self._m != value:
             self._m = value
             self._marginalize(**self._options)
@@ -201,10 +189,27 @@ class ClosedIndexInterface(gf.Module):
         self._marginalize_M0(**self._options)
         self._m = tf.constant(0, dtype=INT())
 
-    def _Lambda2_(self) -> Dict[int, Tuple[TF.Tensor]]:
-        Lambda2 = self._lambda**2 if self._gp.kernel.is_independent else tf.einsum('LM,lM -> LlM', self._lambda, self._lambda)
-        Lambda2 = tuple(Lambda2 + j for j in range(2))
-        return {1: Lambda2, -1: tuple(value**(-1) for value in Lambda2)}
+    def _Lambda2_(self):
+        self._einLambda = self._einLM
+        self._einLambda2 = self._einLM if self._gp.kernel.is_independent else self._einLLM
+        ein = (f'{self._einLambda[0][0]},{self._einLambda[0][0]}->{self._einLM[0][0]}' if self._gp.kernel.is_independent
+               else f'{self._einLambda[0][0]},{self._einLambda[1][0]}->{self._einLLM[0][0]}')
+        self._Lambda2 = tf.einsum(ein, self._lambda, self._lambda)
+        self._Lambda2 = tuple(self._Lambda2 + j for j in range(2))
+        self._Lambda2 = {1: self._Lambda2, -1: tuple(value**(-1) for value in self._Lambda2)}
+        self._pmF = tf.sqrt((2 * np.pi)**(self._M) * tf.reduce_prod(self._Lambda2[1][0], axis=-1)) * self._F
+
+    def _ein_(self):
+        Ls = 10
+        Ms = 6
+        Ns = 6
+        self._einL = [chr(ord('A') + i) for i in range(Ls)]
+        self._einM = [chr(ord('a') + i) for i in range(Ms)]
+        self._einN = [chr(ord('a') + Ms + i) for i in range(Ns)]
+        self._einLL = [self._einL[i] + self._einL[i + 1] for i in range(Ls // 2)]
+        self._einLLL = [self._einL[i] + self._einL[i + 1] + self._einL[i + 2] for i in range(Ls // 3)]
+        self._einLM = [[self._einL[i] + self._einM[j] for j in range(Ms//3)] for i in range(Ls//2)]
+        self._einLLM = [[self._einLL[i] + self._einM[j] for j in range(Ms//3)] for i in range(Ls//2)]
 
     def __init__(self, gp: GPInterface, **kwargs: Any):
         """ Construct a ClosedIndex object.
@@ -214,14 +219,15 @@ class ClosedIndexInterface(gf.Module):
             **kwargs: The calculation options to override OPTIONS.
         """
         super(ClosedIndexInterface, self).__init__()
+        self._ein_()
         self._gp = gp
         self._options = self.OPTIONS | kwargs
         # Unwrap parameters
-        self._L, self._N = self._gp.L, self._gp.N
+        self._L, self._M, self._N = self._gp.L, self._gp.M, self._gp.N
         self._E = tf.constant(self._gp.likelihood.params.variance, dtype=FLOAT())
         self._F = tf.constant(self._gp.kernel.params.variance, dtype=FLOAT())
         self._lambda = tf.constant(self._gp.kernel.params.lengthscales, dtype=FLOAT())
-        self._Lambda2 = self._Lambda2_()
+        self._Lambda2_()
         # Cache the training data kernel
         self._KNoisy_Cho = self._gp.KNoisy_Cho
         self._KNoisyInv_Y = self._gp.KNoisyInv_Y
@@ -235,42 +241,41 @@ class ClosedIndex(ClosedIndexInterface):
     """ Implements calculation of a single closed Sobol index."""
 
     def _marginalize_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        self._m = self.M
+        self._m = tf.constant(self._M, dtype=INT())
         self._V_M0(is_S_diagonal, is_T_calculated, is_T_diagonal, is_T_partial)
         self._S = ClosedIndex.Triad()
         self._S['0'] = tf.zeros_like(self._V['0'])
         self._S['M'] = tf.ones_like(self._V['M'])
         self._T = ClosedIndex.Triad()
-        self._W_M0(is_S_diagonal, is_T_calculated, is_T_diagonal, is_T_partial)
+        self._W = ClosedIndex.Triad()
         if is_T_calculated:
+            self._W_M0(is_S_diagonal, is_T_calculated, is_T_diagonal, is_T_partial)
             self._T['0'] = tf.zeros_like(self._W['M'])
             self._T['M'] = tf.zeros_like(self._W['M'])
 
     def _V_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
+        self._einV = self._einL if is_S_diagonal else self._einLL
         self._V = ClosedIndex.Triad()
-        if is_S_diagonal:
-            self._V['0'] = tf.zeros(shape=(self.L,), dtype=FLOAT())
-            self._V['M'] = 0.5 * tf.ones(shape=(self.L,), dtype=FLOAT())
-            self._V_ein = tf.constant(['L', 'J'])
-        else:
-            self._V['0'] = tf.zeros(shape=(self.L, self.L), dtype=FLOAT())
-            self._V['M'] = 0.5 * tf.ones(shape=(self.L, self.L), dtype=FLOAT()) - self._V['0']
-            self._V_ein = tf.constant(['Ll', 'Jj'])
+        self._V['0'] = self._mu1mu1['0']
+        self._V['M'] = self._mu1mu1['M'] - self._V['0']
+
+    def _V_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
 
     def _W_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        self._W = ClosedIndex.Triad()
-        if is_T_calculated:
-            if is_T_diagonal:
-                shape = self._V['M'].shape
-                self._VV_ein = tf.strings.join([self._V_ein[0], ',', self._V_ein[0], '->', self._V_ein[0]])
-            else:
-                shape = tf.concat([self._V['M'].shape, self._V['M'].shape], 0)
-                self._VV_ein = tf.strings.join([self._V_ein[0], ',', self._V_ein[1], '->', self._V_ein[0], self._V_ein[1]])
-            self._W['M'] = 0.5 * tf.ones(shape=shape, dtype=FLOAT())
-            self._VV = ClosedIndex.Triad()
-            self._VV['m'] = ClosedIndex.Triad()
-            self._VV['M'] = tf.einsum(self._VV_ein.numpy().decode(), self._V['M'], self._V['M'])
+        self._einVSquare = (f'{self._einV[0]},{self._einV[0]}->{self._einV[0]}' if is_T_diagonal
+                       else f'{self._einV[0]},{self._einV[1]}->{self._einV[0]}{self._einV[1]}')
+        self._VV = ClosedIndex.Triad()
+        self._VV['m'] = ClosedIndex.Triad()
+        self._VV['M'] = tf.einsum(self._einVSquare, self._V['M'], self._V['M'])
+        self._mu1mu2mu1_M0(is_S_diagonal, is_T_calculated, is_T_diagonal, is_T_partial)
+        self._W['M'] = 4 * (self._mu1mu2mu1['0']['0'] - 2 * self._mu1mu2mu1['0']['M'] + self._mu1mu2mu1['M'])
 
+    def _mu1mu2mu1_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
+        self._mu1mu2mu1 = ClosedIndex.Triad()
+        self._mu1mu2mu1['0'] = ClosedIndex.Triad()
+        self._mu1mu2mu1['0']['0'] = tf.ones_like(self._VV['M'])
+        self._mu1mu2mu1['0']['M'] = tf.ones_like(self._VV['M'])
+        self._mu1mu2mu1['M'] = tf.ones_like(self._VV['M'])
 
     def _marginalize(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
         self._V_m(is_S_diagonal, is_T_calculated, is_T_diagonal, is_T_partial)
@@ -279,18 +284,26 @@ class ClosedIndex(ClosedIndexInterface):
             self._W_m(is_S_diagonal, is_T_calculated, is_T_diagonal, is_T_partial)
             self._T['m'] = self._W['m']['m'] / self._VV['M']
             if not is_T_partial:
-                self._VV['m']['m'] = tf.einsum(self._VV_ein.numpy().decode(), self._V['m'], self._V['m'])
-                self._VV['m']['M'] = tf.einsum(self._VV_ein.numpy().decode(), self._V['m'], self._V['M'])
+                self._VV['m']['m'] = tf.einsum(self._einVSquare, self._V['m'], self._V['m'])
+                self._VV['m']['M'] = tf.einsum(self._einVSquare, self._V['m'], self._V['M'])
                 self._T['m'] = self._T['m'] + (self._VV['m']['m'] / self._VV['M']) * (self._W['M'] / self._VV['M']
                                                                                       - 2 * self._W['m']['M'] / (self._VV['m']['M']))
 
     def _V_m(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        self._V['m'] = 0.5 * tf.ones_like(self._V['M'])
+        self._V['m'] = tf.ones_like(self._V['M']) / tf.constant(self._m.numpy(), dtype=FLOAT())
 
     def _W_m(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
         self._W['m'] = ClosedIndex.Triad()
-        self._W['m']['m'] = tf.ones_like(self._W['M'])
-        self._W['m']['M'] = tf.ones_like(self._W['M'])
+        self._mu1mu2mu1_m(is_S_diagonal, is_T_calculated, is_T_diagonal, is_T_partial)
+        self._W['m']['m'] = 4 * (self._mu1mu2mu1['0']['0'] - 2 * self._mu1mu2mu1['m']['0'] + self._mu1mu2mu1['m']['m'])
+        self._W['m']['M'] = 4 * (self._mu1mu2mu1['0']['0'] - self._mu1mu2mu1['m']['0'] - self._mu1mu2mu1['0']['M'] + self._mu1mu2mu1['m']['M'])
+
+    def _mu1mu2mu1_m(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
+        self._mu1mu2mu1['m'] = ClosedIndex.Triad()
+        self._mu1mu2mu1['m']['0'] = tf.ones_like(self._VV['M'])
+        self._mu1mu2mu1['m']['m'] = tf.ones_like(self._VV['M'])
+        self._mu1mu2mu1['m']['M'] = tf.ones_like(self._VV['M'])
+
 
     def _calculate_without_marginalizing_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
         pass

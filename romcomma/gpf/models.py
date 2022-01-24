@@ -101,10 +101,10 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         f_mean = tf.reshape(f_mean, f_mean_shape)
         f_var = tf.reshape(f_var, f_mean_shape * 2)
         if full_output_cov:
-            einsum = 'LNln -> LlNn'
+            ein = 'LNln -> LlNn'
         else:
-            einsum = 'LNLn -> LNn'
-        f_var = tf.einsum(einsum, f_var)
+            ein = 'LNLn -> LNn'
+        f_var = tf.einsum(ein, f_var)
         if not full_cov:
             f_var = tf.einsum('...NN->...N', f_var)
         perm = tuple(reversed(range(tf.rank(f_var))))

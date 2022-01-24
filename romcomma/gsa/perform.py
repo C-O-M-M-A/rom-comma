@@ -131,7 +131,7 @@ class GSA(Model):
 
     @classmethod
     def _index(cls, L: int, rank: int):
-        return pd.MultiIndex.from_product([list(range(L))] * rank, names=['L'] * rank)
+        return pd.MultiIndex.from_product([list(range(L))] * rank, names=['l'] * rank)
 
     def __init__(self, gp: GPInterface, kind: GSA.Kind, name: str = '', Theta: Optional[NP.Matrix] = None, m: int = -1, **kwargs: Any):
         """ Perform a Sobol GSA. The object created is single use and disposable: the constructor performs and records the entire GSA and the
