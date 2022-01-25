@@ -56,7 +56,16 @@ class ClosedIndexInterface(gf.Module):
     @classmethod
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
-        """ Calculation options. ``is_T_partial`` forces W[`m`][`M`] = W[`M`][`M`] = 0."""
+        """ Calculation options. ``is_T_partial`` forces W[`m`][`M`] = W[`M`][`M`] = 0.
+
+        Args:
+            ms: The range of ms to calculate for.
+            is_S_diagonal: If True, only the L-diagonal (variance) elements of S and V are calculated.
+            is_T_calculated: If False, T and W return TF.NaN.
+            is_T_diagonal: If True, only the S.shape-diagonal elements of T and W are calculated.
+                In other words the variance of each element of S is calculated, but cross-covariances are not.
+            is_T_partial: If True this effectively forces W[`m`][`M`] = W[`M`][`M`] = 0, as if the full ['M'] model is variance free.
+        """
         return {'is_S_diagonal': False, 'is_T_calculated': True, 'is_T_diagonal': True, 'is_T_partial': False}
 
     @classmethod
@@ -70,36 +79,36 @@ class ClosedIndexInterface(gf.Module):
 
     @property
     def S(self) -> TF.Tensor:
-        """ The closed Sobol index tensor shaped (L,) if ``is_S_diagonal`` else (L, L)."""
-        return self._S['m'] if self._m > 0 else TF.NaN
+        """ The closed Sobol index tensor shaped (1,L) if ``is_S_diagonal`` else (L,L)."""
+        return self._S['m']
 
     @property
     def T(self) -> TF.Tensor:
-        """ The cross covariance of S, shaped (L,) (if ``is_S_diagonal and is_T_diagonal``),
-        (L,L)  (if ``is_S_diagonal xor is_T_diagonal``), or (L,L,L,L)  (if ``is_S_diagonal nor is_T_diagonal``). """
-        return self._T['m'] if self._m > 0 else TF.NaN
+        """ The cross covariance of S, shaped (1,L,1,1) (if ``is_S_diagonal and is_T_diagonal``), (L,L,1,1) (if ``not is_S_diagonal and is_T_diagonal``)
+        (1,L,1,L)  (if ``is_S_diagonal and not is_T_diagonal``), or (L,L,L,L)  (if not ``is_S_diagonal and not is_T_diagonal``). """
+        return self._T['m']
 
     @property
     def V(self) -> Triad:
         """ The conditional variance Triad. Each element is shaped (L,) if ``is_S_diagonal`` else (L, L)."""
-        return self._V if self._m > 0 else ClosedIndex.Triad()
+        return self._V
 
     @property
     def W(self) -> TriadOfTriads:
-        """ The cross covariance of V. Each element is shaped (L,) (if ``is_S_diagonal and is_T_diagonal``),
-        (L,L)  (if ``is_S_diagonal xor is_T_diagonal``), or (L,L,L,L)  (if ``is_S_diagonal nor is_T_diagonal``). """
-        return self._W if self._m > 0 else ClosedIndex.Triad()
+        """ The cross covariance of V, shaped (1,L,1,1) (if ``is_S_diagonal and is_T_diagonal``), (L,L,1,1) (if ``not is_S_diagonal and is_T_diagonal``)
+        (1,L,1,L)  (if ``is_S_diagonal and not is_T_diagonal``), or (L,L,L,L)  (if not ``is_S_diagonal and not is_T_diagonal``). """
+        return self._W
 
     @property
     def Theta(self) -> TF.Matrix:
         """ The input rotation matrix."""
-        return tf.eye(self._M, dtype=FLOAT()) if tf.reduce_any(self._Theta == TF.NaN) else self._Theta
+        return tf.eye(self._M, dtype=FLOAT()) if self._Theta is None else self._Theta
 
     @Theta.setter
     def Theta(self, value: TF.Matrix):
         self._Theta = value
-        self._calculate_without_marginalizing(**self._options)
-        self._m = 0
+        self._calculate_without_marginalizing()
+        self._m = self._M
 
     @property
     def m(self) -> TF.Tensor:
@@ -112,82 +121,19 @@ class ClosedIndexInterface(gf.Module):
         return self._m
 
     @m.setter
-    def m(self, value: TF.Tensor):
-        tf.debugging.assert_type(value, INT())
-        tf.assert_greater(value, 0, f'm={value} must be between 0 and M+1={self._M+1}.')
-        tf.assert_less(value, self._M + 1, f'm={value} must be between 0 and M+1={self._M+1}.')
+    def m(self, value: int):
+        assert 0 < value < self._M, f'm={value} is undoable.'
         if self._m != value:
             self._m = value
-            self._marginalize(**self._options)
+            self._marginalize()
 
     @abstractmethod
-    def _marginalize_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        """ Calculate the closed Sobol index tensors S['M'], S.['0'], and, optionally, their cross covariances T['M'], T['0'].
-
-        Args:
-            is_S_diagonal: If True, only the L-diagonal (variance) elements of S and V are calculated.
-            is_T_calculated: If False, T and W return TF.NaN.
-            is_T_diagonal: If True, only the S.shape-diagonal elements of T and W are calculated.
-                In other words the variance of each element of S is calculated, but cross-covariances are not.
-            is_T_partial: If True this effectively forces W[`m`][`M`] = W[`M`][`M`] = 0, as if the full ['M'] model is variance free.
-        """
+    def _marginalize(self):
         raise NotImplementedError
 
     @abstractmethod
-    def _marginalize(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        """ Calculate the closed Sobol index tensor S['m'] of the first m input dimensions, and, optionally, its cross covariance T['m'].
-
-        Args:
-            is_S_diagonal: If True, only the L-diagonal (variance) elements of S and V are calculated.
-            is_T_calculated: If False, T and W return TF.NaN.
-            is_T_diagonal: If True, only the S.shape-diagonal elements of T and W are calculated.
-                In other words the variance of each element of S is calculated, but cross-covariances are not.
-            is_T_partial: If True this effectively forces W[`m`][`M`] = W[`M`][`M`] = 0, as if the full ['M'] model is variance free.
-        """
+    def _calculate_without_marginalizing(self):
         raise NotImplementedError
-
-    @abstractmethod
-    def _calculate_without_marginalizing_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        """ Calculate all quantities up to marginalization. Essentially, this calculates all the means and variances of all Gaussians behind the ClosedIndex,
-        but stops short of calculating the (marginalized) Gaussians.
-
-        Args:
-            is_S_diagonal: If True, only the L-diagonal (variance) elements of S and V are calculated.
-            is_T_calculated: If False, T and W return TF.NaN.
-            is_T_diagonal: If True, only the S.shape-diagonal elements of T and W are calculated.
-                In other words the variance of each element of S is calculated, but cross-covariances are not.
-            is_T_partial: If True this effectively forces W[`m`][`M`] = W[`M`][`M`] = 0, as if the full ['M'] model is variance free.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def _calculate_without_marginalizing(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        """ Calculate all quantities up to marginalization. Essentially, this calculates all the means and variances of all Gaussians behind the ClosedIndex,
-        but stops short of calculating the (marginalized) Gaussians.
-
-        Args:
-            is_S_diagonal: If True, only the L-diagonal (variance) elements of S and V are calculated.
-            is_T_calculated: If False, T and W return TF.NaN.
-            is_T_diagonal: If True, only the S.shape-diagonal elements of T and W are calculated.
-                In other words the variance of each element of S is calculated, but cross-covariances are not.
-            is_T_partial: If True this effectively forces W[`m`][`M`] = W[`M`][`M`] = 0, as if the full ['M'] model is variance free.
-        """
-        raise NotImplementedError
-
-    def _calculate_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        """ Calculate all quantities for m=M and m=0, setting Theta=None and m=0 for this ClosedIndex.
-
-        Args:
-            is_S_diagonal: If True, only the L-diagonal (variance) elements of S and V are calculated.
-            is_T_calculated: If False, T and W return TF.NaN.
-            is_T_diagonal: If True, only the S.shape-diagonal elements of T and W are calculated.
-                In other words the variance of each element of S is calculated, but cross-covariances are not.
-            is_T_partial: If True this effectively forces W[`m`][`M`] = W[`M`][`M`] = 0, as if the full ['M'] model is variance free.
-        """
-        self._Theta = None
-        self._calculate_without_marginalizing_M0(**self._options)
-        self._marginalize_M0(**self._options)
-        self._m = tf.constant(0, dtype=INT())
 
     def _Lambda2_(self):
         if self._gp.kernel.is_independent:
@@ -231,97 +177,85 @@ class ClosedIndexInterface(gf.Module):
         self._KNoisy_Cho = self._gp.KNoisy_Cho
         self._KNoisyInv_Y = self._gp.KNoisyInv_Y
         # Calculate the initial values
-        self._Theta = TF.NaN
-        self._m = tf.constant(0, dtype=INT())
-        self._calculate_M0(**self._options)
+        self._Theta = None
+        self._m = self._M
+        self._calculate_without_marginalizing()
+        self._marginalize()
 
         
 class ClosedIndex(ClosedIndexInterface):
     """ Implements calculation of a single closed Sobol index."""
 
-    def _marginalize_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        self._m = tf.constant(self._M, dtype=INT())
-        self._V_M0(is_S_diagonal)
-        self._S = ClosedIndex.Triad()
-        self._S['0'] = tf.zeros_like(self._V['0'])
-        self._S['M'] = tf.ones_like(self._V['M'])
-        self._T = ClosedIndex.Triad()
-        self._W = ClosedIndex.Triad()
-        if is_T_calculated:
-            self._W_M0(is_T_diagonal, is_T_partial)
-            self._T['0'] = tf.zeros_like(self._W['M'])
-            self._T['M'] = tf.zeros_like(self._W['M'])
-
-    def _V_M0(self, is_S_diagonal: bool):
-        self._V = ClosedIndex.Triad()
-        self._mu1mu1_M0(is_S_diagonal)
-        self._V['0'] = self._mu1mu1['0']
-        self._V['M'] = self._mu1mu1['M'] - self._V['0']
-
-    def _mu1mu1_M0(self, is_S_diagonal: bool):
-        self._mu1mu1 = ClosedIndex.Triad()
-        if is_S_diagonal:
-            self._mu1mu1['0'] = tf.ones((1, self._L), dtype=FLOAT())
-            self._mu1mu1['M'] = tf.ones((1, self._L), dtype=FLOAT())
-        else:
-            self._mu1mu1['0'] = tf.ones((self._L, self._L), dtype=FLOAT())
-            self._mu1mu1['M'] = tf.ones((self._L, self._L), dtype=FLOAT())
-
-    def _W_M0(self, is_T_diagonal: bool, is_T_partial: bool):
-        self._VV = ClosedIndex.Triad()
-        self._VV['m'] = ClosedIndex.Triad()
-        if is_T_diagonal:
-            self._VV['M'] = tf.einsum('Ll,Ll -> Ll', self._V['M'], self._V['M'])[..., tf.newaxis, tf.newaxis]
-        else:
-            self._VV['M'] = tf.einsum('Ll,Jj -> LlJj', self._V['M'], self._V['M'])
-        self._mu1mu2mu1_M0(is_T_diagonal, is_T_partial)
-        if not is_T_partial:
-            self._W['M'] = 4 * (self._mu1mu2mu1['0'] - 2 * self._mu1mu2mu1['M']['0'] + self._mu1mu2mu1['M']['M'])
-
-    def _mu1mu2mu1_M0(self, is_T_diagonal: bool, is_T_partial: bool):
-        self._mu1mu2mu1 = ClosedIndex.Triad()
-        self._mu1mu2mu1['0'] = tf.ones_like(self._VV['M'])
-        if not is_T_partial:
-            self._mu1mu2mu1['M'] = ClosedIndex.Triad()
-            self._mu1mu2mu1['M']['0'] = tf.ones_like(self._VV['M'])
-            self._mu1mu2mu1['M']['M'] = tf.ones_like(self._VV['M'])
-
-    def _marginalize(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        self._V_m(is_S_diagonal)
+    def _marginalize(self):
+        self._V_()
+        if self._m == self._M:
+            self._S = ClosedIndex.Triad()
+            self._T = ClosedIndex.Triad()
+            self._W = ClosedIndex.Triad()
+            self._S['0'] = tf.zeros_like(self._V['0'])
+            self._S['M'] = tf.ones_like(self._V['M'])
         self._S['m'] = self._V['m'] / self._V['M']
-        if is_T_calculated:
-            self._W_m(is_T_diagonal, is_T_partial)
-            self._T['m'] = self._W['m']['m'] / self._VV['M']
-            if not is_T_partial:
-                if is_T_diagonal:
-                    self._VV['m']['m'] = tf.einsum('Ll,Ll -> Ll', self._V['m'], self._V['m'])[..., tf.newaxis, tf.newaxis]
-                    self._VV['m']['M'] = tf.einsum('Ll,Ll -> Ll', self._V['m'], self._V['M'])[..., tf.newaxis, tf.newaxis]
+        if self._options['is_T_calculated']:
+            if self._m == self._M:
+                self._VV = ClosedIndex.Triad()
+                self._VV['m'] = ClosedIndex.Triad()
+                if self._options['is_T_diagonal']:
+                    self._VV['M'] = tf.einsum('Ll,Ll -> Ll', self._V['M'], self._V['M'])[..., tf.newaxis, tf.newaxis]
                 else:
-                    self._VV['m']['m'] = tf.einsum('Ll,Jj -> LlJj', self._V['m'], self._V['m'])
-                    self._VV['m']['M'] = tf.einsum('Ll,Jj -> LlJj', self._V['m'], self._V['M'])
+                    self._VV['M'] = tf.einsum('Ll,Jj -> LlJj', self._V['M'], self._V['M'])
+                self._T['0'] = tf.zeros_like(self._VV['M'])
+                self._T['M'] = tf.zeros_like(self._VV['M'])
+            self._W_()
+            self._T['m'] = self._W['m']['m'] / self._VV['M']
+            if not self._options['is_T_partial']:
                 self._T['m'] = self._T['m'] + (self._VV['m']['m'] / self._VV['M']) * (self._W['M'] / self._VV['M']
                                                                                       - 2 * self._W['m']['M'] / (self._VV['m']['M']))
 
-    def _V_m(self, is_S_diagonal: bool):
-        self._V['m'] = tf.ones_like(self._V['M']) / tf.constant(self._m.numpy(), dtype=FLOAT())
+    def _V_(self):
+        self._mu1mu1_()
+        if self._m == self._M:
+            self._V = ClosedIndex.Triad()
+            self._V['0'] = self._mu1mu1['0']
+            self._V['M'] = self._mu1mu1['M'] - self._V['0']
+        self._V['m'] = self._mu1mu1['m'] - self._V['0']
 
-    def _W_m(self, is_T_diagonal: bool, is_T_partial: bool):
-        self._W['m'] = ClosedIndex.Triad()
-        self._mu1mu2mu1_m(is_T_diagonal, is_T_partial)
+    def _mu1mu1_(self):
+        shape = (1, self._L) if self._options['is_S_diagonal'] else (self._L, self._L)
+        if self._m == self._M:
+            self._mu1mu1 = ClosedIndex.Triad()
+            self._mu1mu1['0'] = 0.5 * tf.ones(shape, dtype=FLOAT())
+            self._mu1mu1['M'] = tf.ones(shape, dtype=FLOAT())
+        self._mu1mu1['m'] = tf.ones(shape, dtype=FLOAT())
+
+    def _W_(self):
+        self._mu1mu2mu1_()
+        if self._m == self._M:
+            self._W['m'] = ClosedIndex.Triad()
+            if not self._options['is_T_partial']:
+                self._W['M'] = 4 * (self._mu1mu2mu1['0'] - 2 * self._mu1mu2mu1['M']['0'] + self._mu1mu2mu1['M']['M'])
         self._W['m']['m'] = 4 * (self._mu1mu2mu1['0'] - 2 * self._mu1mu2mu1['m']['0'] + self._mu1mu2mu1['m']['m'])
-        if not is_T_partial:
+        if not self._options['is_T_partial']:
+            if self._options['is_T_diagonal']:
+                self._VV['m']['m'] = tf.einsum('Ll,Ll -> Ll', self._V['m'], self._V['m'])[..., tf.newaxis, tf.newaxis]
+                self._VV['m']['M'] = tf.einsum('Ll,Ll -> Ll', self._V['m'], self._V['M'])[..., tf.newaxis, tf.newaxis]
+            else:
+                self._VV['m']['m'] = tf.einsum('Ll,Jj -> LlJj', self._V['m'], self._V['m'])
+                self._VV['m']['M'] = tf.einsum('Ll,Jj -> LlJj', self._V['m'], self._V['M'])
             self._W['m']['M'] = 4 * (self._mu1mu2mu1['0'] - self._mu1mu2mu1['m']['0'] - self._mu1mu2mu1['M']['0'] + self._mu1mu2mu1['m']['M'])
 
-    def _mu1mu2mu1_m(self, is_T_diagonal: bool, is_T_partial: bool):
-        self._mu1mu2mu1['m'] = ClosedIndex.Triad()
+    def _mu1mu2mu1_(self):
+        if self._m == self._M:
+            self._mu1mu2mu1 = ClosedIndex.Triad()
+            self._mu1mu2mu1['m'] = ClosedIndex.Triad()
+            self._mu1mu2mu1['0'] = tf.zeros_like(self._VV['M'])
+            if not self._options['is_T_partial']:
+                self._mu1mu2mu1['M'] = ClosedIndex.Triad()
+                self._mu1mu2mu1['M']['0'] = tf.ones_like(self._VV['M'])
+                self._mu1mu2mu1['M']['M'] = tf.ones_like(self._VV['M'])
         self._mu1mu2mu1['m']['0'] = tf.ones_like(self._VV['M'])
         self._mu1mu2mu1['m']['m'] = tf.ones_like(self._VV['M'])
-        if not is_T_partial:
+        if not self._options['is_T_partial']:
             self._mu1mu2mu1['m']['M'] = tf.ones_like(self._VV['M'])
 
-
-    def _calculate_without_marginalizing_M0(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
-        pass
-
-    def _calculate_without_marginalizing(self, is_S_diagonal: bool, is_T_calculated: bool, is_T_diagonal: bool, is_T_partial: bool):
+    def _calculate_without_marginalizing(self):
         pass

@@ -125,7 +125,7 @@ class MOStationary(AnisotropicStationary, Kernel):
             name: The name of this kernel.
             active_dims: Which of the input dimensions are used. The default None means all of them.
         """
-        super(AnisotropicStationary, self).__init__(active_dims=active_dims, name=name)  # Do not call gf.kernels.AnisotropicStationary.__init__()!
+        super(AnisotropicStationary, self).__init__(name=name, active_dims=active_dims)  # Do not call gf.kernels.AnisotropicStationary.__init__()!
         self.variance = Variance(value=np.atleast_2d(variance), name=name + 'Variance')
         self._L = self.variance.shape[0]
         lengthscales = data_input_to_tensor(lengthscales)

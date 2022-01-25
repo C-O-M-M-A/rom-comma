@@ -129,7 +129,7 @@ def gps(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                     if test:
                         gp.test()
                     if analyze:
-                        gsa.perform.GSA(gp, gsa.perform.GSA.Kind.CLOSED, m=1)
+                        gsa.perform.GSA(gp, gsa.perform.GSA.Kind.CLOSED, m=-1)
 
 
 # def ROMs(module: Module, name: str, repo: Repository, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,

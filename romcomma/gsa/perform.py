@@ -78,12 +78,12 @@ class GSA(Model):
         return calculate.ClosedIndex.OPTIONS
 
     @classmethod
-    def _calculate(cls, kind: GSA.Kind, Theta: TF.Tensor, m_range: tf.data.Dataset, calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
+    def _calculate(cls, kind: GSA.Kind, Theta: TF.Tensor, m_list: List[int], calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
         results = cls.Parameters().as_dict()
         del results['Theta']
         del results['m']
-        first_iteration = tf.constant(True)
-        for m in m_range:
+        first_iteration = True
+        for m in m_list:
             if kind == GSA.Kind.FIRST_ORDER:
                 updates = tf.constant([Theta[m, :], Theta[1, :]])
                 tf.tensor_scatter_nd_update(Theta, indices=[[1], [m]], updates=updates)
@@ -100,18 +100,17 @@ class GSA(Model):
                 results['V'] = tf.concat([results['V'], calculate.V['m'][..., tf.newaxis]], axis=-1)
                 results['Wmm'] = calculate.W['m']['m'][..., tf.newaxis]
                 results['WmM'] = calculate.W['m']['M'][..., tf.newaxis]
-                first_iteration = tf.constant(False)
+                first_iteration = False
             else:
                 results['S'] = tf.concat([results['S'], calculate.S[..., tf.newaxis]], axis=-1)
                 results['T'] = tf.concat([results['T'], calculate.T[..., tf.newaxis]], axis=-1)
                 results['V'] = tf.concat([results['V'], calculate.V['m'][..., tf.newaxis]], axis=-1)
                 results['Wmm'] = tf.concat([results['Wmm'], calculate.W['m']['m'][..., tf.newaxis]], axis=-1)
                 results['WmM'] = tf.concat([results['WmM'], calculate.W['m']['M'][..., tf.newaxis]], axis=-1)
+        results['V'] = tf.concat([results['V'], calculate.V['M'][..., tf.newaxis]], axis=-1)
+        results['WmM'] = tf.concat([results['WmM'], calculate.W['M'][..., tf.newaxis]], axis=-1)
         if kind == GSA.Kind.TOTAL:
             results['S'] = 1 - results['S']
-        if m_range.cardinality() == 1:
-            results['V'] = tf.concat([results['V'], calculate.V['M'][..., tf.newaxis]], axis=-1)
-            results['WmM'] = tf.concat([results['WmM'], calculate.W['M'][..., tf.newaxis]], axis=-1)
         return results
 
     @classmethod
@@ -151,11 +150,11 @@ class GSA(Model):
             kind: The kind of index to calculate - first order, closed or total.
             name: An optional prefix to the name of this GSA.
             Theta: The input rotation matrix. The identity matrix is assumed if Theta is None.
-            m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m <= gp.M``.
+            m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
                 Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
             **kwargs: The calculation options to override OPTIONS.
         """
-        m, name_suffix = (m, f'.{m}') if 0 < m <= gp.M else (-1, '')
+        m, name_suffix = (m, f'.{m}') if 0 < m < gp.M else (-1, '')
         # Arrange name
         name_suffix = kind.name.lower() + name_suffix
         name += name_suffix if name == '' else f'.{name_suffix}'
@@ -166,13 +165,12 @@ class GSA(Model):
         options = self.OPTIONS() | kwargs
         self._write_options(options)
         # Prepare and calculate results
-        m_list = list(range(1, gp.M + 1)) if m < 0 else list(range(m, m + 1))
+        m_list = list(range(1, gp.M)) if m < 0 else list(range(m, m + 1))
         if kind == GSA.Kind.TOTAL:
             Theta = np.flip(Theta, axis=0)
             m_list = [gp.M - i for i in m_list]
         Theta = tf.constant(Theta, dtype=FLOAT())
-        m_range = tf.data.Dataset.from_tensor_slices(m_list)
-        results = self._calculate(kind, Theta, m_range, calculate.ClosedIndex(gp, **options))
+        results = self._calculate(kind, Theta, m_list, calculate.ClosedIndex(gp, **options))
         if kind == GSA.Kind.TOTAL:
             m_list = [gp.M - i for i in m_list]
         # Compose and save results

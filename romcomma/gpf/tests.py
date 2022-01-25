@@ -22,8 +22,8 @@
 """ Contains tests of the gpf package."""
 
 
-from romcomma import run
 from romcomma.gpf import base, kernels, likelihoods, models
+from romcomma import run
 import numpy as np
 import gpflow as gf
 
@@ -36,14 +36,17 @@ def covariance():
     print(b.value)
     print(b.value)
 
+
 def regression_data():
-    data = np.linspace(start=1, stop=50, num=50, dtype='float32').reshape(5, 10).transpose()
+    data = np.linspace(start=1, stop=50, num=50).reshape(5, 10).transpose()
     return data[:, :3], data[:, 3:]
 
-def kernel(is_lengthscales_trainable: bool):
+
+def kernel():
     lengthscales = [0.01 * np.ones(3), 0.03 * np.ones(3)]
     variance = 0.5 * np.eye(2)
-    return kernels.RBF(variance, lengthscales, is_lengthscales_trainable)
+    return kernels.RBF(variance, lengthscales)
+
 
 def likelihood():
     variance = 0.0001 * np.eye(2)
@@ -51,12 +54,12 @@ def likelihood():
 
 
 if __name__ == '__main__':
-    with run.Context('Test', float='float32'):
+    with run.Context('Test', float='float64'):
         lh = likelihood()
         X, Y = regression_data()
         print(X)
         print(Y)
-        gp = models.MOGPR((X, Y), kernel(True), noise_variance=lh.variance.value)
+        gp = models.MOGPR((X, Y), kernel(), noise_variance=lh.variance.value)
         results = gp.predict_f(X, full_cov=False, full_output_cov=False)
         print(results)
         results = gp.predict_y(X, full_cov=False, full_output_cov=False)
