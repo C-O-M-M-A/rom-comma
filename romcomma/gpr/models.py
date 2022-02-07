@@ -143,7 +143,7 @@ class GPInterface(Model):
     @property
     def N(self) -> int:
         """ The the number of training samples."""
-        return self._M
+        return self._N
 
 
     @property
@@ -346,7 +346,7 @@ class GP(GPInterface):
             Y = np.reshape(np.transpose(self._Y), [-1, 1])
         else:
             Y = tf.reshape(tf.transpose(self.Y), [-1, 1])
-        return tf.linalg.cholesky_solve(self.KNoisy_Cho, Y)
+        return tf.reshape(tf.linalg.cholesky_solve(self.KNoisy_Cho, Y),[-1])
 
     def check_KNoisyInv_Y(self, x: NP.Matrix) -> NP.Matrix:
         """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance).
@@ -365,7 +365,7 @@ class GP(GPInterface):
             gp = self._implementation[0]
             kernel = gp.kernel(x, self.X)
         predicted = self.predict(x)[0]
-        result = tf.transpose(tf.reshape(tf.einsum('on, ni -> o', kernel, self.KNoisyInv_Y), (-1, o)))
+        result = tf.transpose(tf.reshape(tf.einsum('on, n -> o', kernel, self.KNoisyInv_Y), (-1, o)))
         result -= predicted
         return np.sqrt(np.sum(result * result)/o)
 

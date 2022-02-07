@@ -56,7 +56,6 @@ class GSA(Model):
                         Wmm (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
                         WmM (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
                 """
-                Theta: NP.Matrix = np.atleast_2d(None)
                 m: NP.Matrix = np.atleast_2d(None)
                 S: NP.Matrix = np.atleast_2d(None)
                 T: NP.Matrix = np.atleast_2d(None)
@@ -78,43 +77,28 @@ class GSA(Model):
         return calculate.ClosedIndex.OPTIONS
 
     @classmethod
-    def _calculate(cls, kind: GSA.Kind, Theta: TF.Tensor, m_list: List[int], calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
+    def _calculate(cls, kind: GSA.Kind, m_dataset: tf.data.Dataset, calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
         results = cls.Parameters().as_dict()
-        del results['Theta']
         del results['m']
         first_iteration = True
-        for m in m_list:
-            if kind == GSA.Kind.FIRST_ORDER:
-                updates = tf.constant([Theta[m, :], Theta[1, :]])
-                tf.tensor_scatter_nd_update(Theta, indices=[[1], [m]], updates=updates)
-                calculate.Theta = Theta
-                calculate.m = 1
-            else:
-                if first_iteration:
-                    calculate.Theta = Theta
-                calculate.m = m
+        for m in m_dataset:
+            result = calculate.marginalize(m)
             if first_iteration:
-                results['V'] = calculate.V['0'][..., tf.newaxis]
-                results['S'] = calculate.S[..., tf.newaxis]
-                results['T'] = calculate.T[..., tf.newaxis]
-                results['V'] = tf.concat([results['V'], calculate.V['m'][..., tf.newaxis]], axis=-1)
-                results['Wmm'] = calculate.W['m']['m'][..., tf.newaxis]
-                results['WmM'] = calculate.W['m']['M'][..., tf.newaxis]
+                results = {key: value[..., tf.newaxis] for key, value in result.items()}
+                results['V'] = tf.concat([calculate.V0[..., tf.newaxis], results['V']], axis=-1)
                 first_iteration = False
             else:
-                results['S'] = tf.concat([results['S'], calculate.S[..., tf.newaxis]], axis=-1)
-                results['T'] = tf.concat([results['T'], calculate.T[..., tf.newaxis]], axis=-1)
-                results['V'] = tf.concat([results['V'], calculate.V['m'][..., tf.newaxis]], axis=-1)
-                results['Wmm'] = tf.concat([results['Wmm'], calculate.W['m']['m'][..., tf.newaxis]], axis=-1)
-                results['WmM'] = tf.concat([results['WmM'], calculate.W['m']['M'][..., tf.newaxis]], axis=-1)
-        results['V'] = tf.concat([results['V'], calculate.V['M'][..., tf.newaxis]], axis=-1)
-        results['WmM'] = tf.concat([results['WmM'], calculate.W['M'][..., tf.newaxis]], axis=-1)
+                for key in results.keys():
+                    results[key] = tf.concat([results[key], result[key][..., tf.newaxis]], axis=-1)
+        results['V'] = tf.concat([results['V'], calculate.V[..., tf.newaxis]], axis=-1)
+        results['WmM'] = tf.concat([results['WmM'], calculate.WmM[..., tf.newaxis]], axis=-1)
         if kind == GSA.Kind.TOTAL:
             results['S'] = 1 - results['S']
         return results
 
     @classmethod
-    def _compose_and_save(cls, path: Path, value: TF.Tensor, m_list: List[int], M: int):
+    def _compose_and_save(cls, path: Path, value: TF.Tensor, m: int, M: int):
+        m_list = range(M) if m < 0 else [m]
         shape = value.shape.as_list()
         df = pd.DataFrame(tf.reshape(value, [-1, shape[-1]]).numpy(), columns=cls._columns(M, shape[-1], m_list), index=cls._index(shape))
         df.to_csv(path, float_format='%.6f')
@@ -141,7 +125,18 @@ class GSA(Model):
                 df.iloc[:, -2] = df.iloc[:, -1]
         return pd.MultiIndex.from_frame(df, names=['l'] * len(indices))
 
-    def __init__(self, gp: GPInterface, kind: GSA.Kind, name: str = '', Theta: Optional[NP.Matrix] = None, m: int = -1, **kwargs: Any):
+    def _m_dataset(self, kind: GSA.Kind, m: int, M: int) -> tf.data.Dataset:
+        result = []
+        ms = range(M) if m < 0 else [m]
+        if kind == GSA.Kind.FIRST_ORDER:
+            result = [tf.constant([m, m + 1], dtype=INT()) for m in ms]
+        elif kind == GSA.Kind.CLOSED:
+            result = [tf.constant([0, m + 1], dtype=INT()) for m in ms]
+        elif kind == GSA.Kind.TOTAL:
+            result = [tf.constant([m + 1, M + 1], dtype=INT()) for m in ms]
+        return tf.data.Dataset.from_tensor_slices(result)
+
+    def __init__(self, gp: GPInterface, kind: GSA.Kind, name: str = '', m: int = -1, **kwargs: Any):
         """ Perform a Sobol GSA. The object created is single use and disposable: the constructor performs and records the entire GSA and the
         constructed object is basically useless once constructed.
 
@@ -149,7 +144,6 @@ class GSA(Model):
             gp: The underlying Gaussian Process.
             kind: The kind of index to calculate - first order, closed or total.
             name: An optional prefix to the name of this GSA.
-            Theta: The input rotation matrix. The identity matrix is assumed if Theta is None.
             m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
                 Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
             **kwargs: The calculation options to override OPTIONS.
@@ -160,18 +154,10 @@ class GSA(Model):
         name += name_suffix if name == '' else f'.{name_suffix}'
         folder = gp.folder / 'gsa' / name
         # Save Parameters and Options
-        Theta = np.eye(gp.M, dtype=FLOAT()) if Theta is None else Theta
-        super().__init__(folder, read_parameters=False, Theta=Theta, m=m)
+        super().__init__(folder, read_parameters=False, m=m)
         options = self.OPTIONS() | kwargs
         self._write_options(options)
         # Prepare and calculate results
-        m_list = list(range(1, gp.M)) if m < 0 else list(range(m, m + 1))
-        if kind == GSA.Kind.TOTAL:
-            Theta = np.flip(Theta, axis=0)
-            m_list = [gp.M - i for i in m_list]
-        Theta = tf.constant(Theta, dtype=FLOAT())
-        results = self._calculate(kind, Theta, m_list, calculate.ClosedIndex(gp, **options))
-        if kind == GSA.Kind.TOTAL:
-            m_list = [gp.M - i for i in m_list]
         # Compose and save results
-        results = {key: self._compose_and_save(self.parameters.csv(key), value, m_list, gp.M) for key, value in results.items()}
+        results = self._calculate(kind, self._m_dataset(kind, m, gp.M), calculate.ClosedIndex(gp, **options))
+        results = {key: self._compose_and_save(self.parameters.csv(key), value, m, gp.M) for key, value in results.items()}

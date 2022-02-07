@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.1')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.2')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -112,8 +112,8 @@ def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = 
 
 if __name__ == '__main__':
     with run.Context('Test', float='float64'):
-        for N in (800,):
-            for noise_magnitude in (0.05,):
+        for N in (200,):
+            for noise_magnitude in (0.1,):
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     for M in (5,):

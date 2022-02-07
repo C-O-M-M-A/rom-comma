@@ -26,6 +26,7 @@ from romcomma.gpf import base, kernels, likelihoods, models
 from romcomma import run
 import numpy as np
 import gpflow as gf
+import tensorflow as tf
 
 def covariance():
     a = np.array([[0.9, -0.5], [-0.5, 0.75]])
@@ -53,25 +54,35 @@ def likelihood():
     return likelihoods.MOGaussian(variance)
 
 
+@tf.function
+def increment(x: tf.Tensor) -> tf.Tensor:
+    x = x + tf.constant(1.0)
+    return {'x': x}
+
 if __name__ == '__main__':
-    with run.Context('Test', float='float64'):
-        lh = likelihood()
-        X, Y = regression_data()
-        print(X)
-        print(Y)
-        gp = models.MOGPR((X, Y), kernel(), noise_variance=lh.variance.value)
-        results = gp.predict_f(X, full_cov=False, full_output_cov=False)
-        print(results)
-        results = gp.predict_y(X, full_cov=False, full_output_cov=False)
-        print(results)
-        results = gp.log_marginal_likelihood()
-        print(results)
-        gp.kernel.is_lengthscales_trainable = True
-        opt = gf.optimizers.Scipy()
-        opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables)
-        results = gp.predict_y(X, full_cov=False, full_output_cov=False)
-        print(gp.log_marginal_likelihood())
-        print(gp.kernel.variance.value)
-        print(gp.likelihood.variance.value)
-        print(results)
+    x = {'x': tf.constant(1.0)}
+    print((x := increment(**x)))
+    print((x := increment(**x)))
+    print((x := increment(**x)))
+
+    # with run.Context('Test', float='float64'):
+    #     lh = likelihood()
+    #     X, Y = regression_data()
+    #     print(X)
+    #     print(Y)
+    #     gp = models.MOGPR((X, Y), kernel(), noise_variance=lh.variance.value)
+    #     results = gp.predict_f(X, full_cov=False, full_output_cov=False)
+    #     print(results)
+    #     results = gp.predict_y(X, full_cov=False, full_output_cov=False)
+    #     print(results)
+    #     results = gp.log_marginal_likelihood()
+    #     print(results)
+    #     gp.kernel.is_lengthscales_trainable = True
+    #     opt = gf.optimizers.Scipy()
+    #     opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables)
+    #     results = gp.predict_y(X, full_cov=False, full_output_cov=False)
+    #     print(gp.log_marginal_likelihood())
+    #     print(gp.kernel.variance.value)
+    #     print(gp.likelihood.variance.value)
+    #     print(results)
 
