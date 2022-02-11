@@ -451,20 +451,20 @@ class ClosedIndex(gf.Module):
     def _calculate_expectation(self):
         if self._options['is_S_diagonal']:
             self._Sigma = tf.expand_dims(self._Gamma_reshape + tf.expand_dims(self._Gamma, axis=1), axis=2)
-            self._Psi = self._Sigma - tf.expand_dims(tf.einsum('liM, lkM -> likM', self._Gamma, self._Gamma), axis=2)
-            self._SigmaPsi = tf.einsum('lijkM, lijkM -> lijkM', self._Sigma, self._Psi)
-            self._SigmaG = tf.einsum('lknM, liNM -> liNknM', self._Gamma_reshape, self._G) + tf.einsum('liNM, lknM -> liNknM', self._Gamma_reshape, self._G)
-            self._SigmaG = tf.expand_dims(self._SigmaG, axis=3)
+            self._Psi = self._Sigma - tf.expand_dims(tf.einsum('lLM, lJM -> lLJM', self._Gamma, self._Gamma), axis=2)
+            self._SigmaPsi = tf.einsum('lLjJM, lLjJM -> lLjJM', self._Sigma, self._Psi)
+            self._SigmaG = tf.expand_dims(tf.einsum('lJnM, lLNM -> lLNJnM', self._Gamma_reshape, self._G) +
+                                          tf.einsum('lLNM, lJnM -> lLNJnM', self._Gamma_reshape, self._G), axis=3)
             Sigma_pdf, Sigma_det = Gaussian.pdf_with_det(mean=self._G, ordinate=self._G, variance_cho=tf.sqrt(self._Sigma), is_variance_diagonal=True, LBunch=2)
             SigmaPsi_pdf, SigmaPsi_det = Gaussian.pdf_with_det(mean=self._SigmaG, variance_cho=tf.sqrt(self._SigmaPsi), is_variance_diagonal=True, LBunch=2)
             self._H = (Sigma_pdf / SigmaPsi_pdf) * (Sigma_det / SigmaPsi_det)**2
             self._V['0'] = tf.einsum('l, l -> l', self._KYg0_summed, self._KYg0_summed)[..., tf.newaxis]
-            self._V['M'] = tf.einsum('liN, liNjkn, lkn -> lj', self._KYg0, self._H, self._KYg0)
+            self._V['M'] = tf.einsum('liN, lLNlJn, lkn -> lj', self._KYg0, self._H, self._KYg0)
         else:
             self._Sigma = tf.expand_dims(self._Gamma_reshape, axis=2) + self._Gamma[tf.newaxis, tf.newaxis, ...]
-            self._Psi = self._Sigma - tf.einsum('liM, jkM -> lijkM', self._Gamma, self._Gamma)
-            self._SigmaPsi = tf.einsum('lijkM, lijkM -> lijkM', self._Sigma, self._Psi)
-            self._SigmaG = tf.einsum('jknM, liNM -> liNjknM', self._Gamma_reshape, self._G) + tf.einsum('liNM, jknM -> liNjknM', self._Gamma_reshape, self._G)
+            self._Psi = self._Sigma - tf.einsum('lLM, jJM -> lLjJM', self._Gamma, self._Gamma)
+            self._SigmaPsi = tf.einsum('lLjJM, lLjJM -> lLjJM', self._Sigma, self._Psi)
+            self._SigmaG = tf.einsum('jJnM, lLNM -> lLNjJnM', self._Gamma_reshape, self._G) + tf.einsum('lLNM, jJnM -> liNjJnM', self._Gamma_reshape, self._G)
             Sigma_pdf, Sigma_det = Gaussian.pdf_with_det(mean=self._G, ordinate=self._G, variance_cho=tf.sqrt(self._Sigma), is_variance_diagonal=True, LBunch=2)
             SigmaPsi_pdf, SigmaPsi_det = Gaussian.pdf_with_det(mean=self._SigmaG, variance_cho=tf.sqrt(self._SigmaPsi), is_variance_diagonal=True, LBunch=2)
             self._H = (Sigma_pdf / SigmaPsi_pdf) * (Sigma_det / SigmaPsi_det)**2
