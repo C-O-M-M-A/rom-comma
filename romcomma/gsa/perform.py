@@ -159,5 +159,6 @@ class GSA(Model):
         self._write_options(options)
         # Prepare and calculate results
         # Compose and save results
-        results = self._calculate(kind, self._m_dataset(kind, m, gp.M), calculate.ClosedIndex(gp, **options))
-        results = {key: self._compose_and_save(self.parameters.csv(key), value, m, gp.M) for key, value in results.items()}
+        poo = calculate.ClosedIndex(gp, **options)
+        # results = self._calculate(kind, self._m_dataset(kind, m, gp.M), calculate.ClosedIndex(gp, **options))
+        # results = {key: self._compose_and_save(self.parameters.csv(key), value, m, gp.M) for key, value in results.items()}

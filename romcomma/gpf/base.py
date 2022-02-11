@@ -32,7 +32,7 @@ from gpflow.config import default_float
 class Variance(Module):
     """ A non-diagonal Variance Matrix."""
 
-    CHOLESKY_DIAGONAL_LOWER_BOUND = 1e-4
+    CHOLESKY_DIAGONAL_LOWER_BOUND = 1e-3
 
     @property
     def shape(self) -> Tuple[int, int]:

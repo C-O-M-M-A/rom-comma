@@ -158,14 +158,15 @@ class GPInterface(Model):
 
     @property
     @abstractmethod
-    def KNoisy_Cho(self) -> Union[NP.Matrix, TF.Tensor]:
-        """ The Cholesky decomposition of the LNxLN noisy kernel kernel(X, X) + likelihood.variance. """
+    def K_cho(self) -> Union[NP.Matrix, TF.Tensor]:
+        """ The Cholesky decomposition of the LNxLN noisy kernel(X, X) + likelihood.variance. Shape is (L,N,N) if self.kernel.is_independent, else (LN, LN)."""
 
     @property
     @abstractmethod
-    def KNoisyInv_Y(self) -> Union[NP.Matrix, TF.Tensor]:
+    def K_inv_Y(self) -> Union[NP.Matrix, TF.Tensor]:
         """ The LN-Vector, which pre-multiplied by the LoxLN kernel k(x, X) gives the Lo-Vector predictive mean f(x).
-        Returns: ChoSolve(self.KNoisy_Cho, self.Y) """
+        Shape is (L,1,N) self.kernel.is_independent, else (1, L, N).
+        Returns: ChoSolve(self.K_cho, self.Y) """
 
     @abstractmethod
     def optimize(self, **kwargs):
@@ -325,49 +326,47 @@ class GP(GPInterface):
     @property
     def Y(self) -> TF.Matrix:
         """ The implementation training outputs as an (N,L) design matrix. """
-        return self._implementation[0].data[1]
+        return tf.concat([gp.data[1] for gp in self._implementation], axis=1) if self.likelihood.is_independent else self._implementation[0].data[1]
 
     @property
-    def KNoisy_Cho(self) -> TF.Tensor:
+    def K_cho(self) -> TF.Tensor:
         if self._likelihood.is_independent:
-            result = np.zeros(shape=(self._L * self._N, self._L * self._N))
-            for l, gp in enumerate(self._implementation):
+            result = []
+            for gp in self._implementation:
                 K = gp.kernel(self.X)
                 K_diag = tf.linalg.diag_part(K)
-                result[l*self._N:(l+1)*self._N, l*self._N:(l+1)*self._N] = tf.linalg.set_diag(K, K_diag + tf.fill(tf.shape(K_diag), gp.likelihood.variance))
+                result.append(tf.linalg.set_diag(K, K_diag + tf.fill(tf.shape(K_diag), gp.likelihood.variance)))
+            result = tf.stack(result)
         else:
             gp = self._implementation[0]
             result = gp.likelihood.add_to(gp.KXX)
         return tf.linalg.cholesky(result)
 
     @property
-    def KNoisyInv_Y(self) -> TF.Tensor:
+    def K_inv_Y(self) -> TF.Tensor:
         if self._likelihood.is_independent:
-            Y = np.reshape(np.transpose(self._Y), [-1, 1])
+            return tf.reshape(tf.linalg.cholesky_solve(self.K_cho, tf.transpose(self.Y)[..., tf.newaxis]), [self._L, 1, self._N])
         else:
-            Y = tf.reshape(tf.transpose(self.Y), [-1, 1])
-        return tf.reshape(tf.linalg.cholesky_solve(self.KNoisy_Cho, Y),[-1])
+            return tf.reshape(tf.linalg.cholesky_solve(self.K_cho, tf.reshape(tf.transpose(self.Y), [-1, 1])), [1, self._L, self._N])
 
-    def check_KNoisyInv_Y(self, x: NP.Matrix) -> NP.Matrix:
+    def check_K_inv_Y(self, x: NP.Matrix) -> NP.Matrix:
         """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance).
 
         Args:
             x: An (o, M) matrix of inputs.
-            y: An (o, L) matrix of outputs.
         Returns: Should return zeros((Lo)) (to within numerical error tolerance).
         """
-        o = x.shape[0]
-        if self._likelihood.is_independent:
-            kernel = np.zeros(shape=(self._L * o, self._L * self._N))
-            for l, gp in enumerate(self._implementation):
-                kernel[l*o:(l+1)*o, l*self._N:(l+1)*self._N] = gp.kernel(x, self.X)
-        else:
-            gp = self._implementation[0]
-            kernel = gp.kernel(x, self.X)
         predicted = self.predict(x)[0]
-        result = tf.transpose(tf.reshape(tf.einsum('on, n -> o', kernel, self.KNoisyInv_Y), (-1, o)))
+        o = predicted.shape[0]
+        if self._likelihood.is_independent:
+            kernel = tf.stack([gp.kernel(x, self.X) for gp in self._implementation], axis=0)
+            ein = 'loN, liN -> ol'
+        else:
+            kernel = tf.reshape(self._implementation[0].kernel(x, self.X), [self._L, o, self._L, self._N])
+            ein = 'loLN, iLN -> ol'
+        result = tf.einsum(ein, kernel, self.K_inv_Y)
         result -= predicted
-        return np.sqrt(np.sum(result * result)/o)
+        return tf.sqrt(tf.reduce_sum(result * result, axis=0)/o)
 
     def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
                  kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):

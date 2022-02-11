@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.2')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.2.1')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -47,7 +47,8 @@ def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
 
 def fold_and_rotate(repo: Repository, K: int, rotation: NP.Matrix):
     repo.into_K_folds(K)
-    for k in range(repo.K + 1):
+    rng = range(repo.K + 1) if K > 1 else range(1,2)
+    for k in rng:
         fold = Fold(repo, k)
         fold.X_rotation = rotation
 
@@ -67,7 +68,7 @@ def run_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float]
     repo = functions.sample(f, N, M, noise_variance, store_folder)
     # fold_and_rotate_with_tests(repo, K, rotation)
     fold_and_rotate(repo, K, rotation)
-    run.gps(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=True, test=True, analyze=False)
 
 
@@ -81,7 +82,7 @@ def compare_gpr(name, function_names: Sequence[str], N: int, noise_variance: [fl
         store_folder += '.rotated'
     store_folder = BASE_PATH / store_folder
     repo = Repository(store_folder)
-    run.gps(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=True, test=True, analyze=False)
 
 
@@ -94,7 +95,7 @@ def run_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float]
         store_folder += '.rotated'
     store_folder = BASE_PATH / store_folder
     repo = Repository(store_folder)
-    run.gps(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
             optimize=False, test=False, analyze=True)
 
 
@@ -111,11 +112,13 @@ def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = 
 
 
 if __name__ == '__main__':
-    with run.Context('Test', float='float64'):
-        for N in (200,):
+    with run.Context('Test', float='float64', device='CPU'):
+        for N in (2000,):
             for noise_magnitude in (0.1,):
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     for M in (5,):
+                        # run_gpr('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
+                        #         noise_label=noise_label, random=random, M=M, K=1)
                         run_gsa('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
                                 noise_label=noise_label, random=random, M=M)

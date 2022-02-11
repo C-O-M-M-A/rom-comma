@@ -135,8 +135,6 @@ class MOStationary(AnisotropicStationary, Kernel):
         self.lengthscales = Parameter(lengthscales, transform=positive(), trainable=False, name=name + 'Lengthscales')
         self._validate_ard_active_dims(self.lengthscales[0, 0])
 
-        # set_trainable(self.variance, False)  # TODO: Refactor to somewhere more appropriate.
-
 
 class RBF(MOStationary):
     """

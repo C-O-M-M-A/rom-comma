@@ -50,8 +50,8 @@ def run_gps(name, function_name: Sequence[str], N: int, noise_std: float, random
                                 input_transform=input_transform, functions=functions, noise_std=noise_std)
     savetxt(store.folder / 'InverseRotation.csv', transpose(lin_trans))
     Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
-    run.gps(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
-                  optimize=True, test=True)
+    run.gpr(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+            optimize=True, test=True)
 
 
 if __name__ == '__main__':

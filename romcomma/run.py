@@ -23,7 +23,7 @@
 
 from romcomma.base.definitions import *
 from romcomma.data.storage import Repository, Fold
-from romcomma import gpr, gsa
+import romcomma
 from time import time
 from datetime import timedelta
 from contextlib import contextmanager
@@ -72,8 +72,8 @@ def Context(name: str, device: str = '', **kwargs):
         print('...Running ' + name, end='')
 
 
-def gps(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
-        kernel_parameters: Optional[gpr.kernels.Kernel.Parameters] = None, parameters: Optional[gpr.models.GP.Parameters] = None,
+def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
+        kernel_parameters: Optional[romcomma.gpr.kernels.Kernel.Parameters] = None, parameters: Optional[romcomma.gpr.models.GP.Parameters] = None,
         optimize: bool = True, test: bool = True, analyze: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.META'}, **kwargs):
     """ Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.
 
@@ -97,17 +97,18 @@ def gps(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
         FileNotFoundError: If repo is not a Fold, and contains no Folds.
     """
     if not isinstance(repo, Fold):
-        for k in range(repo.meta['K'] + 1):
-            gps(name, Fold(repo, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+        rng = range(repo.meta['K'] + 1) if repo.meta['K'] > 1 else range(1, 2)
+        for k in rng:
+            gpr(name, Fold(repo, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
     else:
         if is_independent is None:
-            gps(name, repo, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
-            gps(name, repo, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+            gpr(name, repo, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+            gpr(name, repo, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
         else:
             full_name = name + ('.i' if is_independent else '.d')
             if is_isotropic is None:
-                gps(name, repo, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
-                gps(name, repo, None, False, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+                gpr(name, repo, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+                gpr(name, repo, None, False, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
             else:
                 full_name = full_name + ('.i' if is_isotropic else '.a')
                 if is_read is None:
@@ -116,20 +117,21 @@ def gps(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                         if is_independent or not (repo.folder / nearest_name).exists():
                             nearest_name = full_name[:-2] + '.i'
                             if not (repo.folder / nearest_name).exists():
-                                gps(name, repo, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze,
+                                gpr(name, repo, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze,
                                     semi_norm, **kwargs)
                                 return
-                        gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
-                    gps(name, repo, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+                        romcomma.gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
+                    gpr(name, repo, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
                 else:
-                    gp = gpr.models.GP(full_name, repo, is_read, is_isotropic, is_independent, kernel_parameters,
+                    gp = romcomma.gpr.models.GP(full_name, repo, is_read, is_isotropic, is_independent, kernel_parameters,
                                        **({} if parameters is None else parameters.as_dict()))
                     if optimize:
                         gp.optimize(**kwargs)
                     if test:
                         gp.test()
+                        print(gp.check_K_inv_Y(gp.fold.test_x.values))  # FIXME: debug print
                     if analyze:
-                        gsa.perform.GSA(gp, gsa.perform.GSA.Kind.CLOSED, m=-1)
+                        romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.CLOSED, m=-1)
 
 
 # def ROMs(module: Module, name: str, repo: Repository, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
