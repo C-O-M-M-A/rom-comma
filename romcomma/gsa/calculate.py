@@ -23,6 +23,7 @@
 
 from __future__ import annotations
 
+import self as self
 import sym as sym
 
 from romcomma.base.definitions import *
@@ -39,8 +40,8 @@ class Gaussian(ABC):
     """ Encapsulates the calculation of a Gaussian pdf. Not instantiatable."""
 
     @staticmethod
-    def pdf_with_det(mean: TF.Tensor, variance_cho: TF.Tensor, is_variance_diagonal: bool,
-                     ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT()), LBunch: int = 2) -> Tuple[TF.Tensor, TF.Tensor]:
+    def log_pdfu(mean: TF.Tensor, variance_cho: TF.Tensor, is_variance_diagonal: bool,
+                 ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT()), LBunch: int = 2) -> Tuple[TF.Tensor, TF.Tensor]:
         """ Computes the tensor gaussian probability density. Batch dimensions of ordinate, mean and variance are internally broadcast to match each other.
 
         Args:
@@ -65,26 +66,9 @@ class Gaussian(ABC):
             variance_cho = tf.expand_dims(variance_cho, axis=axis)
         # Calculate the Gaussian pdf.
         result = ((ordinate / variance_cho)[..., tf.newaxis] if is_variance_diagonal
-                  else tf.linalg.triangular_solve(variance_cho, ordinate[..., tf.newaxis], lower=True))
-        result = tf.einsum('...oz, ...oz -> ...', result, result)
-        det_cho = tf.reduce_prod(variance_cho if is_variance_diagonal else tf.linalg.diag_part(variance_cho), axis=-1)
-        return tf.math.exp(-0.5 * (result + LOG2PI * ordinate.shape[-1])) / det_cho, det_cho
-
-    @staticmethod
-    def pdf(mean: TF.Tensor, variance_cho: TF.Tensor, is_variance_diagonal: bool,
-                     ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT()), LBunch: int = 2) -> TF.Tensor:
-        """ Computes the tensor gaussian probability density. Batch dimensions of ordinate, mean and variance are internally broadcast to match each other.
-
-        Args:
-            mean: Gaussian population mean. Should be of adequate rank to broadcast Ls.
-            variance_cho: The lower triangular Cholesky decomposition of the Gaussian population variance. Is automatically broadcast to embrace Ns
-            is_variance_diagonal: True if variance is an M-vector
-            ordinate: The ordinate (z-value) to calculate the Gaussian density for. Should be of adequate rank to broadcast Ls. If not supplied, 0 is assumed.
-            LBunch: The number of consecutive output (L) dimensions to count before inserting an N for broadcasting. Usually 2, sometimes 3.
-        Returns: The tensor Gaussian pdf.
-        """
-        # Broadcast ordinate - mean.
-        return Gaussian.pdf_with_det(mean, variance_cho, is_variance_diagonal, ordinate, LBunch)[0]
+                  else tf.squeeze(tf.linalg.triangular_solve(variance_cho, ordinate[..., tf.newaxis], lower=True), axis=-1))
+        result = - 0.5 * (LOG2PI * ordinate.shape[-1] + tf.einsum('...oz, ...oz -> ...', result, result))
+        return result, variance_cho if is_variance_diagonal else tf.linalg.diag_part(variance_cho)
 
 
 class Dagger(ABC):
@@ -395,7 +379,7 @@ class ClosedIndex(gf.Module):
                 In other words the variance of each element of S is calculated, but cross-covariances are not.
             is_T_partial: If True this effectively forces W[`m`][`M`] = W[`M`][`M`] = 0, as if the full ['M'] model is variance free.
         """
-        return {'is_T_calculated': True, 'is_T_diagonal': False, 'is_T_partial': False}
+        return {'is_T_calculated': False, 'is_T_diagonal': False, 'is_T_partial': False}
 
     @property
     def gp(self):
@@ -440,10 +424,10 @@ class ClosedIndex(gf.Module):
                 self._mu_phi_mu['pre-factor'] = (tf.sqrt((2 * np.pi)**self._M * tf.reduce_prod(self._Lambda2[1][0] * self._Lambda2[-1][2], axis=-1))
                                                  * self._F)
             # FIXME: Debug
-            print(f'_Upsilon = {self._Upsilon.shape}    _Pi = {self._Pi.shape}')
-            print(f'_Upsilon sym {sym_check(self._Upsilon, [1,0,2])}    _Pi sym {sym_check(self._Pi, [1,0,2])}')
-            print(f'_mu_phi_mu["pre-factor"] = {self._mu_phi_mu["pre-factor"].shape}    _Gamma_reshape = {self._Gamma_reshape.shape}')
-            print(f'_mu_phi_mu["pre-factor"] = {self._mu_phi_mu["pre-factor"]}')
+            # print(f'_Upsilon = {self._Upsilon.shape}    _Pi = {self._Pi.shape}')
+            # print(f'_Upsilon sym {sym_check(self._Upsilon, [1,0,2])}    _Pi sym {sym_check(self._Pi, [1,0,2])}')
+            # print(f'_mu_phi_mu["pre-factor"] = {self._mu_phi_mu["pre-factor"].shape}    _Gamma_reshape = {self._Gamma_reshape.shape}')
+            # print(f'_mu_phi_mu["pre-factor"] = {self._mu_phi_mu["pre-factor"]}')
         # Expected Value
         self._calculate_expectation()
         # Variance
@@ -455,36 +439,36 @@ class ClosedIndex(gf.Module):
         self._Psi = self._Sigma - tf.einsum('lLM, jJM -> lLjJM', self._Gamma, self._Gamma)
         self._SigmaPsi = tf.einsum('lLjJM, lLjJM -> lLjJM', self._Sigma, self._Psi)
         self._SigmaG = tf.einsum('jJnM, lLNM -> lLNjJnM', self._Gamma_reshape, self._G) + tf.einsum('lLNM, jJnM -> lLNjJnM', self._Gamma_reshape, self._G)
-        Sigma_pdf, Sigma_det = Gaussian.pdf_with_det(mean=self._G, ordinate=self._G, variance_cho=tf.sqrt(self._Sigma), is_variance_diagonal=True, LBunch=2)
-        SigmaPsi_pdf, SigmaPsi_det = Gaussian.pdf_with_det(mean=self._SigmaG, variance_cho=tf.sqrt(self._SigmaPsi), is_variance_diagonal=True, LBunch=2)
-        self._H = (Sigma_pdf / SigmaPsi_pdf) * (Sigma_det / SigmaPsi_det)**2
+        Sigma_pdf, Sigma_diag = Gaussian.log_pdfu(mean=self._G, ordinate=self._G, variance_cho=tf.sqrt(self._Sigma), is_variance_diagonal=True, LBunch=2)
+        SigmaPsi_pdf, SigmaPsi_diag = Gaussian.log_pdfu(mean=self._SigmaG, variance_cho=tf.sqrt(self._SigmaPsi), is_variance_diagonal=True, LBunch=2)
+        self._H = tf.exp(Sigma_pdf - SigmaPsi_pdf) * tf.reduce_prod(Sigma_diag/SigmaPsi_diag, axis=-1)
         self._V['0'] = tf.einsum('l, j -> lj', self._KYg0_summed, self._KYg0_summed)
         self._V['M'] = tf.einsum('lLN, lLNjJn, jJn -> lj', self._KYg0, self._H, self._KYg0) - self._V['0']
         # FIXME: Debug
-        print(f'_Sigma = {self._Sigma.shape}    _Psi = {self._Psi.shape}    _SigmaPsi = {self._SigmaPsi.shape}')
-        print(f'_Sigma sym {sym_check(self._Sigma, [1, 0, 3, 2, 4])}    _Psi sym {sym_check(self._Psi, [1, 0, 3, 2, 4])}    _SigmaPsi sym {sym_check(self._SigmaPsi, [1, 0, 3, 2, 4])}')
-        print(f'_Sigma sym {sym_check(self._Sigma, [2, 3, 0, 1, 4])}    _Psi sym {sym_check(self._Psi, [2, 3, 0, 1, 4])}    _SigmaPsi sym {sym_check(self._SigmaPsi, [2, 3, 0, 1, 4])}')
-        print(f'_Sigma sym {sym_check(self._Sigma, [3, 2, 1, 0, 4])}    _Psi sym {sym_check(self._Psi, [3, 2, 1, 0, 4])}    _SigmaPsi sym {sym_check(self._SigmaPsi, [3, 2, 1, 0, 4])}')
-        print(f'_Sigma sym {sym_check(self._Sigma, [3, 1, 2, 0, 4])}    _Psi sym {sym_check(self._Psi, [3, 1, 2, 0, 4])}    _SigmaPsi sym {sym_check(self._SigmaPsi, [3, 1, 2, 0, 4])}')
-        print(f'_SigmaG = {self._SigmaG.shape}    Sigma_pdf = {Sigma_pdf.shape}    SigmaPsi_pdf = {SigmaPsi_pdf.shape}')
-        if not self.gp.kernel.is_independent:
-            print(f'_SigmaG sym {sym_check(self._SigmaG, [1, 0, 2, 4, 3, 5, 6])}  Sigma_pdf sym {sym_check(Sigma_pdf, [1, 0, 2, 4, 3, 5])}  SigmaPsi_pdf sym {sym_check(SigmaPsi_pdf, [1, 0, 2, 4, 3, 5])}')
-            print(f'_SigmaG sym {sym_check(self._SigmaG, [3, 4, 5, 0, 1, 2, 6])}  Sigma_pdf sym {sym_check(Sigma_pdf, [3, 4, 5, 0, 1, 2])}  SigmaPsi_pdf sym {sym_check(SigmaPsi_pdf, [3, 4, 5, 0, 1, 2])}')
-            print(f'_SigmaG sym {sym_check(self._SigmaG, [4, 3, 5, 1, 0, 2, 6])}  Sigma_pdf sym {sym_check(Sigma_pdf, [4, 3, 5, 1, 0, 2])}  SigmaPsi_pdf sym {sym_check(SigmaPsi_pdf, [4, 3, 5, 1, 0, 2])}')
-            print(f'_SigmaG sym {sym_check(self._SigmaG, [4, 3, 2, 1, 0, 5, 6])}  Sigma_pdf sym {sym_check(Sigma_pdf, [4, 3, 2, 1, 0, 5])}  SigmaPsi_pdf sym {sym_check(SigmaPsi_pdf, [4, 3, 2, 1, 0, 5])}')
-            print(f'Sigma_det sym {sym_check(Sigma_det, [1, 0, 2, 4, 3, 5])}  SigmaPsi_det sym {sym_check(SigmaPsi_det, [1, 0, 2, 4, 3, 5])}')
-            print(f'Sigma_det sym {sym_check(Sigma_det, [3, 4, 5, 0, 1, 2])}  SigmaPsi_det sym {sym_check(SigmaPsi_det, [3, 4, 5, 0, 1, 2])}')
-            print(f'Sigma_det sym {sym_check(Sigma_det, [4, 3, 5, 1, 0, 2])}  SigmaPsi_det sym {sym_check(SigmaPsi_det, [4, 3, 5, 1, 0, 2])}')
-            print(f'Sigma_det sym {sym_check(Sigma_det, [4, 3, 2, 1, 0, 5])}  SigmaPsi_det sym {sym_check(SigmaPsi_det, [4, 3, 2, 1, 0, 5])}')
-        print(f'Sigma_det = {Sigma_det.shape}    SigmaPsi_det = {SigmaPsi_det.shape}')
+        # print(f'_Sigma = {self._Sigma.shape}    _Psi = {self._Psi.shape}    _SigmaPsi = {self._SigmaPsi.shape}')
+        # print(f'_Sigma sym {sym_check(self._Sigma, [1, 0, 3, 2, 4])}    _Psi sym {sym_check(self._Psi, [1, 0, 3, 2, 4])}    _SigmaPsi sym {sym_check(self._SigmaPsi, [1, 0, 3, 2, 4])}')
+        # print(f'_Sigma sym {sym_check(self._Sigma, [2, 3, 0, 1, 4])}    _Psi sym {sym_check(self._Psi, [2, 3, 0, 1, 4])}    _SigmaPsi sym {sym_check(self._SigmaPsi, [2, 3, 0, 1, 4])}')
+        # print(f'_Sigma sym {sym_check(self._Sigma, [3, 2, 1, 0, 4])}    _Psi sym {sym_check(self._Psi, [3, 2, 1, 0, 4])}    _SigmaPsi sym {sym_check(self._SigmaPsi, [3, 2, 1, 0, 4])}')
+        # print(f'_Sigma sym {sym_check(self._Sigma, [3, 1, 2, 0, 4])}    _Psi sym {sym_check(self._Psi, [3, 1, 2, 0, 4])}    _SigmaPsi sym {sym_check(self._SigmaPsi, [3, 1, 2, 0, 4])}')
+        # print(f'_SigmaG = {self._SigmaG.shape}    Sigma_pdf = {Sigma_pdf.shape}    SigmaPsi_pdf = {SigmaPsi_pdf.shape}')
+        # if not self.gp.kernel.is_independent:
+        #     print(f'_SigmaG sym {sym_check(self._SigmaG, [1, 0, 2, 4, 3, 5, 6])}  Sigma_pdf sym {sym_check(Sigma_pdf, [1, 0, 2, 4, 3, 5])}  SigmaPsi_pdf sym {sym_check(SigmaPsi_pdf, [1, 0, 2, 4, 3, 5])}')
+        #     print(f'_SigmaG sym {sym_check(self._SigmaG, [3, 4, 5, 0, 1, 2, 6])}  Sigma_pdf sym {sym_check(Sigma_pdf, [3, 4, 5, 0, 1, 2])}  SigmaPsi_pdf sym {sym_check(SigmaPsi_pdf, [3, 4, 5, 0, 1, 2])}')
+        #     print(f'_SigmaG sym {sym_check(self._SigmaG, [4, 3, 5, 1, 0, 2, 6])}  Sigma_pdf sym {sym_check(Sigma_pdf, [4, 3, 5, 1, 0, 2])}  SigmaPsi_pdf sym {sym_check(SigmaPsi_pdf, [4, 3, 5, 1, 0, 2])}')
+        #     print(f'_SigmaG sym {sym_check(self._SigmaG, [4, 3, 2, 1, 0, 5, 6])}  Sigma_pdf sym {sym_check(Sigma_pdf, [4, 3, 2, 1, 0, 5])}  SigmaPsi_pdf sym {sym_check(SigmaPsi_pdf, [4, 3, 2, 1, 0, 5])}')
+        #     print(f'Sigma_det sym {sym_check(Sigma_det, [1, 0, 2, 4, 3, 5])}  SigmaPsi_det sym {sym_check(SigmaPsi_det, [1, 0, 2, 4, 3, 5])}')
+        #     print(f'Sigma_det sym {sym_check(Sigma_det, [3, 4, 5, 0, 1, 2])}  SigmaPsi_det sym {sym_check(SigmaPsi_det, [3, 4, 5, 0, 1, 2])}')
+        #     print(f'Sigma_det sym {sym_check(Sigma_det, [4, 3, 5, 1, 0, 2])}  SigmaPsi_det sym {sym_check(SigmaPsi_det, [4, 3, 5, 1, 0, 2])}')
+        #     print(f'Sigma_det sym {sym_check(Sigma_det, [4, 3, 2, 1, 0, 5])}  SigmaPsi_det sym {sym_check(SigmaPsi_det, [4, 3, 2, 1, 0, 5])}')
+        # print(f'Sigma_det = {Sigma_det.shape}    SigmaPsi_det = {SigmaPsi_det.shape}')
         # print(f'Sigma_det = {Sigma_det}')
         # print(f'SigmaPsi_det = {SigmaPsi_det}')
-        print(f'_H = {self._H.shape}    _V["0"] = {self._V["0"].shape}    _V["M"] = {self._V["M"].shape}')
-        if not self.gp.kernel.is_independent:
-            print(f'self._H sym {sym_check(self._H, [1, 0, 2, 4, 3, 5])}')
-            print(f'self._H sym {sym_check(self._H, [3, 4, 5, 0, 1, 2])}')
-            print(f'self._H sym {sym_check(self._H, [4, 3, 5, 1, 0, 2])}')
-            print(f'self._H sym {sym_check(self._H, [3, 1, 2, 0, 4, 5])}')
+        # print(f'_H = {self._H.shape}    _V["0"] = {self._V["0"].shape}    _V["M"] = {self._V["M"].shape}')
+        # if not self.gp.kernel.is_independent:
+            # print(f'self._H sym {sym_check(self._H, [1, 0, 2, 4, 3, 5])}')
+            # print(f'self._H sym {sym_check(self._H, [3, 4, 5, 0, 1, 2])}')
+            # print(f'self._H sym {sym_check(self._H, [4, 3, 5, 1, 0, 2])}')
+            # print(f'self._H sym {sym_check(self._H, [3, 1, 2, 0, 4, 5])}')
         print(f'_V["0"] = {self._V["0"]}')
         print(f'_V["M"] = {self._V["M"]}')
 
@@ -500,13 +484,13 @@ class ClosedIndex(gf.Module):
                    + tf.einsum('kJM, kJM -> kJM', self._Gamma, self._Phi)[tf.newaxis, tf.newaxis, ...])
         self._C = self._Gamma_reshape / (self._Gamma_reshape + tf.einsum('lLM, ijM -> liLjM', self._Phi, self._Upsilon))
         self._C = tf.einsum('ijM, liLjM -> liLjM', self._Upsilon, self._C)
-        self._D = (tf.einsum('kKM, jJM, kKM -> jJkKM', self._Phi, self._Gamma, self._Phi)
-                   + tf.expand_dims(tf.expand_dims(tf.einsum('kKM, kKM -> kKM', self._Gamma, self._Phi), axis=0), axis=0))
+        self._D = (tf.einsum('iIM, lLM, iIM -> lLiIM', self._Phi, self._Gamma, self._Phi)
+                   + tf.expand_dims(tf.expand_dims(tf.einsum('iIM, iIM -> iIM', self._Gamma, self._Phi), axis=0), axis=0))
         g_factor = self._KYg0 / Gaussian.pdf(self._G, tf.sqrt(self._Phi), True)
         # FIXME: Debug
-        print(f'_Gamma_reshape = {self._Gamma_reshape.shape}    g_factor = {g_factor.shape}    Phi_ein = {Phi_ein}')
-        print(f'_sqrt_1_Upsilon = {self._sqrt_1_Upsilon.shape}    _Omega = {self._Omega.shape}')
-        print(f'_B = {self._B.shape}    _C = {self._C.shape}    _D = {self._D.shape}')
+        # print(f'_Gamma_reshape = {self._Gamma_reshape.shape}    g_factor = {g_factor.shape}    Phi_ein = {Phi_ein}')
+        # print(f'_sqrt_1_Upsilon = {self._sqrt_1_Upsilon.shape}    _Omega = {self._Omega.shape}')
+        # print(f'_B = {self._B.shape}    _C = {self._C.shape}    _D = {self._D.shape}')
         self._calculate_mu_phi_mu(g_factor)
         self._calculate_mu_psi_mu(g_factor)
         self._V2MM = {'MM': tf.einsum('li, jk -> lijk', self._V['M'], self._V['M'])}
@@ -519,19 +503,19 @@ class ClosedIndex(gf.Module):
             # print(f'_A["MM"] = {self._A["MM"]}')
             # print(f'_A["M0"] = {self._A["M0"]}')
             # print(f'_A["00"] = {self._A["00"]}')
-            print(f'_mu_psi_mu["00"] = {self._mu_psi_mu["00"]}')
-            print(f'_mu_psi_mu["M0"] = {self._mu_psi_mu["M0"]}')
+            # print(f'_mu_psi_mu["00"] = {self._mu_psi_mu["00"]}')
+            # print(f'_mu_psi_mu["M0"] = {self._mu_psi_mu["M0"]}')
             print(f'_mu_psi_mu["MM"] = {self._mu_psi_mu["MM"]}')
             # print(f'_A["00"] sym {sym_check(self._A["00"], [1, 0, 3, 2])}    _A["M0"] sym {sym_check(self._A["M0"], [1, 0, 3, 2])}    _A["MM"] sym {sym_check(self._A["MM"], [1, 0, 3, 2])}')
             # print(f'_A["00"] sym {sym_check(self._A["00"], [2, 3, 0, 1])}    _A["M0"] sym {sym_check(self._A["M0"], [2, 3, 0, 1])}    _A["MM"] sym {sym_check(self._A["MM"], [2, 3, 0, 1])}')
             # print(f'_A["00"] sym {sym_check(self._A["00"], [3, 2, 1, 0])}    _A["M0"] sym {sym_check(self._A["M0"], [3, 2, 1, 0])}    _A["MM"] sym {sym_check(self._A["MM"], [3, 2, 1, 0])}')
             # print(f'_A["00"] sym {sym_check(self._A["00"], [3, 1, 2, 0])}    _A["M0"] sym {sym_check(self._A["M0"], [3, 1, 2, 0])}    _A["MM"] sym {sym_check(self._A["MM"], [3, 1, 2, 0])}')
-            print(f'_mu_phi_mu["00"] sym {sym_check(self._mu_phi_mu["00"], [3, 1, 2, 0])}    _mu_phi_mu["M0"] sym {sym_check(self._mu_phi_mu["M0"], [3, 1, 2, 0])}    _mu_phi_mu["MM"] sym {sym_check(self._mu_phi_mu["MM"], [3, 1, 2, 0])}')
-            print(f'_mu_phi_mu["00"] sym {sym_check(self._mu_phi_mu["00"], [0, 2, 1, 3])}    _mu_phi_mu["M0"] sym {sym_check(self._mu_phi_mu["M0"], [0, 2, 1, 3])}    _mu_phi_mu["MM"] sym {sym_check(self._mu_phi_mu["MM"], [0, 2, 1, 3])}')
-            # print(f'_mu_phi_mu["00"] sym {sym_check(self._mu_phi_mu["00"], [3, 2, 1, 0])}    _mu_phi_mu["M0"] sym {sym_check(self._mu_phi_mu["M0"], [3, 2, 1, 0])}    _mu_phi_mu["MM"] sym {sym_check(self._mu_phi_mu["MM"], [3, 2, 1, 0])}')
             # print(f'_mu_phi_mu["00"] sym {sym_check(self._mu_phi_mu["00"], [3, 1, 2, 0])}    _mu_phi_mu["M0"] sym {sym_check(self._mu_phi_mu["M0"], [3, 1, 2, 0])}    _mu_phi_mu["MM"] sym {sym_check(self._mu_phi_mu["MM"], [3, 1, 2, 0])}')
-            print(f'_mu_psi_mu["00"] sym {sym_check(self._mu_psi_mu["00"], [3, 1, 2, 0])}    _mu_psi_mu["M0"] sym {sym_check(self._mu_psi_mu["M0"], [3, 1, 2, 0])}    _mu_psi_mu["MM"] sym {sym_check(self._mu_psi_mu["MM"], [3, 1, 2, 0])}')
-            print(f'_mu_psi_mu["00"] sym {sym_check(self._mu_psi_mu["00"], [0, 2, 1, 3])}    _mu_psi_mu["M0"] sym {sym_check(self._mu_psi_mu["M0"], [0, 2, 1, 3])}    _mu_psi_mu["MM"] sym {sym_check(self._mu_psi_mu["MM"], [0, 2, 1, 3])}')
+            # print(f'_mu_phi_mu["00"] sym {sym_check(self._mu_phi_mu["00"], [0, 2, 1, 3])}    _mu_phi_mu["M0"] sym {sym_check(self._mu_phi_mu["M0"], [0, 2, 1, 3])}    _mu_phi_mu["MM"] sym {sym_check(self._mu_phi_mu["MM"], [0, 2, 1, 3])}')
+            # # print(f'_mu_phi_mu["00"] sym {sym_check(self._mu_phi_mu["00"], [3, 2, 1, 0])}    _mu_phi_mu["M0"] sym {sym_check(self._mu_phi_mu["M0"], [3, 2, 1, 0])}    _mu_phi_mu["MM"] sym {sym_check(self._mu_phi_mu["MM"], [3, 2, 1, 0])}')
+            # # print(f'_mu_phi_mu["00"] sym {sym_check(self._mu_phi_mu["00"], [3, 1, 2, 0])}    _mu_phi_mu["M0"] sym {sym_check(self._mu_phi_mu["M0"], [3, 1, 2, 0])}    _mu_phi_mu["MM"] sym {sym_check(self._mu_phi_mu["MM"], [3, 1, 2, 0])}')
+            # print(f'_mu_psi_mu["00"] sym {sym_check(self._mu_psi_mu["00"], [3, 1, 2, 0])}    _mu_psi_mu["M0"] sym {sym_check(self._mu_psi_mu["M0"], [3, 1, 2, 0])}    _mu_psi_mu["MM"] sym {sym_check(self._mu_psi_mu["MM"], [3, 1, 2, 0])}')
+            # print(f'_mu_psi_mu["00"] sym {sym_check(self._mu_psi_mu["00"], [0, 2, 1, 3])}    _mu_psi_mu["M0"] sym {sym_check(self._mu_psi_mu["M0"], [0, 2, 1, 3])}    _mu_psi_mu["MM"] sym {sym_check(self._mu_psi_mu["MM"], [0, 2, 1, 3])}')
             # print(f'_mu_psi_mu["00"] sym {sym_check(self._mu_psi_mu["00"], [3, 2, 1, 0])}    _mu_psi_mu["M0"] sym {sym_check(self._mu_psi_mu["M0"], [3, 2, 1, 0])}    _mu_psi_mu["MM"] sym {sym_check(self._mu_psi_mu["MM"], [3, 2, 1, 0])}')
             # print(f'_mu_psi_mu["00"] sym {sym_check(self._mu_psi_mu["00"], [3, 1, 2, 0])}    _mu_psi_mu["M0"] sym {sym_check(self._mu_psi_mu["M0"], [3, 1, 2, 0])}    _mu_psi_mu["MM"] sym {sym_check(self._mu_psi_mu["MM"], [3, 1, 2, 0])}')
 
@@ -549,7 +533,11 @@ class ClosedIndex(gf.Module):
             else:
                 self._mu_phi_mu['M0'] = tf.einsum('ij, lLN, liLNj, k -> lijk',
                                                   self._mu_phi_mu['pre-factor'], self._KYg0, sqrt_1_Upsilon_pdf, self._KYg0_summed)
-                print(f'_mu_phi_mu["M0"] sym {sym_check(self._mu_phi_mu["M0"], [3, 1, 2, 0])}    _mu_phi_mu["M0"] sym {sym_check(self._mu_phi_mu["M0"], [3, 1, 2, 0])}    _mu_phi_mu["00"] sym {sym_check(self._mu_phi_mu["00"], [3, 1, 2, 0])}')
+                # FIXME: Debug
+                print(
+                    f'_mu_phi_mu["M0"] SYM {tf.reduce_sum((tf.transpose(self._mu_phi_mu["M0"], [3, 0, 2, 1]) - tf.transpose(self._mu_phi_mu["M0"], [0, 3, 2, 1])) ** 2)}')
+                if not self.gp.kernel.is_independent:
+                    print(f'_mu_phi_mu["M0"] SYM {tf.reduce_sum((tf.transpose(self._mu_phi_mu["M0"], [3, 0, 2, 1]) - tf.transpose(self._mu_phi_mu["M0"], [3, 2, 0, 1]))**2)}')
                 self._mu_phi_mu['M0'] += tf.transpose(self._mu_phi_mu['M0'], [3, 0, 2, 1])
                 self._mu_phi_mu['MM'] = tf.einsum('kJn, liLNjkJn -> liLNjk', g_factor,
                                                   self._Omega_pdf(True, self._B, self._C, self._G, self._Omega, 1 / self._Gamma))
@@ -560,16 +548,17 @@ class ClosedIndex(gf.Module):
             self._mu_phi_mu['MM'] += (tf.transpose(self._mu_phi_mu['MM'], [1, 0, 2, 3]) + tf.transpose(self._mu_phi_mu['MM'], [0, 1, 3, 2])
                                       + tf.transpose(self._mu_phi_mu['MM'], [1, 0, 3, 2]))
             # FIXME: Debug
-            print(f'sqrt_1_Upsilon_pdf = {sqrt_1_Upsilon_pdf.shape}       _mu_phi_mu["M0"] = {self._mu_phi_mu["M0"].shape}  _mu_phi_mu["MM"] = {self._mu_phi_mu["MM"].shape}')
+            # print(f'sqrt_1_Upsilon_pdf = {sqrt_1_Upsilon_pdf.shape}       _mu_phi_mu["M0"] = {self._mu_phi_mu["M0"].shape}  _mu_phi_mu["MM"] = {self._mu_phi_mu["MM"].shape}')
 
     def _calculate_mu_psi_mu(self, g_factor: TF.Tensor):
         D_cho = tf.sqrt(self._D)
         factor = {}
         factor['0'] = tf.einsum('l, iIn -> liIn', self._KYg0_summed, self._g0)
-        shape = factor['0'].shape[0:2].as_list() + [-1, 1]
+        shape = factor['0'].shape[:2].as_list() + [-1, 1]
         if not self._options['is_T_partial']:
-            pdf = Gaussian.pdf(mean=self._G, variance_cho=D_cho, is_variance_diagonal=True, ordinate=self._G)
-            factor['M'] = tf.einsum('lLN, lLNiIn -> liIn', g_factor, pdf)
+            pdf = Gaussian.pdf(mean=self._G, variance_cho=D_cho, is_variance_diagonal=True, ordinate=self._G, LBunch=2)
+            factor['M'] = tf.einsum('lLN, iIn, lLNiIn -> liIn', g_factor, self._g0, pdf)
+            print(f'D {det(self._D)}  Phi {det(self._Phi)} D/Phi {det(self._D/self._Phi)}')
         self._mu_psi_mu_factor = {key: tf.squeeze(tf.linalg.triangular_solve(self._K_cho, tf.reshape(factor[key], shape)), axis=-1)
                                   for key in self._keys['factor']}
         if self._options['is_T_diagonal']:
@@ -582,13 +571,22 @@ class ClosedIndex(gf.Module):
             else:
                 self._mu_psi_mu = {key: tf.einsum('liIn, kjIn -> lijk', factor[key[0]], factor[key[1]])
                                    for key in self._keys['A']}
+        self._mu_psi_mu['MM'] += self._mu_psi_mu['00'] - self._mu_psi_mu['M0'] - tf.transpose(self._mu_psi_mu['M0'], [2, 3, 0, 1])
+        self._mu_psi_mu['MM'] += (tf.transpose(self._mu_psi_mu['MM'], [1, 0, 2, 3]) + tf.transpose(self._mu_psi_mu['MM'], [0, 1, 3, 2])
+                                  + tf.transpose(self._mu_psi_mu['MM'], [1, 0, 3, 2]))
         # FIXME: Debug
         if not self._options['is_T_partial']:
-            print(f'factor["0"] = {factor["0"]}')
-            print(f'factor["M"] = {factor["M"]}')
-            print(f'factor["0"] = {factor["0"].shape}       factor["M"] = {factor["M"].shape}')
-            print(f'_mu_psi_mu_factor["0"] = {self._mu_psi_mu_factor["0"].shape}       _mu_psi_mu_factor["M"] = {self._mu_psi_mu_factor["M"].shape}')
-            print(f'_mu_psi_mu["00"] = {self._mu_psi_mu["00"].shape}       _mu_psi_mu["M0"] = {self._mu_psi_mu["M0"].shape}  _mu_psi_mu["MM"] = {self._mu_psi_mu["MM"].shape}')
+            print(f'g_factor {magnitude(g_factor)}')
+            print(f'pdf {tf.reduce_sum(magnitude(pdf), axis=2)}')
+            print(f'g0 {magnitude(self._g0)}')
+            print(f'factor["M"] {magnitude(factor["M"])}')
+            print(f'self._mu_psi_mu_factor {self._mu_psi_mu_factor["M"].shape}')
+            print(f'self._mu_psi_mu_factor {magnitude(self._mu_psi_mu_factor["M"])}')
+            # print(f'factor["0"] = {factor["0"]}')
+            # print(f'factor["M"] = {factor["M"]}')
+            # print(f'factor["0"] = {factor["0"].shape}       factor["M"] = {factor["M"].shape}')
+            # print(f'_mu_psi_mu_factor["0"] = {self._mu_psi_mu_factor["0"].shape}       _mu_psi_mu_factor["M"] = {self._mu_psi_mu_factor["M"].shape}')
+            # print(f'_mu_psi_mu["00"] = {self._mu_psi_mu["00"].shape}       _mu_psi_mu["M0"] = {self._mu_psi_mu["M0"].shape}  _mu_psi_mu["MM"] = {self._mu_psi_mu["MM"].shape}')
 
     def _Omega_pdf(self, is_diagonal: bool, B: TF.Tensor, C: TF.Tensor, G: TF.Tensor, Omega: TF.Tensor, Gamma_inv: TF.Tensor) -> TF.Tensor:
         # The assumption here is that m >= m'. This is important
@@ -607,8 +605,6 @@ class ClosedIndex(gf.Module):
         variance = 1 - tf.einsum(ein, sqrt_1_Upsilon, Phi, sqrt_1_Upsilon)
         variance = tf.sqrt(variance) if is_diagonal else tf.linalg.cholesky(variance)
         return Gaussian.pdf(mean, variance, is_diagonal, LBunch=3)
-        # return tf.transpose(tf.linalg.diag(tf.transpose(tf.squeeze(result, axis=-1),
-        #                                                 [0, 2, 3, 1])), [0, 3, 1, 2, 4]) if self.gp.kernel.is_independent else result
 
     def _calc_Lambda2_(self, is_diagonal: bool) -> dict[int, Tuple[TF.Tensor]]:
         if is_diagonal:
@@ -638,22 +634,23 @@ class ClosedIndex(gf.Module):
         self._K_cho = self._gp.K_cho
         self._K_inv_Y = self._gp.K_inv_Y
         # Calculate selected constants
-        self._g0 = Gaussian.pdf(mean=self._gp.X[tf.newaxis, tf.newaxis, ...],
-                                                             variance_cho=tf.sqrt(self._Lambda2[1][1]), is_variance_diagonal=True, LBunch=2)
-        self._pmF = tf.sqrt((2 * np.pi) ** (self._M) * tf.reduce_prod(self._Lambda2[1][0], axis=-1)) * self._F
-        self._g0 *= self._pmF[..., tf.newaxis]
+        self._pmF = tf.sqrt((2 * np.pi) ** (self._M) * tf.reduce_prod(self._Lambda2[1][0] / self._Lambda2[1][1], axis=-1)) * self._F
+        self._g0, _ = Gaussian.log_pdfu(mean=self._gp.X[tf.newaxis, tf.newaxis, ...],
+                                     variance_cho=tf.sqrt(self._Lambda2[1][1]), is_variance_diagonal=True, LBunch=2)
+        self._g0 = self._pmF[..., tf.newaxis] * tf.exp(self._g0)
         self._KYg0 = self._g0 * self._K_inv_Y
         self._KYg0_summed = tf.einsum('lLN -> l', self._KYg0)
         # FIXME: Debug
         print()
+        print((_dtype := set([self._Lambda.dtype, self._Lambda2[1][1].dtype, self._Lambda2_diag[-1][1].dtype, self._K_cho.dtype, self._K_inv_Y.dtype, self._g0.dtype, self._KYg0.dtype, self._pmF.dtype])))
         print(f'kernel.is_independent = {self._gp.kernel.is_independent}    is_T_diagonal = {self._options["is_T_diagonal"]}    is_T_partial = {self._options["is_T_partial"]}')
         # print(f'_Lambda2 = {self._Lambda2[1][0]}')
         # print(f'_Lambda2+1 = {self._Lambda2[1][1]}')
-        print(f'_pmF = {self._pmF}') #    _Lambda2 = {self._Lambda2[1][1].shape}    _Lambda2_diag = {self._Lambda2_diag[1][1].shape}')
+        # print(f'_pmF = {self._pmF}') #    _Lambda2 = {self._Lambda2[1][1].shape}    _Lambda2_diag = {self._Lambda2_diag[1][1].shape}')
         # print(f'_g0_det sym {sym_check(self._g0_det, [1,0])}    _Lambda2 sym {sym_check(self._Lambda2[1][1], [1,0,2])}')
         # print(f'_K_cho = {self._K_cho.shape}    _K_inv_Y = {self._K_inv_Y.shape}')
-        print(f'_KYg0_summed = {self._KYg0_summed}')
         print(f'_g0 = {self._g0.shape}  _KYg0 = {self._KYg0.shape}    _KYg0_summed = {self._KYg0_summed.shape}')
+        print(f'_g0 = {magnitude(self._g0)}  _KYg0 = {magnitude(self._KYg0)}    _KYg0_summed = {magnitude(self._KYg0_summed)}')
         # print(f'_g0 sym {sym_check(self._g0, [1,0,2])}  _KYg0 sym {sym_check(self._KYg0, [1,0,2])}')
         self._V = {}
         if self._options['is_T_calculated']:
@@ -726,3 +723,9 @@ class RotatedClosedIndex(ClosedIndex):
 
 def sym_check(tensor: TF.Tensor, transposition: List[int]) -> TF.Tensor:
     return tf.reduce_sum((tensor - tf.transpose(tensor, transposition))**2)
+
+def magnitude(tensor: TF.Tensor):
+    return tf.sqrt(tf.einsum('...o, ...o -> ...', tensor, tensor))
+
+def det(tensor: TF.Tensor):
+    return tf.reduce_prod(tensor, axis=-1)
