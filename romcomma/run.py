@@ -131,7 +131,7 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                         gp.test()
                         print(gp.check_K_inv_Y(gp.fold.test_x.values))  # FIXME: debug print
                     if analyze:
-                        romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.CLOSED, m=-1)
+                        romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.FIRST_ORDER, m=-1)
 
 
 # def ROMs(module: Module, name: str, repo: Repository, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,

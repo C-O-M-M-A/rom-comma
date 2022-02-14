@@ -58,10 +58,10 @@ class GSA(Model):
                 """
                 m: NP.Matrix = np.atleast_2d(None)
                 S: NP.Matrix = np.atleast_2d(None)
-                T: NP.Matrix = np.atleast_2d(None)
+                # T: NP.Matrix = np.atleast_2d(None)
                 V: NP.Matrix = np.atleast_2d(None)
-                Wmm: NP.Matrix = np.atleast_2d(None)
-                WmM: NP.Matrix = np.atleast_2d(None)
+                # Wmm: NP.Matrix = np.atleast_2d(None)
+                # WmM: NP.Matrix = np.atleast_2d(None)
 
             return Values
 
@@ -73,7 +73,7 @@ class GSA(Model):
 
     @classmethod
     def OPTIONS(cls) -> Dict[str, Any]:
-        """ Calculation options. ``is_T_partial`` forces ``WmM = 0``."""
+        """ Default calculation options. ``is_T_partial`` forces ``WmM = 0``."""
         return calculate.ClosedIndex.OPTIONS
 
     @classmethod
@@ -85,15 +85,15 @@ class GSA(Model):
             result = calculate.marginalize(m)
             if first_iteration:
                 results = {key: value[..., tf.newaxis] for key, value in result.items()}
-                results['V'] = tf.concat([calculate.V0[..., tf.newaxis], results['V']], axis=-1)
+                results['V'] = tf.concat([calculate.V['0'][..., tf.newaxis], results['V']], axis=-1)
                 first_iteration = False
             else:
                 for key in results.keys():
                     results[key] = tf.concat([results[key], result[key][..., tf.newaxis]], axis=-1)
-        results['V'] = tf.concat([results['V'], calculate.V[..., tf.newaxis]], axis=-1)
-        results['WmM'] = tf.concat([results['WmM'], calculate.WmM[..., tf.newaxis]], axis=-1)
-        if kind == GSA.Kind.TOTAL:
-            results['S'] = 1 - results['S']
+        results['V'] = tf.concat([results['V'], calculate.V['M'][..., tf.newaxis]], axis=-1)
+        # results['WmM'] = tf.concat([results['WmM'], calculate.WmM[..., tf.newaxis]], axis=-1)
+        # if kind == GSA.Kind.TOTAL:
+        #     results['S'] = 1 - results['S']
         return results
 
     @classmethod
@@ -157,8 +157,6 @@ class GSA(Model):
         super().__init__(folder, read_parameters=False, m=m)
         options = self.OPTIONS() | kwargs
         self._write_options(options)
-        # Prepare and calculate results
+        results = self._calculate(kind, self._m_dataset(kind, m, gp.M), calculate.ClosedIndex(gp, **options))
         # Compose and save results
-        poo = calculate.ClosedIndex(gp, **options)
-        # results = self._calculate(kind, self._m_dataset(kind, m, gp.M), calculate.ClosedIndex(gp, **options))
         # results = {key: self._compose_and_save(self.parameters.csv(key), value, m, gp.M) for key, value in results.items()}

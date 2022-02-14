@@ -45,10 +45,10 @@ def FLOAT() -> Type:
 
 
 Numeric = Union[int, float]
-OneOrMoreInts = Union[int, Sequence[int]]
-ZeroOrMoreInts = Optional[OneOrMoreInts]
-OneOrMoreFloats = Union[float, Sequence[float]]
-ZeroOrMoreFloats = Optional[OneOrMoreFloats]
+# OneOrMoreInts = Union[int, Sequence[int]]
+# ZeroOrMoreInts = Optional[OneOrMoreInts]
+# OneOrMoreFloats = Union[float, Sequence[float]]
+# ZeroOrMoreFloats = Optional[OneOrMoreFloats]
 PathLike = Union[str, Path]
 
 
@@ -96,9 +96,9 @@ class TF:
     CovectorLike = MatrixLike
     ArrayLike = TensorLike = Union[MatrixLike, Sequence[MatrixLike], Sequence[Sequence[MatrixLike]]]
     VectorOrMatrix = TypeVar('VectorOrMatrix', Vector, Matrix)
-
-    @classmethod
-    @property
-    def NaN(cls) -> TF.Tensor:
-        return tf.constant(np.NaN, dtype=FLOAT())
+    Slice = PairOfInts = tf.Tensor
+    # @classmethod
+    # @property
+    # def NaN(cls) -> TF.Tensor:
+    #     return tf.constant(np.NaN, dtype=FLOAT())
 
