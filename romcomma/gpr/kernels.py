@@ -43,8 +43,8 @@ class Kernel(Model):
                 Attributes:
                     variance: An (L,L) or (1,L) Matrix of kernel variances. (1,L) represents a diagonal (L,L) variance matrix.
                         (1,1) means a single kernel shared by all outputs.
-                    lengthscales: A (V,M) Matrix of anisotropic lengthscales, or a (V,1) Vector of isotropic lengthscales,
-                        where V=1 or V=variance.shape[1]*(variance.shape[0]+ 1)/2.
+                    lengthscales: A (L,M) Matrix of anisotropic lengthscales, or a (L,1) Vector of isotropic lengthscales,
+                        where L=1 or L=variance.shape[1]*(variance.shape[0]+ 1)/2.
                 """
                 variance: NP.Matrix = np.atleast_2d(0.1)
                 lengthscales: NP.Matrix = np.atleast_2d(0.2)

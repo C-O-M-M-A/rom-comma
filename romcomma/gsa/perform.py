@@ -52,7 +52,7 @@ class GSA(Model):
                         m (NP.Matrix): The dimensionality of the reduced model behind this calculation.
                         S (NP.Matrix): The Sobol index/indices.
                         T (NP.Matrix): The cross covariances of the Sobol index/indices.
-                        V (NP.Matrix): The conditional variances underpinning Sobol index/indices.
+                        _V (NP.Matrix): The conditional variances underpinning Sobol index/indices.
                         Wmm (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
                         WmM (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
                 """

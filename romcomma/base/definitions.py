@@ -97,8 +97,9 @@ class TF:
     ArrayLike = TensorLike = Union[MatrixLike, Sequence[MatrixLike], Sequence[Sequence[MatrixLike]]]
     VectorOrMatrix = TypeVar('VectorOrMatrix', Vector, Matrix)
     Slice = PairOfInts = tf.Tensor
-    # @classmethod
-    # @property
-    # def NaN(cls) -> TF.Tensor:
-    #     return tf.constant(np.NaN, dtype=FLOAT())
+
+    @classmethod
+    @property
+    def NaN(cls) -> TF.Tensor:
+        return tf.constant(np.NaN, dtype=FLOAT())
 
