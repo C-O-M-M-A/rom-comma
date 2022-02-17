@@ -101,5 +101,5 @@ class TF:
     @classmethod
     @property
     def NaN(cls) -> TF.Tensor:
-        return tf.constant(np.NaN, dtype=FLOAT())
+        return tf.constant('NaN')
 

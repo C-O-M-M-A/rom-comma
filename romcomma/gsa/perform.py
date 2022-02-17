@@ -23,9 +23,6 @@
 
 from __future__ import annotations
 
-import columns as columns
-import pandas as pd
-
 from romcomma.base.definitions import *
 from romcomma.base.classes import Model, Parameters
 from romcomma.gpr.models import GPInterface
@@ -58,10 +55,10 @@ class GSA(Model):
                 """
                 m: NP.Matrix = np.atleast_2d(None)
                 S: NP.Matrix = np.atleast_2d(None)
-                # T: NP.Matrix = np.atleast_2d(None)
+                T: NP.Matrix = np.atleast_2d(None)
                 V: NP.Matrix = np.atleast_2d(None)
-                # Wmm: NP.Matrix = np.atleast_2d(None)
-                # WmM: NP.Matrix = np.atleast_2d(None)
+                Wmm: NP.Matrix = np.atleast_2d(None)
+                WmM: NP.Matrix = np.atleast_2d(None)
 
             return Values
 
@@ -91,9 +88,9 @@ class GSA(Model):
                 for key in results.keys():
                     results[key] = tf.concat([results[key], result[key][..., tf.newaxis]], axis=-1)
         results['V'] = tf.concat([results['V'], calculate.V['M'][..., tf.newaxis]], axis=-1)
-        # results['WmM'] = tf.concat([results['WmM'], calculate.WmM[..., tf.newaxis]], axis=-1)
-        # if kind == GSA.Kind.TOTAL:
-        #     results['S'] = 1 - results['S']
+        results['WmM'] = tf.concat([results['WmM'], calculate.W['mm'][..., tf.newaxis]], axis=-1)
+        if kind == GSA.Kind.TOTAL:
+            results['S'] = 1 - results['S']
         return results
 
     @classmethod
