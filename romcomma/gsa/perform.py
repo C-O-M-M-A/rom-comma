@@ -95,7 +95,7 @@ class GSA(Model):
 
     @classmethod
     def _compose_and_save(cls, path: Path, value: TF.Tensor, m: int, M: int):
-        m_list = range(M) if m < 0 else [m]
+        m_list = list(range(M)) if m < 0 else [m]
         shape = value.shape.as_list()
         df = pd.DataFrame(tf.reshape(value, [-1, shape[-1]]).numpy(), columns=cls._columns(M, shape[-1], m_list), index=cls._index(shape))
         df.to_csv(path, float_format='%.6f')
@@ -156,4 +156,4 @@ class GSA(Model):
         self._write_options(options)
         results = self._calculate(kind, self._m_dataset(kind, m, gp.M), calculate.ClosedIndex(gp, **options))
         # Compose and save results
-        # results = {key: self._compose_and_save(self.parameters.csv(key), value, m, gp.M) for key, value in results.items()}
+        results = {key: self._compose_and_save(self.parameters.csv(key), value, m, gp.M) for key, value in results.items()}

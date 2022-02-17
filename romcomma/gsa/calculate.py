@@ -194,7 +194,7 @@ class ClosedIndex(gf.Module):
                 V_ratio_2 = tf.einsum('li, li -> li', V_ratio, V_ratio)[..., tf.newaxis, tf.newaxis]
                 V_ratio = V_ratio[..., tf.newaxis, tf.newaxis]
             else:
-                V_ratio_2 = tf.einsum('li, jk -> lijk', V_ratio, V_ratio)[..., tf.newaxis, tf.newaxis]
+                V_ratio_2 = tf.einsum('li, jk -> lijk', V_ratio, V_ratio)
                 V_ratio = tf.einsum('li, jk -> lijk', V_ratio, tf.ones_like(V_ratio))
             T += self.W['mm'] * V_ratio_2 - 2 * Mm * V_ratio
         return {'T': T / self.V2MM, 'Wmm': mm, 'WmM': Mm}
@@ -212,7 +212,7 @@ class ClosedIndex(gf.Module):
         return W
 
     def _A(self, mu_phi_mu: TF.Tensor, mu_psi_mu: TF.Tensor) -> Dict[str, TF.Tensor]:
-        A = mu_phi_mu - mu_psi_mu
+        A = mu_psi_mu # - mu_psi_mu
         if self.options['is_T_diagonal']:
             A += tf.transpose(A, [0, 2, 1, 3, 4])
             A *= 2
