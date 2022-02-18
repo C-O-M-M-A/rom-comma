@@ -106,14 +106,15 @@ class ClosedIndex(gf.Module):
         self.g0 = pre_factor[..., tf.newaxis] * tf.exp(self.g0)
         self.KYg0 = self.g0 * self.K_inv_Y
         self.KYg0_sum = tf.einsum('lLN -> l', self.KYg0)
-        # FIXME: Debug
-        print()
-        print(f'kernel.is_independent = {self.gp.kernel.is_independent}    is_T_diagonal = {self.options["is_T_diagonal"]}    is_T_partial = {self.options["is_T_partial"]}')
-        print((dtype := set([self.Lambda.dtype, self.Lambda2[1][1].dtype, self.Lambda2_diag[-1][1].dtype, self.K_cho.dtype, self.g0.dtype, self.KYg0.dtype])))
         self.V = {'0': tf.einsum('l, j -> lj', self.KYg0_sum, self.KYg0_sum)}
         self.G = tf.einsum('lLM, NM -> lLNM', self.Lambda2[-1][1], self.gp.X)
         self.Phi = self.Lambda2[-1][1]
         self.Gamma = 1 - self.Phi
+        # FIXME: Debug
+        print()
+        print(f'kernel.is_independent = {self.gp.kernel.is_independent}    is_T_diagonal = {self.options["is_T_diagonal"]}    is_T_partial = {self.options["is_T_partial"]}')
+        self.dtype = set(['calculate']) | set([self.Lambda.dtype, self.Lambda2[1][1].dtype, self.Lambda2_diag[-1][1].dtype, self.K_cho.dtype, self.g0.dtype, self.KYg0.dtype])
+        print(self.dtype)
         self.V['M'] = self._V(self.G, self.Gamma)
         if self.options['is_T_calculated']:
             self.Phi_ein = 'iiM' if self.Phi.shape[0] == self.Phi.shape[1] else 'ijM'
@@ -138,6 +139,7 @@ class ClosedIndex(gf.Module):
             self.psi_factor['0'] = tf.squeeze(tf.linalg.triangular_solve(self.K_cho, tf.reshape(factor, self.psi_factor['shape'])), axis=-1)
             self.psi_factor['M'] = self._psi_factor(self.G, self.Phi, self.G_log_pdf)
             # FIXME: Debug
+            print(f'|psi_factor["0"]| = {magnitude(self.psi_factor["0"], "liS, liS")}')
             print(f'|psi_factor["M"]| = {magnitude(self.psi_factor["M"], "liS, liS")}')
             A_mislabelled = self._A(self._mu_phi_mu(self.G_log_pdf, self.Upsilon_log_pdf, self.Omega_log_pdf, self.Omega_log_pdf, is_constructor=True),
                              self._mu_psi_mu(self.psi_factor['M'], is_constructor=True))
@@ -146,10 +148,10 @@ class ClosedIndex(gf.Module):
                 self.W = self._W(**A_mislabelled)
                 self.A = self.A | A_mislabelled
                 # FIXME: Debug
-                print(f'|self.A["mm"]| = {magnitude(self.A["mm"])}')
-                print(f'|self.A["m0"]| = {magnitude(self.A["m0"])}')
-                print(f'|self.A["00"]| = {magnitude(self.A["00"])}')
-                print(f'|self.W["mm"]| = {magnitude(self.W["mm"])}')
+                # print(f'|self.A["mm"]| = {magnitude(self.A["mm"])}')
+                # print(f'|self.A["m0"]| = {magnitude(self.A["m0"])}')
+                # print(f'|self.A["00"]| = {magnitude(self.A["00"])}')
+                # print(f'|self.W["mm"]| = {magnitude(self.W["mm"])}')
 
     def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
         """ Calculate everything.
@@ -186,7 +188,8 @@ class ClosedIndex(gf.Module):
         V = tf.einsum('lLN, lLNjJn, jJn -> lj', self.KYg0, H, self.KYg0) - self.V['0']
         # FIXME: Debug
         # print(f'V = {V}')
-        # print((_dtype := set([G.dtype, Gamma.dtype, Sigma.dtype, Psi.dtype, SigmaPsi.dtype, SigmaG.dtype, Sigma_pdf.dtype, Sigma_diag.dtype, SigmaPsi_pdf.dtype, SigmaPsi_diag.dtype, H.dtype, V.dtype])))
+        self.dtype = set(['V']) | self.dtype | set([G.dtype, Gamma.dtype, Sigma.dtype, Psi.dtype, SigmaPsi.dtype, SigmaG.dtype, Sigma_pdf.dtype, Sigma_diag.dtype, SigmaPsi_pdf.dtype, SigmaPsi_diag.dtype, H.dtype, V.dtype])
+        print(self.dtype)
         return V
 
     def _T(self, Vm: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = TF.NaN) -> Dict[str, TF.Tensor]:
@@ -200,28 +203,28 @@ class ClosedIndex(gf.Module):
                 V_ratio_2 = tf.einsum('li, jk -> lijk', V_ratio, V_ratio)
                 V_ratio = tf.einsum('li, jk -> lijk', V_ratio, tf.ones_like(V_ratio))
             T += self.W['mm'] * V_ratio_2 - 2 * Mm * V_ratio
-        return {'T': T / self.V2MM, 'Wmm': mm, 'WmM': Mm}
+        return {'T': T / self.V2MM, 'Wmm': mm} if self.options['is_T_partial'] else {'T': T / self.V2MM, 'Wmm': mm, 'WmM': Mm}
 
     def _W(self, m0: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = TF.NOT_CALCULATED) -> Dict[str, TF.Tensor]:
         if self.options['is_T_diagonal']:
             W = {'mm': mm - 2 * m0 + self.A['00']}
         else:
-            W = {'mm': mm - m0 - tf.transpose(m0, [3, 0, 2, 1]) + self.A['00']}
+            W = {'mm': mm - m0 - tf.transpose(m0, [3, 2, 1, 0]) + self.A['00']}
         if not self.options['is_T_partial'] and Mm.dtype.is_floating:
             if self.options['is_T_diagonal']:
                 W['Mm'] = Mm - self.A['m0'] - m0 + self.A['00']
             else:
-                W['Mm'] = Mm - self.A['m0'] - tf.transpose(m0, [3, 0, 2, 1]) + self.A['00']
+                W['Mm'] = Mm - self.A['m0'] - tf.transpose(m0, [3, 2, 1, 0]) + self.A['00']
         return W
 
     def _A(self, mu_phi_mu: TF.Tensor, mu_psi_mu: TF.Tensor) -> Dict[str, TF.Tensor]:
-        A = mu_psi_mu # - mu_psi_mu
+        A = mu_phi_mu # - mu_psi_mu
         if self.options['is_T_diagonal']:
             A += tf.transpose(A, [0, 2, 1, 3, 4])
             A *= 2
         else:
             A += tf.transpose(A, [0, 2, 1, 3, 4]) + tf.transpose(A, [0, 1, 2, 4, 3]) + tf.transpose(A, [0, 2, 1, 4, 3])
-        return {'m0': A[0], 'mm': A[1], 'Mm': A[-1]} if A.shape[0] > 1 else {'00': A[0]}
+        return {'m0': A[0], 'mm': A[1], 'Mm': A[-1]} if A.shape[0] > 1 else {'Mm': A[0]}
 
     def _mu_psi_mu(self, psi_factor: TF.Tensor, is_constructor: bool = False) -> TF.Tensor:
         mu_psi_mu = []
@@ -296,8 +299,8 @@ class ClosedIndex(gf.Module):
                     mu_phi_mu += [tf.einsum('lLN, liLNjkJn, kJn -> lijk', self.KYg0, Gaussian.pdf(*tuple(Omega_log_pdf_M)), self.KYg0)]
         mu_phi_mu = [item * self.mu_phi_mu['pre-factor'] for item in mu_phi_mu]
         # FIXME: Debug
-        for i, item in enumerate(mu_phi_mu):
-            print(f'|mu_phi_mu[{i}]| = {magnitude(item)}')
+        # for i, item in enumerate(mu_phi_mu):
+        #     print(f'|mu_phi_mu[{i}]| = {magnitude(item)}')
         return tf.stack(mu_phi_mu)
 
     def _Omega_log_pdf(self, m: TF.Slice, mp: TF.Slice, G: TF.Tensor, Phi: TF.Tensor, Gamma: TF.Tensor,
@@ -370,8 +373,8 @@ class ClosedIndex(gf.Module):
         self.Lambda2 = self._Lambda2(is_diagonal=self.gp.kernel.is_independent)
         self.Lambda2_diag = self._Lambda2(is_diagonal=True)
         # Cache the training data kernel
-        self.K_cho = self.gp.K_cho
-        self.K_inv_Y = self.gp.K_inv_Y
+        self.K_cho = tf.constant(self.gp.K_cho, dtype=FLOAT())
+        self.K_inv_Y = tf.constant(self.gp.K_inv_Y, dtype=FLOAT())
         self._calculate()
 
 
