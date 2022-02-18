@@ -69,14 +69,13 @@ class GSA(Model):
         TOTAL = auto()
 
     @classmethod
+    @property
     def OPTIONS(cls) -> Dict[str, Any]:
         """ Default calculation options. ``is_T_partial`` forces ``WmM = 0``."""
         return calculate.ClosedIndex.OPTIONS
 
     @classmethod
     def _calculate(cls, kind: GSA.Kind, m_dataset: tf.data.Dataset, calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
-        results = cls.Parameters().as_dict()
-        del results['m']
         first_iteration = True
         for m in m_dataset:
             result = calculate.marginalize(m)
@@ -88,9 +87,10 @@ class GSA(Model):
                 for key in results.keys():
                     results[key] = tf.concat([results[key], result[key][..., tf.newaxis]], axis=-1)
         results['V'] = tf.concat([results['V'], calculate.V['M'][..., tf.newaxis]], axis=-1)
-        results['WmM'] = tf.concat([results['WmM'], calculate.W['mm'][..., tf.newaxis]], axis=-1)
         if kind == GSA.Kind.TOTAL:
             results['S'] = 1 - results['S']
+        if 'WmM' in results:
+            results['WmM'] = tf.concat([results['WmM'], calculate.W['mm'][..., tf.newaxis]], axis=-1)
         return results
 
     @classmethod
@@ -152,7 +152,7 @@ class GSA(Model):
         folder = gp.folder / 'gsa' / name
         # Save Parameters and Options
         super().__init__(folder, read_parameters=False, m=m)
-        options = self.OPTIONS() | kwargs
+        options = self.OPTIONS | kwargs
         self._write_options(options)
         results = self._calculate(kind, self._m_dataset(kind, m, gp.M), calculate.ClosedIndex(gp, **options))
         # Compose and save results

@@ -101,5 +101,10 @@ class TF:
     @classmethod
     @property
     def NaN(cls) -> TF.Tensor:
-        return tf.constant('NaN')
+        return tf.constant(np.NaN, dtype=FLOAT())
+
+    @classmethod
+    @property
+    def NOT_CALCULATED(cls) -> TF.Tensor:
+        return tf.constant('Not Calculated')
 
