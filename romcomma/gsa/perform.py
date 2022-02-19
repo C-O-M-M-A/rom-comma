@@ -58,7 +58,7 @@ class GSA(Model):
                 T: NP.Matrix = np.atleast_2d(None)
                 V: NP.Matrix = np.atleast_2d(None)
                 Wmm: NP.Matrix = np.atleast_2d(None)
-                WmM: NP.Matrix = np.atleast_2d(None)
+                WmM_: NP.Matrix = np.atleast_2d(None)
 
             return Values
 
@@ -91,6 +91,7 @@ class GSA(Model):
             results['S'] = 1 - results['S']
         if 'WmM' in results:
             results['WmM'] = tf.concat([results['WmM'], calculate.W['mm'][..., tf.newaxis]], axis=-1)
+            results["WmM_"] = results.pop('WmM')
         return results
 
     @classmethod

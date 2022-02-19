@@ -97,7 +97,7 @@ class ClosedIndex(gf.Module):
                 In other words the variance of each element of S is calculated, but cross-covariances are not.
             is_T_partial: If True this effectively asserts the full ['M'] model is variance free, so WmM is not calculated or returned.
         """
-        return {'is_T_calculated': True, 'is_T_diagonal': False, 'is_T_partial': True}
+        return {'is_T_calculated': True, 'is_T_diagonal': False, 'is_T_partial': False}
 
     def _calculate(self):
         pre_factor = tf.sqrt((Gaussian.TWO_PI) ** (self.M) * tf.reduce_prod(self.Lambda2[1][0] / self.Lambda2[1][1], axis=-1)) * self.F
@@ -131,7 +131,7 @@ class ClosedIndex(gf.Module):
                 if self.gp.kernel.is_independent:
                     self.mu_phi_mu['pre-factor'] = tf.linalg.diag(tf.squeeze(self.mu_phi_mu['pre-factor'], axis=-1))
             self.mu_phi_mu['pre-factor'] = self.mu_phi_mu['pre-factor'][tf.newaxis, ..., tf.newaxis]
-            self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Upsilon, self.Phi)
+            self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Phi, self.Upsilon)
             self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
             self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.Ms, self.G, self.Phi, self.Gamma, self.Upsilon)
             factor = tf.einsum('l, iIn -> liIn', self.KYg0_sum, self.g0)
@@ -142,7 +142,7 @@ class ClosedIndex(gf.Module):
             print(f'|psi_factor["0"]| = {magnitude(self.psi_factor["0"], "liS, liS")}')
             print(f'|psi_factor["M"]| = {magnitude(self.psi_factor["M"], "liS, liS")}')
             A_mislabelled = self._A(self._mu_phi_mu(self.G_log_pdf, self.Upsilon_log_pdf, self.Omega_log_pdf, self.Omega_log_pdf, is_constructor=True),
-                             self._mu_psi_mu(self.psi_factor['M'], is_constructor=True))
+                                    self._mu_psi_mu(self.psi_factor['M'], is_constructor=True))
             self.A = {'00': A_mislabelled.pop('Mm')}
             if not self.options['is_T_partial']:
                 self.W = self._W(**A_mislabelled)
@@ -167,12 +167,13 @@ class ClosedIndex(gf.Module):
             Upsilon = self.Upsilon
             G_m = G[..., m[0]:m[1]]
             Phi_mm = Phi[..., m[0]:m[1]]
-            Upsilon_log_pdf = self._Upsilon_log_pdf(G_m, Upsilon[..., m[0]:m[1]], Phi_mm)
+            Upsilon_log_pdf = self._Upsilon_log_pdf(G_m, Phi_mm, Upsilon[..., m[0]:m[1]])
             G_log_pdf = Gaussian.log_pdf(G_m, tf.sqrt(Phi_mm), is_variance_diagonal=True, LBunch=2)
-            Omega_log_pdf = self._Omega_log_pdf(self.Ms, m, G, Phi, Gamma, Upsilon)
+            Omega_log_pdf_M = self._Omega_log_pdf(self.Ms, m, G, Phi, Gamma, Upsilon)
+            Omega_log_pdf_m = self._Omega_log_pdf(m, m, G, Phi, Gamma, Upsilon)
             psi_factor = self._psi_factor(G[..., m[0]:m[1]], Phi[..., m[0]:m[1]], G_log_pdf)
             result = result | self._T(result['V'],
-                                      **self._W(**self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, self.Omega_log_pdf, Omega_log_pdf),
+                                      **self._W(**self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf_M, Omega_log_pdf_m),
                                                           self._mu_psi_mu(psi_factor))))
         return result
 
@@ -205,26 +206,27 @@ class ClosedIndex(gf.Module):
             T += self.W['mm'] * V_ratio_2 - 2 * Mm * V_ratio
         return {'T': T / self.V2MM, 'Wmm': mm} if self.options['is_T_partial'] else {'T': T / self.V2MM, 'Wmm': mm, 'WmM': Mm}
 
-    def _W(self, m0: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = TF.NOT_CALCULATED) -> Dict[str, TF.Tensor]:
+    def _W(self, Om: TF.Tensor, m0: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = TF.NOT_CALCULATED) -> Dict[str, TF.Tensor]:
         if self.options['is_T_diagonal']:
             W = {'mm': mm - 2 * m0 + self.A['00']}
         else:
-            W = {'mm': mm - m0 - tf.transpose(m0, [3, 2, 1, 0]) + self.A['00']}
+            W = {'mm': mm - m0 - Om + self.A['00']}
         if not self.options['is_T_partial'] and Mm.dtype.is_floating:
             if self.options['is_T_diagonal']:
                 W['Mm'] = Mm - self.A['m0'] - m0 + self.A['00']
             else:
-                W['Mm'] = Mm - self.A['m0'] - tf.transpose(m0, [3, 2, 1, 0]) + self.A['00']
+                W['Mm'] = Mm - self.A['m0'] - Om + self.A['00']
         return W
 
     def _A(self, mu_phi_mu: TF.Tensor, mu_psi_mu: TF.Tensor) -> Dict[str, TF.Tensor]:
         A = mu_phi_mu - mu_psi_mu
+        A = tf.concat([tf.transpose(A[0:1, ...], [0, 4, 3, 2, 1]), A], axis=0)  # Create Om from m0 symmetry of mu_phi_mu and mu_psi_mu.
         if self.options['is_T_diagonal']:
             A += tf.transpose(A, [0, 2, 1, 3, 4])
             A *= 2
         else:
             A += tf.transpose(A, [0, 2, 1, 3, 4]) + tf.transpose(A, [0, 1, 2, 4, 3]) + tf.transpose(A, [0, 2, 1, 4, 3])
-        return {'m0': A[0], 'mm': A[1], 'Mm': A[-1]} if A.shape[0] > 1 else {'Mm': A[0]}
+        return {'Om': A[0], 'm0': A[1], 'mm': A[2], 'Mm': A[-1]} if A.shape[0] > 1 else {'Mm': A[0]}
 
     def _mu_psi_mu(self, psi_factor: TF.Tensor, is_constructor: bool = False) -> TF.Tensor:
         mu_psi_mu = []
@@ -271,7 +273,7 @@ class ClosedIndex(gf.Module):
         # print(f'after solve |factor| = {magnitude(factor, "kjS, kjS")}')
         return factor
 
-    def _Upsilon_log_pdf(self, G: TF.Tensor, Upsilon: TF.Tensor, Phi: TF.Tensor) -> Tuple[TF.Tensor, TF.Tensor]:
+    def _Upsilon_log_pdf(self, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor) -> Tuple[TF.Tensor, TF.Tensor]:
         sqrt_1_Upsilon = tf.sqrt(1 - Upsilon)
         if self.options['is_T_diagonal']:
             mean = tf.expand_dims(tf.einsum(f'{self.Phi_ein}, lLNM -> liLNM', sqrt_1_Upsilon, G), axis=-2)
