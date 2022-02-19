@@ -97,7 +97,7 @@ class ClosedIndex(gf.Module):
                 In other words the variance of each element of S is calculated, but cross-covariances are not.
             is_T_partial: If True this effectively asserts the full ['M'] model is variance free, so WmM is not calculated or returned.
         """
-        return {'is_T_calculated': True, 'is_T_diagonal': False, 'is_T_partial': False}
+        return {'is_T_calculated': True, 'is_T_diagonal': False, 'is_T_partial': True}
 
     def _calculate(self):
         pre_factor = tf.sqrt((Gaussian.TWO_PI) ** (self.M) * tf.reduce_prod(self.Lambda2[1][0] / self.Lambda2[1][1], axis=-1)) * self.F
@@ -218,7 +218,7 @@ class ClosedIndex(gf.Module):
         return W
 
     def _A(self, mu_phi_mu: TF.Tensor, mu_psi_mu: TF.Tensor) -> Dict[str, TF.Tensor]:
-        A = mu_phi_mu # - mu_psi_mu
+        A = mu_phi_mu - mu_psi_mu
         if self.options['is_T_diagonal']:
             A += tf.transpose(A, [0, 2, 1, 3, 4])
             A *= 2
@@ -249,12 +249,26 @@ class ClosedIndex(gf.Module):
         return tf.stack(mu_psi_mu)
 
     def _psi_factor(self, G: TF.Tensor, Phi: TF.Tensor, G_log_pdf: Tuple[TF.Tensor, TF.Tensor]) -> TF.Tensor:
-        D = Phi[tf.newaxis, tf.newaxis, ...] - tf.einsum('kKM, jJM, kKM -> jJkKM', Phi, Phi, Phi)
+        D = Phi[tf.newaxis, tf.newaxis, ...] - tf.einsum('kKM, jJM, kKM -> kKjJM', Phi, Phi, Phi)
         log_pdf = list(Gaussian.log_pdf(mean=G, variance_cho=tf.sqrt(D), is_variance_diagonal=True, ordinate=G, LBunch=2))
-        log_pdf[0] -= G_log_pdf[0][..., tf.newaxis, tf.newaxis, tf.newaxis]
-        log_pdf[1] /= G_log_pdf[1][..., tf.newaxis, tf.newaxis, tf.newaxis, :]
-        factor = tf.einsum('lLN, iIn, lLNiIn -> liIn', self.KYg0, self.g0, Gaussian.pdf(*tuple(log_pdf)))
+        log_pdf[0] -= G_log_pdf[0][tf.newaxis, tf.newaxis, tf.newaxis, ...]
+        log_pdf[1] /= G_log_pdf[1][tf.newaxis, tf.newaxis, tf.newaxis, ...]
+        # FIXME: Debug
+        # print(f'|g0| = {magnitude(self.g0, "kjS, kjS")}')
+        # print(f'|KYg0| = {magnitude(self.KYg0, "kjS, kjS")}')
+        # print(f'|K_inv_Y| = {magnitude(self.K_inv_Y, "kjS, kjS")}')
+        # print(f'|Gaussian.pdf(*tuple(log_pdf))| = {magnitude(Gaussian.pdf(*tuple(log_pdf)), "kKnjJN, kKnjJN")}')
+        # print(f'|det ratio| = {tf.sqrt(tf.reduce_prod(log_pdf[1], axis=-1))}')
+        # print(f'|exponent| = {magnitude(log_pdf[0], "kKnjJN, kKnjJN")}')
+        # print(f'|Gexp| = {magnitude(G_log_pdf[0], "kjS, kjS")}')
+        # print(f'|G| = {magnitude(G)}')
+        # print(f'|Gaussian.pdf(G)| = {magnitude(Gaussian.pdf(*tuple(G_log_pdf)) * tf.reduce_prod(G_log_pdf[1], axis=-1), "kjS, kjS")}')
+        factor = tf.einsum('kKn, jJN, kKnjJN -> kjJN', self.KYg0, self.g0, Gaussian.pdf(*tuple(log_pdf)))
+        # FIXME: Debug
+        # print(f'before solve |factor| = {magnitude(factor)}')
         factor = tf.squeeze(tf.linalg.triangular_solve(self.K_cho, tf.reshape(factor, self.psi_factor['shape'])), axis=-1)
+        # FIXME: Debug
+        # print(f'after solve |factor| = {magnitude(factor, "kjS, kjS")}')
         return factor
 
     def _Upsilon_log_pdf(self, G: TF.Tensor, Upsilon: TF.Tensor, Phi: TF.Tensor) -> Tuple[TF.Tensor, TF.Tensor]:
@@ -299,8 +313,8 @@ class ClosedIndex(gf.Module):
                     mu_phi_mu += [tf.einsum('lLN, liLNjkJn, kJn -> lijk', self.KYg0, Gaussian.pdf(*tuple(Omega_log_pdf_M)), self.KYg0)]
         mu_phi_mu = [item * self.mu_phi_mu['pre-factor'] for item in mu_phi_mu]
         # FIXME: Debug
-        # for i, item in enumerate(mu_phi_mu):
-        #     print(f'|mu_phi_mu[{i}]| = {magnitude(item)}')
+        for i, item in enumerate(mu_phi_mu):
+            print(f'|mu_phi_mu[{i}]| = {magnitude(item)}')
         return tf.stack(mu_phi_mu)
 
     def _Omega_log_pdf(self, m: TF.Slice, mp: TF.Slice, G: TF.Tensor, Phi: TF.Tensor, Gamma: TF.Tensor,
@@ -436,7 +450,8 @@ def sym_check(tensor: TF.Tensor, transposition: List[int]) -> TF.Tensor:
     return tf.reduce_sum((tensor - tf.transpose(tensor, transposition))**2)
 
 def magnitude(tensor: TF.Tensor, ein: str = 'lijk, lijk'):
-    return tf.sqrt(tf.einsum(ein, tensor, tensor))
+    n = tf.cast(tf.reduce_prod(tensor.shape), FLOAT())
+    return tf.sqrt(tf.divide(tf.einsum(ein, tensor, tensor), n))
 
 def det(tensor: TF.Tensor):
     return tf.reduce_prod(tensor, axis=-1)
