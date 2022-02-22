@@ -125,13 +125,11 @@ class ClosedIndex(gf.Module):
             if self.options['is_T_diagonal']:
                 self.Upsilon = self.Lambda2_diag[1][1] * self.Lambda2_diag[-1][2]
                 self.V2MM = tf.einsum('li, li -> li', self.V['M'], self.V['M'])[..., tf.newaxis, tf.newaxis]
-                self.mu_phi_mu = {'pre-factor': tf.sqrt((Gaussian.TWO_PI) ** self.M *
-                                                        tf.reduce_prod(self.Lambda2_diag[1][0] * self.Lambda2_diag[-1][2], axis=-1)) * self.F}
+                self.mu_phi_mu = {'pre-factor': tf.sqrt(tf.reduce_prod(self.Lambda2_diag[1][0] * self.Lambda2_diag[-1][2], axis=-1)) * self.F}
             else:
                 self.Upsilon = self.Lambda2[1][1] * self.Lambda2[-1][2]
                 self.V2MM = tf.einsum('li, jk -> lijk', self.V['M'], self.V['M'])
-                self.mu_phi_mu = {'pre-factor': tf.sqrt((Gaussian.TWO_PI) ** self.M *
-                                                        tf.reduce_prod(self.Lambda2[1][0] * self.Lambda2[-1][2], axis=-1)) * self.F}
+                self.mu_phi_mu = {'pre-factor': tf.sqrt(tf.reduce_prod(self.Lambda2[1][0] * self.Lambda2[-1][2], axis=-1)) * self.F}
                 if self.gp.kernel.is_independent:
                     self.mu_phi_mu['pre-factor'] = tf.linalg.diag(tf.squeeze(self.mu_phi_mu['pre-factor'], axis=-1))
             self.mu_phi_mu['pre-factor'] = self.mu_phi_mu['pre-factor'][tf.newaxis, ..., tf.newaxis]
@@ -299,7 +297,10 @@ class ClosedIndex(gf.Module):
         else:
             mean = tf.einsum('ijM, lLNM -> liLNjM', sqrt_1_Upsilon, G)
         variance = 1 - tf.einsum('ijM, lLM, ijM -> liLjM', sqrt_1_Upsilon, Phi, sqrt_1_Upsilon)
-        return Gaussian.log_pdf(mean, tf.sqrt(variance), is_variance_diagonal=True, LBunch=3)
+        exponent, variance_cho = Gaussian.log_pdf(mean, tf.sqrt(variance), is_variance_diagonal=True, LBunch=3)
+        # FIXME: Debug
+        print(f'm={variance_cho.shape[-1]}')
+        return 0.5 * Gaussian.LOG_TWO_PI * variance_cho.shape[-1] + exponent, variance_cho
 
     def _mu_phi_mu(self, G_log_pdf: TF.Tensor, Upsilon_log_pdf: TF.Tensor, Omega_log_pdf_M: TF.Tensor, Omega_log_pdf_m: TF.Tensor,
                    is_constructor: bool = False) -> TF.Tensor:
