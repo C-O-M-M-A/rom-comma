@@ -114,7 +114,7 @@ def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = 
 if __name__ == '__main__':
     with run.Context('Test', float='float64', device='CPU'):
         for N in (400,):
-            for noise_magnitude in (0.05,):
+            for noise_magnitude in (0.1,):
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     for M in (5,):
