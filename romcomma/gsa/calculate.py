@@ -299,7 +299,7 @@ class ClosedIndex(gf.Module):
         variance = 1 - tf.einsum('ijM, lLM, ijM -> liLjM', sqrt_1_Upsilon, Phi, sqrt_1_Upsilon)
         exponent, variance_cho = Gaussian.log_pdf(mean, tf.sqrt(variance), is_variance_diagonal=True, LBunch=3)
         # FIXME: Debug
-        print(f'm={variance_cho.shape[-1]}')
+        print(f'm={tf.sqrt((Gaussian.TWO_PI) ** self.M) - tf.exp(0.5 * Gaussian.LOG_TWO_PI * variance_cho.shape[-1])}')
         return 0.5 * Gaussian.LOG_TWO_PI * variance_cho.shape[-1] + exponent, variance_cho
 
     def _mu_phi_mu(self, G_log_pdf: TF.Tensor, Upsilon_log_pdf: TF.Tensor, Omega_log_pdf_M: TF.Tensor, Omega_log_pdf_m: TF.Tensor,
@@ -308,15 +308,15 @@ class ClosedIndex(gf.Module):
         if self.options['is_T_diagonal']:
             if not is_constructor or (is_constructor and not self.options['is_T_partial']):
                 Omega_log_pdf_m[0] += Upsilon_log_pdf[0][..., tf.newaxis, tf.newaxis, tf.newaxis] - G_log_pdf[0]
-                Omega_log_pdf_m[1] *= Upsilon_log_pdf[1][..., tf.newaxis, tf.newaxis, tf.newaxis] / G_log_pdf[1]
+                Omega_log_pdf_m[1] *= Upsilon_log_pdf[1][..., tf.newaxis, tf.newaxis, tf.newaxis, :] / G_log_pdf[1]
                 mu_phi_mu += [tf.einsum('lLN, liLNj, l -> li', self.KYg0, Gaussian.pdf(*Upsilon_log_pdf), self.KYg0_sum)[..., tf.newaxis, tf.newaxis],
                               tf.einsum('lLN, liLNjkJn, kJn -> lijk', self.KYg0, Gaussian.pdf(*Omega_log_pdf_m), self.KYg0)]
             if is_constructor:
                 mu_phi_mu += [tf.expand_dims(tf.expand_dims(tf.einsum('l, l -> l', self.KYg0_sum, self.KYg0_sum)[..., tf.newaxis], axis=1), axis=1)]
             else:
                 if not self.options['is_T_partial']:
-                    Omega_log_pdf_M[0] += self.Upsilon_log_pdf[0][..., tf.newaxis, tf.newaxis, tf.newaxis] - G_log_pdf[0]
-                    Omega_log_pdf_M[1] *= self.Upsilon_log_pdf[1][..., tf.newaxis, tf.newaxis, tf.newaxis] / G_log_pdf[1]
+                    Omega_log_pdf_M[0] += self.Upsilon_log_pdf[0][..., tf.newaxis, tf.newaxis, tf.newaxis] - self.G_log_pdf[0]
+                    Omega_log_pdf_M[1] *= self.Upsilon_log_pdf[1][..., tf.newaxis, tf.newaxis, tf.newaxis, :] / self.G_log_pdf[1]
                     mu_phi_mu += [tf.einsum('lLN, liLNjkJn, lJn -> lijk', self.KYg0, Gaussian.pdf(*Omega_log_pdf_M), self.KYg0)]
         else:
             if not is_constructor or (is_constructor and not self.options['is_T_partial']):
