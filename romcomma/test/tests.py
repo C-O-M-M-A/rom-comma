@@ -20,12 +20,12 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Contains developer tests of romcomma. """
-
+import pandas as pd
 
 from romcomma.base.definitions import *
 from romcomma import run
 from romcomma.data.storage import Fold, Repository, Frame
-from romcomma.test import functions
+from romcomma.test import functions, sampling
 import shutil
 import scipy.stats
 
@@ -112,6 +112,9 @@ def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = 
 
 
 if __name__ == '__main__':
+    # data = sampling.latin_hypercube(1000, 5)
+    # data = pd.DataFrame(data)
+    # data.to_csv(Path('C:\\Users\\fc1ram\\Downloads'))
     with run.Context('Test', float='float64', device='CPU'):
         for N in (400,):
             for noise_magnitude in (0.1,):
