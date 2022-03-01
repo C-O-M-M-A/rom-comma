@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\5.5')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\7.0')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -68,8 +68,26 @@ def run_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float]
     repo = functions.sample(f, N, M, noise_variance, store_folder)
     # fold_and_rotate_with_tests(repo, K, rotation)
     fold_and_rotate(repo, K, rotation)
-    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
             optimize=True, test=True, analyze=False)
+
+
+def run_gpr_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5, K: int = 2):
+    if isinstance(function_names, str):
+        function_names = [function_names]
+    f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
+    store_folder = '.'.join(function_names) + f'.{M:d}.{noise_label}.{N:d}'
+    if random:
+        rotation = scipy.stats.ortho_group.rvs(M)
+        store_folder += '.rotated'
+    else:
+        rotation = np.eye(M)
+    store_folder = BASE_PATH / store_folder
+    repo = functions.sample(f, N, M, noise_variance, store_folder)
+    # fold_and_rotate_with_tests(repo, K, rotation)
+    fold_and_rotate(repo, K, rotation)
+    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+            optimize=True, test=True, analyze=True)
 
 
 # noinspection PyShadowingNames
@@ -82,7 +100,7 @@ def compare_gpr(name, function_names: Sequence[str], N: int, noise_variance: [fl
         store_folder += '.rotated'
     store_folder = BASE_PATH / store_folder
     repo = Repository(store_folder)
-    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
             optimize=True, test=True, analyze=False)
 
 
@@ -95,7 +113,7 @@ def run_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float]
         store_folder += '.rotated'
     store_folder = BASE_PATH / store_folder
     repo = Repository(store_folder)
-    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
+    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
             optimize=False, test=False, analyze=True)
 
 
@@ -116,12 +134,13 @@ if __name__ == '__main__':
     # data = pd.DataFrame(data)
     # data.to_csv(Path('C:\\Users\\fc1ram\\Downloads'))
     with run.Context('Test', float='float64', device='CPU'):
-        for N in (400,):
-            for noise_magnitude in (0.1,):
+        for N in (1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000, 256000, 512000):
+            for noise_magnitude in (0.01, 0.05, 0.1, 0.2, 0.5):
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     for M in (5,):
-                        # run_gpr('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
+                        # run_gpr('initial', ['ishigami'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
                         #         noise_label=noise_label, random=random, M=M, K=1)
-                        run_gsa('initial', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=False),
-                                noise_label=noise_label, random=random, M=M)
+                        with run.Timing(f'N={N}, noise={noise_magnitude}'):
+                            run_gpr_gsa('initial', ['ishigami'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
+                                    noise_label=noise_label, random=random, M=M, K=10)

@@ -129,7 +129,7 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                         gp.optimize(**kwargs)
                     if test:
                         gp.test()
-                        print(gp.check_K_inv_Y(gp.fold.test_x.values))  # FIXME: debug print
+                        # print(gp.check_K_inv_Y(gp.fold.test_x.values))  # FIXME: debug print
                     if analyze:
                         romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.FIRST_ORDER, m=-1)
 

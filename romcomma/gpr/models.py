@@ -46,7 +46,7 @@ class Likelihood(Model):
                     variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
                     log_marginal (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
                 """
-                variance: NP.Matrix = np.atleast_2d(0.9)
+                variance: NP.Matrix = np.atleast_2d(0.5)
                 log_marginal: NP.Matrix = np.atleast_2d(1.0)
 
             return Values
