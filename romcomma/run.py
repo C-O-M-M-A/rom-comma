@@ -134,6 +134,27 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                         romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.FIRST_ORDER, m=-1)
 
 
+def gsa(name: str, repo: Repository, is_independent: bool, **kwargs):
+    """ Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.
+
+    Args:
+        name: The GP name.
+        repo: The source of the training data.csv. May be a Fold, or a Repository which contains Folds.
+        kwargs: A Dict of gsa calculation options, which updates the default gsa.perform.GSA.OPTIONS.
+        is_independent: Whether the gp kernel for each output is independent of the other outputs.
+    Raises:
+        FileNotFoundError: If repo is not a Fold, and contains no Folds.
+    """
+    if not isinstance(repo, Fold):
+        rng = range(repo.meta['K'] + 1) if repo.meta['K'] > 1 else range(1, 2)
+        for k in rng:
+            gsa(name, Fold(repo, k), is_independent, **kwargs)
+    else:
+        name += '.i.a' if is_independent else '.d.a'
+        gp = romcomma.gpr.models.GP(name, repo, is_read=True, is_isotropic=False, is_independent=is_independent)
+        romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.FIRST_ORDER, m=-1, is_T_partial=True, name='T_partial')
+
+
 # def ROMs(module: Module, name: str, repo: Repository, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
 #          options: Dict = None, rbf_parameters: Optional[gpr.GP.Parameters] = None):
 #     """ Service routine to recursively run ROMs on the Splits in a Repository, the Folds in a Split or Repository, and on a single Fold.

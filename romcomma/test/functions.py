@@ -40,7 +40,7 @@ from __future__ import annotations
 from romcomma.base.definitions import *
 from romcomma.data.storage import Repository
 from romcomma.test import sampling
-from SALib.test_functions import Ishigami
+from SALib.test_functions import Ishigami, Sobol_G
 
 
 class FunctionWithMeta:
@@ -62,6 +62,9 @@ class FunctionWithMeta:
                 **cls._default(name='sin.1', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=0.0, B=0.0),
                 **cls._default(name='sin.2', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=2.0, B=0.0),
                 **cls._default(name='ishigami', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=7.0, B=0.1),
+                **cls._default(name='sobol_g', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 4.5, 9, 99])),
+                **cls._default(name='sobol_g2', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 4.5, 9, 99]),
+                               alpha=np.array([2.0, 2.0, 2.0, 2.0, 2.0])),
             }
         return cls._DEFAULT
 

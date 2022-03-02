@@ -46,7 +46,7 @@ class Likelihood(Model):
                     variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
                     log_marginal (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
                 """
-                variance: NP.Matrix = np.atleast_2d(0.5)
+                variance: NP.Matrix = np.atleast_2d(0.0001)
                 log_marginal: NP.Matrix = np.atleast_2d(1.0)
 
             return Values
@@ -259,14 +259,14 @@ class GP(GPInterface):
     @classmethod
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
-        return {'maxiter': 5000, 'gtol': 1E-16}
+        return {'maxiter': 5000, 'gtol': 1E-12}
 
     @property
     def implementation(self) -> Tuple[Any, ...]:
         if self._implementation is None:
             if self._likelihood.is_independent:
                 self._implementation = tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None,
-                                                            noise_variance=self._likelihood.params.variance[0, l])
+                                                            noise_variance=max(self._likelihood.params.variance[0, l], 1.00001E-6))
                                             for l, kernel in enumerate(self._kernel.implementation))
             else:
                 self._implementation = tuple(mf.models.MOGPR(data=(self._X, self._Y), kernel=kernel, mean_function=None,

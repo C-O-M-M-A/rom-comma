@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\8.0')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\7.7')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -133,11 +133,11 @@ if __name__ == '__main__':
     # data = sampling.latin_hypercube(1000, 5)
     # data = pd.DataFrame(data)
     # data.to_csv(Path('C:\\Users\\fc1ram\\Downloads'))
-    with run.Context('Test', float='float64', device='CPU'):
-        for N in (500,):
-            for noise_magnitude in (0.1,):
+    with run.Context('Test', float='float64'):  # , device='CPU'
+        for N in (330, 440, 550, 660, 770, 880, 990, 1100, 1320, 1650): #  # 33, 55, 110,
+            for noise_magnitude in (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0): # 0.001, 0.01, 0.05, #
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     with run.Timing(f'N={N}, noise={noise_magnitude}'):
-                        run_gpr('sin', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
-                                noise_label=noise_label, random=random, M=5, K=1)
+                        run_gpr('initial', ['ishigami', 'sobol_g', 'sobol_g2'], N, noise_variance(L=3, scale=noise_magnitude, diagonal=True),
+                                noise_label=noise_label, random=random, M=5, K=10)
