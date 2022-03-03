@@ -211,7 +211,7 @@ class GPInterface(Model):
         Returns: ``self``, for chaining calls.
         """
         target_shape = (1, self._L) if is_independent else (self._L, self._L)
-        self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance", target_shape=target_shape, is_diagonal=is_independent,
+        self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance", target_shape=target_shape, is_diagonal=True,
                                                     folder=folder)
         self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
         self._implementation = None

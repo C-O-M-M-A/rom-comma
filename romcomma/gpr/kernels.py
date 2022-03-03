@@ -164,7 +164,7 @@ class RBF(Kernel):
         """
         if self._implementation is None:
             if self.params.variance.shape[0] == 1:
-                self._implementation = tuple(gf.kernels.RBF(variance=self.params.variance[0, l], lengthscales=self.params.lengthscales[l])
+                self._implementation = tuple(gf.kernels.RBF(variance=max(self.params.variance[0, l], 1.00001E-6), lengthscales=self.params.lengthscales[l])
                                 for l in range(self.params.variance.shape[1]))
             else:
                 self._implementation = (mf.kernels.RBF(variance=self.params.variance, lengthscales=self.params.lengthscales), )

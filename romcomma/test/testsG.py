@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\7.7')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\9.0')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -69,7 +69,7 @@ def run_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float]
     # fold_and_rotate_with_tests(repo, K, rotation)
     fold_and_rotate(repo, K, rotation)
     run.gpr(name=name, repo=repo, is_read=None, is_isotropic=None, is_independent=True, kernel_parameters=None, parameters=None,
-            optimize=True, test=True, analyze=False)
+            optimize=True, test=True)
 
 
 def run_gpr_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5, K: int = 2):
@@ -87,7 +87,7 @@ def run_gpr_gsa(name, function_names: Sequence[str], N: int, noise_variance: [fl
     # fold_and_rotate_with_tests(repo, K, rotation)
     fold_and_rotate(repo, K, rotation)
     run.gpr(name=name, repo=repo, is_read=None, is_isotropic=None, is_independent=True, kernel_parameters=None, parameters=None,
-            optimize=True, test=True, analyze=True)
+            optimize=True, test=True)
 
 
 # noinspection PyShadowingNames
@@ -101,7 +101,7 @@ def compare_gpr(name, function_names: Sequence[str], N: int, noise_variance: [fl
     store_folder = BASE_PATH / store_folder
     repo = Repository(store_folder)
     run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
-            optimize=True, test=True, analyze=False)
+            optimize=True, test=True)
 
 
 def run_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5):
@@ -114,7 +114,7 @@ def run_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float]
     store_folder = BASE_PATH / store_folder
     repo = Repository(store_folder)
     run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
-            optimize=False, test=False, analyze=True)
+            optimize=False, test=False)
 
 
 def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = False):
@@ -134,10 +134,10 @@ if __name__ == '__main__':
     # data = pd.DataFrame(data)
     # data.to_csv(Path('C:\\Users\\fc1ram\\Downloads'))
     with run.Context('Test', float='float64'):  # , device='CPU'
-        for N in (330, 440, 550, 660, 770, 880, 990, 1100, 1320, 1650): #  # 33, 55, 110,
-            for noise_magnitude in (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0): # 0.001, 0.01, 0.05, #
+        for N in (40, 60, 100, 200, 300, 400, 600, 800, 1000, 1500, 2000, 3000, 4000, 6000, 8000, 10000):   #
+            for noise_magnitude in (0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0):    #
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
                     with run.Timing(f'N={N}, noise={noise_magnitude}'):
                         run_gpr('initial', ['ishigami', 'sobol_g', 'sobol_g2'], N, noise_variance(L=3, scale=noise_magnitude, diagonal=True),
-                                noise_label=noise_label, random=random, M=5, K=10)
+                                noise_label=noise_label, random=random, M=5, K=2)

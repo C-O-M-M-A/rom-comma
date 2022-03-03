@@ -141,6 +141,14 @@ class Repository:
         """ The number of folds contained in this Repository."""
         return self._meta['K']
 
+    @property
+    def folds(self) -> range:
+        """ The indices of the folds contained in this Repository."""
+        if not isinstance(self, Fold):
+            return range(self.K + 1) if self.K > 1 else range(1, 2)
+        else:
+            return range(0, 0)
+
     def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> int:
         """ Fold this repo into K Folds, indexed by range(K).
         An additional Fold, indexed by K, takes all the repo data for both training and (invalid) testing.
@@ -184,6 +192,28 @@ class Repository:
 
         Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         return K
+
+    def aggregate_over_folds(self, local_path: Union[Path, str], is_K_included: bool=False, **kwargs: Any) -> Frame:
+        if isinstance(self, Fold):
+            raise NotADirectoryError('A Fold cannot contain other Folds, so cannot be aggregated over')
+        if not (is_K_included or self.K > 1):
+            raise NotADirectoryError('Fold K is not included in this aggregation, but here are no Folds other than K here because K is 1.')
+        local_path = Path(local_path)
+        dst = self._folder / local_path
+        shutil.rmtree(dst, ignore_errors=True)
+        dst.mkdir(mode=0o777, parents=True, exist_ok=False)
+        rng = self.folds if is_K_included else range(self.K)
+        results = None
+        for k in rng:
+            fold = Fold(self, k)
+            source = fold.folder / local_path
+            result = Frame(source, **kwargs).df
+            result.insert(0, "Fold", np.full(result.shape[0], k), True)
+            if k == 0:
+                results = result.copy(deep=True)
+            else:
+                results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
+        return Frame(dst, results)
 
     def fold_folder(self, k: int) -> Path:
         return self.folder / f'fold.{k:d}'

@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\8.0')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\7.5')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -72,7 +72,7 @@ def run_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float]
             optimize=True, test=True, analyze=False)
 
 
-def run_gpr_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5, K: int = 1):
+def run_gpr_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5, K: int = 2):
     if isinstance(function_names, str):
         function_names = [function_names]
     f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
@@ -91,7 +91,7 @@ def run_gpr_gsa(name, function_names: Sequence[str], N: int, noise_variance: [fl
 
 
 # noinspection PyShadowingNames
-def compare_gpr(name, function_names: Sequence[str], N: int, noise_label: str, random: bool, M: int = 5):
+def compare_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5):
     if isinstance(function_names, str):
         function_names = [function_names]
     f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
@@ -100,11 +100,11 @@ def compare_gpr(name, function_names: Sequence[str], N: int, noise_label: str, r
         store_folder += '.rotated'
     store_folder = BASE_PATH / store_folder
     repo = Repository(store_folder)
-    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=None, kernel_parameters=None, parameters=None,
-            optimize=False, test=False, analyze=False)
+    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+            optimize=True, test=True, analyze=False)
 
 
-def run_gsa(name, function_names: Sequence[str], N: int, noise_label: str, random: bool, M: int = 5, is_independent: bool = True):
+def run_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5):
     if isinstance(function_names, str):
         function_names = [function_names]
     f = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
@@ -113,7 +113,8 @@ def run_gsa(name, function_names: Sequence[str], N: int, noise_label: str, rando
         store_folder += '.rotated'
     store_folder = BASE_PATH / store_folder
     repo = Repository(store_folder)
-    run.gsa(name=name, repo=repo, is_independent=is_independent)
+    run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
+            optimize=False, test=False, analyze=True)
 
 
 def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = False):
@@ -132,15 +133,16 @@ if __name__ == '__main__':
     # data = sampling.latin_hypercube(1000, 5)
     # data = pd.DataFrame(data)
     # data.to_csv(Path('C:\\Users\\fc1ram\\Downloads'))
-    with run.Context('Test', float='float64', device='CPU'):
-        for N in (500,):
-            for noise_magnitude in (0.1,):
+    with run.Context('Test', float='float64', device='CPU'):  #
+        for N in (1100, 1320, 1650): #
+            for noise_magnitude in (0.001, 0.01, 0.05,): #  # 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
-                    with run.Timing(f'N={N}, noise={noise_magnitude}'):
-                        # compare_gpr('sin', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
-                        #         noise_label=noise_label, random=random, M=5)
-                        run_gsa('sin', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
-                                random=random, M=5, is_independent=True)
-                        run_gsa('sin', ['sin.1', 'sin.1'], N, noise_variance(L=2, scale=noise_magnitude, diagonal=True),
-                                random=random, M=5, is_independent=False)
+                    for M in (5,):
+                        # run_gpr('initial', ['ishigami'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
+                        #         noise_label=noise_label, random=random, M=M, K=1)
+                        with run.Timing(f'N={N}, noise={noise_magnitude}'):
+                            run_gpr('initial', ['ishigami'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
+                                    noise_label=noise_label, random=random, M=M, K=10)
+                            run_gpr('initial', ['sobol_g'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
+                                    noise_label=noise_label, random=random, M=M, K=10)

@@ -134,26 +134,24 @@ class GSA(Model):
             result = [tf.constant([m + 1, M + 1], dtype=INT()) for m in ms]
         return tf.data.Dataset.from_tensor_slices(result)
 
-    def __init__(self, gp: GPInterface, kind: GSA.Kind, name: str = '', m: int = -1, **kwargs: Any):
+    def __init__(self, gp: GPInterface, kind: GSA.Kind, m: int = -1, **kwargs: Any):
         """ Perform a Sobol GSA. The object created is single use and disposable: the constructor performs and records the entire GSA and the
         constructed object is basically useless once constructed.
 
         Args:
             gp: The underlying Gaussian Process.
             kind: The kind of index to calculate - first order, closed or total.
-            name: An optional prefix to the name of this GSA.
             m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
                 Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
             **kwargs: The calculation options to override OPTIONS.
         """
-        m, name_suffix = (m, f'.{m}') if 0 < m < gp.M else (-1, '')
-        # Arrange name
-        name_suffix = kind.name.lower() + name_suffix
-        name += name_suffix if name == '' else f'.{name_suffix}'
+        options = self.OPTIONS | kwargs
+        m, name = (m, f'{kind.name.lower()}.{m}') if 0 < m < gp.M else (-1, kind.name.lower())
+        for option in ('is_T_partial', 'is_T_diagonal'):
+            name += f'.{option.split("_")[-1][0]}' if options[option] else ''
         folder = gp.folder / 'gsa' / name
         # Save Parameters and Options
         super().__init__(folder, read_parameters=False, m=m)
-        options = self.OPTIONS | kwargs
         self._write_options(options)
         results = self._calculate(kind, self._m_dataset(kind, m, gp.M), calculate.ClosedIndex(gp, **options))
         # Compose and save results

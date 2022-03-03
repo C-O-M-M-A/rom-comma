@@ -74,7 +74,7 @@ def Context(name: str, device: str = '', **kwargs):
 
 def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
         kernel_parameters: Optional[romcomma.gpr.kernels.Kernel.Parameters] = None, parameters: Optional[romcomma.gpr.models.GP.Parameters] = None,
-        optimize: bool = True, test: bool = True, analyze: bool = True, semi_norm: Dict = {'DELETE_ME': 'base.Sobol.SemiNorm.META'}, **kwargs):
+        optimize: bool = True, test: bool = True, **kwargs):
     """ Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.
 
     Args:
@@ -89,26 +89,23 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
         parameters: The GP.parameters fields=values to replace after reading from file/defaults.
         optimize: Whether to optimize each GP.
         test: Whether to test_data each GP.
-        analyze: Whether to calculate Sobol' indices for each GP.
-        semi_norm: Meta json describing a Sobol.SemiNorm.
         kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.OPTIMIZER_OPTIONS.
 
     Raises:
         FileNotFoundError: If repo is not a Fold, and contains no Folds.
     """
     if not isinstance(repo, Fold):
-        rng = range(repo.meta['K'] + 1) if repo.meta['K'] > 1 else range(1, 2)
-        for k in rng:
-            gpr(name, Fold(repo, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+        for k in repo.folds:
+            gpr(name, Fold(repo, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
     else:
         if is_independent is None:
-            gpr(name, repo, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
-            gpr(name, repo, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+            gpr(name, repo, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, **kwargs)
+            gpr(name, repo, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, **kwargs)
         else:
             full_name = name + ('.i' if is_independent else '.d')
             if is_isotropic is None:
-                gpr(name, repo, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
-                gpr(name, repo, None, False, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+                gpr(name, repo, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
+                gpr(name, repo, None, False, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
             else:
                 full_name = full_name + ('.i' if is_isotropic else '.a')
                 if is_read is None:
@@ -117,11 +114,10 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                         if is_independent or not (repo.folder / nearest_name).exists():
                             nearest_name = full_name[:-2] + '.i'
                             if not (repo.folder / nearest_name).exists():
-                                gpr(name, repo, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze,
-                                    semi_norm, **kwargs)
+                                gpr(name, repo, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
                                 return
                         romcomma.gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
-                    gpr(name, repo, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, analyze, semi_norm, **kwargs)
+                    gpr(name, repo, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
                 else:
                     gp = romcomma.gpr.models.GP(full_name, repo, is_read, is_isotropic, is_independent, kernel_parameters,
                                        **({} if parameters is None else parameters.as_dict()))
@@ -129,9 +125,6 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                         gp.optimize(**kwargs)
                     if test:
                         gp.test()
-                        # print(gp.check_K_inv_Y(gp.fold.test_x.values))  # FIXME: debug print
-                    if analyze:
-                        romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.FIRST_ORDER, m=-1)
 
 
 def gsa(name: str, repo: Repository, is_independent: bool, **kwargs):
@@ -146,13 +139,14 @@ def gsa(name: str, repo: Repository, is_independent: bool, **kwargs):
         FileNotFoundError: If repo is not a Fold, and contains no Folds.
     """
     if not isinstance(repo, Fold):
-        rng = range(repo.meta['K'] + 1) if repo.meta['K'] > 1 else range(1, 2)
-        for k in rng:
+        for k in repo.folds:
             gsa(name, Fold(repo, k), is_independent, **kwargs)
     else:
-        name += '.i.a' if is_independent else '.d.a'
-        gp = romcomma.gpr.models.GP(name, repo, is_read=True, is_isotropic=False, is_independent=is_independent)
-        romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.FIRST_ORDER, m=-1, is_T_partial=True, name='T_partial')
+        if is_independent:
+            gp = romcomma.gpr.models.GP(f'{name}.i.a' , repo, is_read=True, is_isotropic=False, is_independent=True)
+        else:
+            gp = romcomma.gpr.models.GP(f'{name}.d.a', repo, is_read=True, is_isotropic=False, is_independent=False)
+        romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.FIRST_ORDER, m=-1, **kwargs)
 
 
 # def ROMs(module: Module, name: str, repo: Repository, source_gp_name: str, Mu: Union[int, List[int]], Mx: Union[int, List[int]] = -1,
