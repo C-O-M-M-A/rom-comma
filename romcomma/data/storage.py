@@ -201,6 +201,7 @@ class Repository:
         Args:
             child_path: The child path of the folder to aggregate into. The source is fold.folder/child_path/csvs[i],
             the aggregate destination is self.folder/child_path/csvs[i].
+            csvs: A list of the csv files to aggregate.
             is_K_included: Whether to in include Fold K, which is always the union of all the other folds.
             **kwargs: Write options passed directly to pd.Dataframe.to_csv(). Overridable defaults are {'index': False, 'float_format':'%.6f'}
         """
@@ -213,17 +214,21 @@ class Repository:
         shutil.rmtree(dst, ignore_errors=True)
         dst.mkdir(mode=0o777, parents=True, exist_ok=False)
         rng = self.folds if is_K_included else range(self.K)
+        kwargs = {'index': False, 'float_format': '%.6f'} | kwargs
         for csv in csvs:
             results = None
+            is_initial=True
             for k in rng:
                 fold = Fold(self, k)
-                result = pd.read_csv(fold.folder/child_path/csv)
-                result.insert(0, 'Fold', np.full(result.shape[0], k), True)
-                if k == 0:
-                    results = result.copy(deep=True)
-                else:
-                    results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
-            kwargs = {'index': False, 'float_format': '%.6f'} | kwargs
+                if (fold.folder/child_path/csv).exists():
+                    result = pd.read_csv(fold.folder/child_path/csv)
+                    result.insert(0, 'Fold', np.full(result.shape[0], k), True)
+                    result.insert(0, 'N', np.full(result.shape[0], fold.N), True)
+                    if is_initial:
+                        results = result.copy(deep=True)
+                        is_initial = False
+                    else:
+                        results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
             results.to_csv(dst/csv, **kwargs)
 
     def fold_folder(self, k: int) -> Path:

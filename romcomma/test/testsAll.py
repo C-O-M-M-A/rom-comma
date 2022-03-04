@@ -116,31 +116,32 @@ def aggregator(child_path: Union[Path, str], function_names: Sequence[str], N: i
     return {'path': repo_folder(function_names, N, noise_label(noise_magnitude), random, M) / child_path, 'N': N, 'noise': noise_magnitude}
 
 
-def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path, str], **kwargs):
+def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path, str], ignore_missing: bool=False, **kwargs):
     """ Aggregate csv files over aggregators.
 
     Args:
-        aggregators: A List of aggregators. An aggregator is a dict containing source csv ['src']
-            and {key: value} to insert column 'key' and populate it with 'value'.
-        dst: The destination path.
+        aggregators: A Dict of aggregators, keyed by csv filename. An aggregator is a List of Dicts containing source path ['path']
+            and {key: value} to insert column 'key' and populate it with 'value' in path/csv.
+        dst: The destination path, to which csv files listed as the keys in aggregators.
         **kwargs: Write options passed directly to pd.Dataframe.to_csv(). Overridable defaults are {'index': False, 'float_format':'%.6f'}
     """
     dst = Path(dst)
     shutil.rmtree(dst, ignore_errors=True)
     dst.mkdir(mode=0o777, parents=True, exist_ok=False)
+    kwargs = {'index': False, 'float_format': '%.6f'} | kwargs
     for csv, aggregator in aggregators.items():
         is_initial = True
         results = None
         for file in aggregator:
-            result = pd.read_csv(Path(file.pop('path'))/csv)
-            for key, value in file.items():
-                result.insert(0, key, np.full(result.shape[0], value), True)
-            if is_initial:
-                results = result.copy(deep=True)
-                is_initial = False
-            else:
-                results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
-            kwargs = {'index': False, 'float_format': '%.6f'} | kwargs
+            if (Path(file.pop('path'))/csv).exists() or not ignore_missing:
+                result = pd.read_csv(Path(file.pop('path'))/csv)
+                for key, value in file.items():
+                    result.insert(0, key, np.full(result.shape[0], value), True)
+                if is_initial:
+                    results = result.copy(deep=True)
+                    is_initial = False
+                else:
+                    results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
         results.to_csv(dst/csv, index=False)
 
 
@@ -155,8 +156,8 @@ if __name__ == '__main__':
                     for random in (False, ):
                         with run.Timing(f'N={N}, noise={noise_magnitude} {gsa} aggregation'):
                             repo = Repository(repo_folder(['ishigami', 'sobol_g', 'sobol_g2'], N, noise_label(noise_magnitude), random=random, M=5))
-                            repo.aggregate_over_folds(child_path, csvs, is_K_included=False)
+                            repo.aggregate_over_folds(child_path, csvs, is_K_included=True)
                             for csv in csvs:
-                                aggregators[csv].append({'path': repo.folder/child_path, 'N': N, '|noise|': noise_magnitude})
+                                aggregators[csv].append({'path': repo.folder/child_path, '|noise|': noise_magnitude})
             with run.Timing(f'{gsa} aggregation'):
                 aggregate(aggregators, dst=BASE_PATH/child_path)
