@@ -23,6 +23,8 @@
 
 from __future__ import annotations
 
+import pandas as pd
+
 from romcomma.base.definitions import *
 from copy import deepcopy
 import itertools
@@ -193,27 +195,36 @@ class Repository:
         Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         return K
 
-    def aggregate_over_folds(self, local_path: Union[Path, str], is_K_included: bool=False, **kwargs: Any) -> Frame:
+    def aggregate_over_folds(self, child_path: Union[Path, str], csvs: Sequence[str], is_K_included: bool=False, **kwargs: Any):
+        """ Aggregate csv files over the Folds in this Repo.
+
+        Args:
+            child_path: The child path of the folder to aggregate into. The source is fold.folder/child_path/csvs[i],
+            the aggregate destination is self.folder/child_path/csvs[i].
+            is_K_included: Whether to in include Fold K, which is always the union of all the other folds.
+            **kwargs: Write options passed directly to pd.Dataframe.to_csv(). Overridable defaults are {'index': False, 'float_format':'%.6f'}
+        """
         if isinstance(self, Fold):
             raise NotADirectoryError('A Fold cannot contain other Folds, so cannot be aggregated over')
         if not (is_K_included or self.K > 1):
             raise NotADirectoryError('Fold K is not included in this aggregation, but here are no Folds other than K here because K is 1.')
-        local_path = Path(local_path)
-        dst = self._folder / local_path
+        child_path = Path(child_path)
+        dst = self._folder/child_path
         shutil.rmtree(dst, ignore_errors=True)
         dst.mkdir(mode=0o777, parents=True, exist_ok=False)
         rng = self.folds if is_K_included else range(self.K)
-        results = None
-        for k in rng:
-            fold = Fold(self, k)
-            source = fold.folder / local_path
-            result = Frame(source, **kwargs).df
-            result.insert(0, "Fold", np.full(result.shape[0], k), True)
-            if k == 0:
-                results = result.copy(deep=True)
-            else:
-                results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
-        return Frame(dst, results)
+        for csv in csvs:
+            results = None
+            for k in rng:
+                fold = Fold(self, k)
+                result = pd.read_csv(fold.folder/child_path/csv)
+                result.insert(0, 'Fold', np.full(result.shape[0], k), True)
+                if k == 0:
+                    results = result.copy(deep=True)
+                else:
+                    results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
+            kwargs = {'index': False, 'float_format': '%.6f'} | kwargs
+            results.to_csv(dst/csv, **kwargs)
 
     def fold_folder(self, k: int) -> Path:
         return self.folder / f'fold.{k:d}'
