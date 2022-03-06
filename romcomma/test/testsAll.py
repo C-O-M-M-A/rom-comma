@@ -30,8 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\7.8')
-TEST_REPO = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\7.8\\ishigami.sobol_g.sobol_g2.5.0.001.33')
+BASE_ROOT = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\9s')
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
     repo._data.df = repo._data.df * 5
@@ -133,8 +132,9 @@ def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path,
         is_initial = True
         results = None
         for file in aggregator:
-            if (Path(file.pop('path'))/csv).exists() or not ignore_missing:
-                result = pd.read_csv(Path(file.pop('path'))/csv)
+            filepath = Path(file.pop('path'))/csv
+            if filepath.exists() or not ignore_missing:
+                result = pd.read_csv(filepath)
                 for key, value in file.items():
                     result.insert(0, key, np.full(result.shape[0], value), True)
                 if is_initial:
@@ -146,18 +146,30 @@ def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path,
 
 
 if __name__ == '__main__':
-    with run.Context('Test', float='float64', device='CPU'):  #
-        for gsa in ('first_order.d', 'first_order.p.d'):
-            child_path = Path('initial.i.a\\gsa')/gsa
+    BASE_PATH = BASE_ROOT
+    for gsa in ('first_order.d', 'first_order.p.d'):
+        with run.Context(f'GSA.{gsa}', float='float64', device='CPU'):  #
+            child_path = Path('initial.i.a\\gsa') / gsa
             csvs = ['S.csv', 'T.csv']
             aggregators = {csv: [] for csv in csvs}
-            for N in (33, 55, 110, 220, 330, 440, 550, 660, 770, 880, 990, 1100, 1320, 1650):
-                for noise_magnitude in (0.001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0):
-                    for random in (False, ):
-                        with run.Timing(f'N={N}, noise={noise_magnitude} {gsa} aggregation'):
-                            repo = Repository(repo_folder(['ishigami', 'sobol_g', 'sobol_g2'], N, noise_label(noise_magnitude), random=random, M=5))
-                            repo.aggregate_over_folds(child_path, csvs, is_K_included=True)
-                            for csv in csvs:
-                                aggregators[csv].append({'path': repo.folder/child_path, '|noise|': noise_magnitude})
-            with run.Timing(f'{gsa} aggregation'):
-                aggregate(aggregators, dst=BASE_PATH/child_path)
+            for test in range(6):
+                for csv in csvs:
+                    aggregators[csv].append({'path': BASE_PATH/f'9.{test}'/child_path, 'test': test})
+            aggregate(aggregators, dst=BASE_PATH/child_path, ignore_missing=True)
+
+        # BASE_PATH = BASE_ROOT/f'9.{test}'
+        # with run.Context(f'Test.{test}', float='float64', device='CPU'):  #
+        #     for gsa in ('first_order.d', 'first_order.p.d'):
+        #         child_path = Path('initial.i.a\\gsa')/gsa
+        #         csvs = ['S.csv', 'T.csv']
+        #         aggregators = {csv: [] for csv in csvs}
+        #         for N in (40, 60, 100, 200, 300, 400, 600, 800, 1000, 1500, 2000, 3000,):  #
+        #             for noise_magnitude in (0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0,):  #
+        #                 for random in (False, ):
+        #                     with run.Timing(f'N={N}, noise={noise_magnitude} {gsa} aggregation'):
+        #                         repo = Repository(repo_folder(['ishigami', 'sobol_g', 'sobol_g2'], N, noise_label(noise_magnitude), random=random, M=5))
+        #                         repo.aggregate_over_folds(child_path, csvs, is_K_included=True, ignore_missing=True)
+        #                         for csv in csvs:
+        #                             aggregators[csv].append({'path': repo.folder/child_path, '|noise|': noise_magnitude})
+        #         with run.Timing(f'Test.{test} {gsa} aggregation'):
+        #             aggregate(aggregators, dst=BASE_PATH/child_path, ignore_missing=True)

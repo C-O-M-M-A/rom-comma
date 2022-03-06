@@ -343,9 +343,6 @@ class ClosedIndex(gf.Module):
                 mu_phi_mu += [tf.expand_dims(tf.expand_dims(tf.einsum('l, k -> lk', self.KYg0_sum, self.KYg0_sum), axis=1), axis=1)]
             else:
                 if not self.options['is_T_partial']:
-                    # Omega_log_pdf_M[0] += self.Upsilon_log_pdf[0][..., tf.newaxis, tf.newaxis, tf.newaxis] - G_log_pdf[0]
-                    # Omega_log_pdf_M[1] /= self.G_log_pdf[1]
-                    # pdf = Gaussian.pdf(*tuple(Omega_log_pdf_M)) / tf.reduce_prod(self.Upsilon_log_pdf[1], axis=-1)[..., tf.newaxis, tf.newaxis, tf.newaxis]
                     Omega_log_pdf_M[0] -= G_log_pdf[0]
                     Omega_log_pdf_M[1] /= G_log_pdf[1]
                     pdf = Gaussian.pdf(*tuple(Omega_log_pdf_M)) * Gaussian.pdf(*self.Upsilon_log_pdf)[..., tf.newaxis, tf.newaxis, tf.newaxis]

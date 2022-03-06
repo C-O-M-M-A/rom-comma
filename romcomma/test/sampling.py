@@ -26,7 +26,7 @@ from romcomma.base.definitions import *
 import scipy.stats
 
 
-def latin_hypercube(N: int, M: int, is_centered: bool = False):
+def latin_hypercube(N: int, M: int, is_centered: bool = True):
     """ Latin Hypercube Sample.
 
     Args:

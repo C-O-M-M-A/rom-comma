@@ -121,7 +121,7 @@ class GSA(Model):
                 df.iloc[:, -2:] = df.iloc[:, :2]
             elif shape[-3] == 1:
                 df.iloc[:, -2] = df.iloc[:, -1]
-        return pd.MultiIndex.from_frame(df, names=['l'] * len(indices))
+        return pd.MultiIndex.from_frame(df, names=[f'l.{l}' for l in range(len(indices))])
 
     def _m_dataset(self, kind: GSA.Kind, m: int, M: int) -> tf.data.Dataset:
         result = []

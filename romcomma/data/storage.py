@@ -195,7 +195,7 @@ class Repository:
         Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         return K
 
-    def aggregate_over_folds(self, child_path: Union[Path, str], csvs: Sequence[str], is_K_included: bool=False, **kwargs: Any):
+    def aggregate_over_folds(self, child_path: Union[Path, str], csvs: Sequence[str], is_K_included: bool=False, ignore_missing: bool = False, **kwargs: Any):
         """ Aggregate csv files over the Folds in this Repo.
 
         Args:
@@ -203,10 +203,11 @@ class Repository:
             the aggregate destination is self.folder/child_path/csvs[i].
             csvs: A list of the csv files to aggregate.
             is_K_included: Whether to in include Fold K, which is always the union of all the other folds.
+            ignore_missing: Whether to suppress missing FileNotFoundError.
             **kwargs: Write options passed directly to pd.Dataframe.to_csv(). Overridable defaults are {'index': False, 'float_format':'%.6f'}
         """
         if isinstance(self, Fold):
-            raise NotADirectoryError('A Fold cannot contain other Folds, so cannot be aggregated over')
+            raise NotADirectoryError('A Fold cannot contain other Folds, so cannot be aggregated over.')
         if not (is_K_included or self.K > 1):
             raise NotADirectoryError('Fold K is not included in this aggregation, but here are no Folds other than K here because K is 1.')
         child_path = Path(child_path)
@@ -220,9 +221,9 @@ class Repository:
             is_initial=True
             for k in rng:
                 fold = Fold(self, k)
-                if (fold.folder/child_path/csv).exists():
+                if (fold.folder/child_path/csv).exists() or not ignore_missing:
                     result = pd.read_csv(fold.folder/child_path/csv)
-                    result.insert(0, 'Fold', np.full(result.shape[0], k), True)
+                    result.insert(0, 'fold', np.full(result.shape[0], k), True)
                     result.insert(0, 'N', np.full(result.shape[0], fold.N), True)
                     if is_initial:
                         results = result.copy(deep=True)

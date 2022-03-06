@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\9.3')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\9.5')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -53,7 +53,6 @@ def fold_and_rotate(repo: Repository, K: int, rotation: NP.Matrix):
         fold.X_rotation = rotation
 
 
-# noinspection PyShadowingNames
 def run_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5, K: int = 2):
     if isinstance(function_names, str):
         function_names = [function_names]
@@ -90,7 +89,6 @@ def run_gpr_gsa(name, function_names: Sequence[str], N: int, noise_variance: [fl
             optimize=True, test=True)
 
 
-# noinspection PyShadowingNames
 def compare_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float], noise_label: str, random: bool, M: int = 5):
     if isinstance(function_names, str):
         function_names = [function_names]
