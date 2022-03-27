@@ -130,19 +130,19 @@ def noise_variance(L: int, scale: float, diagonal: bool = False, random: bool = 
 
 
 if __name__ == '__main__':
-    # data = sampling.latin_hypercube(1000, 5)
-    # data = pd.DataFrame(data)
-    # data.to_csv(Path('C:\\Users\\fc1ram\\Downloads'))
-    with run.Context('Test', float='float64', device='CPU'):  #
-        for N in (1100, 1320, 1650): #
-            for noise_magnitude in (0.001, 0.01, 0.05,): #  # 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0
-                noise_label = f'{noise_magnitude:.3f}'
-                for random in (False, ):
-                    for M in (5,):
-                        # run_gpr('initial', ['ishigami'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
-                        #         noise_label=noise_label, random=random, M=M, K=1)
-                        with run.Timing(f'N={N}, noise={noise_magnitude}'):
-                            run_gpr('initial', ['ishigami'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
-                                    noise_label=noise_label, random=random, M=M, K=10)
-                            run_gpr('initial', ['sobol_g'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
-                                    noise_label=noise_label, random=random, M=M, K=10)
+    data = sampling.latin_hypercube(1000, 3, is_centered=True)
+    data = pd.DataFrame(data)
+    data.to_csv(Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\WellcomeLeap\\doe.csv'))
+    # with run.Context('Test', float='float64', device='CPU'):  #
+    #     for N in (1100, 1320, 1650): #
+    #         for noise_magnitude in (0.001, 0.01, 0.05,): #  # 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0
+    #             noise_label = f'{noise_magnitude:.3f}'
+    #             for random in (False, ):
+    #                 for M in (5,):
+    #                     # run_gpr('initial', ['ishigami'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
+    #                     #         noise_label=noise_label, random=random, M=M, K=1)
+    #                     with run.Timing(f'N={N}, noise={noise_magnitude}'):
+    #                         run_gpr('initial', ['ishigami'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
+    #                                 noise_label=noise_label, random=random, M=M, K=10)
+    #                         run_gpr('initial', ['sobol_g'], N, noise_variance(L=1, scale=noise_magnitude, diagonal=True),
+    #                                 noise_label=noise_label, random=random, M=M, K=10)
