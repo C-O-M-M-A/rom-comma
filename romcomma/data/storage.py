@@ -215,14 +215,13 @@ class Repository:
         shutil.rmtree(dst, ignore_errors=True)
         dst.mkdir(mode=0o777, parents=True, exist_ok=False)
         rng = self.folds if is_K_included else range(self.K)
-        kwargs = {'index': False, 'float_format': '%.6f'} | kwargs
         for csv in csvs:
             results = None
             is_initial=True
             for k in rng:
                 fold = Fold(self, k)
                 if (fold.folder/child_path/csv).exists() or not ignore_missing:
-                    result = pd.read_csv(fold.folder/child_path/csv)
+                    result = pd.read_csv(fold.folder/child_path/csv, **kwargs)
                     result.insert(0, 'fold', np.full(result.shape[0], k), True)
                     result.insert(0, 'N', np.full(result.shape[0], fold.N), True)
                     if is_initial:
@@ -230,7 +229,7 @@ class Repository:
                         is_initial = False
                     else:
                         results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
-            results.to_csv(dst/csv, **kwargs)
+            results.to_csv(dst/csv, **{'index': False, 'float_format': '%.6f'})
 
     def fold_folder(self, k: int) -> Path:
         return self.folder / f'fold.{k:d}'
@@ -303,25 +302,24 @@ class Repository:
     @classmethod
     @property
     def CSV_OPTIONS(cls) -> Dict[str, Any]:
-        return {'skiprows': None, 'index_col': None}
+        return {'skiprows': None, 'index_col': 0}
 
     @classmethod
-    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = META, skiprows: ZeroOrMoreInts = None, **kwargs) -> Repository:
+    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = None, **kwargs) -> Repository:
         """ Create a Repository from a csv file.
 
         Args:
             folder: The location (folder) of the target Repository.
             csv: The file containing the data to record in [Return].csv.
             meta: The meta data to record in [Return].meta.json.
-            skiprows: The rows of csv to skip while reading, a convenience update to csv_kwargs.
-        Keyword Args:
             kwargs: Updates Repository.CSV_OPTIONS for reading the csv file, as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html.
         Returns: A new Repository located in folder.
         """
         csv = Path(csv)
-        origin_csv_kwargs = {**cls.CSV_OPTIONS, **kwargs, **{'skiprows': skiprows}}
+        origin_csv_kwargs = cls.CSV_OPTIONS | kwargs
         data = Frame(csv, **origin_csv_kwargs)
+        meta = cls.META  if meta is None else cls.META | meta
         meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
         return cls.from_df(folder, data.df, meta)
 
@@ -336,6 +334,10 @@ class Fold(Repository):
     @property
     def normalization(self) -> Normalization:
         return self._normalization
+
+    @property
+    def test_csv(self) -> Path:
+        return self._test_csv
 
     @property
     def test_data(self) -> Frame:

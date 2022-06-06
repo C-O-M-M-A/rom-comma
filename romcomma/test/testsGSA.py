@@ -40,7 +40,7 @@ def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
     shutil.copytree(repo.fold_folder(repo.K), repo.folder / f'fold.{repo.K + 1}')
     fold = Fold(repo, repo.K + 1)
     fold.X_rotation = np.transpose(rotation)
-    Frame(fold._test_csv, fold.normalization.undo_from(fold._test_data.df))
+    Frame(fold.test_csv, fold.normalization.undo_from(fold._test_data.df))
     fold = Fold(repo, repo.K)
     Frame(repo.folder / 'undone.csv', fold.normalization.undo_from(fold.test_data.df))
 

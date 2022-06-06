@@ -128,13 +128,14 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
 
 
 def gsa(name: str, repo: Repository, is_independent: bool, ignore_exceptions: bool = False, **kwargs):
-    """ Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.
+    """ Service routine to recursively run GSAs on the Folds in a Repository, or on a single Fold.
 
     Args:
         name: The GP name.
         repo: The source of the training data.csv. May be a Fold, or a Repository which contains Folds.
-        kwargs: A Dict of gsa calculation options, which updates the default gsa.perform.GSA.OPTIONS.
         is_independent: Whether the gp kernel for each output is independent of the other outputs.
+        ignore_exceptions: Whether to ignore exceptions (e.g. file not found) when they are encountered, or halt.
+        kwargs: A Dict of gsa calculation options, which updates the default gsa.perform.GSA.OPTIONS.
     Raises:
         FileNotFoundError: If repo is not a Fold, and contains no Folds.
     """

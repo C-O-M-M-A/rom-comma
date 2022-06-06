@@ -23,6 +23,9 @@
 
 from __future__ import annotations
 
+import numpy as np
+import pandas as pd
+
 from romcomma.base.definitions import *
 from romcomma.data.storage import Fold, Frame
 from romcomma.base.classes import Parameters, Model
@@ -115,6 +118,10 @@ class GPInterface(Model):
         return self._folder / "test.csv"
 
     @property
+    def test_summary_csv(self) -> Path:
+        return self._folder / "test_summary.csv"
+
+    @property
     def kernel(self) -> Kernel:
         return self._kernel
 
@@ -183,21 +190,40 @@ class GPInterface(Model):
         """
 
     def test(self) -> Frame:
-        """ Tests the GP on the test data in self._fold.test_data.
+        """ Tests the GP on the test data in self._fold.test_data. Test results comprise three values for each output at each datapoint:
+        The mean prediction, the std error of prediction and the Z score of prediction (i.e. error of prediction scaled by std error of prediction).
 
         Returns: The test_data results as a Frame backed by GP.test_result_csv.
         """
         result = Frame(self.test_csv, self._fold.test_data.df)
         Y_heading = self._fold.meta['data']['Y_heading']
         prediction = self.predict(self._fold.test_x.values)
-        predictive_mean = (result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Mean"}, level=0))
+        predictive_mean = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive Mean'}, level=0)
         predictive_mean.iloc[:] = prediction[0]
-        predictive_std = (result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Std"}, level=0))
+        predictive_std = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive Std'}, level=0)
         predictive_std.iloc[:] = prediction[1]
-        predictive_error = (result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: "Predictive Error"}, level=0))
-        predictive_error.iloc[:] -= predictive_mean.to_numpy(dtype=float, copy=False)
-        result.df = result.df.join([predictive_mean, predictive_std, predictive_error])
+        predictive_score = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive Z Score'}, level=0)
+        predictive_score.iloc[:] -= predictive_mean.to_numpy(dtype=float, copy=False)
+        rmse = predictive_score.iloc[:].copy().rename(columns={'Predictive Z Score': 'RMSE'}, level=0)
+        predictive_score.iloc[:] /= predictive_std.to_numpy(dtype=float, copy=False)
+        result.df = result.df.join([predictive_mean, predictive_std, predictive_score])
         result.write()
+        rmse = rmse**2
+        rmse = rmse.sum(axis=0)/rmse.count(axis=0)
+        r2 = 1 - rmse
+        rmse = rmse**(1/2)
+        rmse = rmse if isinstance(rmse, pd.DataFrame) else pd.DataFrame(rmse).transpose()
+        r2 = r2 if isinstance(r2, pd.DataFrame) else pd.DataFrame(r2).transpose()
+        r2 = r2.rename(columns={'RMSE': 'R^2'}, level=0)
+        predictive_std = predictive_std.sum(axis=0)/predictive_std.count(axis=0)
+        predictive_std = predictive_std if isinstance(predictive_std, pd.DataFrame) else pd.DataFrame(predictive_std).transpose()
+        ci = (predictive_std.iloc[:].copy().rename(columns={'Predictive Std': '95% CI'}, level=0))
+        ci = ci * 2
+        outliers = predictive_score[predictive_score**2 > 4].count(axis=0)/predictive_score.count(axis=0)
+        outliers = outliers if isinstance(outliers, pd.DataFrame) else pd.DataFrame(outliers).transpose()
+        outliers = outliers.rename(columns={'Predictive Z Score': 'outliers'})
+        summary = rmse.join([r2, predictive_std, ci, outliers])
+        summary = Frame(self.test_summary_csv, summary)
         return result
 
     def broadcast_parameters(self, is_independent: bool, is_isotropic: bool, folder: Optional[PathLike] = None) -> GPInterface:

@@ -45,10 +45,6 @@ def FLOAT() -> Type:
 
 
 Numeric = Union[int, float]
-# OneOrMoreInts = Union[int, Sequence[int]]
-# ZeroOrMoreInts = Optional[OneOrMoreInts]
-# OneOrMoreFloats = Union[float, Sequence[float]]
-# ZeroOrMoreFloats = Optional[OneOrMoreFloats]
 PathLike = Union[str, Path]
 
 

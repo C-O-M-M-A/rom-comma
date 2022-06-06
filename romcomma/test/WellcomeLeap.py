@@ -24,22 +24,19 @@ import pandas as pd
 
 from romcomma.base.definitions import *
 from romcomma import run
-from romcomma.data.storage import Repository
-from romcomma.test.utilities import repo_folder
+from romcomma.data.storage import Fold, Repository, Frame
+from romcomma.test import functions, sampling
+import shutil
+import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\8.0')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\WellcomeLeap')
 
 
 if __name__ == '__main__':
-    with run.Context('Test', float='float64', device='CPU'):
-        for N in (500,):
-            for M in (5,):
-                for noise_magnitude in (0.1,):
-                    for is_rotated in (False, ):
-                        with run.Timing(f'N={N}, noise={noise_magnitude}'):
-                            repo = Repository(repo_folder(BASE_PATH, ['sin.1', 'sin.1'], N, M, noise_magnitude, is_noise_diagonal=True))
-                            run.gsa('sin', repo, is_independent=True, is_T_diagonal=False)
-                            run.gsa('sin', repo, is_independent=False, is_T_diagonal=False)
-                            run.gsa('sin', repo, is_independent=True)
-                            run.gsa('sin', repo, is_independent=False)
+    with run.Context('RNA Degradation'):
+        repo = Repository.from_csv(BASE_PATH / 'Repo.0.0', BASE_PATH / 'ExportToRepo.csv', index_col=0)
+        repo.into_K_folds(10)
+        run.gpr('initial', repo, is_read=None, is_isotropic=None, is_independent=True)
+        repo.aggregate_over_folds('initial.i.a', ['test_summary.csv'], header=[0, 1], index_col=0)
+        repo.aggregate_over_folds('initial.i.a\\likelihood', ['variance.csv'])
