@@ -111,17 +111,17 @@ class GSA(Model):
 
     @classmethod
     def _index(cls, shape: List[int]) -> pd.MultiIndex:
-        indices = [list(range(l)) for l in shape[:-1]]
-        # Because of the options is_S_diagonal and is_T_diagonal, a bit of work is required to get the index correct.
-        df = pd.MultiIndex.from_product(indices).to_frame(index=False)
-        if shape[0] == 1:
-            df.iloc[:, 0] = df.iloc[:, 1]
-        if len(indices) >= 4:
-            if shape[-2] == 1:
-                df.iloc[:, -2:] = df.iloc[:, :2]
-            elif shape[-3] == 1:
-                df.iloc[:, -2] = df.iloc[:, -1]
-        return pd.MultiIndex.from_frame(df, names=[f'l.{l}' for l in range(len(indices))])
+        shape = shape[:-1]
+        indices = [list(range(l)) for l in shape]
+        columns = len(shape)
+        df = pd.MultiIndex.from_product(indices, names=[f'l.{l}' for l in range(len(indices))]).to_frame()
+        df['diagonal'] = False
+        for row in range(df.shape[0]):
+            if columns == 2 and df.iloc[row, 0] == df.iloc[row, 1]:
+                df.iloc[row, -1] = True
+            elif columns == 4 and df.iloc[row, 0] == df.iloc[row, 2] and df.iloc[row, 1] == df.iloc[row, 3]:
+                df.iloc[row, -1] = True
+        return pd.MultiIndex.from_frame(df)
 
     def _m_dataset(self, kind: GSA.Kind, m: int, M: int) -> tf.data.Dataset:
         result = []
@@ -147,8 +147,7 @@ class GSA(Model):
         """
         options = self.OPTIONS | kwargs
         m, name = (m, f'{kind.name.lower()}.{m}') if 0 < m < gp.M else (-1, kind.name.lower())
-        for option in ('is_T_partial', 'is_T_diagonal'):
-            name += f'.{option.split("_")[-1][0]}' if options[option] else ''
+        name += '.p' if options['is_T_partial'] else ''
         folder = gp.folder / 'gsa' / name
         # Save Parameters and Options
         super().__init__(folder, read_parameters=False, m=m)

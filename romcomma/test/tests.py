@@ -39,7 +39,5 @@ if __name__ == '__main__':
                     for is_rotated in (False, ):
                         with run.Timing(f'N={N}, noise={noise_magnitude}'):
                             repo = Repository(repo_folder(BASE_PATH, ['sin.1', 'sin.1'], N, M, noise_magnitude, is_noise_diagonal=True))
-                            run.gsa('sin', repo, is_independent=True, is_T_diagonal=False)
-                            run.gsa('sin', repo, is_independent=False, is_T_diagonal=False)
                             run.gsa('sin', repo, is_independent=True)
                             run.gsa('sin', repo, is_independent=False)
