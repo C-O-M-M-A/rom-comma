@@ -74,10 +74,10 @@ class FunctionWithMeta:
 
     def __call__(self, X: NP.Matrix, **kwargs) -> NP.Matrix:
         kwargs.update(self.parameters)
-        return np.reshape(self._function(X * self._meta['noise_magnitude'] + self._meta['loc'], **kwargs), (X.shape[0], 1))
+        return np.reshape(self._function(X * self._meta['scale'] + self._meta['loc'], **kwargs), (X.shape[0], 1))
 
     def __init__(self, **kwargs):
-        self._meta = {key: kwargs.pop(key) for key in ('name', 'loc', 'noise_magnitude')}
+        self._meta = {key: kwargs.pop(key) for key in ('name', 'loc', 'scale')}
         self._function = kwargs.pop('function')
         self.parameters = kwargs.copy()
 

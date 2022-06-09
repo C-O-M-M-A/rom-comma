@@ -44,10 +44,6 @@ class Frame:
         return {'sep': ',', 'header': [0, 1], 'index_col': 0, }
 
     @property
-    def csv(self) -> Path:
-        return self._csv
-
-    @property
     def is_empty(self) -> bool:
         """ Defines the empty Frame as that having an empty Path."""
         return 0 == len(self._csv.parts)
@@ -56,6 +52,9 @@ class Frame:
         """ Write to csv, according to Frame.CSV_OPTIONS."""
         assert not self.is_empty, 'Cannot write when frame.is_empty.'
         self.df.to_csv(path_or_buf=self._csv, sep=Frame.CSV_OPTIONS['sep'], index=True)
+
+    def __repr__(self) -> Path:
+        return self._csv
 
     # noinspection PyDefaultArgument
     def __init__(self, csv: PathLike = Path(), df: pd.DataFrame = pd.DataFrame(), **kwargs):
