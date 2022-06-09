@@ -28,7 +28,7 @@ from romcomma.data.storage import Repository
 from romcomma.test.utilities import repo_folder
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\8.0')
+BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\8.1')
 
 
 if __name__ == '__main__':
