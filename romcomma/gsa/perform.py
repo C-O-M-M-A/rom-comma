@@ -76,6 +76,14 @@ class GSA(Model):
 
     @classmethod
     def _calculate(cls, kind: GSA.Kind, m_dataset: tf.data.Dataset, calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
+        """ Perform the GSA calculation.
+
+        Args:
+            kind: The Kind of GSA to perform.
+            m_dataset: The tf.Dataset of slices to iterate through.
+            calculate: The ``calculate.ClosedIndex`` object to do the calculations.
+        Returns: The results of the calculation, as a labelled dictionary of tf.Tensors.
+        """
         first_iteration = True
         for m in m_dataset:
             result = calculate.marginalize(m)
@@ -95,14 +103,31 @@ class GSA(Model):
         return results
 
     @classmethod
-    def _compose_and_save(cls, path: Path, value: TF.Tensor, m: int, M: int):
+    def _compose_and_save(cls, csv: Path, value: TF.Tensor, m: int, M: int):
+        """ Compose and Save a GSA results tf.Tensor.
+
+        Args:
+            csv: The path to save to.
+            value: The tf.Tensor of results to compose and save.
+            m: The dimensionality of the reduced model.
+            M: The dimensionality of the full model.
+        """
         m_list = list(range(M)) if m < 0 else [m]
         shape = value.shape.as_list()
         df = pd.DataFrame(tf.reshape(value, [-1, shape[-1]]).numpy(), columns=cls._columns(M, shape[-1], m_list), index=cls._index(shape))
-        df.to_csv(path, float_format='%.6f')
+        df.to_csv(csv, float_format='%.6f')
 
     @classmethod
     def _columns(cls, M: int, m_cols: int, m_list: List[int]) -> pd.Index:
+        """ Index pd.DataFrame columns for output.
+
+        Args:
+            M: The dimensionality of the full model.
+            m_cols: The number of input columns covering ``m``.
+            m_list: The list of input columns covering ``m``.
+        Returns: A pd.Index of column labels (integers).
+
+        """
         if m_cols > len(m_list):
             m_list = m_list + [M]
         if m_cols > len(m_list):
@@ -111,6 +136,12 @@ class GSA(Model):
 
     @classmethod
     def _index(cls, shape: List[int]) -> pd.MultiIndex:
+        """ Index a pd.DataFrame for output.
+
+        Args:
+            shape: The shape of the pd.DataFrame to index.
+        Returns: The pd.MultiIndex to index the pd.DataFrame
+        """
         shape = shape[:-1]
         indices = [list(range(l)) for l in shape]
         columns = len(shape)
@@ -124,6 +155,14 @@ class GSA(Model):
         return pd.MultiIndex.from_frame(df)
 
     def _m_dataset(self, kind: GSA.Kind, m: int, M: int) -> tf.data.Dataset:
+        """ ``m`` as a tf.Dataset for iteration.
+
+        Args:
+            kind: A GSA.Kind specifying the kind of GSA.
+            m: The dimensionality of the reduced model.
+            M: The dimensionality of the full model.
+        Returns: A dataset of slices to iterate through to perform th GSA.
+        """
         result = []
         ms = range(M) if m < 0 else [m]
         if kind == GSA.Kind.FIRST_ORDER:
@@ -133,6 +172,12 @@ class GSA(Model):
         elif kind == GSA.Kind.TOTAL:
             result = [tf.constant([m + 1, M + 1], dtype=INT()) for m in ms]
         return tf.data.Dataset.from_tensor_slices(result)
+
+    def __repr__(self) -> str:
+        return str(self.folder)
+
+    def __str__(self) -> str:
+        return self.folder.name
 
     def __init__(self, gp: GPInterface, kind: GSA.Kind, m: int = -1, **kwargs: Any):
         """ Perform a Sobol GSA. The object created is single use and disposable: the constructor performs and records the entire GSA and the

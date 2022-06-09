@@ -140,6 +140,12 @@ class Parameters(ABC):
         tuple(Frame(self._csvs[i], pd.DataFrame(p)) for i, p in enumerate(self._values))
         return self
 
+    def __repr__(self) -> str:
+        return str(self._folder)
+
+    def __str__(self) -> str:
+        return self._folder.name
+
     def __init__(self, folder: Optional[PathLike] = None, **kwargs: NP.Matrix):
         """ Parameters Constructor. Shouldn't need to be overridden. Does not write to file.
 
@@ -161,6 +167,19 @@ class Model(ABC):
 
     A Model also may include an optimize method taking options stored in an options.json file, which default to cls.OPTIONS.
     """
+
+    class Parameters(Parameters):
+        """ This is a placeholder which must be overridden in any implementation."""
+
+        @classmethod
+        @property
+        def Values(cls) -> Type[NamedTuple]:
+
+            class Values(NamedTuple):
+                """ The parameters set of a Model."""
+                NotImplemented: NP.Matrix = np.atleast_2d('Not Implemented')
+
+            return Values
 
     @staticmethod
     def delete(folder: PathLike, ignore_errors: bool = True):
@@ -218,13 +237,19 @@ class Model(ABC):
         with open(self._options_json, mode='w') as file:
             json.dump(options, file, indent=8)
 
+    def __repr__(self) -> str:
+        return str(self._folder)
+
+    def __str__(self) -> str:
+        return self._folder.name
+
     @abstractmethod
     def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
         """ Model constructor, to be called by all subclasses as a matter of priority.
 
         Args:
             folder: The model file location.
-            read_parameters: If True, the model.parameters are read from ``folder``, otherwise defaults are used.
+            read_parameters: If True, the ``model.parameters`` are read from ``folder``, otherwise defaults are used.
             **kwargs: The model.parameters fields=values to replace after reading from file/defaults.
         """
         self._folder = Path(folder)

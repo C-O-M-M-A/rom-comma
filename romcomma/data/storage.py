@@ -23,8 +23,6 @@
 
 from __future__ import annotations
 
-import pandas as pd
-
 from romcomma.base.definitions import *
 from copy import deepcopy
 import itertools
@@ -37,11 +35,16 @@ import json
 
 class Frame:
     """ Encapsulates a pd.DataFrame (df) backed by a source file."""
+
     @classmethod
     @property
     def CSV_OPTIONS(cls) -> Dict[str, Any]:
         """ The default options (kwargs) to pass to pandas.pd.read_csv."""
         return {'sep': ',', 'header': [0, 1], 'index_col': 0, }
+
+    @property
+    def csv(self) -> Path:
+        return self._csv
 
     @property
     def is_empty(self) -> bool:
@@ -53,8 +56,11 @@ class Frame:
         assert not self.is_empty, 'Cannot write when frame.is_empty.'
         self.df.to_csv(path_or_buf=self._csv, sep=Frame.CSV_OPTIONS['sep'], index=True)
 
-    def __repr__(self) -> Path:
-        return self._csv
+    def __repr__(self) -> str:
+        return str(self._csv)
+
+    def __str__(self) -> str:
+        return self._csv.name
 
     # noinspection PyDefaultArgument
     def __init__(self, csv: PathLike = Path(), df: pd.DataFrame = pd.DataFrame(), **kwargs):
@@ -194,7 +200,7 @@ class Repository:
         Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         return K
 
-    def aggregate_over_folds(self, child_path: Union[Path, str], csvs: Sequence[str], is_K_included: bool=False, ignore_missing: bool = False, **kwargs: Any):
+    def aggregate_over_folds(self, child_path: Union[Path, str], csvs: Sequence[str], is_K_included: bool = False, ignore_missing: bool = False, **kwargs: Any):
         """ Aggregate csv files over the Folds in this Repo.
 
         Args:
@@ -210,17 +216,17 @@ class Repository:
         if not (is_K_included or self.K > 1):
             raise NotADirectoryError('Fold K is not included in this aggregation, but here are no Folds other than K here because K is 1.')
         child_path = Path(child_path)
-        dst = self._folder/child_path
+        dst = self._folder / child_path
         shutil.rmtree(dst, ignore_errors=True)
         dst.mkdir(mode=0o777, parents=True, exist_ok=False)
         rng = self.folds if is_K_included else range(self.K)
         for csv in csvs:
             results = None
-            is_initial=True
+            is_initial = True
             for k in rng:
                 fold = Fold(self, k)
-                if (fold.folder/child_path/csv).exists() or not ignore_missing:
-                    result = pd.read_csv(fold.folder/child_path/csv, **kwargs)
+                if (fold.folder / child_path / csv).exists() or not ignore_missing:
+                    result = pd.read_csv(fold.folder / child_path / csv, **kwargs)
                     result.insert(0, 'fold', np.full(result.shape[0], k), True)
                     result.insert(0, 'N', np.full(result.shape[0], fold.N), True)
                     if is_initial:
@@ -228,10 +234,10 @@ class Repository:
                         is_initial = False
                     else:
                         results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
-            results.to_csv(dst/csv, **{'index': False, 'float_format': '%.6f'})
+            results.to_csv(dst / csv, **{'index': False, 'float_format': '%.6f'})
 
     def fold_folder(self, k: int) -> Path:
-        return self.folder / f'fold.{k:d}'
+        return self._folder / f'fold.{k:d}'
 
     def Y_split(self):
         """Split this Repository into L Y_splits. Each Y.l is just a Repository containing the lth output only.
@@ -257,10 +263,17 @@ class Repository:
         """ Lists the index and path of every Y_split in this Repository."""
         return [(int(Y_dir.suffix[1:]), Y_dir) for Y_dir in self.folder.glob('Y.[0-9]*')]
 
+    # noinspection PyArgumentList
     class _InitMode(IntEnum):
         READ_META_ONLY = auto()
         READ = auto()
         CREATE = auto()
+
+    def __repr__(self) -> str:
+        return str(self._folder)
+
+    def __str__(self) -> str:
+        return self._folder.name
 
     def __init__(self, folder: PathLike, **kwargs):
         self._folder = Path(folder)
@@ -289,7 +302,7 @@ class Repository:
         Args:
             folder: The location (folder) of the Repository.
             df: The data to record in [Return].csv.
-            meta: The meta data to record in [Return].meta.json.
+            meta: The metadata to record in [Return].meta.json.
         Returns: A new Repository.
         """
         repo = Repository(folder, init_mode=Repository._InitMode.CREATE)
@@ -310,7 +323,7 @@ class Repository:
         Args:
             folder: The location (folder) of the target Repository.
             csv: The file containing the data to record in [Return].csv.
-            meta: The meta data to record in [Return].meta.json.
+            meta: The metadata to record in [Return].meta.json.
             kwargs: Updates Repository.CSV_OPTIONS for reading the csv file, as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html.
         Returns: A new Repository located in folder.
@@ -318,7 +331,7 @@ class Repository:
         csv = Path(csv)
         origin_csv_kwargs = cls.CSV_OPTIONS | kwargs
         data = Frame(csv, **origin_csv_kwargs)
-        meta = cls.META  if meta is None else cls.META | meta
+        meta = cls.META if meta is None else cls.META | meta
         meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
         return cls.from_df(folder, data.df, meta)
 
@@ -423,6 +436,7 @@ class Normalization:
         X data is assumed to follow a Uniform distribution, which is normalized to U[0,1] , then inverse probability transformed to N[0,1].
         Y data is normalized to zero mean and unit variance.
     """
+
     @classmethod
     @property
     def UNIFORM_MARGIN(cls) -> float:
@@ -453,7 +467,7 @@ class Normalization:
         X_min, X_rng, Y_mean, Y_std = self._relevant_stats
         X = df.iloc[:, :self._fold.M].copy(deep=True)
         Y = df.iloc[:, self._fold.M:].copy(deep=True)
-        X = X.sub(X_min, axis=1).div(X_rng, axis=1).clip(lower=self.UNIFORM_MARGIN, upper=1-self.UNIFORM_MARGIN)
+        X = X.sub(X_min, axis=1).div(X_rng, axis=1).clip(lower=self.UNIFORM_MARGIN, upper=1 - self.UNIFORM_MARGIN)
         X.iloc[:, :] = scipy.stats.norm.ppf(X, loc=0, scale=1)
         Y = Y.sub(Y_mean, axis=1).div(Y_std, axis=1)
         return pd.concat((X, Y), axis=1)
@@ -473,6 +487,12 @@ class Normalization:
         X = X.mul(X_rng, axis=1).add(X_min, axis=1)
         Y = Y.mul(Y_std, axis=1).add(Y_mean, axis=1)
         return pd.concat((X, Y), axis=1)
+
+    def __repr__(self) -> str:
+        return str(self.csv)
+
+    def __str__(self) -> str:
+        return self.csv.name
 
     def __init__(self, fold: Fold, data: Optional[pd.DataFrame] = None):
         """ Initialize this Normalization. If the fold has already been Normalized, that Normalization is returned.
