@@ -110,7 +110,7 @@ def repo_folder(base_path: PathLike, function_names: Union[str, Sequence[str]], 
 # noinspection PyShadowingNames
 def sample(base_path: PathLike, function_names: Union[str, Sequence[str]], N: int, M: int, K: int, 
            noise_magnitude: float, is_noise_diagonal: bool = False, is_noise_variance_stochastic: bool = False, 
-           is_input_rotated: bool = False, is_rotation_undone: bool = False):
+           is_input_rotated: bool = False, is_rotation_undone: bool = False) -> Repository:
     """
     
     Args:
@@ -132,7 +132,9 @@ def sample(base_path: PathLike, function_names: Union[str, Sequence[str]], N: in
         rotation = np.eye(M)
     function_names = [function_names] if isinstance(function_names, str) else function_names
     functions_with_meta = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
-    repo = functions.sample(functions_with_meta, N, M, 
-                            noise_variance(len(function_names), noise_magnitude, is_noise_diagonal, is_noise_variance_stochastic), 
-                            repo_folder(base_path, function_names, N, M, noise_magnitude, is_noise_diagonal, is_noise_variance_stochastic, is_input_rotated))
-    fold_and_rotate(repo, K, rotation, is_rotation_undone)
+    repo = fold_and_rotate(functions.sample(functions_with_meta, N, M,
+                                            noise_variance(len(function_names), noise_magnitude, is_noise_diagonal, is_noise_variance_stochastic),
+                                            repo_folder(base_path, function_names, N, M, noise_magnitude, is_noise_diagonal, is_noise_variance_stochastic,
+                                                        is_input_rotated)),
+                           K, rotation, is_rotation_undone)
+    return repo

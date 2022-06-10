@@ -99,7 +99,7 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
             gpr(name, Fold(repo, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
     else:
         if is_independent is None:
-            gpr(name, repo, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, **kwargs)
+            gpr(name, repo, is_read, True if is_isotropic is True else None, True, kernel_parameters, parameters, optimize, test, **kwargs)
             gpr(name, repo, None, is_isotropic, False, kernel_parameters, parameters, optimize, test, **kwargs)
         else:
             full_name = name + ('.i' if is_independent else '.d')

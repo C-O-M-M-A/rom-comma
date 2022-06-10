@@ -20,15 +20,14 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Contains developer tests of romcomma. """
-import pandas as pd
 
 from romcomma.base.definitions import *
 from romcomma import run
-from romcomma.data.storage import Repository
-from romcomma.test.utilities import repo_folder, sample
+from romcomma.test.utilities import sample
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\10.0')
+# BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\10.0')
+BASE_PATH = Path('.\\installation_test')
 
 
 if __name__ == '__main__':
@@ -41,6 +40,6 @@ if __name__ == '__main__':
                             repo = sample(BASE_PATH, ['sin.1', 'sin.1'], N, M, K=1,
                                           noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=False)
                             # repo = Repository(repo_folder(BASE_PATH, ['sin.1', 'sin.1'], N, M, noise_magnitude, is_noise_diagonal=False))
-                            # run.gpr()
+                            run.gpr(repo, None, )
                             # run.gsa('sin', repo, is_independent=True)
                             # run.gsa('sin', repo, is_independent=False)

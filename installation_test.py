@@ -22,41 +22,27 @@
 """ Run this module first thing, to test_data your installation of romcomma. """
 
 from romcomma.base.definitions import *
-from romcomma.data.storage import Fold, Store
-from test.functions import Matrix, FunctionWithParameters, functions_of_normal
-from numpy import eye, savetxt, transpose
-from pathlib import Path
-from scipy.stats import ortho_group
-
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\0.0')
+from romcomma import run
+from romcomma.test.utilities import sample
 
 
-# noinspection PyShadowingNames
-def run_gps(name, function_name: Sequence[str], N: int, noise_std: float, random: bool, M: int = 5, K: int = 2):
-    if isinstance(function_name, str):
-        function_name = [function_name]
-    store_dir = '.'.join(function_name) + f'.{M:d}.{noise_std:.3f}.{N:d}'
-    if random:
-        lin_trans = ortho_group.rvs(M)
-        input_transform = FunctionWithParameters(function_= Matrix.multiply, parameters_={'matrix': lin_trans})
-        store_dir += '.random'
-    else:
-        lin_trans = eye(M)
-        input_transform = None
-        store_dir += '.rom'
-    store_dir = BASE_PATH / store_dir
-    CDF_loc, CDF_scale, functions = FunctionWithParameters.default(function_name)
-    store = functions_of_normal(store_dir=store_dir, N=N, M=M, CDF_loc=CDF_loc, CDF_scale=CDF_scale,
-                                input_transform=input_transform, functions=functions, noise_std=noise_std)
-    savetxt(store.folder / 'InverseRotation.csv', transpose(lin_trans))
-    Fold.into_K_folds(parent=store, K=K, shuffled_before_folding=False, standard=Store.Standard.mean_and_std, replace_empty_test_with_data_=True)
-    run.gpr(name=name, store=store, M=M, is_read=False, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
-            optimize=True, test=True)
+BASE_PATH = Path('.\\installation_test')
 
 
 if __name__ == '__main__':
-    with run.Context('Test'):
-        for N in (800,):
-            for noise_std in (0,):
-                for random in (False,):
-                    run_gps('initial', ['sin.2', 'sin.1'], N, noise_std, random, M=2)
+    with run.Context('Test', float='float64', device='CPU'):
+        for N in (500,):
+            for M in (5,):
+                for noise_magnitude in (0.1,):
+                    for is_rotated in (False, ):
+                        with run.Timing(f'sample generation for N={N}, noise={noise_magnitude}'):
+                            repo = sample(BASE_PATH, ['sin.1', 'sin.1'], N, M, K=1,
+                                          noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=False)
+                            # repo = Repository(repo_folder(BASE_PATH, ['sin.1', 'sin.1'], N, M, noise_magnitude, is_noise_diagonal=False))
+                        with run.Timing(f'Gaussian Process Regression for N={N}, noise={noise_magnitude}'):
+                            run.gpr(name='test', repo=repo, is_read=None, is_isotropic=False, is_independent=None, optimize=True, test=True)
+                        with run.Timing(f'Global Sensitivity Analysis for N={N}, noise={noise_magnitude}'):
+                            run.gsa(name='test', repo=repo, is_independent=True)
+                            run.gsa(name='test', repo=repo, is_independent=False)
+                            # run.gsa('sin', repo, is_independent=True)
+                            # run.gsa('sin', repo, is_independent=False)
