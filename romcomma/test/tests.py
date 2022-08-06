@@ -20,26 +20,93 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Contains developer tests of romcomma. """
+import pandas as pd
 
 from romcomma.base.definitions import *
-from romcomma import run
-from romcomma.test.utilities import sample
+from romcomma import run, data
+from romcomma.test.utilities import repo_folder
+from romcomma.test.sampling import latin_hypercube
+
+# BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\DependentGPR')
+BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SiPM')
 
 
-# BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\10.0')
-BASE_PATH = Path('.\\installation_test')
-
-
+"""
 if __name__ == '__main__':
     with run.Context('Test', float='float64', device='CPU'):
-        for N in (500,):
+        aggregators = []
+        for N in (1000,):
             for M in (5,):
-                for noise_magnitude in (0.1,):
+                for noise_magnitude in (0.5,):
                     for is_rotated in (False, ):
-                        with run.Timing(f'N={N}, noise={noise_magnitude}'):
-                            repo = sample(BASE_PATH, ['sin.1', 'sin.1'], N, M, K=1,
-                                          noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=False)
-                            # repo = Repository(repo_folder(BASE_PATH, ['sin.1', 'sin.1'], N, M, noise_magnitude, is_noise_diagonal=False))
-                            run.gpr(repo, None, )
-                            # run.gsa('sin', repo, is_independent=True)
-                            # run.gsa('sin', repo, is_independent=False)
+                        for broadcast_fraction in ('0.0', '0.1', '0.2', '0.3', '0.4', '0.45', '0.49'):
+                            with run.Timing(f'N={N}, noise={noise_magnitude}'):
+                                repo = data.storage.Repository(repo_folder(BASE_FOLDER / broadcast_fraction, ['sin.1', 'sin.1', 'sin.2'],
+                                                                           N, M, noise_magnitude, is_noise_diagonal=False))
+                                run.gsa('initial', repo, False)
+"""
+
+if __name__ == '__main__':
+    values = latin_hypercube(100, 3)
+    result = pd.DataFrame(values)
+    result.to_csv(BASE_FOLDER / 'latin_hypercube.csv')
+
+"""
+if __name__ == '__main__':
+        with run.Context('Test', float='float64'):
+        aggregators = []
+        csvs = ['S.csv', 'T.csv', 'V.csv', 'Wmm.csv']
+        child_path = Path('initial.d.a\\gsa\\first_order.p')
+        for N in (1000,):
+            for M in (5,):
+                for noise_magnitude in (0.5,):
+                    for is_rotated in (False, ):
+                        for broadcast_fraction in ('0.0', '0.1', '0.2', '0.3', '0.4', '0.45', '0.49'):
+                            with run.Timing(f'N={N}, noise={noise_magnitude}'):
+                                repo = repo_folder(BASE_FOLDER / broadcast_fraction, ['sin.1', 'sin.1', 'sin.2'], N, M, noise_magnitude, is_noise_diagonal=False)
+                                data.storage.Repository(repo).aggregate_over_folds(child_path, csvs, is_K_included=True, header=0)
+                                aggregators.append({'folder': repo / child_path, 'broadcast_fraction': float(broadcast_fraction)})
+
+        run.aggregate(dict.fromkeys(csvs, aggregators),
+                      BASE_FOLDER / Path('initial.d.a\\gsa\\first_order.p'), header=0)
+                                # repo = Repository(repo_folder(BASE_FOLDER, ['sin.1', 'sin.1'], N, M, noise_magnitude, is_noise_diagonal=False))
+                                # run.gpr2(name='initial', repo=repo, is_read=None, is_isotropic=None, is_independent=False,
+                                #          broadcast_fraction=float(broadcast_fraction), optimize=False, test=True)
+                                # run.gsa('sin', repo, is_independent=True)
+                                # run.gsa('sin', repo, is_independent=False)
+
+"""
+"""
+if __name__ == '__main__':
+    with run.Context('Test', float='float64'):
+        for N in (1000,):
+            for M in (5,):
+                for noise_magnitude in (0.5,):
+                    for is_rotated in (False, ):
+                        for broadcast_fraction in ('0.0', '0.1', '0.2', '0.3', '0.4', '0.45', '0.49'):
+                            with run.Timing(f'N={N}, noise={noise_magnitude}'):
+                                repo = data.storage.Repository(repo_folder(BASE_FOLDER / broadcast_fraction, ['sin.1', 'sin.1', 'sin.2'], N, M,
+                                              noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=False))
+                                repo.aggregate_over_folds('initial.d.a', ['test_summary.csv'], is_K_included=True, header=[0, 1])
+                                # repo = Repository(repo_folder(BASE_FOLDER, ['sin.1', 'sin.1'], N, M, noise_magnitude, is_noise_diagonal=False))
+                                # run.gpr2(name='initial', repo=repo, is_read=None, is_isotropic=None, is_independent=False,
+                                #          broadcast_fraction=float(broadcast_fraction), optimize=False, test=True)
+                                # run.gsa('sin', repo, is_independent=True)
+                                # run.gsa('sin', repo, is_independent=False)
+"""
+"""
+if __name__ == '__main__':
+    with run.Context('Test', float='float64'):
+        for N in (1000,):
+            for M in (5,):
+                for noise_magnitude in (0.5,):
+                    for is_rotated in (False, ):
+                        for broadcast_fraction in ('0.0', '0.1', '0.2', '0.4', '0.6', '0.8', '0.99'):
+                            with run.Timing(f'N={N}, noise={noise_magnitude}'):
+                                repo = sample(BASE_FOLDER, ['sin.1', 'sin.1', 'sin.2'], N, M, K=2,
+                                              noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=False)
+                                # repo = Repository(repo_folder(BASE_FOLDER, ['sin.1', 'sin.1'], N, M, noise_magnitude, is_noise_diagonal=False))
+                                run.gpr(name='initial', repo=repo, is_read=None, is_isotropic=None, is_independent=True, optimize=True, test=True)
+                                # run.gsa('sin', repo, is_independent=True)
+                                # run.gsa('sin', repo, is_independent=False)
+"""

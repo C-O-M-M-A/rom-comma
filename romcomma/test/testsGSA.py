@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\9s\\9.5')
+BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\9s\\9.5')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -106,24 +106,24 @@ def repo_folder(function_names: Sequence[str], N: int, noise_label: str, random:
     folder = '.'.join(function_names) + f'.{M:d}.{noise_label}.{N:d}'
     if random:
         folder += '.rotated'
-    return BASE_PATH / folder
+    return BASE_FOLDER / folder
 
 
 def noise_label(noise_magnitude: float) -> str:
     return f'{noise_magnitude:.3f}'
 
 
-def aggregator(child_path: Union[Path, str], function_names: Sequence[str], N: int, noise_magnitude: float, random: bool, M: int = 5) -> Dict[str, Any]:
-    return {'path': repo_folder(function_names, N, noise_label(noise_magnitude), random, M) / child_path, 'N': N, 'noise': noise_magnitude}
+def aggregator(child_folder: Union[Path, str], function_names: Sequence[str], N: int, noise_magnitude: float, random: bool, M: int = 5) -> Dict[str, Any]:
+    return {'folder': repo_folder(function_names, N, noise_label(noise_magnitude), random, M) / child_folder, 'N': N, 'noise': noise_magnitude}
 
 
 def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path, str], **kwargs):
     """ Aggregate csv files over aggregators.
 
     Args:
-        aggregators: A Dict of aggregators, keyed by csv filename. An aggregator is a List of Dicts containing source path ['path']
-            and {key: value} to insert column 'key' and populate it with 'value' in path/csv.
-        dst: The destination path, to which csv files listed as the keys in aggregators.
+        aggregators: A Dict of aggregators, keyed by csv filename. An aggregator is a List of Dicts containing source folder ['folder']
+            and {key: value} to insert column 'key' and populate it with 'value' in folder/csv.
+        dst: The destination folder, to which csv files listed as the keys in aggregators.
         **kwargs: Write options passed directly to pd.Dataframe.to_csv(). Overridable defaults are {'index': False, 'float_format':'%.6f'}
     """
     dst = Path(dst)
@@ -133,7 +133,7 @@ def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path,
         is_initial = True
         results = None
         for file in aggregator:
-            result = pd.read_csv(Path(file.pop('path'))/csv)
+            result = pd.read_csv(Path(file.pop('folder'))/csv)
             for key, value in file.items():
                 result.insert(0, key, np.full(result.shape[0], value), True)
             if is_initial:

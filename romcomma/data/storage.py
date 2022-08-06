@@ -209,7 +209,7 @@ class Repository:
             csvs: A list of the csv files to aggregate.
             is_K_included: Whether to in include Fold K, which is always the union of all the other folds.
             ignore_missing: Whether to suppress missing FileNotFoundError.
-            **kwargs: Write options passed directly to pd.Dataframe.to_csv(). Overridable defaults are {'index': False, 'float_format':'%.6f'}
+            **kwargs: Read options passed directly to pd.read_csv(). Overridable defaults are {'index': False, 'float_format':'%.6f'}
         """
         if isinstance(self, Fold):
             raise NotADirectoryError('A Fold cannot contain other Folds, so cannot be aggregated over.')

@@ -20,23 +20,19 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Contains developer tests of romcomma. """
-import pandas as pd
 
 from romcomma.base.definitions import *
-from romcomma import run
-from romcomma.data.storage import Fold, Repository, Frame
-from romcomma.test import functions, sampling
-import shutil
-import scipy.stats
+from romcomma import run, data
+from romcomma.test.sampling import add_gaussian_noise
 
 
-BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\WellcomeLeap')
+BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\Peter35\\17')
 
 
 if __name__ == '__main__':
-    with run.Context('RNA Degradation'):
-        repo = Repository.from_csv(BASE_FOLDER / 'Repo.0.0', BASE_FOLDER / 'ExportToRepo.csv', index_col=0)
-        repo.into_K_folds(10)
-        run.gpr('initial', repo, is_read=None, is_isotropic=None, is_independent=True)
-        repo.aggregate_over_folds('initial.i.a', ['test_summary.csv'], header=[0, 1], index_col=0)
-        repo.aggregate_over_folds('initial.i.a\\likelihood', ['variance.csv'])
+    with run.Context('Test', float='float64'):
+        csvs = {'0': '1st17.csv', '1': '2nd17.csv'}
+        for segment in ('0', '1'):
+            repo = data.storage.Repository.from_csv(BASE_FOLDER / segment, BASE_FOLDER / csvs[segment])
+            repo.into_K_folds(2)
+            run.gpr(name='initial', repo=repo, is_read=None, is_isotropic=False, is_independent=True, optimize=True, test=True)

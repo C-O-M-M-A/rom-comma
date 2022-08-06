@@ -20,10 +20,11 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Contains Sampling and Design of Experiments functionality.
-
+import numpy as np
 
 from romcomma.base.definitions import *
 import scipy.stats
+from romcomma.data.storage import Repository, Fold
 
 
 def latin_hypercube(N: int, M: int, is_centered: bool = True):
@@ -56,3 +57,26 @@ def multivariate_gaussian_noise(N: int, variance: NP.MatrixLike) -> NP.Matrix:
     result = scipy.stats.multivariate_normal.rvs(mean=None, cov=variance, size=N)
     result.shape = (N, variance.shape[1])
     return result
+
+
+def add_gaussian_noise(repo: Repository, noise_variance: NP.MatrixLike):
+    """ Add gaussian noise to the folds in repo.
+
+    Args:
+        repo: A Repository containing folds.
+        noise_variance: The noise covariance matrix. If a matrix is not supplied, the argument is broadcast to a diagonal matrix.
+    """
+    noise_variance = np.atleast_2d(noise_variance)
+    if noise_variance.shape == (1,1):
+        noise_variance = np.broadcast_to(noise_variance, (1, repo.L))
+    if noise_variance.shape in ((1, repo.L), (repo.L, 1)):
+        noise_variance = noise_variance.reshape((repo.L))
+        noise_variance = np.diag(noise_variance)
+    elif noise_variance.shape != ((repo.L, repo.L)):
+        raise IndexError(f'noise_variance shape {noise_variance.shape} must be broadcastable '
+                         f'to one of ((1,1), (1, {repo.L}), ({repo.L}, 1), ({repo.L}, {repo.L}))')
+    for k in repo.folds:
+        fold = Fold(repo, k)
+        values = np.concatenate((fold.X, fold.Y + multivariate_gaussian_noise(fold.N, noise_variance)), axis=1)
+        fold.data.df.iloc[:, :] = values
+        fold.data.write()

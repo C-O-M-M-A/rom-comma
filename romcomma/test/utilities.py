@@ -86,12 +86,12 @@ def noise_label(noise_magnitude: float, is_diagonal: bool = False, is_stochastic
     return f'{prefix}{noise_magnitude:.3f}'
 
 
-def repo_folder(base_path: PathLike, function_names: Union[str, Sequence[str]], N: int, M: int, 
+def repo_folder(base_folder: PathLike, function_names: Union[str, Sequence[str]], N: int, M: int,
                 noise_magnitude: float, is_noise_diagonal: bool = False, is_noise_variance_stochastic: bool = False, is_input_rotated: bool = False) -> Path:
     """ Construct the folder of a test repo from information regarding the test sample and test functions.
 
     Args:
-        base_path: The base path under which the folder will sit.
+        base_folder: The base folder under which the folder will sit.
         function_names: A sequence of test.functions names.
         N: The number of datapoints in the sample.
         M: The input dimensionality.
@@ -104,17 +104,17 @@ def repo_folder(base_path: PathLike, function_names: Union[str, Sequence[str]], 
     if isinstance(function_names, str):
         function_names = [function_names]
     folder = '.'.join(function_names) + f'.M.{M:d}.{noise_label(noise_magnitude, is_noise_diagonal, is_noise_variance_stochastic)}.N.{N:d}'
-    return Path(base_path) / (folder + '.r' if is_input_rotated else folder)
+    return Path(base_folder) / (folder + '.r' if is_input_rotated else folder)
 
 
 # noinspection PyShadowingNames
-def sample(base_path: PathLike, function_names: Union[str, Sequence[str]], N: int, M: int, K: int, 
+def sample(base_folder: PathLike, function_names: Union[str, Sequence[str]], N: int, M: int, K: int,
            noise_magnitude: float, is_noise_diagonal: bool = False, is_noise_variance_stochastic: bool = False, 
            is_input_rotated: bool = False, is_rotation_undone: bool = False) -> Repository:
     """
     
     Args:
-        base_path: The base path under which the repo folder will sit.
+        base_folder: The base folder under which the repo folder will sit.
         function_names: A sequence of test.functions names.
         N: The number of datapoints in the sample.
         M: The input dimensionality.
@@ -134,7 +134,28 @@ def sample(base_path: PathLike, function_names: Union[str, Sequence[str]], N: in
     functions_with_meta = tuple((functions.FunctionWithMeta.DEFAULT[function_name] for function_name in function_names))
     repo = fold_and_rotate(functions.sample(functions_with_meta, N, M,
                                             noise_variance(len(function_names), noise_magnitude, is_noise_diagonal, is_noise_variance_stochastic),
-                                            repo_folder(base_path, function_names, N, M, noise_magnitude, is_noise_diagonal, is_noise_variance_stochastic,
+                                            repo_folder(base_folder, function_names, N, M, noise_magnitude, is_noise_diagonal, is_noise_variance_stochastic,
                                                         is_input_rotated)),
                            K, rotation, is_rotation_undone)
     return repo
+
+
+def aggregator(base_folder: Union[Path, str], child_folder: Union[Path, str], function_names: Sequence[str],
+               N: int, M: int, noise_magnitude: float, is_noise_diagonal: bool = False, is_noise_variance_stochastic: bool = False,
+               is_input_rotated: bool = False) -> Dict[str, Any]:
+    """ Construct an aggregator Dict for a repo_folder(...).
+
+    Args:
+        base_folder: The base folder containing the repo, under which the output will also sit.
+        child_folder: The child folder within the repo where the .csv to aggregate sits. The aggregate will sit under  base_folder/child_folder
+        function_names: A sequence of test.functions names.
+        N: The number of datapoints in the sample.
+        M: The input dimensionality.
+        noise_magnitude: The StdDev of noise.
+        is_noise_diagonal: True for a diagonal noise variance matrix.
+        is_noise_variance_stochastic: True for a random noise covariance matrix.
+        is_input_rotated: True to randomly rotate the inputs.
+    Returns: The aggregator for the repo_folder specified.
+    """
+    return {'folder': repo_folder(base_folder, function_names, N, M, noise_magnitude, is_noise_diagonal, is_noise_variance_stochastic, is_input_rotated)
+                      / child_folder, 'N': N, 'noise': noise_magnitude}

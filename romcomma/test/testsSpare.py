@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_PATH = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\7.5')
+BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\7.5')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -64,7 +64,7 @@ def run_gpr(name, function_names: Sequence[str], N: int, noise_variance: [float]
         store_folder += '.rotated'
     else:
         rotation = np.eye(M)
-    store_folder = BASE_PATH / store_folder
+    store_folder = BASE_FOLDER / store_folder
     repo = functions.sample(f, N, M, noise_variance, store_folder)
     # fold_and_rotate_with_tests(repo, K, rotation)
     fold_and_rotate(repo, K, rotation)
@@ -82,7 +82,7 @@ def run_gpr_gsa(name, function_names: Sequence[str], N: int, noise_variance: [fl
         store_folder += '.rotated'
     else:
         rotation = np.eye(M)
-    store_folder = BASE_PATH / store_folder
+    store_folder = BASE_FOLDER / store_folder
     repo = functions.sample(f, N, M, noise_variance, store_folder)
     # fold_and_rotate_with_tests(repo, K, rotation)
     fold_and_rotate(repo, K, rotation)
@@ -98,7 +98,7 @@ def compare_gpr(name, function_names: Sequence[str], N: int, noise_variance: [fl
     store_folder = '.'.join(function_names) + f'.{M:d}.{noise_label}.{N:d}'
     if random:
         store_folder += '.rotated'
-    store_folder = BASE_PATH / store_folder
+    store_folder = BASE_FOLDER / store_folder
     repo = Repository(store_folder)
     run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
             optimize=True, test=True, analyze=False)
@@ -111,7 +111,7 @@ def run_gsa(name, function_names: Sequence[str], N: int, noise_variance: [float]
     store_folder = '.'.join(function_names) + f'.{M:d}.{noise_label}.{N:d}'
     if random:
         store_folder += '.rotated'
-    store_folder = BASE_PATH / store_folder
+    store_folder = BASE_FOLDER / store_folder
     repo = Repository(store_folder)
     run.gpr(name=name, repo=repo, is_read=None, is_isotropic=False, is_independent=True, kernel_parameters=None, parameters=None,
             optimize=False, test=False, analyze=True)

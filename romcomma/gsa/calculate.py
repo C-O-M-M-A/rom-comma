@@ -23,8 +23,6 @@
 
 from __future__ import annotations
 
-import self as self
-
 from romcomma.base.definitions import *
 from romcomma.gpr.models import GPInterface
 from abc import ABC

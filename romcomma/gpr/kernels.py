@@ -132,6 +132,31 @@ class Kernel(Model):
         self._implementation = self.implementation
         return self
 
+    def broadcast_parameters2(self, variance_shape: Tuple[int, int], M, folder: Optional[PathLike] = None, broadcast_fraction: float = 0.0) -> Kernel:
+        """ Broadcast this kernel to higher dimensions. Shrinkage raises errors, unchanged dimensions silently nop.
+        A diagonal variance matrix broadcast to a square matrix is initially diagonal. All other expansions are straightforward broadcasts.
+        Args:
+            variance_shape: The new shape for the variance, must be (1, L) or (L, L).
+            M: The number of input Lengthscales per output.
+            folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
+        Returns: ``self``, for chaining calls.
+        Raises:
+            IndexError: If an attempt is made to shrink a parameter.
+        """
+        if variance_shape != self.params.variance.shape:
+            self.parameters.broadcast_value(model_name=str(self.folder), field="variance", target_shape=variance_shape, is_diagonal=True, folder=folder)
+            self._L = variance_shape[1]
+        if (self._L, M) != self.params.lengthscales.shape:
+            self.parameters.broadcast_value(model_name=str(self.folder), field="lengthscales", target_shape=(self._L, M), is_diagonal=False, folder=folder)
+            self._M = M
+        self.params.variance[0, 1] = self.params.variance[1, 0] = np.min((self.params.variance[0, 0], self.params.variance[1, 1])) * broadcast_fraction
+        self.params.variance[0, 0] -= self.params.variance[0, 1]
+        self.params.variance[1, 1] -= self.params.variance[1, 0]
+        self.parameters.write()
+        self._implementation = None
+        self._implementation = self.implementation
+        return self
+
     @property
     @abstractmethod
     def implementation(self) -> Tuple[Any, ...]:
