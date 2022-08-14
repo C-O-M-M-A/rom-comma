@@ -117,13 +117,10 @@ class ClosedIndex(gf.Module):
         self.Gamma = 1 - self.Phi
         self.V['M'] = self._V(self.G, self.Gamma)
         if self.options['is_T_calculated']:
-            self.diag_ein = 'iiM' if self.Phi.shape[0] == self.Phi.shape[1] else 'ijM'
             self.Upsilon = self.Lambda2[1][1] * self.Lambda2[-1][2]
-            self.V2MM = tf.einsum('li, jk -> lijk', self.V['M'], self.V['M'])
+            self.V2MM = tf.einsum('li, li -> li', self.V['M'], self.V['M'])
             self.mu_phi_mu = {'pre-factor': tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][2])) * self.F}
-            if self.gp.kernel.is_independent:
-                self.mu_phi_mu['pre-factor'] = tf.linalg.diag(tf.squeeze(self.mu_phi_mu['pre-factor'], axis=-1))
-            self.mu_phi_mu['pre-factor'] = self.mu_phi_mu['pre-factor'][tf.newaxis, ..., tf.newaxis]
+            self.mu_phi_mu['pre-factor'] = tf.transpose(self.mu_phi_mu['pre-factor'],[1, 0])
             self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
             self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Phi, self.Upsilon)
             self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.Ms, self.G, self.Phi, self.Gamma, self.Upsilon)
@@ -181,7 +178,7 @@ class ClosedIndex(gf.Module):
         Sigma_pdf, Sigma_diag = Gaussian.log_pdf(mean=G, ordinate=G, variance_cho=tf.sqrt(Sigma), is_variance_diagonal=True, LBunch=2)
         SigmaPsi_pdf, SigmaPsi_diag = Gaussian.log_pdf(mean=SigmaG, variance_cho=tf.sqrt(SigmaPsi), is_variance_diagonal=True, LBunch=2)
         H = tf.exp(Sigma_pdf - SigmaPsi_pdf)
-        V = tf.einsum('lLN, lLNjJn, jJn -> lLjJ', self.KYg0, H, self.KYg0) / tf.sqrt(Gaussian.det(Psi))
+        V = tf.einsum('lLN, lLNjJn, jJn -> lj', self.KYg0, H, self.KYg0) / tf.sqrt(Gaussian.det(Psi))
         V = tf.einsum('lLjJ -> lj', V) - self.V['0']
         return V
 
@@ -377,17 +374,12 @@ class ClosedIndex(gf.Module):
         variance = 1 - tf.einsum('ijM, lLM, ijM -> liLjM', sqrt_1_Upsilon, Phi, sqrt_1_Upsilon)
         return Gaussian.log_pdf(mean, tf.sqrt(variance), is_variance_diagonal=True, LBunch=3)
 
-    def _Lambda2(self, is_diagonal: bool) -> dict[int, Tuple[TF.Tensor]]:
+    def _Lambda2(self: bool) -> dict[int, Tuple[TF.Tensor]]:
         """ Calculate and cache the required powers of <Lambda^2 + J>.
 
-        Args:
-            is_diagonal: Whether to store diagonal only.
         Returns: {1: <Lambda^2 + J>, -1: <Lambda^2 + J>^(-1)} for J in {0,1,2}.
         """
-        if is_diagonal:
-            result = tf.expand_dims(tf.einsum('lM, lM -> lM', self.Lambda, self.Lambda), axis=1)
-        else:
-            result = tf.einsum('lM, LM -> lLM', self.Lambda, self.Lambda)
+        result = tf.expand_dims(tf.einsum('lM, lM -> lM', self.Lambda, self.Lambda), axis=1)
         result = tuple(result + j for j in range(3))
         return {1: result, -1: tuple(value**(-1) for value in result)}
 
@@ -404,10 +396,9 @@ class ClosedIndex(gf.Module):
         # Unwrap parameters
         self.L, self.M, self.N = self.gp.L, self.gp.M, self.gp.N
         self.Ms = tf.constant([0, self.M], dtype=INT())
-        self.F = tf.transpose(tf.constant(self.gp.kernel.params.variance, dtype=FLOAT()))     # To convert (1,L) to (L,1)
+        self.F = tf.reshape(tf.constant(self.gp.kernel.params.variance, dtype=FLOAT()), [self.L, 1])     # To convert (1,L) to (L,1)
         self.Lambda = tf.constant(self.gp.kernel.params.lengthscales, dtype=FLOAT())
-        self.Lambda2 = self._Lambda2(is_diagonal=self.gp.kernel.is_independent)
-        self.Lambda2_diag = self._Lambda2(is_diagonal=True)
+        self.Lambda2 = self._Lambda2()
         # Cache the training data kernel
         self.K_cho = tf.constant(self.gp.K_cho, dtype=FLOAT())
         self.K_inv_Y = tf.constant(self.gp.K_inv_Y, dtype=FLOAT())

@@ -29,6 +29,7 @@ from time import time
 from datetime import timedelta
 from contextlib import contextmanager
 from shutil import rmtree
+from romcomma import gpf
 
 @contextmanager
 def Timing(name: str):
@@ -58,6 +59,8 @@ def Context(name: str, device: str = '', **kwargs):
     """
     with Timing(name):
         kwargs = kwargs | {'float': 'float64'}
+        eager = kwargs.pop('eager', None)
+        tf.config.run_functions_eagerly(eager)
         print(' using GPFlow(' + ', '.join([f'{k}={v!r}' for k, v in kwargs.items()]), end=')')
         device = '/' + device[max(device.rfind('CPU'), device.rfind('GPU')):]
         if len(device) > 3:
@@ -129,62 +132,6 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                             gp.test()
 
 
-def gpr2(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool], broadcast_fraction: float,
-        kernel_parameters: Optional[romcomma.gpr.kernels.Kernel.Parameters] = None, parameters: Optional[romcomma.gpr.models.GP.Parameters] = None,
-        optimize: bool = True, test: bool = True, **kwargs):
-    """ Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.
-
-    Args:
-        name: The GP name.
-        repo: The source of the training data.csv. May be a Fold, or a Repository which contains Folds.
-        is_read: If True, the GP.kernel.parameters and GP.parameters are read from ``fold.folder/name``, otherwise defaults are used.
-            If None, the nearest available GP down the hierarchy is broadcast, constructing from scratch if no nearby GP is available.
-        is_isotropic: Whether to coerce the kernel to be isotropic. If None, isotropic is run, then broadcast to run anisotropic.
-        is_independent: Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.
-        kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
-            If None, the kernel is read from file, or set to the default base.Kernel.Parameters(), according to read_from_file.
-        parameters: The GP.parameters fields=values to replace after reading from file/defaults.
-        optimize: Whether to optimize each GP.
-        test: Whether to test_data each GP.
-        kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.OPTIMIZER_OPTIONS.
-
-    Raises:
-        FileNotFoundError: If repo is not a Fold, and contains no Folds.
-    """
-    if not isinstance(repo, Fold):
-        for k in repo.folds:
-            gpr2(name, Fold(repo, k), is_read, is_isotropic, is_independent, broadcast_fraction, kernel_parameters, parameters, optimize, test, **kwargs)
-    else:
-        if is_independent is None:
-            gpr2(name, repo, is_read, True if is_isotropic is True else None, True, broadcast_fraction, kernel_parameters, parameters, optimize, test, **kwargs)
-            gpr2(name, repo, None, is_isotropic, False, broadcast_fraction, kernel_parameters, parameters, optimize, test, **kwargs)
-        else:
-            full_name = name + ('.i' if is_independent else '.d')
-            if is_isotropic is None:
-                gpr2(name, repo, is_read, True, is_independent, broadcast_fraction, kernel_parameters, parameters, optimize, test, **kwargs)
-                gpr2(name, repo, None, False, is_independent, broadcast_fraction, kernel_parameters, parameters, optimize, test, **kwargs)
-            else:
-                full_name = full_name + ('.i' if is_isotropic else '.a')
-                if is_read is None:
-                    if not (repo.folder / full_name).exists():
-                        nearest_name = name + '.i' + full_name[-2:]
-                        if is_independent or not (repo.folder / nearest_name).exists():
-                            nearest_name = full_name[:-2] + '.i'
-                            if not (repo.folder / nearest_name).exists():
-                                gpr2(name, repo, False, is_isotropic, is_independent, broadcast_fraction, kernel_parameters, parameters, optimize, test, **kwargs)
-                                return
-                        romcomma.gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
-                    gpr2(name, repo, True, is_isotropic, is_independent, broadcast_fraction, kernel_parameters, parameters, optimize, test, **kwargs)
-                else:
-                    gp = romcomma.gpr.models.GP(full_name, repo, is_read, is_isotropic, True, kernel_parameters,
-                                       **({} if parameters is None else parameters.as_dict()))
-                    gp.broadcast_parameters2(False, is_isotropic, broadcast_fraction=broadcast_fraction)
-                    if optimize:
-                        gp.optimize(**kwargs)
-                    if test:
-                        gp.test()
-
-
 def gsa(name: str, repo: Repository, is_independent: bool, ignore_exceptions: bool = False, **kwargs):
     """ Service routine to recursively run GSAs on the Folds in a Repository, or on a single Fold.
 
@@ -199,15 +146,15 @@ def gsa(name: str, repo: Repository, is_independent: bool, ignore_exceptions: bo
     """
     if not isinstance(repo, Fold):
         for k in repo.folds:
-            gsa(name, Fold(repo, k), is_independent, ignore_exceptions, **kwargs)
+            gsa(name, Fold(repo, k), is_independent, kind, m, ignore_exceptions, **kwargs)
     else:
         with Timing(f'fold{repo.meta["k"]}'):
             try:
                 if is_independent:
-                    gp = romcomma.gpr.models.GP(f'{name}.i.a' , repo, is_read=True, is_isotropic=False, is_independent=True)
+                    gp = romcomma.gpr.models.GP(f'{name}.i.a', repo, is_read=True, is_isotropic=False, is_independent=True)
                 else:
                     gp = romcomma.gpr.models.GP(f'{name}.d.a', repo, is_read=True, is_isotropic=False, is_independent=False)
-                romcomma.gsa.perform.GSA(gp, romcomma.gsa.perform.GSA.Kind.FIRST_ORDER, m=-1, **kwargs)
+                romcomma.gsa.perform.GSA(gp, kind, m, **kwargs)
             except BaseException as exception:
                 if not ignore_exceptions:
                     raise exception

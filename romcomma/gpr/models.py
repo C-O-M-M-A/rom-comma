@@ -244,24 +244,6 @@ class GPInterface(Model):
         self._implementation = self.implementation
         return self
 
-    def broadcast_parameters2(self, is_independent: bool, is_isotropic: bool, folder: Optional[PathLike] = None, broadcast_fraction: float = 0.0) -> GPInterface:
-        """ Broadcast the parameters of the GP (including kernels) to higher dimensions.
-        Shrinkage raises errors, unchanged dimensions silently do nothing.
-
-        Args:
-            is_independent: Whether the outputs will be treated as independent.
-            is_isotropic: Whether to restrict the kernel to be isotropic.
-            folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
-        Returns: ``self``, for chaining calls.
-        """
-        target_shape = (1, self._L) if is_independent else (self._L, self._L)
-        self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance", target_shape=target_shape, is_diagonal=True,
-                                                    folder=folder)
-        self._kernel.broadcast_parameters2(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder, broadcast_fraction=broadcast_fraction)
-        self._implementation = None
-        self._implementation = self.implementation
-        return self
-
     @abstractmethod
     def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
                  kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):
