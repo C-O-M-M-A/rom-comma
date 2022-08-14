@@ -37,8 +37,10 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 
 from __future__ import annotations
 
+import pandas as pd
+
 from romcomma.base.definitions import *
-from romcomma.data.storage import Repository
+from romcomma.data.storage import Repository, Frame
 from romcomma.test import sampling
 from SALib.test_functions import Ishigami, Sobol_G
 
@@ -101,7 +103,9 @@ def sample(functions: Tuple[FunctionWithMeta], N: int, M: int, likelihood_varian
     likelihood_variance = np.atleast_2d(likelihood_variance)
     origin_meta = {'sampling_method': sampling_method.__name__, 'noise_variance': likelihood_variance.tolist()}
     noise = sampling.multivariate_gaussian_noise(N, likelihood_variance)
-    return apply(functions, X, noise, folder, origin_meta=origin_meta)
+    repo = apply(functions, X, noise, folder, origin_meta=origin_meta)
+    noise = Frame(repo.folder / 'likelihood.variance.csv', pd.DataFrame(likelihood_variance))
+    return repo
 
 
 def apply(functions: Tuple[FunctionWithMeta], X: NP.Matrix, noise: NP.Matrix, folder: PathLike, **kwargs) -> Repository:

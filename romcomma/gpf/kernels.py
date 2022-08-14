@@ -127,6 +127,7 @@ class MOStationary(AnisotropicStationary, Kernel):
         """
         super(AnisotropicStationary, self).__init__(name=name, active_dims=active_dims)  # Do not call gf.kernels.AnisotropicStationary.__init__()!
         self.variance = Variance(value=np.atleast_2d(variance), name=name + 'Variance')
+        # set_trainable(self.variance._cholesky_lower_triangle, False)
         self._L = self.variance.shape[0]
         lengthscales = data_input_to_tensor(lengthscales)
         lengthscales_shape = tuple(tf.shape(lengthscales).numpy())

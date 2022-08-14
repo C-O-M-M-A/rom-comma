@@ -54,13 +54,14 @@ class Kernel(Model):
     @classmethod
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
-        return {'variance': True, 'lengthscales': False}
+        return {'variance_diagonal': True, 'variance_off_diagonal': False, 'lengthscales': False}
 
     def optimize(self, **kwargs: Any):
         """ Merely sets which parameters are trainable. """
         if self.params.variance.shape[0] > 1:
             options = self.OPTIONS | kwargs
-            gf.set_trainable(self._implementation[0].variance, options['variance'])
+            gf.set_trainable(self._implementation[0].variance._cholesky_diagonal, options['variance_diagonal'])
+            gf.set_trainable(self._implementation[0].variance._cholesky_lower_triangle, options['variance_off_diagonal'])
             gf.set_trainable(self._implementation[0].lengthscales, options['lengthscales'])
 
     @classmethod

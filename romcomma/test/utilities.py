@@ -20,6 +20,7 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Contains developer test utilities for romcomma. """
+import numpy as np
 
 from romcomma.base.definitions import *
 from romcomma import run
@@ -64,8 +65,9 @@ def noise_variance(L: int, noise_magnitude: float, is_diagonal: bool = False, is
     Returns: An (L,L) covariance matrix.
     """
     if is_stochastic:
-        result = 2 * np.random.random_sample((2, 2))
+        result = 2 * np.random.random_sample((L, L)) - np.ones((L, L))
         result = np.matmul(result, result.transpose())
+        result /= np.trace(result)/L
     else:
         result = -np.ones(shape=(L, L)) / 10 + 11 * np.eye(L) / 10
     if is_diagonal:
