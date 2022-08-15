@@ -24,6 +24,7 @@ import copy
 
 from romcomma.base.definitions import *
 from romcomma.data.storage import Repository, Fold
+from romcomma.gsa import perform
 import romcomma
 from time import time
 from datetime import timedelta
@@ -132,13 +133,16 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
                             gp.test()
 
 
-def gsa(name: str, repo: Repository, is_independent: bool, ignore_exceptions: bool = False, **kwargs):
+def gsa(name: str, repo: Repository, is_independent: Optional[bool], kind: perform.GSA.Kind, m: int=-1, ignore_exceptions: bool = False, **kwargs):
     """ Service routine to recursively run GSAs on the Folds in a Repository, or on a single Fold.
 
     Args:
         name: The GP name.
         repo: The source of the training data.csv. May be a Fold, or a Repository which contains Folds.
-        is_independent: Whether the gp kernel for each output is independent of the other outputs.
+        is_independent: Whether the gp kernel for each output is independent of the other outputs. None results in independent followed by dependent.
+        kind: The gsa.perform.Kind of index to calculate - first order, closed or total.
+        m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
+            Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
         ignore_exceptions: Whether to ignore exceptions (e.g. file not found) when they are encountered, or halt.
         kwargs: A Dict of gsa calculation options, which updates the default gsa.perform.GSA.OPTIONS.
     Raises:
@@ -153,8 +157,10 @@ def gsa(name: str, repo: Repository, is_independent: bool, ignore_exceptions: bo
                 if is_independent:
                     gp = romcomma.gpr.models.GP(f'{name}.i.a', repo, is_read=True, is_isotropic=False, is_independent=True)
                 else:
+                    if is_independent is None:
+                        gsa(name, repo, True, kind, m, ignore_exceptions, **kwargs)
                     gp = romcomma.gpr.models.GP(f'{name}.d.a', repo, is_read=True, is_isotropic=False, is_independent=False)
-                romcomma.gsa.perform.GSA(gp, kind, m, **kwargs)
+                perform.GSA(gp, kind, m, **kwargs)
             except BaseException as exception:
                 if not ignore_exceptions:
                     raise exception

@@ -31,20 +31,17 @@ BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\11.0')
 
 
 if __name__ == '__main__':
-    with run.Context('Test', float='float64', eager=True):
+    with run.Context('Test', float='float64', device='CPU', eager=True):
         for N in (400,):
             for M in (5,):
                 for noise_magnitude in (0.03,):
                     for is_rotated in (False, ):
                             with run.Timing(f'N={N}, noise={noise_magnitude}'):
-                                tf.config.run_functions_eagerly(True)
-                                repo = sample(BASE_FOLDER, ['sin.1', 'sin.1', 'sin.2'], N, M, K=2,
-                                              noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=True)
-                                # run.gpr(name='initial', repo=repo, is_read=None, is_isotropic=None, is_independent=None, is_fully_dependent=False,
+                                # tf.config.run_functions_eagerly(True)
+                                # repo = sample(BASE_FOLDER, ['sin.1', 'sin.1', 'sin.2'], N, M, K=2,
+                                #               noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=True)
+                                # run.gpr(name='initial', repo=repo, is_read=None, is_isotropic=None, is_independent=None,
                                 #         optimize=True, test=True)
-                                run.gpr(name='initial', repo=repo, is_read=None, is_isotropic=None, is_independent=None,
-                                        optimize=True, test=True)
-                                # repo = data.storage.Repository(repo_folder(BASE_FOLDER / broadcast_fraction, ['sin.1', 'sin.1', 'sin.2'],
-                                #                                            N, M, noise_magnitude, is_noise_diagonal=False))
-                                # run.gsa('initial', repo, True, is_T_calculated=False)
-                                # run.gsa('initial', repo, False, is_T_calculated=False)
+                                repo = data.storage.Repository(repo_folder(BASE_FOLDER, ['sin.1', 'sin.1', 'sin.2'], N, M,
+                                              noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=True))
+                                run.gsa('initial', repo, None, run.perform.GSA.Kind.FIRST_ORDER)

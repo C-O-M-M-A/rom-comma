@@ -118,9 +118,9 @@ class ClosedIndex(gf.Module):
         self.V['M'] = self._V(self.G, self.Gamma)
         if self.options['is_T_calculated']:
             self.Upsilon = self.Lambda2[1][1] * self.Lambda2[-1][2]
-            self.V2MM = tf.einsum('li, li -> li', self.V['M'], self.V['M'])
+            self.V2MM = self.V['M'] * self.V['M']
             self.mu_phi_mu = {'pre-factor': tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][2])) * self.F}
-            self.mu_phi_mu['pre-factor'] = tf.transpose(self.mu_phi_mu['pre-factor'],[1, 0])
+            self.mu_phi_mu['pre-factor'] = tf.transpose(self.mu_phi_mu['pre-factor'], [1, 0])
             self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
             self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Phi, self.Upsilon)
             self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.Ms, self.G, self.Phi, self.Gamma, self.Upsilon)
@@ -196,9 +196,7 @@ class ClosedIndex(gf.Module):
         T = mm
         if not self.options['is_T_partial']:
             V_ratio = Vm / self.V['M']
-            V_ratio_2 = tf.einsum('li, jk -> lijk', V_ratio, V_ratio)
-            V_ratio = tf.einsum('li, jk -> lijk', V_ratio, tf.ones_like(V_ratio))
-            T += self.W['mm'] * V_ratio_2 - 2 * Mm * V_ratio
+            T += self.W['mm'] * V_ratio * V_ratio - 2 * Mm * V_ratio
         return {'T': T / self.V2MM, 'Wmm': mm} if self.options['is_T_partial'] else {'T': T / self.V2MM, 'Wmm': mm, 'WmM': Mm}
 
     def _W(self, Om: TF.Tensor, m0: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = TF.NOT_CALCULATED) -> Dict[str, TF.Tensor]:
@@ -218,8 +216,9 @@ class ClosedIndex(gf.Module):
 
     def _A(self, mu_phi_mu: TF.Tensor, mu_psi_mu: TF.Tensor) -> Dict[str, TF.Tensor]:
         A = mu_phi_mu - mu_psi_mu
-        A = tf.concat([tf.transpose(A[0:1, ...], [0, 4, 3, 2, 1]), A], axis=0)  # Create Om from m0 symmetry of mu_phi_mu and mu_psi_mu.
-        A += tf.transpose(A, [0, 2, 1, 3, 4]) + tf.transpose(A, [0, 1, 2, 4, 3]) + tf.transpose(A, [0, 2, 1, 4, 3])
+        # A = tf.concat([tf.transpose(A[0:1, ...], [0, 4, 3, 2, 1]), A], axis=0)  # Create Om from m0 symmetry of mu_phi_mu and mu_psi_mu.
+        A += tf.transpose(A, [0, 2, 1])
+        A *= 2
         return {'Om': A[0], 'm0': A[1], 'mm': A[2], 'Mm': A[-1]} if A.shape[0] > 2 else {'Mm': A[0]}
 
     def _mu_psi_mu(self, psi_factor: TF.Tensor, is_constructor: bool = False) -> TF.Tensor:
@@ -396,7 +395,10 @@ class ClosedIndex(gf.Module):
         # Unwrap parameters
         self.L, self.M, self.N = self.gp.L, self.gp.M, self.gp.N
         self.Ms = tf.constant([0, self.M], dtype=INT())
-        self.F = tf.reshape(tf.constant(self.gp.kernel.params.variance, dtype=FLOAT()), [self.L, 1])     # To convert (1,L) to (L,1)
+        self.F = tf.constant(self.gp.kernel.params.variance, dtype=FLOAT())
+        if self.F.shape[0] > 1:
+            self.F = tf.linalg.diag_part(self.F)
+        self.F = tf.reshape(self.F, [self.L, 1])
         self.Lambda = tf.constant(self.gp.kernel.params.lengthscales, dtype=FLOAT())
         self.Lambda2 = self._Lambda2()
         # Cache the training data kernel

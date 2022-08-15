@@ -370,10 +370,8 @@ class GP(GPInterface):
 
     @property
     def K_inv_Y(self) -> TF.Tensor:
-        if self._likelihood.is_independent:
-            return tf.reshape(tf.linalg.cholesky_solve(self.K_cho, tf.transpose(self.Y)[..., tf.newaxis]), [self._L, 1, self._N])
-        else:
-            return tf.reshape(tf.linalg.cholesky_solve(self.K_cho, tf.reshape(tf.transpose(self.Y), [-1, 1])), [1, self._L, self._N])
+        Y = tf.transpose(self.Y)[..., tf.newaxis] if self._likelihood.is_independent else tf.reshape(tf.transpose(self.Y), [-1, 1])
+        return tf.reshape(tf.linalg.cholesky_solve(self.K_cho, Y), [self._L, 1, self._N])
 
     def check_K_inv_Y(self, x: NP.Matrix) -> NP.Matrix:
         """ FOR TESTING PURPOSES ONLY. Should return 0 Vector (to within numerical error tolerance).

@@ -145,14 +145,7 @@ class GSA(Model):
         shape = shape[:-1]
         indices = [list(range(l)) for l in shape]
         columns = len(shape)
-        df = pd.MultiIndex.from_product(indices, names=[f'l.{l}' for l in range(len(indices))]).to_frame()
-        df['diagonal'] = False
-        for row in range(df.shape[0]):
-            if columns == 2 and df.iloc[row, 0] == df.iloc[row, 1]:
-                df.iloc[row, -1] = True
-            elif columns == 4 and df.iloc[row, 0] == df.iloc[row, 2] and df.iloc[row, 1] == df.iloc[row, 3]:
-                df.iloc[row, -1] = True
-        return pd.MultiIndex.from_frame(df)
+        return pd.MultiIndex.from_product(indices, names=[f'l.{l}' for l in range(len(indices))])
 
     def _m_dataset(self, kind: GSA.Kind, m: int, M: int) -> tf.data.Dataset:
         """ ``m`` as a tf.Dataset for iteration.
