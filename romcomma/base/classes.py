@@ -215,7 +215,7 @@ class Model(ABC):
         """
         return self._parameters.values
 
-    def optimize(self, method: str, **kwargs):
+    def optimize(self, method: str, **kwargs) -> Dict[str, Any]:
         if method != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks.':
             raise NotImplementedError('base.optimize() must never be called.')
         else:
@@ -226,6 +226,7 @@ class Model(ABC):
             options = {**options, 'result': 'OPTIMIZE HERE !!!'}
             self._write_options(options)
             self.parameters = self._parameters.replace('WITH OPTIMAL PARAMETERS!!!').write(self.folder)   # Remember to write optimization results.
+        return options
 
     def _read_options(self) -> Dict[str, Any]:
         # noinspection PyTypeChecker

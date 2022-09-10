@@ -92,6 +92,11 @@ class ClosedIndex(gf.Module):
 
     @classmethod
     @property
+    def EFFECTIVELY_ZERO_COVARIANCE(cls) -> TF.Tensor:
+        return tf.constant(1.0E-6, dtype=FLOAT())
+
+    @classmethod
+    @property
     def OPTIONS(cls) -> Dict[str, Any]:
         """ Default calculation options. ``is_T_partial`` forces W[mM] = W[MM] = 0.
 
@@ -116,6 +121,8 @@ class ClosedIndex(gf.Module):
         self.Phi = self.Lambda2[-1][1]
         self.Gamma = 1 - self.Phi
         self.V['M'] = self._V(self.G, self.Gamma)
+        self.is_covariance_zero = tf.where(tf.abs(self.V['M']) > self.EFFECTIVELY_ZERO_COVARIANCE, tf.constant([False]), tf.constant([True]))
+        self.V['M'] = tf.where(self.is_covariance_zero, tf.constant(1.0, dtype=FLOAT()), self.V['M'])
         if self.options['is_T_calculated']:
             self.Upsilon = self.Lambda2[1][1] * self.Lambda2[-1][2]
             self.V2MM = self.V['M'] * self.V['M']
@@ -232,13 +239,13 @@ class ClosedIndex(gf.Module):
         mu_psi_mu = []
         if self.gp.kernel.is_independent:
             if not is_constructor or (is_constructor and not self.options['is_T_partial']):
-                mu_psi_mu += [tf.einsum('liS, kiS -> lki', psi_factor, self.psi_factor['0']),
-                              tf.einsum('liS, kiS -> lki', psi_factor, psi_factor)]
+                mu_psi_mu += [tf.einsum('liS, liS -> li', psi_factor, self.psi_factor['0']),
+                              tf.einsum('liS, liS -> li', psi_factor, psi_factor)]
             if is_constructor:
-                mu_psi_mu += [tf.einsum('liS, kiS -> lki', self.psi_factor['0'], self.psi_factor['0'])]
+                mu_psi_mu += [tf.einsum('liS, liS -> li', self.psi_factor['0'], self.psi_factor['0'])]
             else:
                 if not self.options['is_T_partial']:
-                    mu_psi_mu += [tf.einsum('liS, kiS -> lki', self.psi_factor['M'], psi_factor)]
+                    mu_psi_mu += [tf.einsum('liS, liS -> li', self.psi_factor['M'], psi_factor)]
             mu_psi_mu = [tf.transpose(tf.linalg.diag(item), [0, 2, 3, 1]) for item in mu_psi_mu]
         else:
             if not is_constructor or (is_constructor and not self.options['is_T_partial']):
@@ -378,7 +385,10 @@ class ClosedIndex(gf.Module):
 
         Returns: {1: <Lambda^2 + J>, -1: <Lambda^2 + J>^(-1)} for J in {0,1,2}.
         """
-        result = tf.expand_dims(tf.einsum('lM, lM -> lM', self.Lambda, self.Lambda), axis=1)
+        if self.is_F_diagonal:
+            result = tf.expand_dims(tf.einsum('lM, lM -> lM', self.Lambda, self.Lambda), axis=1)
+        else:
+            result = tf.expand_dims(tf.einsum('lM, LM -> lLM', self.Lambda, self.Lambda), axis=1)
         result = tuple(result + j for j in range(3))
         return {1: result, -1: tuple(value**(-1) for value in result)}
 
@@ -396,9 +406,14 @@ class ClosedIndex(gf.Module):
         self.L, self.M, self.N = self.gp.L, self.gp.M, self.gp.N
         self.Ms = tf.constant([0, self.M], dtype=INT())
         self.F = tf.constant(self.gp.kernel.params.variance, dtype=FLOAT())
-        if self.F.shape[0] > 1:
-            self.F = tf.linalg.diag_part(self.F)
-        self.F = tf.reshape(self.F, [self.L, 1])
+        self.is_F_diagonal = not (gp._read_options() if gp._options_json.exists() else self.OPTIONS).pop('kernel', {}).pop("variance", {}).pop('off_diagonal',
+                                                                                                                                               False)
+        if self.is_F_diagonal:
+            if self.F.shape[0] > 1:
+                self.F = tf.linalg.diag_part(self.F)
+            self.F = tf.reshape(self.F, [self.L, 1])
+        else:
+            self.options['is_T_calculated'] = False
         self.Lambda = tf.constant(self.gp.kernel.params.lengthscales, dtype=FLOAT())
         self.Lambda2 = self._Lambda2()
         # Cache the training data kernel

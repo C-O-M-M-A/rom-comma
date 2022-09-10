@@ -65,7 +65,7 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
 
     @property
     def KXX(self):
-        return self.kernel(self._X, self._X) if self._K_unit_variance is None else self.kernel.K_d_apply_variance(self._K_unit_variance)
+        return self.kernel(self._X, self._X) if self.kernel.lengthscales.trainable else self.kernel.K_d_apply_variance(self._K_unit_variance)
 
     def maximum_log_likelihood_objective(self) -> tf.Tensor:
         return self.log_marginal_likelihood()
@@ -136,4 +136,4 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
             mean_function = mf.mean_functions.MOMeanFunction(self._L)
         super().__init__(kernel, likelihood, mean_function, num_latent_gps=1)
         self._mean = tf.reshape(self.mean_function(self._X), [-1, 1])
-        self._K_unit_variance = None if self.kernel.lengthscales.trainable else self.kernel.K_unit_variance(self._X)
+        self._K_unit_variance = self.kernel.K_unit_variance(self._X)

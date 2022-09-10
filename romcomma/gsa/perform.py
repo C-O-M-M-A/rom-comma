@@ -53,7 +53,6 @@ class GSA(Model):
                         Wmm (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
                         WmM (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
                 """
-                m: NP.Matrix = np.atleast_2d(None)
                 S: NP.Matrix = np.atleast_2d(None)
                 T: NP.Matrix = np.atleast_2d(None)
                 V: NP.Matrix = np.atleast_2d(None)
@@ -183,7 +182,7 @@ class GSA(Model):
                 Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
             **kwargs: The calculation options to override OPTIONS.
         """
-        options = self.OPTIONS | kwargs
+        options = self.OPTIONS | kwargs | {'m': 0}
         m, name = (m, f'{kind.name.lower()}.{m}') if 0 < m < gp.M else (-1, kind.name.lower())
         name += '.p' if options['is_T_partial'] else ''
         folder = gp.folder / 'gsa' / name

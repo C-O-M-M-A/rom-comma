@@ -57,17 +57,27 @@ class Likelihood(Model):
     @classmethod
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
-        return {'variance': True}
+        return {'variance': {'diagonal': True, 'off_diagonal': True}}
+
+    @classmethod
+    @property
+    def VARIANCE_FLOOR(cls) -> Dict[str, Any]:
+        return 1.0001E-6
 
     @property
     def is_independent(self) -> bool:
         return self.params.variance.shape[0] == 1
 
-    def optimize(self, **kwargs):
+    def optimize(self, **kwargs) -> Dict[str, Any]:
         """ Merely sets the trainable parameters."""
-        if not self.is_independent:
-            options = self.OPTIONS | kwargs
-            gf.set_trainable(self._parent.implementation[0].likelihood.variance, options['variance'])
+        options = self.OPTIONS | kwargs
+        if self.is_independent:
+            for implementation in self._parent.implementation:
+                gf.set_trainable(implementation.likelihood.variance, options['variance']['diagonal'])
+        else:
+            gf.set_trainable(self._parent._implementation[0].likelihood.variance._cholesky_diagonal, options['variance']['diagonal'])
+            gf.set_trainable(self._parent._implementation[0].likelihood.variance._cholesky_lower_triangle, options['variance']['off_diagonal'])
+        return options
 
     def __init__(self, parent: GPInterface, read_parameters: bool = False, **kwargs: NP.Matrix):
         super().__init__(parent.folder / 'likelihood', read_parameters, **kwargs)
@@ -176,7 +186,7 @@ class GPInterface(Model):
         Returns: ChoSolve(self.K_cho, self.Y) """
 
     @abstractmethod
-    def optimize(self, **kwargs):
+    def optimize(self, **kwargs) -> Dict[str, Any]:
         raise NotImplementedError
 
     @abstractmethod
@@ -245,7 +255,7 @@ class GPInterface(Model):
         return self
 
     @abstractmethod
-    def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
+    def __init__(self, name: str, fold: Fold, is_read: bool, is_independent: bool, is_isotropic: bool,
                  kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):
         """ Set up parameters, and checks dimensions.
 
@@ -292,7 +302,7 @@ class GP(GPInterface):
         if self._implementation is None:
             if self._likelihood.is_independent:
                 self._implementation = tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None,
-                                                            noise_variance=max(self._likelihood.params.variance[0, l], 1.00001E-6))
+                                                            noise_variance=max(self._likelihood.params.variance[0, l], self._likelihood.VARIANCE_FLOOR))
                                             for l, kernel in enumerate(self._kernel.implementation))
             else:
                 self._implementation = tuple(mf.models.MOGPR(data=(self._X, self._Y), kernel=kernel, mean_function=None,
@@ -300,23 +310,23 @@ class GP(GPInterface):
                                              for kernel in self._kernel.implementation)
         return self._implementation
 
-    def optimize(self, method: str = 'L-BFGS-B', **kwargs):
+    def optimize(self, method: str = 'L-BFGS-B', **kwargs) -> Dict[str, Any]:
         """ Optimize the GP hyper-parameters.
 
         Args:
             method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
             kwargs: A Dict of implementation-dependent optimizer options, following the format of GPInterface.OPTIONS.
+                Options for the kernel should be passed as kernel={see kernel.OPTIONS for format}.
+                Options for the likelihood should be passed as likelihood={see likelihood.OPTIONS for format}.
         """
         options = (self._read_options() if self._options_json.exists() else self.OPTIONS)
-        options.update(kwargs)
+        kernel_options = self._kernel.optimize(**(options.pop('kernel', {}) | kwargs.pop('kernel', {})))
+        likelihood_options = self._likelihood.optimize(**(options.pop('likelihood', {}) | kwargs.pop('likelihood', {})))
+        options = options | kwargs
         options.pop('result', None)
-        kernel_options = options.pop('kernel', {})
-        likelihood_options = options.pop('likelihood', {})
-        self._kernel.optimize(**kernel_options)
-        self._likelihood.optimize(**likelihood_options)
         opt = gf.optimizers.Scipy()
         options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
-                                                  for gp in self._implementation))})
+                                                  for gp in self._implementation)), 'kernel': kernel_options, 'likelihood': likelihood_options})
         self._write_options(options)
         if self._likelihood.is_independent:
             self._likelihood.parameters = self._likelihood.parameters.replace(variance=tuple(gp.likelihood.variance.numpy() for gp in self._implementation),
@@ -332,7 +342,7 @@ class GP(GPInterface):
             self._kernel.parameters = self._kernel.parameters.replace(variance=self._implementation[0].kernel.variance.value.numpy(),
                                                                       lengthscales=tf.squeeze(self._implementation[0].kernel.lengthscales),
                                                                       ).write()
-
+        return options
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
         X = X.astype(dtype=FLOAT())
         if self._likelihood.is_independent:
@@ -392,7 +402,7 @@ class GP(GPInterface):
         result -= predicted
         return tf.sqrt(tf.reduce_sum(result * result, axis=0)/o)
 
-    def __init__(self, name: str, fold: Fold, is_read: bool, is_isotropic: bool, is_independent: bool,
+    def __init__(self, name: str, fold: Fold, is_read: bool, is_independent: bool, is_isotropic: bool,
                  kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):
         """ GP Constructor. Calls __init__ to setup parameters, then checks dimensions.
 
@@ -408,4 +418,4 @@ class GP(GPInterface):
         Raises:
             IndexError: If a parameter is mis-shaped.
         """
-        super().__init__(name, fold, is_read, is_isotropic, is_independent, kernel_parameters, **kwargs)
+        super().__init__(name, fold, is_read, is_independent, is_isotropic, kernel_parameters, **kwargs)

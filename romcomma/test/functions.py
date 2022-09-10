@@ -37,6 +37,7 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from romcomma.base.definitions import *
@@ -46,7 +47,8 @@ from SALib.test_functions import Ishigami, Sobol_G
 
 
 class FunctionWithMeta:
-    """ A class for use with functions.sample(...). Encapsulates a function and its parameters."""
+    """ A class for use with functions.sample(...). Encapsulates a function and its parameters.
+    Every FunctionWithMeta depends on the first 5 inputs dimensions at most."""
 
     _DEFAULT = None
 
@@ -65,8 +67,13 @@ class FunctionWithMeta:
                 **cls._default(name='sin.2', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=2.0, B=0.0),
                 **cls._default(name='ishigami', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=7.0, B=0.1),
                 **cls._default(name='sobol_g', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 4.5, 9, 99])),
-                **cls._default(name='sobol_g2', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 4.5, 9, 99]),
-                               alpha=np.array([2.0, 2.0, 2.0, 2.0, 2.0])),
+                **cls._default(name='sobol_g2', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 4.5, 9, 99]), alpha=np.ones((5,)) * 2.0),
+                **cls._default(name='s.0', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=0.0, B=0.0),
+                **cls._default(name='s.1', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=7.0, B=0.1),
+                **cls._default(name='s.2', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=1.0, B=0.2),
+                **cls._default(name='s.3', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 5, 20, 100]), alpha=np.ones((5,)) * 1.0),
+                **cls._default(name='s.4', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 0.5, 1, 2, 10]), alpha=np.ones((5,)) * 2.0),
+                **cls._default(name='s.5', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 2, 5, 100]), alpha=np.ones((5,)) * 4.0),
             }
         return cls._DEFAULT
 
@@ -132,7 +139,7 @@ def apply(functions: Tuple[FunctionWithMeta], X: NP.Matrix, noise: NP.Matrix, fo
         raise IndexError(f'functions should be of length L, equal to noise.shape[1].')
     meta = {'N': X.shape[0], 'functions': [f.meta for f in functions]}
     meta = {'origin': meta | kwargs.get('origin_meta', {})}
-    Y = np.concatenate([f(X) for f in functions], axis=1)
+    Y = np.concatenate([f(X[:, :5]) for f in functions], axis=1)
     std = np.reshape(np.std(Y, axis=0), (1, -1))
     Y += noise * std
     columns = [('X', f'X.{i:d}') for i in range(X.shape[1])] + [('Y', f'Y.{i:d}') for i in range(Y.shape[1])]

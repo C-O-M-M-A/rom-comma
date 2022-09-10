@@ -54,15 +54,20 @@ class Kernel(Model):
     @classmethod
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
-        return {'variance_diagonal': True, 'variance_off_diagonal': False, 'lengthscales': False}
+        return {'variance': {'diagonal': True, 'off_diagonal': False}, 'lengthscales': {'independent': True, 'dependent': False}}
 
-    def optimize(self, **kwargs: Any):
+    def optimize(self, **kwargs: Any) -> Dict[str, Any]:
         """ Merely sets which parameters are trainable. """
-        if self.params.variance.shape[0] > 1:
-            options = self.OPTIONS | kwargs
-            gf.set_trainable(self._implementation[0].variance._cholesky_diagonal, options['variance_diagonal'])
-            gf.set_trainable(self._implementation[0].variance._cholesky_lower_triangle, options['variance_off_diagonal'])
-            gf.set_trainable(self._implementation[0].lengthscales, options['lengthscales'])
+        options = self.OPTIONS | kwargs
+        if self.is_independent:
+            for implementation in self._implementation:
+                gf.set_trainable(implementation.variance, options['variance']['diagonal'])
+                gf.set_trainable(implementation.lengthscales, options['lengthscales']['independent'])
+        else:
+            gf.set_trainable(self._implementation[0].variance._cholesky_diagonal, options['variance']['diagonal'])
+            gf.set_trainable(self._implementation[0].variance._cholesky_lower_triangle, options['variance']['off_diagonal'])
+            gf.set_trainable(self._implementation[0].lengthscales, options['lengthscales']['dependent'])
+        return options
 
     @classmethod
     @property

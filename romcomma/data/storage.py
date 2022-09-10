@@ -151,20 +151,23 @@ class Repository:
     @property
     def folds(self) -> range:
         """ The indices of the folds contained in this Repository."""
-        if not isinstance(self, Fold):
-            return range(self.K + 1) if self.K > 1 else range(1, 2)
-        else:
+        if isinstance(self, Fold) or self.K < 1:
             return range(0, 0)
+        elif self.K == 1:
+            return range(1, 2)
+        else:
+            return range(self.K + (1 if self.meta['has_extra_fold'] else 0))
 
-    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> int:
+    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None,
+                     has_extra_fold: bool = True) -> int:
         """ Fold this repo into K Folds, indexed by range(K).
-        An additional Fold, indexed by K, takes all the repo data for both training and (invalid) testing.
-        To avoid duplication, when K=1 there is no fold.0, as this would be identical to fold.1.
 
         Args:
             K: The number of Folds, between 1 and N inclusive.
             shuffle_before_folding: Whether to shuffle the data before sampling.
             normalization: An optional normalization.csv file to use.
+            has_extra_fold: If True, an extra Fold, indexed by K, takes all the repo data for both training and (invalid) testing.
+                To avoid duplication, when K=1 there is no fold.0, as this would be identical to fold.1.
 
         Raises:
             IndexError: Unless 1 &lt= K &lt= N.
@@ -177,7 +180,7 @@ class Repository:
         for k in range(max(K, self.K) + 1):
             shutil.rmtree(self.fold_folder(k), ignore_errors=True)
 
-        self._meta.update({'K': K, 'shuffle before folding': shuffle_before_folding})
+        self._meta.update({'K': K, 'shuffle before folding': shuffle_before_folding, 'has_extra_fold': has_extra_fold})
         self._write_meta_json()
 
         index = list(range(N))
@@ -197,29 +200,27 @@ class Repository:
                 test_index = [index for index, indicator in indicated if k == indicator]
                 Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization)
 
-        Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
+        if has_extra_fold or K == 1:
+            Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         return K
 
-    def aggregate_over_folds(self, child_path: Union[Path, str], csvs: Sequence[str], is_K_included: bool = False, ignore_missing: bool = False, **kwargs: Any):
+    def aggregate_over_folds(self, child_path: Union[Path, str], csvs: Sequence[str], ignore_missing: bool = False, **kwargs: Any):
         """ Aggregate csv files over the Folds in this Repo.
 
         Args:
             child_path: The child path of the folder to aggregate into. The source is fold.folder/child_path/csvs[i],
             the aggregate destination is self.folder/child_path/csvs[i].
             csvs: A list of the csv files to aggregate.
-            is_K_included: Whether to in include Fold K, which is always the union of all the other folds.
             ignore_missing: Whether to suppress missing FileNotFoundError.
             **kwargs: Read options passed directly to pd.read_csv(). Overridable defaults are {'index': False, 'float_format':'%.6f'}
         """
         if isinstance(self, Fold):
             raise NotADirectoryError('A Fold cannot contain other Folds, so cannot be aggregated over.')
-        if not (is_K_included or self.K > 1):
-            raise NotADirectoryError('Fold K is not included in this aggregation, but here are no Folds other than K here because K is 1.')
         child_path = Path(child_path)
         dst = self._folder / child_path
         shutil.rmtree(dst, ignore_errors=True)
         dst.mkdir(mode=0o777, parents=True, exist_ok=False)
-        rng = self.folds if is_K_included else range(self.K)
+        rng = self.folds
         for csv in csvs:
             results = None
             is_initial = True

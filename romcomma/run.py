@@ -20,9 +20,10 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Contains routines for running models. """
-import copy
+import copy as copylib
 
 from romcomma.base.definitions import *
+from romcomma.base.classes import Model
 from romcomma.data.storage import Repository, Fold
 from romcomma.gsa import perform
 import romcomma
@@ -77,9 +78,27 @@ def Context(name: str, device: str = '', **kwargs):
         print('...Running ' + name, end='')
 
 
-def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Optional[bool], is_independent: Optional[bool],
+def copy(src: str, dst: str, repo: Repository):
+    """ Service routine to copy a model across the Folds in a Repository, or in a single Fold.
+
+    Args:
+        src: The model to be copied.
+        dst: The name of the copy.
+        repo: The source of the training data.csv. May be a Fold, or a Repository which contains Folds.
+
+    Raises:
+        FileNotFoundError: If repo is not a Fold, and contains no Folds.
+    """
+    if not isinstance(repo, Fold):
+        for k in repo.folds:
+            copy(src, dst, Fold(repo, k))
+    else:
+        Model.copy(repo.folder / src, repo.folder / dst)
+
+
+def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Optional[bool], is_isotropic: Optional[bool],
         kernel_parameters: Optional[romcomma.gpr.kernels.Kernel.Parameters] = None, parameters: Optional[romcomma.gpr.models.GP.Parameters] = None,
-        optimize: bool = True, test: bool = True, **kwargs):
+        optimize: bool = True, test: bool = True, **kwargs) -> List[str]:
     """ Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.
 
     Args:
@@ -87,80 +106,103 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_isotropic: Opti
         repo: The source of the training data.csv. May be a Fold, or a Repository which contains Folds.
         is_read: If True, the GP.kernel.parameters and GP.parameters are read from ``fold.folder/name``, otherwise defaults are used.
             If None, the nearest available GP down the hierarchy is broadcast, constructing from scratch if no nearby GP is available.
-        is_isotropic: Whether to coerce the kernel to be isotropic. If None, isotropic is run, then broadcast to run anisotropic.
         is_independent: Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.
+        is_isotropic: Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.
         kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
             If None, the kernel is read from file, or set to the default base.Kernel.Parameters(), according to read_from_file.
         parameters: The GP.parameters fields=values to replace after reading from file/defaults.
         optimize: Whether to optimize each GP.
         test: Whether to test_data each GP.
-        kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) base.GP.OPTIMIZER_OPTIONS.
-
+        kwargs: A Dict of implementation-dependent optimizer options, similar to (and documented in) models.GP.Optimize().
+    Returns:
+        A list of the GP names which have been run.
     Raises:
         FileNotFoundError: If repo is not a Fold, and contains no Folds.
     """
     if not isinstance(repo, Fold):
         for k in repo.folds:
-            gpr(name, Fold(repo, k), is_read, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
+            names = gpr(name, Fold(repo, k), is_read, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
+        for name in names:
+            if test:
+                repo.aggregate_over_folds(name, ['test_summary.csv'], header=[0, 1], index_col=0)
+            repo.aggregate_over_folds(f'{name}\\likelihood', ['variance.csv', 'log_marginal.csv'])
+            repo.aggregate_over_folds(f'{name}\\kernel', ['variance.csv', 'lengthscales.csv'])
+        return names
     else:
         if is_independent is None:
-            gpr(name, repo, is_read, is_isotropic, True, kernel_parameters, parameters, optimize, test, **kwargs)
-            gpr(name, repo, None, True if is_isotropic else False, False, kernel_parameters, parameters, optimize, test, **kwargs)
-        else:
-            full_name = name + ('.i' if is_independent else '.d')
-            if is_isotropic is None:
-                gpr(name, repo, is_read, True, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
-                gpr(name, repo, None, False, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
-            else:
-                full_name = full_name + ('.i' if is_isotropic else '.a')
-                if is_read is None:
-                    if not (repo.folder / full_name).exists():
-                        nearest_name = name + '.i' + full_name[-2:]
-                        if is_independent or not (repo.folder / nearest_name).exists():
-                            nearest_name = full_name[:-2] + '.i'
-                            if not (repo.folder / nearest_name).exists():
-                                gpr(name, repo, False, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
-                                return
-                        romcomma.gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
-                    gpr(name, repo, True, is_isotropic, is_independent, kernel_parameters, parameters, optimize, test, **kwargs)
-                else:
-                    with Timing(f'fold.{repo.meta["k"]}, is_isotropic={is_isotropic}, is_independent={is_independent}'):
-                        gp = romcomma.gpr.models.GP(full_name, repo, is_read, is_isotropic, is_independent, kernel_parameters,
-                                           **({} if parameters is None else parameters.as_dict()))
-                        if optimize:
-                            gp.optimize(**kwargs)
-                        if test:
-                            gp.test()
+            names = gpr(name, repo, is_read, True, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
+            return (names +
+                    gpr(name, repo, None, False, False if is_isotropic is None else is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs))
+        full_name = name + ('.i' if is_independent else '.d')
+        if is_isotropic is None:
+            names = gpr(name, repo, is_read, is_independent, True, kernel_parameters, parameters, optimize, test, **kwargs)
+            return names + gpr(name, repo, None, is_independent, False, kernel_parameters, parameters, optimize, test, **kwargs)
+        full_name = full_name + ('.i' if is_isotropic else '.a')
+        if is_read is None:
+            if not (repo.folder / full_name).exists():
+                nearest_name = name + '.i' + full_name[-2:]
+                if is_independent or not (repo.folder / nearest_name).exists():
+                    nearest_name = full_name[:-2] + '.i'
+                    if not (repo.folder / nearest_name).exists():
+                        return gpr(name, repo, False, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
+                romcomma.gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
+            return gpr(name, repo, True, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
+        with Timing(f'fold.{repo.meta["k"]}, is_isotropic={is_isotropic}, is_independent={is_independent}'):
+            gp = romcomma.gpr.models.GP(full_name, repo, is_read, is_independent, is_isotropic, kernel_parameters,
+                                        **({} if parameters is None else parameters.as_dict()))
+            if optimize:
+                gp.optimize(**kwargs)
+            if test:
+                gp.test()
+        return [full_name]
 
 
-def gsa(name: str, repo: Repository, is_independent: Optional[bool], kind: perform.GSA.Kind, m: int=-1, ignore_exceptions: bool = False, **kwargs):
+def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropic: Optional[bool], kinds: Sequence[perform.GSA.Kind],
+        is_T_calculated: bool = False, m: int = -1, ignore_exceptions: bool = False, **kwargs) -> List[Path]:
     """ Service routine to recursively run GSAs on the Folds in a Repository, or on a single Fold.
 
     Args:
         name: The GP name.
         repo: The source of the training data.csv. May be a Fold, or a Repository which contains Folds.
         is_independent: Whether the gp kernel for each output is independent of the other outputs. None results in independent followed by dependent.
-        kind: The gsa.perform.Kind of index to calculate - first order, closed or total.
+        is_isotropic: Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.
+        kinds: The gsa.perform.Kind of index to calculate - first order, closed or total. A Sequence of Kinds will be run consecutively.
+        is_T_calculated: Whether to calculate variances (errors) on the Sobol indices.
+            The calculation of T is memory intensive, so leave this flag as False unless you know what you are doing.
         m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
             Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
         ignore_exceptions: Whether to ignore exceptions (e.g. file not found) when they are encountered, or halt.
         kwargs: A Dict of gsa calculation options, which updates the default gsa.perform.GSA.OPTIONS.
     Raises:
         FileNotFoundError: If repo is not a Fold, and contains no Folds.
+    Returns:
+        A list of the GP names which have been run.
     """
+    kinds = (kinds,) if isinstance(kinds, perform.GSA.Kind) else kinds
     if not isinstance(repo, Fold):
         for k in repo.folds:
-            gsa(name, Fold(repo, k), is_independent, kind, m, ignore_exceptions, **kwargs)
+            names = gsa(name, Fold(repo, k), is_independent, is_isotropic, kinds, is_T_calculated, m, ignore_exceptions, **kwargs)
+        csvs = ['m.csv', 'S.csv', 'V.csv'] + (['T.csv', 'Wmm.csv', 'WmM.csv'] if is_T_calculated else [])
+        for name in names:
+            repo.aggregate_over_folds(name, csvs, ignore_missing=True)
+        return names
     else:
         with Timing(f'fold{repo.meta["k"]}'):
             try:
-                if is_independent:
-                    gp = romcomma.gpr.models.GP(f'{name}.i.a', repo, is_read=True, is_isotropic=False, is_independent=True)
-                else:
-                    if is_independent is None:
-                        gsa(name, repo, True, kind, m, ignore_exceptions, **kwargs)
-                    gp = romcomma.gpr.models.GP(f'{name}.d.a', repo, is_read=True, is_isotropic=False, is_independent=False)
-                perform.GSA(gp, kind, m, **kwargs)
+                if is_independent is None:
+                    names = gsa(name, repo, True, is_isotropic, kinds, is_T_calculated, m, ignore_exceptions, **kwargs)
+                    return (names +
+                            gsa(name, repo, True, False if is_isotropic is None else is_isotropic, kinds, is_T_calculated, m, ignore_exceptions, **kwargs))
+                full_name = name + ('.i' if is_independent else '.d')
+                if is_isotropic is None:
+                    names = gsa(name, repo, is_independent, True, kinds, is_T_calculated, m, ignore_exceptions, **kwargs)
+                    return names + gsa(name, repo, is_independent, False, kinds, is_T_calculated, m, ignore_exceptions, **kwargs)
+                full_name = full_name + ('.i' if is_isotropic else '.a')
+                gp = romcomma.gpr.models.GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
+                names = []
+                for kind in kinds:
+                    folder = perform.GSA(gp, kind, m, **kwargs).folder
+                    names += folder.relative_to(repo.folder)
             except BaseException as exception:
                 if not ignore_exceptions:
                     raise exception
@@ -168,14 +210,13 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], kind: perfo
                     pass
 
 
-def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path, str], ignore_missing: bool=False, **kwargs):
+def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path, str], ignore_missing: bool=False):
     """ Aggregate csv files over aggregators.
 
     Args:
         aggregators: A Dict of aggregators, keyed by csv filename. An aggregator is a List of Dicts containing source folder ['folder']
             and {key: value} to insert column 'key' and populate it with 'value' in folder/csv.
-        dst: The destination folder, to which csv files listed as the keys in aggregators.
-        **kwargs: Read options passed directly to pd.read_csv().
+        dst: The destination folder, to house csv files listed as the keys in aggregators.
     """
     dst = Path(dst)
     rmtree(dst, ignore_errors=True)
@@ -184,8 +225,9 @@ def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path,
         is_initial = True
         results = None
         for file in aggregator:
-            file = copy.deepcopy(file)
+            file = copylib.deepcopy(file)
             filepath = Path(file.pop('folder'))/csv
+            kwargs = file.pop('kwargs', {})
             if filepath.exists() or not ignore_missing:
                 result = pd.read_csv(filepath, **kwargs)
                 for key, value in file.items():
