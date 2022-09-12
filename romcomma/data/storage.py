@@ -156,52 +156,46 @@ class Repository:
         elif self.K == 1:
             return range(1, 2)
         else:
-            return range(self.K + (1 if self.meta['has_extra_fold'] else 0))
+            return range(self.K + (1 if self.meta['has_improper_fold'] else 0))
 
-    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None,
-                     has_extra_fold: bool = True) -> int:
+    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> int:
         """ Fold this repo into K Folds, indexed by range(K).
 
         Args:
-            K: The number of Folds, between 1 and N inclusive.
+            K: The number of Folds, of absolute value between 1 and N inclusive.
+                An improper Fold, indexed by K and including all data for both training and testing is included by default.
+                To suppress this give K as a negative integer.
             shuffle_before_folding: Whether to shuffle the data before sampling.
             normalization: An optional normalization.csv file to use.
-            has_extra_fold: If True, an extra Fold, indexed by K, takes all the repo data for both training and (invalid) testing.
-                To avoid duplication, when K=1 there is no fold.0, as this would be identical to fold.1.
 
         Raises:
             IndexError: Unless 1 &lt= K &lt= N.
         """
         data = self.data.df
         N = data.shape[0]
-        if not (1 <= K <= N):
+        if not (1 <= abs(K) <= N):
             raise IndexError(f'K={K:d} does not lie between 1 and N={N:d} inclusive.')
-
-        for k in range(max(K, self.K) + 1):
+        for k in range(max(abs(K), self.K) + 1):
             shutil.rmtree(self.fold_folder(k), ignore_errors=True)
-
-        self._meta.update({'K': K, 'shuffle before folding': shuffle_before_folding, 'has_extra_fold': has_extra_fold})
+        self._meta.update({'K': abs(K), 'shuffle before folding': shuffle_before_folding, 'has_improper_fold': K > 0})
         self._write_meta_json()
-
         index = list(range(N))
         if shuffle_before_folding:
             random.shuffle(index)
-
+        if K <= 1:
+            K = abs(K)
+            Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         if K > 1:
             K_blocks = [list(range(K)) for dummy in range(int(N / K))]
             K_blocks.append(list(range(N % K)))
             for K_range in K_blocks:
                 random.shuffle(K_range)
             indicator = list(itertools.chain(*K_blocks))
-
             for k in range(K):
                 indicated = tuple(zip(index, indicator))
                 data_index = [index for index, indicator in indicated if k != indicator]
                 test_index = [index for index, indicator in indicated if k == indicator]
                 Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization)
-
-        if has_extra_fold or K == 1:
-            Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         return K
 
     def aggregate_over_folds(self, child_path: Union[Path, str], csvs: Sequence[str], ignore_missing: bool = False, **kwargs: Any):

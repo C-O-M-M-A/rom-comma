@@ -21,6 +21,7 @@
 
 """ Contains routines for running models. """
 import copy as copylib
+import shutil
 
 from romcomma.base.definitions import *
 from romcomma.base.classes import Model
@@ -147,7 +148,7 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
                         return gpr(name, repo, False, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
                 romcomma.gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
             return gpr(name, repo, True, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
-        with Timing(f'fold.{repo.meta["k"]}, is_isotropic={is_isotropic}, is_independent={is_independent}'):
+        with Timing(f'fold.{repo.meta["k"]} {full_name} GP Regression'):
             gp = romcomma.gpr.models.GP(full_name, repo, is_read, is_independent, is_isotropic, kernel_parameters,
                                         **({} if parameters is None else parameters.as_dict()))
             if optimize:
@@ -158,7 +159,7 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
 
 
 def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropic: Optional[bool], kinds: Sequence[perform.GSA.Kind],
-        is_T_calculated: bool = False, m: int = -1, ignore_exceptions: bool = False, **kwargs) -> List[Path]:
+        m: int = -1, ignore_exceptions: bool = False, is_error_calculated: bool = False, **kwargs) -> List[Path]:
     """ Service routine to recursively run GSAs on the Folds in a Repository, or on a single Fold.
 
     Args:
@@ -167,8 +168,9 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
         is_independent: Whether the gp kernel for each output is independent of the other outputs. None results in independent followed by dependent.
         is_isotropic: Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.
         kinds: The gsa.perform.Kind of index to calculate - first order, closed or total. A Sequence of Kinds will be run consecutively.
-        is_T_calculated: Whether to calculate variances (errors) on the Sobol indices.
-            The calculation of T is memory intensive, so leave this flag as False unless you know what you are doing.
+        is_error_calculated: Whether to calculate variances (errors) on the Sobol indices.
+            The calculation of is memory intensive, so leave this flag as False unless you are sure you need errors.
+            Furthermore, errors will only be calculated if the kernel of the gp has diagonal variance F.
         m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
             Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
         ignore_exceptions: Whether to ignore exceptions (e.g. file not found) when they are encountered, or halt.
@@ -176,38 +178,39 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
     Raises:
         FileNotFoundError: If repo is not a Fold, and contains no Folds.
     Returns:
-        A list of the GP names which have been run.
+        A list of the GSA names which have been run, relative to repo.folder.
     """
     kinds = (kinds,) if isinstance(kinds, perform.GSA.Kind) else kinds
     if not isinstance(repo, Fold):
         for k in repo.folds:
-            names = gsa(name, Fold(repo, k), is_independent, is_isotropic, kinds, is_T_calculated, m, ignore_exceptions, **kwargs)
-        csvs = ['m.csv', 'S.csv', 'V.csv'] + (['T.csv', 'Wmm.csv', 'WmM.csv'] if is_T_calculated else [])
+            names = gsa(name, Fold(repo, k), is_independent, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
+        csvs = ['S.csv', 'V.csv'] + (['T.csv', 'Wmm.csv', 'WmM.csv'] if is_error_calculated else [])
         for name in names:
             repo.aggregate_over_folds(name, csvs, ignore_missing=True)
-        return names
+            shutil.copyfile(repo.fold_folder(repo.folds.start) / 'meta.json', repo.folder / name / 'meta.json')
     else:
-        with Timing(f'fold{repo.meta["k"]}'):
-            try:
-                if is_independent is None:
-                    names = gsa(name, repo, True, is_isotropic, kinds, is_T_calculated, m, ignore_exceptions, **kwargs)
-                    return (names +
-                            gsa(name, repo, True, False if is_isotropic is None else is_isotropic, kinds, is_T_calculated, m, ignore_exceptions, **kwargs))
-                full_name = name + ('.i' if is_independent else '.d')
-                if is_isotropic is None:
-                    names = gsa(name, repo, is_independent, True, kinds, is_T_calculated, m, ignore_exceptions, **kwargs)
-                    return names + gsa(name, repo, is_independent, False, kinds, is_T_calculated, m, ignore_exceptions, **kwargs)
-                full_name = full_name + ('.i' if is_isotropic else '.a')
+        try:
+            if is_independent is None:
+                names = gsa(name, repo, True, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
+                return (names +
+                        gsa(name, repo, False, False if is_isotropic is None else is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs))
+            full_name = name + ('.i' if is_independent else '.d')
+            if is_isotropic is None:
+                names = gsa(name, repo, is_independent, True, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
+                return names + gsa(name, repo, is_independent, False, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
+            full_name = full_name + ('.i' if is_isotropic else '.a')
+            with Timing(f'fold.{repo.meta["k"]} {full_name} GSA'):
                 gp = romcomma.gpr.models.GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
                 names = []
                 for kind in kinds:
-                    folder = perform.GSA(gp, kind, m, **kwargs).folder
-                    names += folder.relative_to(repo.folder)
-            except BaseException as exception:
-                if not ignore_exceptions:
-                    raise exception
-                else:
-                    pass
+                    folder = perform.GSA(gp, kind, m, is_error_calculated, **kwargs).folder
+                    names += [folder.relative_to(repo.folder)]
+        except BaseException as exception:
+            if not ignore_exceptions:
+                raise exception
+            else:
+                pass
+    return names
 
 
 def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path, str], ignore_missing: bool=False):

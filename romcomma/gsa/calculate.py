@@ -98,17 +98,15 @@ class ClosedIndex(gf.Module):
     @classmethod
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
-        """ Default calculation options. ``is_T_partial`` forces W[mM] = W[MM] = 0.
+        """ Default calculation options.
 
-        Returns:
-            is_T_calculated: If False, T and W are not calculated or returned.
-            is_T_partial: If True this effectively asserts the full ['M'] model is variance free, so WmM is not calculated or returned.
+        Returns: An empty dictionary.
         """
-        return {'is_T_calculated': True, 'is_T_partial': True}
+        return {}
 
     def _calculate(self):
         """ Called by constructor to calculate all available quantities prior to marginalization.
-        These quantities suffice to calculate V[0], V[M], A[00], self.A[m0]=A[M0] and self.A[mm]=A[MM]
+        These quantities suffice to calculate V[0], V[M].
         """
         pre_factor = tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][1])) * self.F
         self.g0, _ = Gaussian.log_pdf(mean=self.gp.X[tf.newaxis, tf.newaxis, ...],
@@ -123,49 +121,18 @@ class ClosedIndex(gf.Module):
         self.V['M'] = self._V(self.G, self.Gamma)
         self.is_covariance_zero = tf.where(tf.abs(self.V['M']) > self.EFFECTIVELY_ZERO_COVARIANCE, tf.constant([False]), tf.constant([True]))
         self.V['M'] = tf.where(self.is_covariance_zero, tf.constant(1.0, dtype=FLOAT()), self.V['M'])
-        if self.options['is_T_calculated']:
-            self.Upsilon = self.Lambda2[1][1] * self.Lambda2[-1][2]
-            self.V2MM = self.V['M'] * self.V['M']
-            self.mu_phi_mu = {'pre-factor': tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][2])) * self.F}
-            self.mu_phi_mu['pre-factor'] = tf.transpose(self.mu_phi_mu['pre-factor'], [1, 0])
-            self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
-            self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Phi, self.Upsilon)
-            self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.Ms, self.G, self.Phi, self.Gamma, self.Upsilon)
-            factor = tf.einsum('k, jJN -> kjJN', self.KYg0_sum, self.g0)
-            self.psi_factor = {'shape': factor.shape[:-2].as_list() + [-1, 1]}
-            self.psi_factor['0'] = tf.squeeze(tf.linalg.triangular_solve(self.K_cho, tf.reshape(factor, self.psi_factor['shape'])), axis=-1)
-            self.psi_factor['M'] = self._psi_factor(self.G, self.Phi, self.G_log_pdf)
-            A_mislabelled = self._A(self._mu_phi_mu(self.G_log_pdf, self.Upsilon_log_pdf, self.Omega_log_pdf, self.Omega_log_pdf, is_constructor=True),
-                                    self._mu_psi_mu(self.psi_factor['M'], is_constructor=True))
-            self.A = {'00': A_mislabelled.pop('Mm')}
-            if not self.options['is_T_partial']:
-                self.W = self._W(**A_mislabelled)
-                self.A = self.A | A_mislabelled
 
     def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
         """ Calculate everything.
         Args:
             m: A Tf.Tensor pair of ints indicating the slice [m[0]:m[1]].
-        Returns:
-
+        Returns: The Sobol Index of m.
         """
         self._m = m
 
         G, Phi, Gamma = self.G, self.Phi, self.Gamma
         result = {'V': self._V(G[..., m[0]:m[1]], Gamma[..., m[0]:m[1]])}
         result['S'] = result['V'] / self.V['M']
-        if self.options['is_T_calculated']:
-            Upsilon = self.Upsilon
-            G_m = G[..., m[0]:m[1]]
-            Phi_mm = Phi[..., m[0]:m[1]]
-            G_log_pdf = Gaussian.log_pdf(G_m, tf.sqrt(Phi_mm), is_variance_diagonal=True, LBunch=2)
-            Upsilon_log_pdf = self._Upsilon_log_pdf(G_m, Phi_mm, Upsilon[..., m[0]:m[1]])
-            Omega_log_pdf_M = self._Omega_log_pdf(self.Ms, m, G, Phi, Gamma, Upsilon)
-            Omega_log_pdf_m = self._Omega_log_pdf(m, m, G, Phi, Gamma, Upsilon)
-            psi_factor = self._psi_factor(G[..., m[0]:m[1]], Phi[..., m[0]:m[1]], G_log_pdf)
-            result = result | self._T(result['V'],
-                                      **self._W(**self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf_M, Omega_log_pdf_m),
-                                                          self._mu_psi_mu(psi_factor))))
         return result
 
     def _V(self, G: TF.Tensor, Gamma: TF.Tensor) -> TF.Tensor:
@@ -188,6 +155,105 @@ class ClosedIndex(gf.Module):
         V = tf.einsum('lLN, lLNjJn, jJn -> lj', self.KYg0, H, self.KYg0) / tf.sqrt(Gaussian.det(Psi))
         V = tf.einsum('lLjJ -> lj', V) - self.V['0']
         return V
+
+    def _Lambda2(self: bool) -> dict[int, Tuple[TF.Tensor]]:
+        """ Calculate and cache the required powers of <Lambda^2 + J>.
+
+        Returns: {1: <Lambda^2 + J>, -1: <Lambda^2 + J>^(-1)} for J in {0,1,2}.
+        """
+        if self.is_F_diagonal:
+            result = tf.expand_dims(tf.einsum('lM, lM -> lM', self.Lambda, self.Lambda), axis=1)
+        else:
+            result = tf.einsum('lM, LM -> lLM', self.Lambda, self.Lambda)
+        result = tuple(result + j for j in range(3))
+        return {1: result, -1: tuple(value**(-1) for value in result)}
+
+    def __init__(self, gp: GPInterface, **kwargs: Any):
+        """ Construct a ClosedIndex object. A wide range of values are collected or calculated and cached, especially via the final call to self._calculate.
+
+        Args:
+            gp: The gp to analyze.
+            **kwargs: The calculation options to override OPTIONS.
+        """
+        super().__init__()
+        self.gp = gp
+        self.options = self.OPTIONS | kwargs
+        # Unwrap parameters
+        self.L, self.M, self.N = self.gp.L, self.gp.M, self.gp.N
+        self.Ms = tf.constant([0, self.M], dtype=INT())
+        self.F = tf.constant(self.gp.kernel.params.variance, dtype=FLOAT())
+        self.is_F_diagonal = not (gp._read_options() if gp._options_json.exists() else self.OPTIONS).pop('kernel', {}).pop("variance", {}).pop('off_diagonal',
+                                                                                                                                               False)
+        if self.is_F_diagonal:
+            self.F = self.F if self.F.shape[0] == 1 else tf.linalg.diag_part(self.F)
+            self.F = tf.reshape(self.F, [self.L, 1])
+        self.Lambda = tf.broadcast_to(tf.constant(self.gp.kernel.params.lengthscales, dtype=FLOAT()), [self.L, self.M])
+        self.Lambda2 = self._Lambda2()
+        # Cache the training data kernel
+        self.K_cho = tf.constant(self.gp.K_cho, dtype=FLOAT())
+        self.K_inv_Y = tf.constant(self.gp.K_inv_Y, dtype=FLOAT())
+        # Calculate and cache values for m=0 and m=M
+        self._calculate()
+
+
+class ClosedIndexWithErrors(ClosedIndex):
+    """ Calculates closed Sobol Indices with Errors."""
+    @classmethod
+    @property
+    def OPTIONS(cls) -> Dict[str, Any]:
+        """ Default calculation options. ``is_T_partial`` forces W[mM] = W[MM] = 0.
+
+        Returns:
+            is_T_calculated: If False, T and W are not calculated or returned.
+            is_T_partial: If True this effectively asserts the full ['M'] model is variance free, so WmM is not calculated or returned.
+        """
+        return {'is_T_partial': True}
+
+    def _calculate(self):
+        """ Called by constructor to calculate all available quantities prior to marginalization.
+        These quantities suffice to calculate V[0], V[M], A[00], self.A[m0]=A[M0] and self.A[mm]=A[MM]
+        """
+        super()._calculate()
+        if self.is_F_diagonal:
+            self.Upsilon = self.Lambda2[1][1] * self.Lambda2[-1][2]
+            self.V2MM = self.V['M'] * self.V['M']
+            self.mu_phi_mu = {'pre-factor': tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][2])) * self.F}
+            self.mu_phi_mu['pre-factor'] = tf.transpose(self.mu_phi_mu['pre-factor'], [1, 0])
+            self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
+            self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Phi, self.Upsilon)
+            self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.Ms, self.G, self.Phi, self.Gamma, self.Upsilon)
+            factor = tf.einsum('k, jJN -> kjJN', self.KYg0_sum, self.g0)
+            self.psi_factor = {'shape': factor.shape[:-2].as_list() + [-1, 1]}
+            self.psi_factor['0'] = tf.squeeze(tf.linalg.triangular_solve(self.K_cho, tf.reshape(factor, self.psi_factor['shape'])), axis=-1)
+            self.psi_factor['M'] = self._psi_factor(self.G, self.Phi, self.G_log_pdf)
+            A_mislabelled = self._A(self._mu_phi_mu(self.G_log_pdf, self.Upsilon_log_pdf, self.Omega_log_pdf, self.Omega_log_pdf, is_constructor=True),
+                                    self._mu_psi_mu(self.psi_factor['M'], is_constructor=True))
+            self.A = {'00': A_mislabelled.pop('Mm')}
+            if not self.options['is_T_partial']:
+                self.W = self._W(**A_mislabelled)
+                self.A = self.A | A_mislabelled
+
+    def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
+        """ Calculate everything.
+        Args:
+            m: A Tf.Tensor pair of ints indicating the slice [m[0]:m[1]].
+        Returns: The Sobol Index of m, with errors (T and W).
+        """
+        result = super().marginalize(m)
+        if self.is_F_diagonal:
+            G, Phi, Gamma = self.G, self.Phi, self.Gamma
+            Upsilon = self.Upsilon
+            G_m = G[..., m[0]:m[1]]
+            Phi_mm = Phi[..., m[0]:m[1]]
+            G_log_pdf = Gaussian.log_pdf(G_m, tf.sqrt(Phi_mm), is_variance_diagonal=True, LBunch=2)
+            Upsilon_log_pdf = self._Upsilon_log_pdf(G_m, Phi_mm, Upsilon[..., m[0]:m[1]])
+            Omega_log_pdf_M = self._Omega_log_pdf(self.Ms, m, G, Phi, Gamma, Upsilon)
+            Omega_log_pdf_m = self._Omega_log_pdf(m, m, G, Phi, Gamma, Upsilon)
+            psi_factor = self._psi_factor(G[..., m[0]:m[1]], Phi[..., m[0]:m[1]], G_log_pdf)
+            result = result | self._T(result['V'],
+                                      **self._W(**self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf_M, Omega_log_pdf_m),
+                                                          self._mu_psi_mu(psi_factor))))
+            return result
 
     def _T(self, Vm: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = TF.NOT_CALCULATED) -> Dict[str, TF.Tensor]:
         """ Calculate T
@@ -379,48 +445,6 @@ class ClosedIndex(gf.Module):
         mean = tf.einsum('ijM, lLNM -> liLNjM', sqrt_1_Upsilon, G)
         variance = 1 - tf.einsum('ijM, lLM, ijM -> liLjM', sqrt_1_Upsilon, Phi, sqrt_1_Upsilon)
         return Gaussian.log_pdf(mean, tf.sqrt(variance), is_variance_diagonal=True, LBunch=3)
-
-    def _Lambda2(self: bool) -> dict[int, Tuple[TF.Tensor]]:
-        """ Calculate and cache the required powers of <Lambda^2 + J>.
-
-        Returns: {1: <Lambda^2 + J>, -1: <Lambda^2 + J>^(-1)} for J in {0,1,2}.
-        """
-        if self.is_F_diagonal:
-            result = tf.expand_dims(tf.einsum('lM, lM -> lM', self.Lambda, self.Lambda), axis=1)
-        else:
-            result = tf.expand_dims(tf.einsum('lM, LM -> lLM', self.Lambda, self.Lambda), axis=1)
-        result = tuple(result + j for j in range(3))
-        return {1: result, -1: tuple(value**(-1) for value in result)}
-
-    def __init__(self, gp: GPInterface, **kwargs: Any):
-        """ Construct a ClosedIndex object. A wide range of values are collected or calculated and cached, especially via the final call to self._calculate.
-
-        Args:
-            gp: The gp to analyze.
-            **kwargs: The calculation options to override OPTIONS.
-        """
-        super().__init__()
-        self.gp = gp
-        self.options = self.OPTIONS | kwargs
-        # Unwrap parameters
-        self.L, self.M, self.N = self.gp.L, self.gp.M, self.gp.N
-        self.Ms = tf.constant([0, self.M], dtype=INT())
-        self.F = tf.constant(self.gp.kernel.params.variance, dtype=FLOAT())
-        self.is_F_diagonal = not (gp._read_options() if gp._options_json.exists() else self.OPTIONS).pop('kernel', {}).pop("variance", {}).pop('off_diagonal',
-                                                                                                                                               False)
-        if self.is_F_diagonal:
-            if self.F.shape[0] > 1:
-                self.F = tf.linalg.diag_part(self.F)
-            self.F = tf.reshape(self.F, [self.L, 1])
-        else:
-            self.options['is_T_calculated'] = False
-        self.Lambda = tf.constant(self.gp.kernel.params.lengthscales, dtype=FLOAT())
-        self.Lambda2 = self._Lambda2()
-        # Cache the training data kernel
-        self.K_cho = tf.constant(self.gp.K_cho, dtype=FLOAT())
-        self.K_inv_Y = tf.constant(self.gp.K_inv_Y, dtype=FLOAT())
-        # Calculate and cache values for m=0 and m=M
-        self._calculate()
 
 
 class RotatedClosedIndex(ClosedIndex):

@@ -40,12 +40,11 @@ def fold_and_rotate(repo: Repository, K: int, rotation: NP.Matrix, is_rotation_u
         is_rotation_undone: Whether to test the undo function in an extra Fold.
     """
     repo.into_K_folds(K)
-    rng = range(repo.K + 1) if K > 1 else range(1,2)
-    for k in rng:
+    for k in repo.folds:
         fold = Fold(repo, k)
         fold.X_rotation = rotation
     if is_rotation_undone:
-        shutil.copytree(repo.fold_folder(repo.K), repo.folder / f'fold.{repo.K + 1}')
+        shutil.copytree(repo.fold_folder(repo.K), repo.fold_folder(repo.K + 1))
         fold = Fold(repo, repo.K + 1)
         fold.X_rotation = np.transpose(rotation)
         Frame(fold.test_csv, fold.normalization.undo_from(fold.test_data.df))
@@ -111,7 +110,7 @@ def repo_folder(base_folder: PathLike, function_names: Union[str, Sequence[str]]
 
 # noinspection PyShadowingNames
 def sample(base_folder: PathLike, function_names: Union[str, Sequence[str]], N: int, M: int, K: int,
-           noise_magnitude: float, is_noise_diagonal: bool = False, is_noise_variance_stochastic: bool = False, 
+           noise_magnitude: float, is_noise_diagonal: bool = False, is_noise_variance_stochastic: bool = False,
            is_input_rotated: bool = False, is_rotation_undone: bool = False) -> Repository:
     """
     

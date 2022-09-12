@@ -295,7 +295,7 @@ class GP(GPInterface):
     @classmethod
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
-        return {'maxiter': 5000, 'gtol': 1E-12}
+        return {'maxiter': 5000, 'gtol': 1E-16}
 
     @property
     def implementation(self) -> Tuple[Any, ...]:
@@ -343,6 +343,7 @@ class GP(GPInterface):
                                                                       lengthscales=tf.squeeze(self._implementation[0].kernel.lengthscales),
                                                                       ).write()
         return options
+
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
         X = X.astype(dtype=FLOAT())
         if self._likelihood.is_independent:

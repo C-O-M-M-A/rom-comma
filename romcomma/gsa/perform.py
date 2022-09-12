@@ -71,7 +71,7 @@ class GSA(Model):
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
         """ Default calculation options. ``is_T_partial`` forces ``WmM = 0``."""
-        return calculate.ClosedIndex.OPTIONS
+        return calculate.ClosedIndexWithErrors.OPTIONS
 
     @classmethod
     def _calculate(cls, kind: GSA.Kind, m_dataset: tf.data.Dataset, calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
@@ -171,7 +171,7 @@ class GSA(Model):
     def __str__(self) -> str:
         return self.folder.name
 
-    def __init__(self, gp: GPInterface, kind: GSA.Kind, m: int = -1, **kwargs: Any):
+    def __init__(self, gp: GPInterface, kind: GSA.Kind, m: int = -1, is_error_calculated: bool = False, **kwargs: Any):
         """ Perform a Sobol GSA. The object created is single use and disposable: the constructor performs and records the entire GSA and the
         constructed object is basically useless once constructed.
 
@@ -180,15 +180,17 @@ class GSA(Model):
             kind: The kind of index to calculate - first order, closed or total.
             m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
                 Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
+            is_error_calculated: Whether to calculate the standard error on the Sobol index.
+                This is a memory intensive calculation, so leave this flag False unless you are sure you need errors
             **kwargs: The calculation options to override OPTIONS.
         """
-        options = self.OPTIONS | kwargs | {'m': 0}
         m, name = (m, f'{kind.name.lower()}.{m}') if 0 < m < gp.M else (-1, kind.name.lower())
-        name += '.p' if options['is_T_partial'] else ''
+        options = {'m': m} | self.OPTIONS | kwargs
         folder = gp.folder / 'gsa' / name
         # Save Parameters and Options
-        super().__init__(folder, read_parameters=False, m=m)
+        super().__init__(folder, read_parameters=False)
         self._write_options(options)
-        results = self._calculate(kind, self._m_dataset(kind, m, gp.M), calculate.ClosedIndex(gp, **options))
+        results = self._calculate(kind, self._m_dataset(kind, m, gp.M),
+                                  calculate.ClosedIndexWithErrors(gp, **options) if is_error_calculated else calculate.ClosedIndex(gp, **options))
         # Compose and save results
         results = {key: self._compose_and_save(self.parameters.csv(key), value, m, gp.M) for key, value in results.items()}
