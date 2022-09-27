@@ -79,7 +79,7 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
 
         """
         L = tf.linalg.cholesky(self.likelihood.add_to(self.KXX))
-        return multivariate_normal(self._Y, self._mean, L)
+        return tf.reduce_sum(multivariate_normal(self._Y, self._mean, L))
 
     def predict_f(self, Xnew: InputData, full_cov: bool = False, full_output_cov: bool = False) -> MeanAndVariance:
         r"""
