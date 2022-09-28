@@ -108,7 +108,7 @@ class ClosedIndex(gf.Module):
         """ Called by constructor to calculate all available quantities prior to marginalization.
         These quantities suffice to calculate V[0], V[M].
         """
-        pre_factor = Gaussian.det(tf.sqrt(self.Lambda2[1][0] * self.Lambda2[-1][1])) * self.F
+        pre_factor = tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][1])) * self.F
         self.g0, _ = Gaussian.log_pdf(mean=self.gp.X[tf.newaxis, tf.newaxis, ...],
                                        variance_cho=tf.sqrt(self.Lambda2[1][1]), is_variance_diagonal=True, LBunch=2)
         self.g0 = pre_factor[..., tf.newaxis] * tf.exp(self.g0)     # Symmetric in L^2
@@ -144,18 +144,20 @@ class ClosedIndex(gf.Module):
         Returns: V[m], according to marginalization.
 
         """
-        Gamma_reshape = tf.expand_dims(Gamma, axis=2)
-        Sigma = tf.expand_dims(Gamma_reshape, axis=2) + Gamma[tf.newaxis, tf.newaxis, ...]    # Symmetric in L^4
+        Phi = 1 - Gamma
+        Sigma = tf.expand_dims(tf.expand_dims(Gamma, axis=2), axis=2) + Gamma[tf.newaxis, tf.newaxis, ...]    # Symmetric in L^4
         Psi = Sigma - tf.einsum('lLM, jJM -> lLjJM', Gamma, Gamma)    # Symmetric in L^4
-        SigmaPsi = tf.einsum('lLjJM, lLjJM -> lLjJM', Sigma, Psi)    # Symmetric in L^4
-        SigmaG = tf.einsum('jJnM, lLNM -> lLNjJnM', Gamma_reshape, G) + tf.einsum('lLNM, jJnM -> lLNjJnM', Gamma_reshape, G)   # Symmetric in L^4 N^2
-        # print(sym_check(SigmaG, [3, 4, 5, 0, 1, 2, 6])) note the symmetry.
-        Sigma_pdf, Sigma_diag = Gaussian.log_pdf(mean=G, ordinate=G, variance_cho=tf.sqrt(Sigma), is_variance_diagonal=True, LBunch=2)
-        SigmaPsi_pdf, SigmaPsi_diag = Gaussian.log_pdf(mean=SigmaG, variance_cho=tf.sqrt(SigmaPsi), is_variance_diagonal=True, LBunch=2)
-        H = tf.exp(Sigma_pdf - SigmaPsi_pdf)   # Symmetric in L^4 N^2
-        V = tf.einsum('lLN, lLNjJn, jJn -> lLjJ', self.g0KY, H, self.g0KY) / tf.sqrt(Gaussian.det(Psi))
-        print(V)
-        V = tf.einsum('lLjJ -> lj', V) - self.V['0']
+        PsiPhi = tf.einsum('lLjJM, lLM -> lLjJM', Psi, Phi)    # Symmetric in L^4
+        PhiG = tf.expand_dims(tf.einsum('lLM, jJnM -> lLjJnM', Phi, G), axis=2)    # Symmetric in L^4 N^2
+        # print(sym_check(PhiG, [3, 4, 5, 0, 1, 2, 6])) note the symmetry.
+        Phi_pdf, Phi_diag = Gaussian.log_pdf(mean=G, variance_cho=tf.sqrt(Phi), is_variance_diagonal=True, LBunch=2)
+        Psi_pdf, Psi_diag = Gaussian.log_pdf(mean=PhiG, variance_cho=tf.sqrt(PsiPhi), ordinate=G[..., tf.newaxis, tf.newaxis, tf.newaxis, :],
+                                             is_variance_diagonal=True, LBunch=2)
+        H = tf.exp(Psi_pdf - Phi_pdf[..., tf.newaxis, tf.newaxis, tf.newaxis])   # Symmetric in L^4 N^2
+        # print(sym_check(H, [0, 1, 2, 4, 3, 5])) note the symmetry.
+        V = tf.einsum('lLN, lLNjJn, jJn -> lLjJ', self.g0KY, H, self.g0KY) / tf.sqrt(Gaussian.det(Psi))         # Only one symmetry in L^4
+        # print(sym_check(V, [2, 3, 0, 1])) note the symmetry.
+        V = tf.einsum('lLjJ -> lj', V) - self.V['0']        # Symmetric in L^2
         return V
 
     def _Lambda2(self) -> dict[int, Tuple[TF.Tensor]]:
@@ -167,7 +169,6 @@ class ClosedIndex(gf.Module):
             result = tf.expand_dims(tf.einsum('lM, lM -> lM', self.Lambda, self.Lambda), axis=1)
         else:
             result = tf.einsum('lM, LM -> lLM', self.Lambda, self.Lambda)
-            print(sym_check(result, [1, 0, 2]))
         result = tuple(result + j for j in range(3))
         return {1: result, -1: tuple(value**(-1) for value in result)}
 
@@ -188,8 +189,10 @@ class ClosedIndex(gf.Module):
         # Cache the training data kernel
         self.K_cho = tf.constant(self.gp.K_cho, dtype=FLOAT())
         self.K_inv_Y = tf.constant(self.gp.K_inv_Y, dtype=FLOAT())
-        self.is_F_diagonal = not (gp._read_options() if gp._options_json.exists() else gp.OPTIONS).pop('kernel', {}).pop("variance", {}).pop('off_diagonal',
-                                                                                                                                             False)
+        self.is_F_diagonal = self.options.pop('is_F_diagonal', None)
+        if self.is_F_diagonal is None:
+            gp_options = self.gp._read_options() if self.gp._options_json.exists() else self.gp.OPTIONS
+            self.is_F_diagonal = not gp_options.pop('kernel', {}).pop("variance", {}).pop('off_diagonal', False)
         if self.is_F_diagonal:
             self.F = self.F if self.F.shape[0] == 1 else tf.linalg.diag_part(self.F)
             self.F = tf.reshape(self.F, [self.L, 1])
