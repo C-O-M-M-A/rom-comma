@@ -29,6 +29,39 @@ from romcomma.test.utilities import sample
 
 BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\Jude EV')
 
+# if __name__ == '__main__':
+#     with run.Context('Test'):
+#         kinds = [run.perform.GSA.Kind.FIRST_ORDER, run.perform.GSA.Kind.CLOSED, run.perform.GSA.Kind.TOTAL]
+#         kind_names = [kind.name.lower() for kind in kinds]
+#         models = ['2WP.0', '2WP.1']
+#         name = 'model'
+#         for model in models:
+#             with run.Timing(f'{model} \n'):
+#                 repo = data.storage.Repository.from_csv(BASE_FOLDER / model, BASE_FOLDER / f'{model}.csv')
+#                 repo.into_K_folds(K=2, shuffle_before_folding=True)
+#                 run.gpr(name=name, repo=repo, is_read=None, is_independent=True, is_isotropic=None, optimize=True, test=True)
+#                 # repo = data.storage.Repository(BASE_FOLDER / model)
+#                 # run.gsa('model', repo, is_independent=True, is_isotropic=False, kinds=kinds)
+#
+#         aggregators = {'test_summary.csv' : [{'folder': (BASE_FOLDER / model) / f'{name}.i.a', 'model': model, 'kwargs': {'header': [0, 1], 'index_col': 0}}
+#                                            for model in models]}
+#         run.aggregate(aggregators=aggregators, dst=BASE_FOLDER / 'gpr', ignore_missing=False)
+#         aggregators = {'variance.csv': None, 'log_marginal.csv': None}
+#         for key in aggregators.keys():
+#             aggregators[key] = [{'folder': ((BASE_FOLDER / model) / f'{name}.i.a') / 'likelihood', 'model': model} for model in models]
+#         run.aggregate(aggregators=aggregators, dst=(BASE_FOLDER / 'gpr') / 'likelihood', ignore_missing=False)
+#
+#         aggregators = {'variance.csv': None, 'lengthscales.csv': None}
+#         for key in aggregators.keys():
+#             aggregators[key] = [{'folder': ((BASE_FOLDER / model) / f'{name}.i.a') / 'kernel', 'model': model} for model in models]
+#         run.aggregate(aggregators=aggregators, dst=(BASE_FOLDER / 'gpr') / 'kernel', ignore_missing=False)
+#
+#         # aggregators = {}
+#         # for key in ['S.csv', 'V.csv']:
+#         #     aggregators[key] = [{'folder': (((BASE_FOLDER / model) / f'{name}.i.a') / 'gsa') / kind_name, 'model': model, 'kind': kind_name}
+#         #                         for kind_name in kind_names
+#         #                         for model in models]
+#         #     run.aggregate(aggregators=aggregators, dst=BASE_FOLDER / 'gsa')
 
 if __name__ == '__main__':
     with run.Context('Test', device='CPU'):
@@ -43,7 +76,7 @@ if __name__ == '__main__':
                 # run.gpr(name=name, repo=repo, is_read=None, is_independent=True, is_isotropic=None, optimize=True, test=True)
                 repo = data.storage.Repository(BASE_FOLDER / model)
                 run.gsa('model', repo, is_independent=True, is_isotropic=False, kinds=kinds)
-                
+
         # aggregators = {'test_summary.csv' : [{'folder': (BASE_FOLDER / model) / f'{name}.i.a', 'model': model, 'kwargs': {'header': [0, 1], 'index_col': 0}}
         #                                    for model in models]}
         # run.aggregate(aggregators=aggregators, dst=BASE_FOLDER / 'gpr', ignore_missing=False)
