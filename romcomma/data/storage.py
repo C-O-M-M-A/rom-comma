@@ -182,9 +182,9 @@ class Repository:
         index = list(range(N))
         if shuffle_before_folding:
             random.shuffle(index)
-        if K <= 1:
-            K = abs(K)
+        if K >= 1:
             Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
+        K = abs(K)
         if K > 1:
             K_blocks = [list(range(K)) for dummy in range(int(N / K))]
             K_blocks.append(list(range(N % K)))
