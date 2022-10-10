@@ -158,7 +158,7 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
         return [full_name]
 
 
-def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropic: Optional[bool], kinds: Sequence[perform.GSA.Kind],
+def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropic: Optional[bool], kinds: Sequence[perform.GSA.Kind] = perform.GSA.ALL_KINDS,
         m: int = -1, ignore_exceptions: bool = False, is_error_calculated: bool = False, **kwargs) -> List[Path]:
     """ Service routine to recursively run GSAs on the Folds in a Repository, or on a single Fold.
 

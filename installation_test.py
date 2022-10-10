@@ -38,11 +38,8 @@ if __name__ == '__main__':
                         with run.Timing(f'sample generation for N={N}, noise={noise_magnitude}'):
                             repo = sample(BASE_PATH, ['sin.1', 'sin.1'], N, M, K=1,
                                           noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=False)
-                            # repo = Repository(repo_folder(BASE_PATH, ['sin.1', 'sin.1'], N, M, noise_magnitude, is_noise_diagonal=False))
                         with run.Timing(f'Gaussian Process Regression for N={N}, noise={noise_magnitude}'):
                             run.gpr(name='test', repo=repo, is_read=None, is_isotropic=False, is_independent=None, optimize=True, test=True)
                         with run.Timing(f'Global Sensitivity Analysis for N={N}, noise={noise_magnitude}'):
-                            run.gsa(name='test', repo=repo, is_independent=True)
-                            run.gsa(name='test', repo=repo, is_independent=False)
-                            # run.gsa('sin', repo, is_independent=True)
-                            # run.gsa('sin', repo, is_independent=False)
+                            run.gsa(name='test', repo=repo, is_independent=True, is_isotropic=False)
+                            run.gsa(name='test', repo=repo, is_independent=False, is_isotropic=False)

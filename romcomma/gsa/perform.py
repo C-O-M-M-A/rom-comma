@@ -69,6 +69,11 @@ class GSA(Model):
 
     @classmethod
     @property
+    def ALL_KINDS(cls):
+        return [kind for kind in cls.Kind]
+
+    @classmethod
+    @property
     def OPTIONS(cls) -> Dict[str, Any]:
         """ Default calculation options. ``is_T_partial`` forces ``WmM = 0``."""
         return calculate.ClosedIndexWithErrors.OPTIONS
