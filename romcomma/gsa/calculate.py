@@ -221,71 +221,48 @@ class ClosedIndexWithErrors(ClosedIndex):
         """
         return {'is_T_partial': True}
 
-    def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
-        """ Calculate everything.
-        Args:
-            m: A Tf.Tensor pair of ints indicating the slice [m[0]:m[1]].
-        Returns: The Sobol Index of m, with errors (T and W).
-        """
-        result = super().marginalize(m)
-        if self.is_F_diagonal:
-            G, Phi, Gamma = self.G, self.Phi, self.Gamma
-            Upsilon = self.Upsilon
-            G_m = G[..., m[0]:m[1]]
-            Phi_mm = Phi[..., m[0]:m[1]]
-            G_log_pdf = Gaussian.log_pdf(G_m, tf.sqrt(Phi_mm), is_variance_diagonal=True, LBunch=2)
-            Upsilon_log_pdf = self._Upsilon_log_pdf(G_m, Phi_mm, Upsilon[..., m[0]:m[1]])
-            Omega_log_pdf_M = self._Omega_log_pdf(self.Ms, m, G, Phi, Gamma, Upsilon)
-            Omega_log_pdf_m = self._Omega_log_pdf(m, m, G, Phi, Gamma, Upsilon)
-            psi_factor = self._psi_factor(G[..., m[0]:m[1]], Phi[..., m[0]:m[1]], G_log_pdf)
-            result = result | self._T(result['V'],
-                                      **self._W(**self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf_M, Omega_log_pdf_m),
-                                                          self._mu_psi_mu(psi_factor))))
-            return result
+    class EquatedRanks(NamedTuple):
+        l_j_and_i_k: Any
+        l_k_and_i_j: Any
 
-    _SIMPLIFICATIONS: Tuple[Tuple[Tuple[int]]] = (((1, 2, 3, 5, 6, 7, 4, 0), (7, 0, 1, 2, 6, 3, 4, 5), (0, 2, 3, 4, 6, 7, 5, 1), (0, 7, 1, 2, 3, 6, 4, 5)),
-                                                  ((1, 2, 3, 4, 6, 7, 5, 0), (7, 0, 1, 2, 3, 6, 4, 5), (0, 2, 3, 5, 6, 7, 4, 1), (0, 7, 1, 2, 6, 3, 4, 5)))
+    _TRANSPOSITIONS: EquatedRanks[Tuple[Tuple[int]]] = (((1, 2, 3, 5, 6, 7, 4, 0), (7, 0, 1, 2, 6, 3, 4, 5), (0, 2, 3, 4, 6, 7, 5, 1), (0, 7, 1, 2, 3, 6, 4, 5)),
+                                                        ((1, 2, 3, 4, 6, 7, 5, 0), (7, 0, 1, 2, 3, 6, 4, 5), (0, 2, 3, 5, 6, 7, 4, 1), (0, 7, 1, 2, 6, 3, 4, 5)))
 
-    class _EQUATE_RANKS(IntEnum):
-        L_J_AND_I_K = 0
-        L_K_AND_I_J = 1
+    class MangledEinstring(NamedTuple):
+        l: str
+        i: str
+
+    _EIN: EquatedRanks[MangledEinstring] = EquatedRanks(l_j_and_i_k=MangledEinstring(l='j', i='k'), l_k_and_i_j=MangledEinstring(l='k', i='j'))
 
     @classmethod
-    def simplified_eins(cls, which: ClosedIndexWithErrors._EQUATE_RANKS):
-        if which == cls._EQUATE_RANKS.L_J_AND_I_K:
-            return ('liLNjkJM', 'jJn', 'j')
-        else:
-            return ('liLNjkJM', 'jJn', 'j')
-
-    @classmethod
-    def equate_ranks(cls, liLNjkJM: TF.Tensor, which: ClosedIndexWithErrors._EQUATE_RANKS) -> TF.Tensor:
+    def equate_ranks(cls, liLNjkJM: TF.Tensor, transpositions: Tuple[Tuple[int]]) -> TF.Tensor:
         """
 
         Args:
             liLNjkJM: A tensor which must have ranks liLNjkJM
-            which: Which ranks to equate, either L_J_AND_I_K or L_K and I_J.
+            transpositions: A top-level element of ClosedIndexWithErrors._TRANSPOSITIONS.
 
         Returns:
-            liLNjkJM with ranks equated, as specified by which.
+            liLNjkJM with ranks equated.
         """
 
         return tf.transpose(tf.linalg.diag_part(tf.transpose(
-            tf.transpose(tf.linalg.diag_part(tf.transpose(liLNjkJM, cls._SIMPLIFICATIONS[which][0]))[..., tf.newaxis],
-                         cls._SIMPLIFICATIONS[which][1]), cls._SIMPLIFICATIONS[which][2]))[..., tf.newaxis], cls._SIMPLIFICATIONS[which][3])
+                            tf.transpose(tf.linalg.diag_part(tf.transpose(liLNjkJM, transpositions[0]))[..., tf.newaxis], transpositions[1]),
+                                         transpositions[2]))[..., tf.newaxis], transpositions[3])
 
     @classmethod
-    def equated_ranks_gaussian_log_pdf(cls, mean: TF.Tensor, variance: TF.Tensor, ordinate: TF.Tensor) -> List[LogPDF]:
+    def equated_ranks_gaussian_log_pdf(cls, mean: TF.Tensor, variance: TF.Tensor, ordinate: TF.Tensor) -> EquatedRanks[LogPDF]:
         variance_cho = tf.sqrt(variance)
         result = []
         N_axis = 3
-        for equate_ranks in cls._EQUATE_RANKS:
-            diag_variance_cho = tf.squeeze(cls.equate_ranks(tf.expand_dims(variance_cho, N_axis), equate_ranks), [N_axis])
-            diag_mean = cls.equate_ranks(mean, equate_ranks)
+        for transpositions in cls._TRANSPOSITIONS:
+            diag_variance_cho = tf.squeeze(cls.equate_ranks(tf.expand_dims(variance_cho, N_axis), transpositions), [N_axis])
+            diag_mean = cls.equate_ranks(mean, transpositions)
             diag_mean = diag_mean[..., tf.newaxis, :] - ordinate
             result += [Gaussian.log_pdf(mean=diag_mean, variance_cho=diag_variance_cho, is_variance_diagonal=True, LBunch=3)]
-        return result
+        return cls.EquatedRanks._make(result)
 
-    def _Omega_log_pdf(self, m: TF.Slice, mp: TF.Slice, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor) -> List[LogPDF]:
+    def _Omega_log_pdf(self, m: TF.Slice, mp: TF.Slice, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor) -> EquatedRanks[LogPDF]:
         """ The Omega integral for m=mp or m=[:M]. Does not apply when m=[0:0].
 
         Args:
@@ -320,7 +297,7 @@ class ClosedIndexWithErrors(ClosedIndex):
             G = G[..., mp[0]:mp[1]]
         return self.equated_ranks_gaussian_log_pdf(mean, variance, G[:, tf.newaxis, ...][tf.newaxis, tf.newaxis, tf.newaxis, tf.newaxis, ...])
 
-    def _Upsilon_log_pdf(self, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor) -> List[LogPDF]:
+    def _Upsilon_log_pdf(self, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor) -> EquatedRanks[LogPDF]:
         """ The Upsilon integral.
 
         Args:
@@ -349,14 +326,16 @@ class ClosedIndexWithErrors(ClosedIndex):
         """
         G_log_pdf = [g[:, tf.newaxis, ...] for g in G_log_pdf]
         mu_phi_mu = [[], []]
-        for i in range(len(Omega_log_pdf_m)):
+        Omega_log_pdf_m = list(Omega_log_pdf_m)
+        Omega_log_pdf_M = list(Omega_log_pdf_M)
+        for i, ein in enumerate(self._EIN):
             Omega_log_pdf_m[i] = list(Omega_log_pdf_m[i])
             Omega_log_pdf_M[i] = list(Omega_log_pdf_M[i])
             if not is_constructor or (is_constructor and not self.options['is_T_partial']):
                 Omega_log_pdf_m[i][0] += Upsilon_log_pdf[i][0] - G_log_pdf[0]
                 Omega_log_pdf_m[i][1] *= Upsilon_log_pdf[i][1] / G_log_pdf[1]
-                mu_phi_mu[i] += [tf.einsum('lLN, liLNjkJn, j -> li', self.g0KY, Gaussian.pdf(*Upsilon_log_pdf), self.KYg0_sum),
-                              tf.einsum('lLN, liLNjkJn, jJn -> li', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf_m)), self.g0KY)]
+                mu_phi_mu[i] += [tf.einsum(f'{ein.l}LN, liLNjkJn, j -> {ein.l}{ein.i}', self.g0KY, Gaussian.pdf(*Upsilon_log_pdf), self.KYg0_sum),
+                                 tf.einsum(f'{ein.l}, liLNjkJn, jJn -> {ein.l}{ein.i}', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf_m)), self.g0KY)]
             if is_constructor:
                 mu_phi_mu[i] += [tf.einsum('l, i -> li', self.KYg0_sum, self.KYg0_sum)]
             else:
@@ -364,7 +343,7 @@ class ClosedIndexWithErrors(ClosedIndex):
                     Omega_log_pdf_M[i][0] -= G_log_pdf[0]
                     Omega_log_pdf_M[i][1] /= G_log_pdf[1]
                     pdf = Gaussian.pdf(*tuple(Omega_log_pdf_M)) * Gaussian.pdf(*self.Upsilon_log_pdf)[..., tf.newaxis, tf.newaxis, tf.newaxis]
-                    mu_phi_mu += [tf.einsum('lLN, liLNjkJn, jJn -> li', self.g0KY, pdf, self.g0KY)]
+                    mu_phi_mu += [tf.einsum(f'{ein.l}LN, liLNjkJn, jJn -> {ein.l}{ein.i}', self.g0KY, pdf, self.g0KY)]
             mu_phi_mu = [item * self.mu_phi_mu['pre-factor'] for item in mu_phi_mu]
         # FIXME: Debug
         # if len(mu_phi_mu) > 1 and self._m[1]==1:
@@ -459,6 +438,27 @@ class ClosedIndexWithErrors(ClosedIndex):
             V_ratio = Vm / self.V['M']
             T += self.W['mm'] * V_ratio * V_ratio - 2 * Mm * V_ratio
         return {'T': T / self.V2MM, 'Wmm': mm} if self.options['is_T_partial'] else {'T': T / self.V2MM, 'Wmm': mm, 'WmM': Mm}
+
+    def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
+        """ Calculate everything.
+        Args:
+            m: A Tf.Tensor pair of ints indicating the slice [m[0]:m[1]].
+        Returns: The Sobol Index of m, with errors (T and W).
+        """
+        result = super().marginalize(m)
+        G, Phi, Gamma = self.G, self.Phi, self.Gamma
+        Upsilon = self.Upsilon
+        G_m = G[..., m[0]:m[1]]
+        Phi_mm = Phi[..., m[0]:m[1]]
+        G_log_pdf = Gaussian.log_pdf(G_m, tf.sqrt(Phi_mm), is_variance_diagonal=True, LBunch=2)
+        Upsilon_log_pdf = self._Upsilon_log_pdf(G_m, Phi_mm, Upsilon[..., m[0]:m[1]])
+        Omega_log_pdf_M = self._Omega_log_pdf(self.Ms, m, G, Phi, Gamma, Upsilon)
+        Omega_log_pdf_m = self._Omega_log_pdf(m, m, G, Phi, Gamma, Upsilon)
+        psi_factor = self._psi_factor(G[..., m[0]:m[1]], Phi[..., m[0]:m[1]], G_log_pdf)
+        result = result | self._T(result['V'],
+                                  **self._W(**self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf_M, Omega_log_pdf_m),
+                                                      self._mu_psi_mu(psi_factor))))
+        return result
 
     def _calculate(self):
         """ Called by constructor to calculate all available quantities prior to marginalization.

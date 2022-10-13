@@ -51,7 +51,7 @@ class MOGaussian(QuadratureLikelihood):
             **kwargs: Keyword arguments forwarded to :class:`Likelihood`.
         """
         self.variance = Variance(variance, name='LikelihoodVariance')
-        super().__init__(*(self.variance.shape))
+        super().__init__(latent_dim=self.variance.shape[0], observation_dim=self.variance.shape[0])
 
     def N(self, data) -> int:
         """ The number of datapoints in data, assuming the last 2 dimensions have been concatenated to LN. """

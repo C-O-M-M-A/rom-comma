@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\9.5')
+BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Rom/dat/SoftwareTest/9.5')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -133,6 +133,6 @@ if __name__ == '__main__':
             for noise_magnitude in (0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0):    #
                 noise_label = f'{noise_magnitude:.3f}'
                 for random in (False, ):
-                    with run.Timing(f'N={N}, noise={noise_magnitude}'):
+                    with run.TimingOneLiner(f'N={N}, noise={noise_magnitude}'):
                         run_gpr('initial', ['ishigami', 'sobol_g', 'sobol_g2'], N, noise_variance(L=3, scale=noise_magnitude, diagonal=True),
                                 noise_label=noise_label, random=random, M=5, K=2)

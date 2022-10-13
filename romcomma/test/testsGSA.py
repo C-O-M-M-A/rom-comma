@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\9s\\9.5')
+BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Rom/dat/SoftwareTest/9s/9.5')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):
@@ -151,6 +151,6 @@ if __name__ == '__main__':
             for noise_magnitude in (0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 1.0):    #
                 for random in (False, ):
                     for is_T_partial in (True, False):
-                        with run.Timing(f'N={N}, noise={noise_magnitude}, is_T_partial={is_T_partial}'):
+                        with run.TimingOneLiner(f'N={N}, noise={noise_magnitude}, is_T_partial={is_T_partial}'):
                             run_gsa('initial', ['ishigami', 'sobol_g', 'sobol_g2'], N, noise_label(noise_magnitude), random, 5,
                                     is_independent=True, ignore_exceptions=True, is_T_partial=is_T_partial)

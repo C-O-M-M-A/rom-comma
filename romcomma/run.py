@@ -35,6 +35,22 @@ from shutil import rmtree
 from romcomma import gpf
 
 @contextmanager
+def TimingOneLiner(name: str):
+    """ Context Manager for timing operations.
+
+    Args:
+        name: The name of this context, this appears as what is being timed. The empty string will not be timed.
+    """
+    _enter = time()
+    if name != '':
+        print(f'Running {name}', end='', flush=True)
+    yield
+    if name != '':
+        _exit = time()
+        print(f' took {timedelta(seconds=int(_exit-_enter))}.')
+
+
+@contextmanager
 def Timing(name: str):
     """ Context Manager for timing operations.
 
@@ -43,11 +59,11 @@ def Timing(name: str):
     """
     _enter = time()
     if name != '':
-        print(f'Running {name}', end='')
+        print(f'Running {name}...')
     yield
     if name != '':
         _exit = time()
-        print(f' took {timedelta(seconds=int(_exit-_enter))}.')
+        print(f'...took {timedelta(seconds=int(_exit-_enter))}.')
 
 
 @contextmanager
@@ -60,7 +76,7 @@ def Context(name: str, device: str = '', **kwargs):
             otherwise device allocation is automatic.
         **kwargs: Is passed straight to the implementation GPFlow manager. Note, however, that ``float=float32`` is inoperative due to sicpy.
     """
-    with Timing(name):
+    with TimingOneLiner(name):
         kwargs = kwargs | {'float': 'float64'}
         eager = kwargs.pop('eager', None)
         tf.config.run_functions_eagerly(eager)
@@ -70,7 +86,7 @@ def Context(name: str, device: str = '', **kwargs):
             device_manager = tf.device(device)
             print(f' on {device}', end='')
         else:
-            device_manager = Timing('')
+            device_manager = TimingOneLiner('')
         implementation_manager = gf.config.as_context(gf.config.Config(**kwargs))
         print('...')
         with device_manager:
@@ -126,8 +142,8 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
         for name in names:
             if test:
                 repo.aggregate_over_folds(name, ['test_summary.csv'], header=[0, 1], index_col=0)
-            repo.aggregate_over_folds(f'{name}\\likelihood', ['variance.csv', 'log_marginal.csv'])
-            repo.aggregate_over_folds(f'{name}\\kernel', ['variance.csv', 'lengthscales.csv'])
+            repo.aggregate_over_folds(f'{name}/likelihood', ['variance.csv', 'log_marginal.csv'])
+            repo.aggregate_over_folds(f'{name}/kernel', ['variance.csv', 'lengthscales.csv'])
         return names
     else:
         if is_independent is None:
@@ -148,7 +164,7 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
                         return gpr(name, repo, False, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
                 romcomma.gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
             return gpr(name, repo, True, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
-        with Timing(f'fold.{repo.meta["k"]} {full_name} GP Regression'):
+        with TimingOneLiner(f'fold.{repo.meta["k"]} {full_name} GP Regression'):
             gp = romcomma.gpr.models.GP(full_name, repo, is_read, is_independent, is_isotropic, kernel_parameters,
                                         **({} if parameters is None else parameters.as_dict()))
             if optimize:
@@ -199,7 +215,7 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
                 names = gsa(name, repo, is_independent, True, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
                 return names + gsa(name, repo, is_independent, False, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
             full_name = full_name + ('.i' if is_isotropic else '.a')
-            with Timing(f'fold.{repo.meta["k"]} {full_name} GSA'):
+            with TimingOneLiner(f'fold.{repo.meta["k"]} {full_name} GSA'):
                 gp = romcomma.gpr.models.GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
                 names = []
                 for kind in kinds:

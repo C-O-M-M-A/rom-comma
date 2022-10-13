@@ -27,7 +27,7 @@ from romcomma import run, data
 from romcomma.test.utilities import repo_folder
 from romcomma.test.utilities import sample
 
-BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\SoftwareTest\\Dependency\\1.1')
+BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Rom/dat/SoftwareTest/Dependency/1.1')
 
 
 if __name__ == '__main__':
@@ -39,7 +39,7 @@ if __name__ == '__main__':
             for M in (5,):
                 for noise_magnitude in (0.1,):
                     for is_noise_diagonal in (True, False):
-                        with run.Timing(f'N={N}, noise={noise_magnitude} \n'):
+                        with run.TimingOneLiner(f'N={N}, noise={noise_magnitude} \n'):
                             # repo = sample(BASE_FOLDER, ['s.0', 's.1'], N, M, K=-2,
                             #               noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True)
                             repo = data.storage.Repository(repo_folder(BASE_FOLDER, ['s.0', 's.1'], N, M,
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 #             for M in (5,):
 #                 for noise_magnitude in (0.1,):
 #                     for is_noise_diagonal in (True, False):
-#                         with run.Timing(f'N={N}, noise={noise_magnitude} \n'):
+#                         with run.TimingOneLiner(f'N={N}, noise={noise_magnitude} \n'):
 #                             # repo = sample(BASE_FOLDER, ['s.0', 's.1'], N, M, K=-2,
 #                             #               noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True)
 #                             repo = data.storage.Repository(repo_folder(BASE_FOLDER, ['s.0', 's.1'], N, M,

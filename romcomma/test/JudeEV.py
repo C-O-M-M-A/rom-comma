@@ -27,7 +27,7 @@ from romcomma import run, data
 from romcomma.test.utilities import repo_folder
 from romcomma.test.utilities import sample
 
-BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\Jude EV')
+BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Rom/dat/Jude EV')
 
 # if __name__ == '__main__':
 #     with run.Context('Test'):
@@ -36,7 +36,7 @@ BASE_FOLDER = Path('C:\\Users\\fc1ram\\Documents\\Rom\\dat\\Jude EV')
 #         models = ['2WP.0', '2WP.1']
 #         name = 'model'
 #         for model in models:
-#             with run.Timing(f'{model} \n'):
+#             with run.TimingOneLiner(f'{model} \n'):
 #                 repo = data.storage.Repository.from_csv(BASE_FOLDER / model, BASE_FOLDER / f'{model}.csv')
 #                 repo.into_K_folds(K=2, shuffle_before_folding=True)
 #                 run.gpr(name=name, repo=repo, is_read=None, is_independent=True, is_isotropic=None, optimize=True, test=True)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         models = ['2WP.0', '2WP.1']
         name = 'model'
         for model in models:
-            with run.Timing(f'{model} \n'):
+            with run.TimingOneLiner(f'{model} \n'):
                 # repo = data.storage.Repository.from_csv(BASE_FOLDER / model, BASE_FOLDER / f'{model}.csv')
                 # repo.into_K_folds(K=2, shuffle_before_folding=True)
                 # run.gpr(name=name, repo=repo, is_read=None, is_independent=True, is_isotropic=None, optimize=True, test=True)
