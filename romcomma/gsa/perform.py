@@ -167,7 +167,7 @@ class GSA(Model):
         elif kind == GSA.Kind.CLOSED:
             result = [tf.constant([0, m + 1], dtype=INT()) for m in ms]
         elif kind == GSA.Kind.TOTAL:
-            result = [tf.constant([m + 1, M + 1], dtype=INT()) for m in ms]
+            result = [tf.constant([m + 1, M], dtype=INT()) for m in ms]
         return tf.data.Dataset.from_tensor_slices(result)
 
     def __repr__(self) -> str:
