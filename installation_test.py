@@ -26,7 +26,7 @@ from romcomma import run
 from romcomma.test.utilities import sample
 
 
-BASE_PATH = Path('.\\installation_test')
+BASE_PATH = Path('installation_test')
 
 
 if __name__ == '__main__':
