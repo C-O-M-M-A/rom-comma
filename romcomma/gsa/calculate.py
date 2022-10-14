@@ -83,7 +83,7 @@ class Gaussian(ABC):
             variance_cho = tf.expand_dims(variance_cho, axis=axis)
         # Calculate the Gaussian pdf.
         if is_variance_diagonal:
-            exponent = (ordinate / variance_cho)
+            exponent = ordinate / tf.broadcast_to(variance_cho, tf.concat([variance_cho.shape[:-2], ordinate.shape[-2:]], axis=0))
         else:
             exponent = tf.squeeze(tf.linalg.triangular_solve(variance_cho, ordinate[..., tf.newaxis], lower=True), axis=-1)
             variance_cho = tf.linalg.diag_part(variance_cho)
@@ -159,8 +159,7 @@ class ClosedIndex(gf.Module):
         self.V = {'0': tf.einsum('l, j -> lj', self.KYg0_sum, self.KYg0_sum)}     # Symmetric in L^2
         self.G = tf.einsum('lLM, NM -> lLNM', self.Lambda2[-1][1], self.gp.X)     # Symmetric in L^2
         self.Phi = self.Lambda2[-1][1]     # Symmetric in L^2
-        self.Gamma = 1 - self.Phi     # Symmetric in L^2
-        self.V['M'] = self._V(self.G, self.Gamma)
+        self.V['M'] = self._V(self.G, self.Phi)
         self.is_covariance_zero = tf.where(tf.abs(self.V['M']) > self.EFFECTIVELY_ZERO_COVARIANCE, tf.constant([False]), tf.constant([True]))
         self.V['M'] = tf.where(self.is_covariance_zero, tf.constant(1.0, dtype=FLOAT()), self.V['M'])
 
@@ -255,11 +254,12 @@ class ClosedIndexWithErrors(ClosedIndex):
         variance_cho = tf.sqrt(variance)
         result = []
         N_axis = 3
+        shape = tf.concat([mean.shape[:-1], ordinate.shape[-2:]], axis=0) if tf.rank(ordinate) > 2 else None
         for transpositions in cls._TRANSPOSITIONS:
-            diag_variance_cho = tf.squeeze(cls.equate_ranks(tf.expand_dims(variance_cho, N_axis), transpositions), [N_axis])
-            diag_mean = cls.equate_ranks(mean, transpositions)
-            diag_mean = diag_mean[..., tf.newaxis, :] - ordinate
-            result += [Gaussian.log_pdf(mean=diag_mean, variance_cho=diag_variance_cho, is_variance_diagonal=True, LBunch=3)]
+            equated_ranks_variance_cho = tf.squeeze(cls.equate_ranks(tf.expand_dims(variance_cho, N_axis), transpositions), [N_axis])
+            equated_ranks_mean = cls.equate_ranks(mean, transpositions)[..., tf.newaxis, :]
+            equated_ranks_mean = (equated_ranks_mean if shape is None else tf.broadcast_to(equated_ranks_mean, shape)) - ordinate
+            result += [Gaussian.log_pdf(mean=equated_ranks_mean, variance_cho=equated_ranks_variance_cho, is_variance_diagonal=True, LBunch=3)]
         return cls.EquatedRanks._make(result)
 
     def _Omega_log_pdf(self, m: TF.Slice, mp: TF.Slice, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor) -> EquatedRanks[LogPDF]:
@@ -334,17 +334,20 @@ class ClosedIndexWithErrors(ClosedIndex):
             if not is_constructor or (is_constructor and not self.options['is_T_partial']):
                 Omega_log_pdf_m[i][0] += Upsilon_log_pdf[i][0] - G_log_pdf[0]
                 Omega_log_pdf_m[i][1] *= Upsilon_log_pdf[i][1] / G_log_pdf[1]
-                mu_phi_mu[i] += [tf.einsum(f'{ein.l}LN, liLNjkJn, j -> {ein.l}{ein.i}', self.g0KY, Gaussian.pdf(*Upsilon_log_pdf), self.KYg0_sum),
-                                 tf.einsum(f'{ein.l}, liLNjkJn, jJn -> {ein.l}{ein.i}', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf_m)), self.g0KY)]
+                mu_phi_mu[i] += [tf.einsum(f'{ein.l}LN, liLNjkJn, j -> {ein.l}{ein.i}', self.g0KY, Gaussian.pdf(*Upsilon_log_pdf[i]), self.KYg0_sum),
+                                 tf.einsum(f'{ein.l}, liLNjkJn, jJn -> {ein.l}{ein.i}', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf_m[i])), self.g0KY)]
             if is_constructor:
                 mu_phi_mu[i] += [tf.einsum('l, i -> li', self.KYg0_sum, self.KYg0_sum)]
             else:
                 if not self.options['is_T_partial']:
                     Omega_log_pdf_M[i][0] -= G_log_pdf[0]
                     Omega_log_pdf_M[i][1] /= G_log_pdf[1]
-                    pdf = Gaussian.pdf(*tuple(Omega_log_pdf_M)) * Gaussian.pdf(*self.Upsilon_log_pdf)[..., tf.newaxis, tf.newaxis, tf.newaxis]
+                    pdf = Gaussian.pdf(*tuple(Omega_log_pdf_M[i])) * Gaussian.pdf(*self.Upsilon_log_pdf[i])[..., tf.newaxis, tf.newaxis, tf.newaxis]
                     mu_phi_mu += [tf.einsum(f'{ein.l}LN, liLNjkJn, jJn -> {ein.l}{ein.i}', self.g0KY, pdf, self.g0KY)]
-            mu_phi_mu = [item * self.mu_phi_mu['pre-factor'] for item in mu_phi_mu]
+        mu_phi_mu = self.EquatedRanks._make(mu_phi_mu)
+        mu_phi_mu = [self.mu_phi_mu['pre-factor'] * tf.linalg.set_diag(mu_phi_mu.l_k_and_i_j[index], (tf.linalg.diag_part(mu_phi_mu.l_k_and_i_j[index]) +
+                                                                                                      tf.linalg.diag_part(mu_phi_mu.l_j_and_i_k[index])))
+                     for index in range(len(mu_phi_mu.l_j_and_i_k))]
         # FIXME: Debug
         # if len(mu_phi_mu) > 1 and self._m[1]==1:
         #     print(self.gp.kernel.is_independent)
@@ -446,14 +449,14 @@ class ClosedIndexWithErrors(ClosedIndex):
         Returns: The Sobol Index of m, with errors (T and W).
         """
         result = super().marginalize(m)
-        G, Phi, Gamma = self.G, self.Phi, self.Gamma
+        G, Phi = self.G, self.Phi
         Upsilon = self.Upsilon
         G_m = G[..., m[0]:m[1]]
         Phi_mm = Phi[..., m[0]:m[1]]
         G_log_pdf = Gaussian.log_pdf(G_m, tf.sqrt(Phi_mm), is_variance_diagonal=True, LBunch=2)
         Upsilon_log_pdf = self._Upsilon_log_pdf(G_m, Phi_mm, Upsilon[..., m[0]:m[1]])
-        Omega_log_pdf_M = self._Omega_log_pdf(self.Ms, m, G, Phi, Gamma, Upsilon)
-        Omega_log_pdf_m = self._Omega_log_pdf(m, m, G, Phi, Gamma, Upsilon)
+        Omega_log_pdf_M = self._Omega_log_pdf(self.Ms, m, G, Phi, Upsilon)
+        Omega_log_pdf_m = self._Omega_log_pdf(m, m, G, Phi, Upsilon)
         psi_factor = self._psi_factor(G[..., m[0]:m[1]], Phi[..., m[0]:m[1]], G_log_pdf)
         result = result | self._T(result['V'],
                                   **self._W(**self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf_M, Omega_log_pdf_m),
@@ -471,7 +474,7 @@ class ClosedIndexWithErrors(ClosedIndex):
         self.mu_phi_mu['pre-factor'] = tf.transpose(self.mu_phi_mu['pre-factor'], [1, 0])
         self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
         self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Phi, self.Upsilon)
-        self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.Ms, self.G, self.Phi, self.Gamma, self.Upsilon)
+        self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.Ms, self.G, self.Phi, self.Upsilon)
         factor = tf.einsum('l, iIN -> liIN', self.KYg0_sum, self.g0)
         self.psi_factor = {'shape': factor.shape[:-2].as_list() + [-1, 1]}
         self.psi_factor['0'] = tf.squeeze(tf.linalg.triangular_solve(self.K_cho, tf.reshape(factor, self.psi_factor['shape'])), axis=-1)
