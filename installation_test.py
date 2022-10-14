@@ -19,14 +19,14 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Run this module first thing, to test_data your installation of romcomma. """
+""" Run this module first thing, to test your installation of romcomma. """
 
 from romcomma.base.definitions import *
 from romcomma import run
 from romcomma.test.utilities import sample
 
 
-BASE_PATH = Path('./installation_test')
+BASE_PATH = Path('installation_test')
 
 
 if __name__ == '__main__':
