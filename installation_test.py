@@ -26,7 +26,7 @@ from romcomma import run
 from romcomma.test.utilities import sample
 
 
-BASE_PATH = Path('.\\installation_test')
+BASE_PATH = Path('./installation_test')
 
 
 if __name__ == '__main__':
@@ -35,7 +35,7 @@ if __name__ == '__main__':
             for M in (5,):
                 for noise_magnitude in (0.1,):
                     for is_rotated in (False, ):
-                        with run.Timing(f'sample generation for N={N}, noise={noise_magnitude}'):
+                        with run.TimingOneLiner(f'sample generation for N={N}, noise={noise_magnitude}'):
                             repo = sample(BASE_PATH, ['sin.1', 'sin.1'], N, M, K=1,
                                           noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=False)
                         with run.Timing(f'Gaussian Process Regression for N={N}, noise={noise_magnitude}'):
