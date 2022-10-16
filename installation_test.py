@@ -19,7 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Run this module first thing, to test_data your installation of romcomma. """
+""" Run this module first thing, to test your installation of romcomma. """
 
 from romcomma.base.definitions import *
 from romcomma import run
@@ -35,7 +35,7 @@ if __name__ == '__main__':
             for M in (5,):
                 for noise_magnitude in (0.1,):
                     for is_rotated in (False, ):
-                        with run.Timing(f'sample generation for N={N}, noise={noise_magnitude}'):
+                        with run.TimingOneLiner(f'sample generation for N={N}, noise={noise_magnitude}'):
                             repo = sample(BASE_PATH, ['sin.1', 'sin.1'], N, M, K=1,
                                           noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=False)
                         with run.Timing(f'Gaussian Process Regression for N={N}, noise={noise_magnitude}'):

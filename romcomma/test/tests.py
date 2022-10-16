@@ -67,7 +67,7 @@ if __name__ == '__main__':
                             # run.aggregate(aggregators=aggregators, dst=(repo.folder / 'gpr') / 'kernel', ignore_missing=False)
                             #
                             # run.gsa('diag', repo, is_independent=None, is_isotropic=None, kinds=kinds)
-                            run.gsa('variance', repo, is_independent=False, is_isotropic=False, kinds=kinds, is_F_diagonal=False)
+                            run.gsa('variance', repo, is_independent=False, is_isotropic=False, kinds=kinds, is_F_diagonal=False, is_error_calculated=True)
                             # run.gsa('lengthscales', repo, is_independent=False, is_isotropic=False, kinds=kinds, is_F_diagonal=True)
                             # aggregators = {}
                             # for key in ['S.csv', 'V.csv']:
