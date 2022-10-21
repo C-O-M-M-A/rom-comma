@@ -23,28 +23,38 @@
 name = "rom-comma"
 version = "1.0.0"
 description = "Reduced Order Modelling software, implementing Global Sensitivity Analysis using Gaussian Processes."
-authors = ["Robert Milton <r.a.milton@sheffield.ac.uk>"]
-license = "BSD 3-Clause"
-
+authors = [
+    {name = "Robert Milton", email="r.a.milton@sheffield.ac.uk"}
+]
+license = { text = "BSD 3-Clause" }
 readme = "README.md"
-homepage = "https://github.com/C-O-M-M-A/rom-comma"
-repository = "https://github.com/C-O-M-M-A/rom-comma"
-documentation = "https://github.com/C-O-M-M-A/rom-comma"
-
 keywords = ["Reduced Order Modelling", "Global Sensitivity Analysis", "Gaussian Process", "Sobol Index", "Screening"]
-
 classifiers = ["Topic :: Scientific/Engineering :: Artificial Intelligence",
                 "Intended Audience :: Science/Research", "Development Status :: 4 - Beta"]
-
-python = ">=3.9"
 
 dependencies = [
     "gpflow >= 2.2.1",
     "pandas >= 1.2.4",
     "SALib >= 1.4.5",
 ]
-build-backend = "setuptools.build_meta"
-optional-dependencies = [
+
+[tool.setuptools.packages.find]
+where = [""]
+include = ["romcomma*"]  # alternatively: `exclude = ["additional*"]`
+namespaces = false
+
+[project.optional-dependencies ]
+dev = [
     "Sphinx >= 4.2.0",
     "m2r2 >= 0.3.1"
 ]
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=40.8.0", "wheel"]
+python = ">=3.9"
+
+[project.urls]
+homepage = "https://github.com/C-O-M-M-A/rom-comma"
+repository = "https://github.com/C-O-M-M-A/rom-comma"
+documentation = "https://github.com/C-O-M-M-A/rom-comma"
