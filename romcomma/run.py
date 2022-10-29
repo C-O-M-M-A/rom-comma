@@ -200,7 +200,8 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
     if not isinstance(repo, Fold):
         for k in repo.folds:
             names = gsa(name, Fold(repo, k), is_independent, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
-        csvs = ['S.csv', 'V.csv'] + (['T.csv', 'Wmm.csv', 'WmM.csv'] if is_error_calculated else [])
+        csvs = ['S.csv', 'V.csv'] + (['T.csv', 'Wmm.csv', 'WmM_.csv'] if is_error_calculated else [])
+        # csvs = ['S.csv', 'V.csv'] + (['OO.csv', 'm0.csv', 'mm.csv', 'Mm_.csv'] if is_error_calculated else [])
         for name in names:
             repo.aggregate_over_folds(name, csvs, ignore_missing=True)
             shutil.copyfile(repo.fold_folder(repo.folds.start) / 'meta.json', repo.folder / name / 'meta.json')

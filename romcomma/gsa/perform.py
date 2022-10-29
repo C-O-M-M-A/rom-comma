@@ -49,13 +49,17 @@ class GSA(Model):
                         m (NP.Matrix): The dimensionality of the reduced model behind this calculation.
                         S (NP.Matrix): The Sobol index/indices.
                         T (NP.Matrix): The cross covariances of the Sobol index/indices.
-                        _V (NP.Matrix): The conditional variances underpinning Sobol index/indices.
+                        V (NP.Matrix): The conditional variances underpinning Sobol index/indices.
                         Wmm (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
                         WmM (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
                 """
                 S: NP.Matrix = np.atleast_2d(None)
                 T: NP.Matrix = np.atleast_2d(None)
                 V: NP.Matrix = np.atleast_2d(None)
+                # OO: NP.Matrix = np.atleast_2d(None)
+                # m0: NP.Matrix = np.atleast_2d(None)
+                # mm: NP.Matrix = np.atleast_2d(None)
+                # Mm_: NP.Matrix = np.atleast_2d(None)
                 Wmm: NP.Matrix = np.atleast_2d(None)
                 WmM_: NP.Matrix = np.atleast_2d(None)
 
@@ -135,7 +139,7 @@ class GSA(Model):
         if m_cols > len(m_list):
             m_list = m_list + [M]
         if m_cols > len(m_list):
-            m_list = [0] + m_list
+            m_list = [-1] + m_list
         return pd.Index(m_list, name='m')
 
     @classmethod
@@ -156,7 +160,7 @@ class GSA(Model):
 
         Args:
             kind: A GSA.Kind specifying the kind of GSA.
-            m: The dimensionality of the reduced model.
+            m: The final index of the reduced model.
             M: The dimensionality of the full model.
         Returns: A dataset of slices to iterate through to perform th GSA.
         """
@@ -183,13 +187,13 @@ class GSA(Model):
         Args:
             gp: The underlying Gaussian Process.
             kind: The kind of index to calculate - first order, closed or total.
-            m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
+            m: The final index of the reduced model. For a single calculation it is required that ``0 &le m &lt gp.M``.
                 Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
             is_error_calculated: Whether to calculate the standard error on the Sobol index.
                 This is a memory intensive calculation, so leave this flag False unless you are sure you need errors
             **kwargs: The calculation options to override OPTIONS.
         """
-        m, name = (m, f'{kind.name.lower()}.{m}') if 0 < m < gp.M else (-1, kind.name.lower())
+        m, name = (m, f'{kind.name.lower()}.{m}') if 0 <= m < gp.M else (-1, kind.name.lower())
         options = {'m': m} | self.OPTIONS | kwargs
         folder = gp.folder / 'gsa' / name
         # Save Parameters and Options
