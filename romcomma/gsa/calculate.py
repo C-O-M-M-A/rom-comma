@@ -97,7 +97,7 @@ class ClosedIndex(gf.Module):
     @classmethod
     @property
     def EFFECTIVELY_ZERO_COVARIANCE(cls) -> TF.Tensor:
-        return tf.constant(1.0E-2, dtype=FLOAT())
+        return tf.constant(1.0E-1, dtype=FLOAT())
 
     @classmethod
     @property
@@ -266,11 +266,10 @@ class ClosedIndexWithErrors(ClosedIndex):
             result += [Gaussian.log_pdf(mean=equated_ranks_mean, variance_cho=equated_ranks_variance_cho, is_variance_diagonal=True, LBunch=10000)]
         return self.EquatedRanks._make(result)
 
-    def _Omega_log_pdf(self, m: TF.Slice, mp: TF.Slice, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor) -> EquatedRanks[LogPDF]:
-        """ The Omega integral for m=mp or m=[:M]. Does not apply when m=[0:0].
+    def _Omega_log_pdf(self, mp: TF.Slice, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor) -> EquatedRanks[LogPDF]:
+        """ The Omega integral for m=mp or m=mp=[:M]. Does not apply when m=[0:0].
 
         Args:
-            m: The marginalization m.
             mp: The marginalization m_primed.
             G: Un-marginalized. lLNM and jJnM.
             Phi: Un-marginalized. ikM and jJM.
@@ -310,42 +309,42 @@ class ClosedIndexWithErrors(ClosedIndex):
         variance = 1 - tf.einsum('ikM, lLM, ikM -> liLkM', Upsilon_cho, Phi, Upsilon_cho)[..., tf.newaxis, :, tf.newaxis, :]
         return self.equated_ranks_gaussian_log_pdf(mean, variance, tf.constant(0, dtype=FLOAT()))
 
-    def _mu_phi_mu(self, G_log_pdf: TF.Tensor, Upsilon_log_pdf: TF.Tensor, Omega_log_pdf_M: TF.Tensor, Omega_log_pdf_m: TF.Tensor,
-                   is_constructor: bool = False) -> TF.Tensor:
+    def _mu_phi_mu(self, G_log_pdf: TF.Tensor, Upsilon_log_pdf: TF.Tensor, Omega_log_pdf: TF.Tensor,
+                   is_constructor: bool = False, Upsilon_log_pdf_M: Optional[TF.Tensor] = None) -> TF.Tensor:
         """ Calculate E[m] E[mp] (mu[m] phi[m][mp] mu[mp]).
 
         Args:
             G_log_pdf: jJn
             Upsilon_log_pdf: liLNjk
-            Omega_log_pdf_M: liLNjkJn
-            Omega_log_pdf_m: liLNjkJn
-            is_constructor:
+            Omega_log_pdf: liLNjkJn
+            is_constructor: bool, internally generated for calculation of A['00']
+            Upsilon_log_pdf_M: liLNjk, only required if not is_T_partial.
 
         Returns: li
         """
         G_log_pdf = [g[:, tf.newaxis, ...] for g in G_log_pdf]
         mu_phi_mu = [[], []]
-        Omega_log_pdf_m = list(Omega_log_pdf_m)
-        Omega_log_pdf_M = list(Omega_log_pdf_M)
+        Omega_log_pdf = list(Omega_log_pdf)
+        correction_00 = 0
         for i, ein in enumerate(self._EIN):
-            ein_j, ein_jJ, ein_0 = ((f'jLN, LNjkJn, j -> j', f'jLN, LNjkJn, jJn -> j', f'l, l -> l') if self.is_F_diagonal and ein.l == 'k' else
-                                    (f'{ein.l}LN, LNjkJn, j -> {ein.l}{ein.i}', f'{ein.l}LN, LNjkJn, jJn -> {ein.l}{ein.i}', f'l, i -> li'))
-            Omega_log_pdf_m[i] = list(Omega_log_pdf_m[i])
-            Omega_log_pdf_M[i] = list(Omega_log_pdf_M[i])
+            ein_j, ein_jJ, ein_0 = ((f'jLN, LNjkJn, j -> j', f'jLN, LNjkJn, jJn -> j', f'j, j -> j') if self.is_F_diagonal and ein.l == 'k' else
+                                    (f'{ein.l}LN, LNjkJn, j -> {ein.l}{ein.i}', f'{ein.l}LN, LNjkJn, jJn -> {ein.l}{ein.i}', f'l,j -> lj'))
+            Omega_log_pdf[i] = list(Omega_log_pdf[i])
             if not is_constructor or (is_constructor and not self.options['is_T_partial']):
-                Omega_log_pdf_m[i][0] += Upsilon_log_pdf[i][0] - G_log_pdf[0]
-                Omega_log_pdf_m[i][1] *= Upsilon_log_pdf[i][1] / G_log_pdf[1]
-                pdf = Gaussian.pdf(*Upsilon_log_pdf[i])
-                mu_phi_mu[i] += [tf.einsum(ein_j, self.g0KY, pdf, self.g0KY_sum),
-                                 tf.einsum(ein_jJ, self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf_m[i])), self.g0KY)]
+                Omega_log_pdf[i][0] += Upsilon_log_pdf[i][0] - G_log_pdf[0]
+                Omega_log_pdf[i][1] *= Upsilon_log_pdf[i][1] / G_log_pdf[1]
+                mu_phi_mu[i] += [tf.einsum(ein_j, self.g0KY, Gaussian.pdf(*Upsilon_log_pdf[i]), self.g0KY_sum),
+                                 tf.einsum(ein_jJ, self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)]
             if is_constructor:
                 mu_phi_mu[i] += [tf.einsum(ein_0, self.g0KY_sum, self.g0KY_sum)]
+                if ein == self._EIN.l_j_and_i_k and not self.is_F_diagonal:
+                    correction_00 = (tf.einsum('ii, ll -> li', self.mu_phi_mu['pre-factor'], mu_phi_mu[i][-1]) -
+                                     tf.einsum('ii, li -> li', self.mu_phi_mu['pre-factor'], mu_phi_mu[i][-1]))
             else:
                 if not self.options['is_T_partial']:
-                    Omega_log_pdf_M[i][0] -= G_log_pdf[0]
-                    Omega_log_pdf_M[i][1] /= G_log_pdf[1]
-                    pdf = Gaussian.pdf(*tuple(Omega_log_pdf_M[i])) * Gaussian.pdf(*self.Upsilon_log_pdf[i])[..., tf.newaxis, tf.newaxis, tf.newaxis]
-                    mu_phi_mu += [tf.einsum(ein_jJ, self.g0KY, pdf, self.g0KY)]
+                    Omega_log_pdf[i][0] += Upsilon_log_pdf_M[i][0] - Upsilon_log_pdf[i][0]
+                    Omega_log_pdf[i][1] /= Upsilon_log_pdf_M[i][1] / Upsilon_log_pdf[i][1]
+                    mu_phi_mu += [tf.einsum(ein_jJ, self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)]
         mu_phi_mu = self.EquatedRanks._make(mu_phi_mu)
         if self.is_F_diagonal:
             mu_phi_mu = [tf.linalg.diag(tf.einsum('i, i -> i', self.mu_phi_mu['pre-factor'], mu_phi_mu.l_k_and_i_j[index]))
@@ -355,6 +354,7 @@ class ClosedIndexWithErrors(ClosedIndex):
             mu_phi_mu = [tf.einsum('il, li -> li', self.mu_phi_mu['pre-factor'], mu_phi_mu.l_k_and_i_j[index])
                          + tf.einsum('ii, li -> li', self.mu_phi_mu['pre-factor'], mu_phi_mu.l_j_and_i_k[index])
                          for index in range(len(mu_phi_mu.l_j_and_i_k))]
+            mu_phi_mu[-1] += correction_00
         return tf.stack(mu_phi_mu)
 
     def _psi_factor_reshape(self, factor):
@@ -409,10 +409,10 @@ class ClosedIndexWithErrors(ClosedIndex):
         return tf.stack(mu_psi_mu)
 
     def _A(self, mu_phi_mu: TF.Tensor, mu_psi_mu: TF.Tensor) -> Dict[str, TF.Tensor]:
+        """ Not that when _is_constructor, anything labelled `Mm` is actually `00`."""
         A = mu_phi_mu - mu_psi_mu
         A += tf.transpose(A, [0, 2, 1])
         return {'Om': A[0], 'm0': A[0], 'mm': A[1], 'Mm': A[-1]} if A.shape[0] > 1 else {'Mm': A[0]}
-        # return {'OO': self.A['00'], 'm0': A[0], 'mm': A[1], 'Mm_': A[-1]} if A.shape[0] > 1 else {'Mm': A[0]}
 
     def _W(self, Om: TF.Tensor, m0: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = TF.NOT_CALCULATED) -> Dict[str, TF.Tensor]:
         """ Calculate W.
@@ -438,13 +438,13 @@ class ClosedIndexWithErrors(ClosedIndex):
             Mm: W[Mm]
 
         Returns: T[mm]
-
         """
-        T = mm
+        T, result = mm, {}
         if not self.options['is_T_partial']:
             V_ratio = Vm / self.V['M']
             T += self.W['mm'] * V_ratio * V_ratio - 2 * Mm * V_ratio
-        return {'T': T / self.V2MM, 'Wmm': mm} if self.options['is_T_partial'] else {'T': T / self.V2MM, 'Wmm': mm, 'WmM_': Mm}
+            result |= {'WmM_': Mm}
+        return {'T': T / self.V2MM, 'Wmm': mm} | result
 
     def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
         """ Calculate everything.
@@ -459,12 +459,11 @@ class ClosedIndexWithErrors(ClosedIndex):
         Phi_mm = Phi[..., m[0]:m[1]]
         G_log_pdf = Gaussian.log_pdf(G_m, tf.sqrt(Phi_mm), is_variance_diagonal=True, LBunch=2)
         Upsilon_log_pdf = self._Upsilon_log_pdf(G_m, Phi_mm, Upsilon[..., m[0]:m[1]])
-        Omega_log_pdf_M = self._Omega_log_pdf(self.Ms, m, G, Phi, Upsilon)
-        Omega_log_pdf_m = self._Omega_log_pdf(m, m, G, Phi, Upsilon)
+        Omega_log_pdf = self._Omega_log_pdf(m, G, Phi, Upsilon)
         psi_factor = self._psi_factor(G_m, Phi_mm, G_log_pdf)
-        result = result | self._T(result['V'], **self._W(**self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf_M, Omega_log_pdf_m),
+        result = result | self._T(result['V'], **self._W(**self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf, False, self.Upsilon_log_pdf),
                                                                    self._mu_psi_mu(psi_factor))))
-        # result = result | self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf_M, Omega_log_pdf_m), self._mu_psi_mu(psi_factor))
+        # result = result | self._A(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf), self._mu_psi_mu(psi_factor))
         return result
 
     def _calculate(self):
@@ -479,11 +478,11 @@ class ClosedIndexWithErrors(ClosedIndex):
         self.mu_phi_mu['pre-factor'] = tf.reshape(self.mu_phi_mu['pre-factor'], [-1]) if self.is_F_diagonal else self.mu_phi_mu['pre-factor']
         self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
         self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Phi, self.Upsilon)
-        self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.Ms, self.G, self.Phi, self.Upsilon)
+        self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.G, self.Phi, self.Upsilon)
         factor = tf.einsum('l, iIN -> liIN', self.g0KY_sum, self.g0)
         self.psi_factor = {'0': tf.squeeze(tf.linalg.triangular_solve(self.K_cho, self._psi_factor_reshape(factor)), axis=-1)}
         self.psi_factor['M'] = self._psi_factor(self.G, self.Phi, self.G_log_pdf)
-        A_mislabelled = self._A(self._mu_phi_mu(self.G_log_pdf, self.Upsilon_log_pdf, self.Omega_log_pdf, self.Omega_log_pdf, is_constructor=True),
+        A_mislabelled = self._A(self._mu_phi_mu(self.G_log_pdf, self.Upsilon_log_pdf, self.Omega_log_pdf, is_constructor=True),
                                 self._mu_psi_mu(self.psi_factor['M'], is_constructor=True))
         self.A = {'00': A_mislabelled.pop('Mm')}
         if not self.options['is_T_partial']:
