@@ -27,7 +27,7 @@ from romcomma import run, data
 from romcomma.test.utilities import repo_folder
 from romcomma.test.utilities import sample
 
-BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Rom/dat/Jude EV')
+BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/Jude EV')
 
 # if __name__ == '__main__':
 #     with run.Context('Test'):

@@ -30,7 +30,7 @@ import shutil
 import scipy.stats
 
 
-BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Rom/dat/SoftwareTest/9.5')
+BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/9.5')
 
 
 def fold_and_rotate_with_tests(repo: Repository, K: int, rotation: NP.Matrix):

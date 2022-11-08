@@ -27,7 +27,7 @@ from romcomma import run, data, gsa
 from romcomma.test.utilities import repo_folder
 from romcomma.test.utilities import sample
 
-BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Rom/dat/SoftwareTest/Dependency/1.5')
+BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/Dependency/1.5')
 
 
 if __name__ == '__main__':
