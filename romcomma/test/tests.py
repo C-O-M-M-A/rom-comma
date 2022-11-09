@@ -32,6 +32,7 @@ BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/Dependen
 
 if __name__ == '__main__':
     with run.Context('Test', device='CPU'):
+        is_sample_generated = True
         kinds = run.perform.GSA.ALL_KINDS
         kind_names = [kind.name.lower() for kind in kinds]
         models = ['diag.i.i', 'diag.i.a', 'diag.d.a']
@@ -40,13 +41,14 @@ if __name__ == '__main__':
                 for noise_magnitude in (0.25,):
                     for is_noise_diagonal in (True, False):
                         with run.TimingOneLiner(f'N={N}, noise={noise_magnitude} \n'):
-                            repo = sample(BASE_FOLDER, ['s.0', 's.1'], N, M, K=-2,
-                                          noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True)
-                            # repo = data.storage.Repository(repo_folder(BASE_FOLDER, ['s.0', 's.1'], N, M,
-                            #             noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True))
+                            if is_sample_generated:
+                                repo = sample(BASE_FOLDER, ['s.0', 's.1'], N, M, K=-2,
+                                              noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True)
+                            else:
+                                repo = data.storage.Repository(repo_folder(BASE_FOLDER, ['s.0', 's.1'], N, M,
+                                            noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True))
 
                             run.gpr(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=None, optimize=True, test=True)
-                            run.copy('diag.d.a', 'variance.d.a', repo)
                             aggregators= {'test_summary.csv': [{'folder': repo.folder / model, 'model': model, 'kwargs': {'header': [0, 1], 'index_col': 0}}
                                                                for model in models]}
                             run.aggregate(aggregators=aggregators, dst=repo.folder / 'gpr', ignore_missing=False)
@@ -63,8 +65,8 @@ if __name__ == '__main__':
                             run.gsa('diag', repo, is_independent=None, is_isotropic=None, kinds=kinds, is_error_calculated=True)
                             aggregators = {}
                             for key in ['S.csv', 'V.csv'] + ['T.csv', 'Wmm.csv', 'WmM_.csv']:
-                                aggregators[key] = [{'folder': (((repo.folder / name) / 'gsa') / kind_name), 'model': name, 'kind': kind_name}
+                                aggregators[key] = [{'folder': (((repo.folder / model) / 'gsa') / kind_name), 'model': model, 'kind': kind_name}
                                                     for kind_name in kind_names
-                                                    for name in models]
+                                                    for model in models]
                             run.aggregate(aggregators=aggregators, dst=repo.folder / 'gsa')
 
