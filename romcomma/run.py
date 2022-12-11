@@ -20,19 +20,20 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Contains routines for running models. """
-import copy as copylib
-import shutil
 
+from __future__ import annotations
+
+import shutil
 from romcomma.base.definitions import *
 from romcomma.base.classes import Model
 from romcomma.data.storage import Repository, Fold
+from romcomma.gpr.models import GP
 from romcomma.gsa import perform
-import romcomma
 from time import time
 from datetime import timedelta
 from contextlib import contextmanager
 from shutil import rmtree
-from romcomma import gpf
+from copy import deepcopy
 
 @contextmanager
 def TimingOneLiner(name: str):
@@ -113,7 +114,7 @@ def copy(src: str, dst: str, repo: Repository):
         Model.copy(repo.folder / src, repo.folder / dst)
 
 
-def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Optional[bool], is_isotropic: Optional[bool],
+def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Optional[bool], is_isotropic: Optional[bool], ignore_exceptions: bool = False,
         kernel_parameters: Optional[romcomma.gpr.kernels.Kernel.Parameters] = None, parameters: Optional[romcomma.gpr.models.GP.Parameters] = None,
         optimize: bool = True, test: bool = True, **kwargs) -> List[str]:
     """ Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.
@@ -125,6 +126,7 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
             If None, the nearest available GP down the hierarchy is broadcast, constructing from scratch if no nearby GP is available.
         is_independent: Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.
         is_isotropic: Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.
+        ignore_exceptions: Whether to continue when the GP provider throws an exception.
         kernel_parameters: A base.Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
             If None, the kernel is read from file, or set to the default base.Kernel.Parameters(), according to read_from_file.
         parameters: The GP.parameters fields=values to replace after reading from file/defaults.
@@ -138,22 +140,22 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
     """
     if not isinstance(repo, Fold):
         for k in repo.folds:
-            names = gpr(name, Fold(repo, k), is_read, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
-        for name in names:
-            if test:
-                repo.aggregate_over_folds(name, ['test_summary.csv'], header=[0, 1], index_col=0)
-            repo.aggregate_over_folds(f'{name}/likelihood', ['variance.csv', 'log_marginal.csv'])
-            repo.aggregate_over_folds(f'{name}/kernel', ['variance.csv', 'lengthscales.csv'])
+            names = gpr(name, Fold(repo, k), is_read, is_independent, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
+        if test:
+            Aggregate({'test_summary': {'header': [0, 1], 'index_col': 0}}, {name: {} for name in names}, ignore_exceptions).over_folds(repo, True)
+        Aggregate({'variance': {}, 'log_marginal': {}}, {f'{name}/likelihood': {} for name in names}, ignore_exceptions).over_folds(repo, True)
+        Aggregate({'variance': {}, 'lengthscales': {}}, {f'{name}/kernel': {} for name in names}, ignore_exceptions).over_folds(repo, True)
         return names
     else:
         if is_independent is None:
-            names = gpr(name, repo, is_read, True, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
+            names = gpr(name, repo, is_read, True, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
             return (names +
-                    gpr(name, repo, None, False, False if is_isotropic is None else is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs))
+                    gpr(name, repo, None, False, False if is_isotropic is None else is_isotropic, ignore_exceptions,
+                        kernel_parameters, parameters, optimize, test, **kwargs))
         full_name = name + ('.i' if is_independent else '.d')
         if is_isotropic is None:
-            names = gpr(name, repo, is_read, is_independent, True, kernel_parameters, parameters, optimize, test, **kwargs)
-            return names + gpr(name, repo, None, is_independent, False, kernel_parameters, parameters, optimize, test, **kwargs)
+            names = gpr(name, repo, is_read, is_independent, True, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
+            return names + gpr(name, repo, None, is_independent, False, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
         full_name = full_name + ('.i' if is_isotropic else '.a')
         if is_read is None:
             if not (repo.folder / full_name).exists():
@@ -161,16 +163,20 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
                 if is_independent or not (repo.folder / nearest_name).exists():
                     nearest_name = full_name[:-2] + '.i'
                     if not (repo.folder / nearest_name).exists():
-                        return gpr(name, repo, False, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
-                romcomma.gpr.models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
-            return gpr(name, repo, True, is_independent, is_isotropic, kernel_parameters, parameters, optimize, test, **kwargs)
+                        return gpr(name, repo, False, is_independent, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
+                GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
+            return gpr(name, repo, True, is_independent, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
         with TimingOneLiner(f'fold.{repo.meta["k"]} {full_name} GP Regression'):
-            gp = romcomma.gpr.models.GP(full_name, repo, is_read, is_independent, is_isotropic, kernel_parameters,
-                                        **({} if parameters is None else parameters.as_dict()))
-            if optimize:
-                gp.optimize(**kwargs)
-            if test:
-                gp.test()
+            try:
+                gp = GP(full_name, repo, is_read, is_independent, is_isotropic, kernel_parameters,
+                                            **({} if parameters is None else parameters.as_dict()))
+                if optimize:
+                    gp.optimize(**kwargs)
+                if test:
+                    gp.test()
+            except BaseException as exception:
+                if not ignore_exceptions:
+                    raise exception
         return [full_name]
 
 
@@ -200,10 +206,11 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
     if not isinstance(repo, Fold):
         for k in repo.folds:
             names = gsa(name, Fold(repo, k), is_independent, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
-        csvs = ['S.csv', 'V.csv'] + (['T.csv', 'Wmm.csv', 'WmM_.csv'] if is_error_calculated else [])
-        # csvs = ['S.csv', 'V.csv'] + (['OO.csv', 'm0.csv', 'mm.csv', 'Mm_.csv'] if is_error_calculated else [])
+        Aggregate({'S': {}, 'V': {}} | ({'T': {}, 'Wmm': {}, 'WmM_': {}} if is_error_calculated else {}),
+                  {name: {} for name in names}, ignore_exceptions).over_folds(repo, True)
+        # Aggregate({'S': {}, 'V': {}} | ({'OO': {}, 'm0': {}, 'mm': {}, 'Mm_': {}} if is_error_calculated else {}),
+        #           {name: {} for name in names}, ignore_exceptions).over_folds(repo, True)
         for name in names:
-            repo.aggregate_over_folds(name, csvs, ignore_missing=True)
             shutil.copyfile(repo.fold_folder(repo.folds.start) / 'meta.json', repo.folder / name / 'meta.json')
     else:
         try:
@@ -217,7 +224,7 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
                 return names + gsa(name, repo, is_independent, False, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
             full_name = full_name + ('.i' if is_isotropic else '.a')
             with TimingOneLiner(f'fold.{repo.meta["k"]} {full_name} GSA'):
-                gp = romcomma.gpr.models.GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
+                gp = GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
                 names = []
                 for kind in kinds:
                     folder = perform.GSA(gp, kind, m, is_error_calculated, **kwargs).folder
@@ -230,31 +237,80 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
     return names
 
 
-def aggregate(aggregators: Dict[str, Sequence[Dict[str, Any]]], dst: Union[Path, str], ignore_missing: bool=False):
-    """ Aggregate csv files over aggregators.
+class Aggregate:
+    """ A device for aggregating csvs across folders."""
 
-    Args:
-        aggregators: A Dict of aggregators, keyed by csv filename. An aggregator is a List of Dicts containing source folder ['folder']
-            and {key: value} to insert column 'key' and populate it with 'value' in folder/csv.
-        dst: The destination folder, to house csv files listed as the keys in aggregators.
-    """
-    dst = Path(dst)
-    rmtree(dst, ignore_errors=True)
-    dst.mkdir(mode=0o777, parents=True, exist_ok=False)
-    for csv, aggregator in aggregators.items():
-        is_initial = True
-        results = None
-        for file in aggregator:
-            file = copylib.deepcopy(file)
-            filepath = Path(file.pop('folder'))/csv
-            kwargs = file.pop('kwargs', {})
-            if filepath.exists() or not ignore_missing:
-                result = pd.read_csv(filepath, **kwargs)
-                for key, value in file.items():
-                    result.insert(0, key, np.full(result.shape[0], value), True)
-                if is_initial:
-                    results = result.copy(deep=True)
-                    is_initial = False
-                else:
-                    results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
-        results.to_csv(dst/csv, index=False, float_format='%.6f')
+    csvs: Dict[str, Dict[str, Any]] = {}    # Key: csv name (minus extension). Value: a Dict of options (kwargs) passed to pd.read_csv.
+    folders: Dict[str, Dict[str, Any]] = {}   # Key: folder containing csvs. Value: An (ordered) Dict of {Column name: Column value} to insert in reverse order.
+    ignore_missing: bool = False    # Whether to raise an exception when a csv is missing from a folder.
+    write_options: Dict[str, Any] = {'index': False, 'float_format': '%.6f'}    # kwargs passed straight to pd.to_csv.
+
+    def __call__(self, dst: Union[Repository, Path, str], delete_existing=False, **kwargs: Any):
+        """ Aggregate self.csvs into dst. If dst is a repo, self.over_folds is called, otherwise self.over_folders.
+
+        Args:
+            dst: The destination folder, to house self.csvs, aggregated over self.folders.
+            delete_existing: Whether to delete and recreate an existing dst.
+            **kwargs:  Write options passed straight to pd.to_csv.
+        """
+        if isinstance(dst, Repository):
+            return self.over_folds(dst, delete_existing, **kwargs)
+        else:
+            return self.over_folders(dst, delete_existing, **kwargs)
+
+    def over_folders(self, dst: Union[Path, str], delete_existing=False, **kwargs: Any):
+        """ Aggregate self.csvs over self.folders.
+
+        Args:
+            dst: The destination folder, to house self.csvs, aggregated over self.folders.
+            delete_existing: Whether to delete and recreate an existing dst.
+            **kwargs:  Write options passed straight to pd.to_csv.
+        """
+        dst = Path(dst)
+        if delete_existing:
+            rmtree(dst, ignore_errors=True)
+        dst.mkdir(mode=0o777, parents=True, exist_ok=True)
+        for csv, read_options in self.csvs.items():
+            is_initial = True
+            results = None
+            for folder, columns in self.folders.items():
+                file = Path(folder) / f'{csv}.csv'
+                if file.exists() or not self.ignore_missing:
+                    result = pd.read_csv(file, **read_options)
+                    for key, value in columns.items():
+                        result.insert(0, key, np.full(result.shape[0], value), True)
+                    if is_initial:
+                        results = result.copy(deep=True)
+                        is_initial = False
+                    else:
+                        results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
+            results.to_csv(dst / f'{csv}.csv', **(self.write_options | kwargs))
+
+    def over_folds(self, dst: Repository, delete_existing=False, **kwargs: Any):
+        """ Aggregate self.csvs in dst.fold[k]/self.folders over k -- i.e. the folds of dst.
+
+        Args:
+            dst: The destination repo, to house csv files listed as the keys in aggregators.
+            delete_existing: Whether to delete and recreate an existing dst.
+            **kwargs:  Write options passed straight to pd.to_csv.
+        """
+        if isinstance(dst, Fold):
+            raise NotADirectoryError('dst is a Fold, which cannot contain other Folds, so cannot be aggregated over.')
+        folds = tuple((Fold(dst, k) for k in dst.folds))
+        for sub_folder, extra_columns in self.folders.items():
+            folders = {fold.folder / sub_folder: {'fold': fold.meta['k'], 'N': fold.N} | extra_columns for fold in folds}
+            Aggregate(self.csvs, folders, self.ignore_missing).over_folders(dst.folder / sub_folder, delete_existing, **kwargs)
+
+    def __init__(self, csvs: Dict[str, Dict[str, Any]] = None, folders: Dict[str, Dict[str, Any]] = None, ignore_missing: bool = False, **kwargs: Any):
+        """ Construct an Aggregate object.
+
+        Args:
+            csvs: Key = csv name (minus extension). Value = a Dict of options (kwargs) passed to pd.read_csv.
+            folders: Key = folder containing csvs. Value = An OrderedDict of {Column name: Column value} to insert (in reverse order) at left of csv.
+            ignore_missing: bool: Whether to raise an exception when a csv is missing from a folder.
+            **kwargs:  Write options passed straight to pd.to_csv.
+        """
+        self.csvs = self.csvs if csvs is None else csvs
+        self.folders = self.folders if folders is None else folders
+        self.ignore_missing = ignore_missing
+        self.write_options.update(kwargs)

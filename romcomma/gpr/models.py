@@ -23,9 +23,6 @@
 
 from __future__ import annotations
 
-import numpy as np
-import pandas as pd
-
 from romcomma.base.definitions import *
 from romcomma.data.storage import Fold, Frame
 from romcomma.base.classes import Parameters, Model
@@ -322,7 +319,7 @@ class GP(GPInterface):
         options = (self._read_options() if self._options_json.exists() else self.OPTIONS)
         kernel_options = self._kernel.optimize(**(options.pop('kernel', {}) | kwargs.pop('kernel', {})))
         likelihood_options = self._likelihood.optimize(**(options.pop('likelihood', {}) | kwargs.pop('likelihood', {})))
-        options = options | kwargs
+        options.update(kwargs)
         options.pop('result', None)
         opt = gf.optimizers.Scipy()
         options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)

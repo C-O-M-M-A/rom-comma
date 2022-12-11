@@ -49,24 +49,24 @@ if __name__ == '__main__':
                                             noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True))
 
                             run.gpr(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=None, optimize=True, test=True)
-                            aggregators= {'test_summary.csv': [{'folder': repo.folder / model, 'model': model, 'kwargs': {'header': [0, 1], 'index_col': 0}}
-                                                               for model in models]}
-                            run.aggregate(aggregators=aggregators, dst=repo.folder / 'gpr', ignore_missing=False)
-                            aggregators = {'variance.csv': None, 'log_marginal.csv': None}
-                            for key in aggregators.keys():
-                                aggregators[key] = [{'folder': (repo.folder / model) / 'likelihood', 'model': model} for model in models]
-                            run.aggregate(aggregators=aggregators, dst=(repo.folder / 'gpr') / 'likelihood', ignore_missing=False)
-
-                            aggregators = {'variance.csv': None, 'lengthscales.csv': None}
-                            for key in aggregators.keys():
-                                aggregators[key] = [{'folder': (repo.folder / model) / 'kernel', 'model': model} for model in models]
-                            run.aggregate(aggregators=aggregators, dst=(repo.folder / 'gpr') / 'kernel', ignore_missing=False)
-
+                            # aggregators= {'test_summary.csv': [{'folder': repo.folder / model, 'model': model, 'kwargs': {'header': [0, 1], 'index_col': 0}}
+                            #                                    for model in models]}
+                            # run.aggregate(aggregators=aggregators, dst=repo.folder / 'gpr', ignore_missing=False)
+                            # aggregators = {'variance.csv': None, 'log_marginal.csv': None}
+                            # for key in aggregators.keys():
+                            #     aggregators[key] = [{'folder': (repo.folder / model) / 'likelihood', 'model': model} for model in models]
+                            # run.aggregate(aggregators=aggregators, dst=(repo.folder / 'gpr') / 'likelihood', ignore_missing=False)
+                            #
+                            # aggregators = {'variance.csv': None, 'lengthscales.csv': None}
+                            # for key in aggregators.keys():
+                            #     aggregators[key] = [{'folder': (repo.folder / model) / 'kernel', 'model': model} for model in models]
+                            # run.aggregate(aggregators=aggregators, dst=(repo.folder / 'gpr') / 'kernel', ignore_missing=False)
+                            #
                             run.gsa('diag', repo, is_independent=None, is_isotropic=None, kinds=kinds, is_error_calculated=True)
-                            aggregators = {}
-                            for key in ['S.csv', 'V.csv'] + ['T.csv', 'Wmm.csv', 'WmM_.csv']:
-                                aggregators[key] = [{'folder': (((repo.folder / model) / 'gsa') / kind_name), 'model': model, 'kind': kind_name}
-                                                    for kind_name in kind_names
-                                                    for model in models]
-                            run.aggregate(aggregators=aggregators, dst=repo.folder / 'gsa')
+                            # aggregators = {}
+                            # for key in ['S.csv', 'V.csv'] + ['T.csv', 'Wmm.csv', 'WmM_.csv']:
+                            #     aggregators[key] = [{'folder': (((repo.folder / model) / 'gsa') / kind_name), 'model': model, 'kind': kind_name}
+                            #                         for kind_name in kind_names
+                            #                         for model in models]
+                            # run.aggregate(aggregators=aggregators, dst=repo.folder / 'gsa')
 

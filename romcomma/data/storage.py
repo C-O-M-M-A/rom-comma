@@ -198,39 +198,6 @@ class Repository:
                 Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization)
         return K
 
-    def aggregate_over_folds(self, child_path: Union[Path, str], csvs: Sequence[str], ignore_missing: bool = False, **kwargs: Any):
-        """ Aggregate csv files over the Folds in this Repo.
-
-        Args:
-            child_path: The child path of the folder to aggregate into. The source is fold.folder/child_path/csvs[i],
-            the aggregate destination is self.folder/child_path/csvs[i].
-            csvs: A list of the csv files to aggregate.
-            ignore_missing: Whether to suppress missing FileNotFoundError.
-            **kwargs: Read options passed directly to pd.read_csv(). Overridable defaults are {'index': False, 'float_format':'%.6f'}
-        """
-        if isinstance(self, Fold):
-            raise NotADirectoryError('A Fold cannot contain other Folds, so cannot be aggregated over.')
-        child_path = Path(child_path)
-        dst = self._folder / child_path
-        shutil.rmtree(dst, ignore_errors=True)
-        dst.mkdir(mode=0o777, parents=True, exist_ok=False)
-        rng = self.folds
-        for csv in csvs:
-            results = None
-            is_initial = True
-            for k in rng:
-                fold = Fold(self, k)
-                if (fold.folder / child_path / csv).exists() or not ignore_missing:
-                    result = pd.read_csv(fold.folder / child_path / csv, **kwargs)
-                    result.insert(0, 'fold', np.full(result.shape[0], k), True)
-                    result.insert(0, 'N', np.full(result.shape[0], fold.N), True)
-                    if is_initial:
-                        results = result.copy(deep=True)
-                        is_initial = False
-                    else:
-                        results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
-            results.to_csv(dst / csv, **{'index': False, 'float_format': '%.6f'})
-
     def fold_folder(self, k: int) -> Path:
         return self._folder / f'fold.{k:d}'
 
