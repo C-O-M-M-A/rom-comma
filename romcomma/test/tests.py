@@ -20,53 +20,44 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Contains developer tests of romcomma. """
-import pandas as pd
 
 from romcomma.base.definitions import *
-from romcomma import run, data, gsa
-from romcomma.test.utilities import repo_folder
-from romcomma.test.utilities import sample
+from romcomma import run, data, test
+from romcomma.test import utilities
 
 BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/Dependency/1.5')
 
 
 if __name__ == '__main__':
+    is_sample_generated = True
+    models = ['diag.i.i', 'diag.i.a', 'diag.d.a']
+    ignore_exceptions = True
+    kinds = run.perform.GSA.ALL_KINDS
+    is_error_calculated = False
     with run.Context('Test', device='CPU'):
-        is_sample_generated = True
-        kinds = run.perform.GSA.ALL_KINDS
         kind_names = [kind.name.lower() for kind in kinds]
-        models = ['diag.i.i', 'diag.i.a', 'diag.d.a']
         for N in (200,):
-            for M in (5,):
-                for noise_magnitude in (0.25,):
-                    for is_noise_diagonal in (True, False):
+            for M in (7,):
+                for noise_magnitude in (0.75,):
+                    for is_noise_diagonal in (True,):
                         with run.TimingOneLiner(f'N={N}, noise={noise_magnitude} \n'):
                             if is_sample_generated:
-                                repo = sample(BASE_FOLDER, ['s.0', 's.1'], N, M, K=-2,
-                                              noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True)
+                                repo = utilities.sample(BASE_FOLDER, ['o.0', 'o.4'], N, M, K=-2,
+                                                        noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True)
                             else:
-                                repo = data.storage.Repository(repo_folder(BASE_FOLDER, ['s.0', 's.1'], N, M,
-                                            noise_magnitude=noise_magnitude, is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True))
-
-                            run.gpr(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=None, optimize=True, test=True)
-                            # aggregators= {'test_summary.csv': [{'folder': repo.folder / model, 'model': model, 'kwargs': {'header': [0, 1], 'index_col': 0}}
-                            #                                    for model in models]}
-                            # run.aggregate(aggregators=aggregators, dst=repo.folder / 'gpr', ignore_missing=False)
-                            # aggregators = {'variance.csv': None, 'log_marginal.csv': None}
-                            # for key in aggregators.keys():
-                            #     aggregators[key] = [{'folder': (repo.folder / model) / 'likelihood', 'model': model} for model in models]
-                            # run.aggregate(aggregators=aggregators, dst=(repo.folder / 'gpr') / 'likelihood', ignore_missing=False)
-                            #
-                            # aggregators = {'variance.csv': None, 'lengthscales.csv': None}
-                            # for key in aggregators.keys():
-                            #     aggregators[key] = [{'folder': (repo.folder / model) / 'kernel', 'model': model} for model in models]
-                            # run.aggregate(aggregators=aggregators, dst=(repo.folder / 'gpr') / 'kernel', ignore_missing=False)
-                            #
-                            run.gsa('diag', repo, is_independent=None, is_isotropic=None, kinds=kinds, is_error_calculated=True)
-                            # aggregators = {}
-                            # for key in ['S.csv', 'V.csv'] + ['T.csv', 'Wmm.csv', 'WmM_.csv']:
-                            #     aggregators[key] = [{'folder': (((repo.folder / model) / 'gsa') / kind_name), 'model': model, 'kind': kind_name}
-                            #                         for kind_name in kind_names
-                            #                         for model in models]
-                            # run.aggregate(aggregators=aggregators, dst=repo.folder / 'gsa')
+                                repo = data.storage.Repository(utilities.repo_folder(BASE_FOLDER, ['s.0', 's.1'], N, M, noise_magnitude=noise_magnitude,
+                                                                                     is_noise_diagonal=is_noise_diagonal, is_noise_variance_stochastic=True))
+                            run.gpr(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=None, ignore_exceptions=ignore_exceptions,
+                                    optimize=True, test=True)
+                            run.Aggregate({'test_summary': {'header': [0, 1], 'index_col': 0}}, {repo.folder/model: {'model': model} for model in models},
+                                          ignore_exceptions).over_folders(repo.folder/'gpr', True)
+                            run.Aggregate({'variance': {}, 'log_marginal': {}}, {f'{repo.folder/model}/likelihood': {'model': model} for model in models},
+                                          ignore_exceptions).over_folders((repo.folder/'gpr')/'likelihood', True)
+                            run.Aggregate({'variance': {}, 'lengthscales': {}}, {f'{repo.folder/model}/kernel': {'model': model} for model in models},
+                                          ignore_exceptions).over_folders((repo.folder/'gpr')/'kernel', True)
+                            run.gsa('diag', repo, is_independent=None, is_isotropic=None, kinds=kinds, is_error_calculated=is_error_calculated)
+                            run.Aggregate({'S': {}, 'V': {}} | ({'T', 'Wmm', 'WmM_'} if is_error_calculated else {}),
+                                          {f'{repo.folder/model}/gsa/{kind_name}': {'model': model, 'kind': kind_name}
+                                           for kind_name in kind_names for model in models},
+                                          ignore_exceptions).over_folders((repo.folder/'gsa'), True)
 

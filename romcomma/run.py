@@ -27,7 +27,7 @@ import shutil
 from romcomma.base.definitions import *
 from romcomma.base.classes import Model
 from romcomma.data.storage import Repository, Fold
-from romcomma.gpr.models import GP
+from romcomma.gpr import models, kernels
 from romcomma.gsa import perform
 from time import time
 from datetime import timedelta
@@ -115,7 +115,7 @@ def copy(src: str, dst: str, repo: Repository):
 
 
 def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Optional[bool], is_isotropic: Optional[bool], ignore_exceptions: bool = False,
-        kernel_parameters: Optional[romcomma.gpr.kernels.Kernel.Parameters] = None, parameters: Optional[romcomma.gpr.models.GP.Parameters] = None,
+        kernel_parameters: Optional[kernels.Kernel.Parameters] = None, parameters: Optional[models.GP.Parameters] = None,
         optimize: bool = True, test: bool = True, **kwargs) -> List[str]:
     """ Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.
 
@@ -164,11 +164,11 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
                     nearest_name = full_name[:-2] + '.i'
                     if not (repo.folder / nearest_name).exists():
                         return gpr(name, repo, False, is_independent, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
-                GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
+                models.GP.copy(src_folder=repo.folder/nearest_name, dst_folder=repo.folder/full_name)
             return gpr(name, repo, True, is_independent, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
         with TimingOneLiner(f'fold.{repo.meta["k"]} {full_name} GP Regression'):
             try:
-                gp = GP(full_name, repo, is_read, is_independent, is_isotropic, kernel_parameters,
+                gp = models.GP(full_name, repo, is_read, is_independent, is_isotropic, kernel_parameters,
                                             **({} if parameters is None else parameters.as_dict()))
                 if optimize:
                     gp.optimize(**kwargs)
@@ -224,7 +224,7 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
                 return names + gsa(name, repo, is_independent, False, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
             full_name = full_name + ('.i' if is_isotropic else '.a')
             with TimingOneLiner(f'fold.{repo.meta["k"]} {full_name} GSA'):
-                gp = GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
+                gp = models.GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
                 names = []
                 for kind in kinds:
                     folder = perform.GSA(gp, kind, m, is_error_calculated, **kwargs).folder

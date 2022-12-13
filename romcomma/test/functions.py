@@ -38,12 +38,11 @@ Returns: A ``Vector[0 : N-1, 1]`` evaluating ``function_(X[0 : N-1, :])``.
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 
 from romcomma.base.definitions import *
 from romcomma.data.storage import Repository, Frame
 from romcomma.test import sampling
-from SALib.test_functions import Ishigami, Sobol_G
+from SALib.test_functions import Ishigami, Sobol_G, oakley2004
 
 
 class FunctionWithMeta:
@@ -65,15 +64,28 @@ class FunctionWithMeta:
             cls._DEFAULT = {
                 **cls._default(name='sin.1', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=0.0, B=0.0),
                 **cls._default(name='sin.2', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=2.0, B=0.0),
-                **cls._default(name='ishigami', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=7.0, B=0.1),
                 **cls._default(name='sobol_g', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 4.5, 9, 99])),
                 **cls._default(name='sobol_g2', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 4.5, 9, 99]), alpha=np.ones((5,)) * 2.0),
-                **cls._default(name='s.0', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=0.0, B=0.0),
-                **cls._default(name='s.1', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=7.0, B=0.1),
-                **cls._default(name='s.2', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=1.0, B=0.2),
-                **cls._default(name='s.3', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 5, 20, 100]), alpha=np.ones((5,)) * 1.0),
-                **cls._default(name='s.4', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 0.5, 1, 2, 10]), alpha=np.ones((5,)) * 2.0),
-                **cls._default(name='s.5', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 2, 5, 100]), alpha=np.ones((5,)) * 4.0),
+                **cls._default(name='i.0', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=0.0, B=0.0),
+                **cls._default(name='i.1', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=7.0, B=0.0),
+                **cls._default(name='i.2', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=7.0, B=0.1),
+                **cls._default(name='i.3', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=7.0, B=1.0),
+                **cls._default(name='i.4', function=Ishigami.evaluate, loc=-np.pi, scale=2 * np.pi, A=0.0, B=1.0),
+                **cls._default(name='s.0', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 5, 20, 100]), alpha=np.ones((5,)) * 1.0),
+                **cls._default(name='s.1', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 1, 5, 20, 100]), alpha=np.ones((5,)) * 2.0),
+                **cls._default(name='s.2', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 0.5, 1, 2, 10]), alpha=np.ones((5,)) * 1.0),
+                **cls._default(name='s.3', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 0.5, 1, 2, 10]), alpha=np.ones((5,)) * 2.0),
+                **cls._default(name='s.4', function=Sobol_G.evaluate, loc=0, scale=1, a=np.array([0, 0.5, 1, 2, 10]), alpha=np.ones((5,)) * 4.0),
+                **cls._default(name='o.0', function=oakley2004.evaluate, loc=-1, scale=2, A=np.array([np.ones([5]), np.zeros([5]), np.zeros([5])]),
+                               M=np.zeros([5, 5])),
+                **cls._default(name='o.1', function=oakley2004.evaluate, loc=-1, scale=2, A=np.array([np.ones([5]), np.zeros([5]), np.zeros([5])]),
+                               M=np.ones([5, 5])),
+                **cls._default(name='o.2', function=oakley2004.evaluate, loc=-1, scale=2, A=np.array([np.array([1, 1, 1, 0, 0]), np.zeros([5]), np.zeros([5])]),
+                               M=np.ones([5, 5])),
+                **cls._default(name='o.3', function=oakley2004.evaluate, loc=-1, scale=2, A=np.array([np.array([1, 1, 1, 0, 0]), np.zeros([5]), np.zeros([5])]),
+                               M=np.pad(np.ones([2, 2]), [[0, 3], [0, 3]], 'constant', constant_values=[0, 0])),
+                **cls._default(name='o.4', function=oakley2004.evaluate, loc=-1, scale=2, A=np.array([np.array([1, 1, 1, 0, 0]), np.zeros([5]), np.zeros([5])]),
+                               M=np.reshape(np.linspace(start=12.0, stop=0.0, num=25, endpoint=True), [5, 5])),
             }
         return cls._DEFAULT
 

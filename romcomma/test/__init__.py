@@ -21,6 +21,8 @@
 
 """ Contains facilities for testing romcomma."""
 
+from . import lhs
 from . import sampling
 from . import functions
+from . import utilities
 from . import tests

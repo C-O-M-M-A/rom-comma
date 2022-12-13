@@ -35,7 +35,7 @@ classifiers = ["Topic :: Scientific/Engineering :: Artificial Intelligence",
 dependencies = [
     "gpflow >= 2.2.1",
     "pandas >= 1.2.4",
-    "SALib >= 1.4.5",
+    "SALib >= 1.4.6",
 ]
 
 [tool.setuptools.packages.find]

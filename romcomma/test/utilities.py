@@ -20,7 +20,6 @@
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """ Contains developer test utilities for romcomma. """
-import numpy as np
 
 from romcomma.base.definitions import *
 from romcomma import run
