@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -38,12 +38,12 @@ class Gaussian(ABC):
     # TWO_PI = tf.constant(2 * np.pi, dtype=FLOAT())
     # LOG_TWO_PI = tf.math.log(TWO_PI)
 
-    @classmethod
-    def det(cls, variance_cho_diagonal):
+    @staticmethod
+    def det(variance_cho_diagonal):
         return tf.reduce_prod(variance_cho_diagonal, axis=-1)
 
-    @classmethod
-    def pdf(cls, exponent: TF.Tensor, variance_cho_diagonal: TF.Tensor):
+    @staticmethod
+    def pdf(exponent: TF.Tensor, variance_cho_diagonal: TF.Tensor):
         """ Calculate the Gaussian pdf from the output of Gaussian.log_pdf.
         Args:
             exponent: The exponent in the Gaussian pdf.
@@ -53,8 +53,8 @@ class Gaussian(ABC):
         """
         return tf.exp(exponent) / Gaussian.det(variance_cho_diagonal)
 
-    @classmethod
-    def log_pdf(cls, mean: TF.Tensor, variance_cho: TF.Tensor, is_variance_diagonal: bool,
+    @staticmethod
+    def log_pdf(mean: TF.Tensor, variance_cho: TF.Tensor, is_variance_diagonal: bool,
                 ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT()), LBunch: int = 2) -> LogPDF:
         """ Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.
         Taking the product (Gaussian.det(variance_cho_diagonal) gives the normalization factor for the gaussian pdf.
@@ -414,7 +414,7 @@ class ClosedIndexWithErrors(ClosedIndex):
         A += tf.transpose(A, [0, 2, 1])
         return {'Om': A[0], 'm0': A[0], 'mm': A[1], 'Mm': A[-1]} if A.shape[0] > 1 else {'Mm': A[0]}
 
-    def _W(self, Om: TF.Tensor, m0: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = TF.NOT_CALCULATED) -> Dict[str, TF.Tensor]:
+    def _W(self, Om: TF.Tensor, m0: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = None) -> Dict[str, TF.Tensor]:
         """ Calculate W.
 
         Args:
@@ -429,7 +429,7 @@ class ClosedIndexWithErrors(ClosedIndex):
             W['Mm'] = Mm - self.A['m0'] - Om + self.A['00']
         return W
 
-    def _T(self, Vm: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = TF.NOT_CALCULATED) -> Dict[str, TF.Tensor]:
+    def _T(self, Vm: TF.Tensor, mm: TF.Tensor, Mm: TF.Tensor = None) -> Dict[str, TF.Tensor]:
         """ Calculate T
 
         Args:

@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -23,11 +23,15 @@
 
 from romcomma.base.definitions import *
 from romcomma import run, data, test
-from romcomma.test import utilities
 
 BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/Dependency/1.5')
 
 
+if __name__ == '__main__':
+    a = test.functions.ALL
+    print(a)
+
+"""
 if __name__ == '__main__':
     is_sample_generated = True
     models = ['diag.i.i', 'diag.i.a', 'diag.d.a']
@@ -60,4 +64,4 @@ if __name__ == '__main__':
                                           {f'{repo.folder/model}/gsa/{kind_name}': {'model': model, 'kind': kind_name}
                                            for kind_name in kind_names for model in models},
                                           ignore_exceptions).over_folders((repo.folder/'gsa'), True)
-
+"""

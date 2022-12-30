@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -22,8 +22,8 @@
 """ Run this module first thing, to test your installation of romcomma. """
 
 from romcomma.base.definitions import *
-from romcomma import run
-from romcomma.test.utilities import sample
+from romcomma import run, test
+
 
 
 BASE_PATH = Path('installation_test')
@@ -31,15 +31,16 @@ BASE_PATH = Path('installation_test')
 
 if __name__ == '__main__':
     with run.Context('Test', float='float64', device='CPU'):
+        function_vector = test.functions.ISHIGAMI.subVector('ishigami', ['standard', 'sin_x0'])
         for N in (500,):
             for M in (5,):
                 for noise_magnitude in (0.1,):
-                    for is_rotated in (False, ):
-                        with run.TimingOneLiner(f'sample generation for N={N}, noise={noise_magnitude}'):
-                            repo = sample(BASE_PATH, ['sin.1', 'sin.1'], N, M, K=1,
-                                          noise_magnitude=noise_magnitude, is_noise_diagonal=False, is_noise_variance_stochastic=False)
-                        with run.Timing(f'Gaussian Process Regression for N={N}, noise={noise_magnitude}'):
-                            run.gpr(name='test', repo=repo, is_read=None, is_isotropic=False, is_independent=None, optimize=True, test=True)
-                        with run.Timing(f'Global Sensitivity Analysis for N={N}, noise={noise_magnitude}'):
-                            run.gsa(name='test', repo=repo, is_independent=True, is_isotropic=False)
-                            run.gsa(name='test', repo=repo, is_independent=False, is_isotropic=False)
+                    with run.TimingOneLiner(f'sample generation for N={N}, noise={noise_magnitude}'):
+                        noise_variance = test.sample.GaussianNoise.Variance(len(function_vector), noise_magnitude, False, False)
+                        sample = test.sample.Function(BASE_PATH, test.sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
+                        repo = sample.into_K_folds(K=1).rotate_folds(None).repo
+                    with run.Timing(f'Gaussian Process Regression for N={N}, noise={noise_magnitude}'):
+                        run.gpr(name='test', repo=repo, is_read=None, is_isotropic=False, is_independent=None, optimize=True, test=True)
+                    with run.Timing(f'Global Sensitivity Analysis for N={N}, noise={noise_magnitude}'):
+                        run.gsa(name='test', repo=repo, is_independent=True, is_isotropic=False)
+                        run.gsa(name='test', repo=repo, is_independent=False, is_isotropic=False)

@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 # 
-#  Copyright (c) 2019-2022 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.
 # 
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 # 
@@ -73,7 +73,7 @@ class NP:
 
 # noinspection PyPep8Naming
 class TF:
-    """ Extended tensorflow types."""
+    """ Extended tensorflow types, and constants."""
     Array = tf.Tensor
     Tensor = tf.Tensor  # Generic Tensor.
     Tensor1 = Tensor    # Second Order Tensor, tf.shape = (i,j)
@@ -94,13 +94,5 @@ class TF:
     VectorOrMatrix = TypeVar('VectorOrMatrix', Vector, Matrix)
     Slice = PairOfInts = tf.Tensor
 
-    @classmethod
-    @property
-    def NaN(cls) -> TF.Tensor:
-        return tf.constant(np.NaN, dtype=FLOAT())
-
-    @classmethod
-    @property
-    def NOT_CALCULATED(cls) -> TF.Tensor:
-        return tf.constant('Not Calculated')
+    NaN: TF.Tensor = tf.constant(np.NaN, dtype=FLOAT())
 
