@@ -25,6 +25,8 @@ All functions herein are taken from https://salib.readthedocs.io/en/latest/api/S
 
 from __future__ import annotations
 
+import numpy as np
+
 from romcomma.base.definitions import *
 import SALib.test_functions.Ishigami, SALib.test_functions.Sobol_G, SALib.test_functions.oakley2004
 
@@ -120,36 +122,39 @@ _SOBOL_G = {'call': SALib.test_functions.Sobol_G.evaluate, 'loc': 0, 'scale': 1}
 _OAKLEY2004 = {'call': SALib.test_functions.oakley2004.evaluate, 'loc': -1, 'scale': 2}
 
 
+def linspace(start: float, stop:float, shape: Sequence[int]) -> NP.Matrix:
+    """
+
+    Args:
+        start:
+        stop:
+        shape:
+    Returns:
+    """
+    return np.reshape(np.linspace(start=start, stop=stop, num=int(np.prod(shape)), endpoint=True), shape)
+
+
 ISHIGAMI = Vector(name='ishigami',
-                  sin_x0=Scalar(**_ISHIGAMI, M_=3, A=0.0, B=0.0),
-                  sin_2_x1=Scalar(**_ISHIGAMI, M_=3, A=7.0, B=0.0),
                   standard=Scalar(**_ISHIGAMI, M_=3, A=7.0, B=0.1),
-                  inflated=Scalar(**_ISHIGAMI, M_=3, A=7.0, B=1.0),
-                  sin2_x03=Scalar(**_ISHIGAMI, M_=3, A=0.0, B=1.0),
+                  balanced=Scalar(**_ISHIGAMI, M_=3, A=5.0, B=1.0),
+                  inflated=Scalar(**_ISHIGAMI, M_=3, A=9.0, B=10.0),
                   )
 
 
 SOBOL_G = Vector(name='sobol_g',
-                 weak7_1=Scalar(**_SOBOL_G, M_=5, a=np.array([0, 2, 10, 20, 50, 100, 1000]), alpha=np.ones((7,)) * 1.0),
-                 weak7_2=Scalar(**_SOBOL_G, M_=5, a=np.array([0, 2, 10, 20, 50, 100, 1000]), alpha=np.ones((7,)) * 2.0),
-                 strong7_1=Scalar(**_SOBOL_G, M_=5, a=np.array([0.5, 1, 2, 4, 8, 16, 32]), alpha=np.ones((7,)) * 1.0),
-                 strong7_2=Scalar(**_SOBOL_G, M_=5, a=np.array([0.5, 1, 2, 4, 8, 16, 32]), alpha=np.ones((7,)) * 2.0),
-                 strong7_4=Scalar(**_SOBOL_G, M_=5, a=np.array([0.5, 1, 2, 4, 8, 16, 32]), alpha=np.ones((7,)) * 4.0),
+                 weak5_2=Scalar(**_SOBOL_G, M_=5, a=np.array([3, 6, 9, 18, 27]), alpha=np.ones((5,)) * 2.0),
+                 strong5_2=Scalar(**_SOBOL_G, M_=5, a=np.array([1/2, 1, 2, 4, 8]), alpha=np.ones((5,)) * 2.0),
+                 strong5_4=Scalar(**_SOBOL_G, M_=5, a=np.array([1/2, 1, 2, 4, 8]), alpha=np.ones((5,)) * 4.0),
                  )
 
 
 OAKLEY2004 = Vector(name='oakley2004',
-                    lin9=Scalar(**_OAKLEY2004, M_=10, A=[np.linspace(start=9.0, stop=0.0, num=10, endpoint=True)] + [np.zeros([10])] * 2,
+                    lin7=Scalar(**_OAKLEY2004, M_=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
                                   M=np.zeros([10, 10])),
-                    quad95=Scalar(**_OAKLEY2004, M_=10, A=[np.linspace(start=9.0, stop=0.0, num=10, endpoint=True)] + [np.zeros([10])] * 2,
-                                      M=np.pad(np.ones([5, 5]), [[0, 5], [0, 5]])),
-                    mix95=Scalar(**_OAKLEY2004, M_=10, A=[np.linspace(start=9.0, stop=0.0, num=10, endpoint=True)] * 3,
-                                     M=np.pad(np.ones([5, 5]), [[0, 5], [0, 5]])),
-                    mix10_321=Scalar(**_OAKLEY2004, M_=10, A=[np.pad(np.ones([3, ]), [0, 7], 'constant', constant_values=[0, 0])] * 3,
-                                     M=np.pad([[1, 2], [3, 4]], [[0, 8], [0, 8]], 'constant', constant_values=[0, 0])),
-                    mix7_1_12=Scalar(**_OAKLEY2004, M_=10, A=[np.pad(np.ones([7, ]), [0, 3], 'constant', constant_values=[0, 0])] * 3,
-                                       M=np.pad(np.reshape(np.linspace(start=12.0, stop=0.0, num=25, endpoint=True), [5, 5]), [[0, 5], [0, 5]],
-                                                'constant', constant_values=[0, 0])),
+                    quad7=Scalar(**_OAKLEY2004, M_=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
+                                  M=linspace(start=7.0, stop=1.0, shape=[7, 7])),
+                    balanced_quad7=Scalar(**_OAKLEY2004, M_=7, A=[linspace(start=7.0, stop=7.0/2, shape=[7, ]), ] + [np.zeros([7])] * 2,
+                                  M=linspace(start=1.0, stop=7.0, shape=[7, 7])),
                     )
 
 

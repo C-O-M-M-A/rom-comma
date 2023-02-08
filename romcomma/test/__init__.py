@@ -23,4 +23,3 @@
 
 from . import sample
 from . import functions
-from . import tests

@@ -21,26 +21,27 @@
 
 """ Run this module first thing, to test your installation of romcomma. """
 
+from __future__ import annotations
+
 from romcomma.base.definitions import *
 from romcomma import run, test
 
 
 
-BASE_PATH = Path('installation_test')
+BASE_FOLDER = Path('installation_test')
 
 
 if __name__ == '__main__':
     with run.Context('Test', float='float64', device='CPU'):
-        function_vector = test.functions.ISHIGAMI.subVector('ishigami', ['standard', 'sin_x0'])
+        function_vector = test.functions.ISHIGAMI.subVector('ishigami', ['standard', 'inflated'])
         for N in (500,):
             for M in (5,):
                 for noise_magnitude in (0.1,):
                     with run.TimingOneLiner(f'sample generation for N={N}, noise={noise_magnitude}'):
                         noise_variance = test.sample.GaussianNoise.Variance(len(function_vector), noise_magnitude, False, False)
-                        sample = test.sample.Function(BASE_PATH, test.sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
+                        sample = test.sample.Function(BASE_FOLDER, test.sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
                         repo = sample.into_K_folds(K=1).rotate_folds(None).repo
                     with run.Timing(f'Gaussian Process Regression for N={N}, noise={noise_magnitude}'):
-                        run.gpr(name='test', repo=repo, is_read=None, is_isotropic=False, is_independent=None, optimize=True, test=True)
+                        run.gpr(name='test', repo=repo, is_read=None, is_independent=None, is_isotropic=False, optimize=True, test=True)
                     with run.Timing(f'Global Sensitivity Analysis for N={N}, noise={noise_magnitude}'):
-                        run.gsa(name='test', repo=repo, is_independent=True, is_isotropic=False)
-                        run.gsa(name='test', repo=repo, is_independent=False, is_isotropic=False)
+                        run.gsa(name='test', repo=repo, is_independent=None, is_isotropic=False)
