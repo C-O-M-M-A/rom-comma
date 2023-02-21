@@ -27,27 +27,27 @@ from romcomma.base.definitions import *
 from romcomma import run
 from romcomma.test import sample, functions
 
-BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/0.1')
+BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/0.2')
 
 
 if __name__ == '__main__':
-    function_vector = functions.OAKLEY2004
-    models = ['diag.i.i', 'diag.i.a', 'diag.d.a']
+    function_vector = functions.SOBOL_G
+    models = ['diag.i.a', 'diag.d.a']
     overwrite_existing = True
     ignore_exceptions = True
     kinds = run.perform.GSA.ALL_KINDS
-    is_error_calculated = False
+    is_error_calculated = True
     with run.Context('Test', device='CPU'):
         kind_names = [kind.name.lower() for kind in kinds]
-        for N in (200,):
-            for M in (10,):
-                for noise_magnitude in (0.5,):
+        for N in (100,):
+            for M in (5,):
+                for noise_magnitude in (0.2,):
                     for is_noise_independent in (True,):
                         with run.TimingOneLiner(f'M={M}, N={N}, noise={noise_magnitude} \n'):
                             noise_variance = sample.GaussianNoise.Variance(len(function_vector), noise_magnitude, False, False)
                             sample = sample.Function(BASE_FOLDER, sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
-                            repo = sample.into_K_folds(K=-2).rotate_folds(None).repo
-                            run.gpr(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=None, ignore_exceptions=ignore_exceptions,
+                            repo = sample.into_K_folds(K=1).rotate_folds(None).repo
+                            run.gpr(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=False, ignore_exceptions=ignore_exceptions,
                                     optimize=True, test=True)
                             run.Aggregate({'test_summary': {'header': [0, 1], 'index_col': 0}}, {repo.folder/model: {'model': model} for model in models},
                                           ignore_exceptions).over_folders(repo.folder/'gpr', True)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
                                           ignore_exceptions).over_folders((repo.folder/'gpr')/'likelihood', True)
                             run.Aggregate({'variance': {}, 'lengthscales': {}}, {f'{repo.folder/model}/kernel': {'model': model} for model in models},
                                           ignore_exceptions).over_folders((repo.folder/'gpr')/'kernel', True)
-                            run.gsa('diag', repo, is_independent=None, is_isotropic=None, kinds=kinds, is_error_calculated=is_error_calculated)
+                            run.gsa('diag', repo, is_independent=None, is_isotropic=False, kinds=kinds, is_error_calculated=is_error_calculated)
                             run.Aggregate({'S': {}, 'V': {}} | ({'T': {}, 'Wmm': {}, 'WmM_': {}} if is_error_calculated else {}),
                                           {f'{repo.folder/model}/gsa/{kind_name}': {'model': model, 'kind': kind_name}
                                            for kind_name in kind_names for model in models},

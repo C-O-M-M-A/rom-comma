@@ -103,8 +103,9 @@ class GSA(Model):
                 for key in results.keys():
                     results[key] = tf.concat([results[key], result[key][..., tf.newaxis]], axis=-1)
         results['V'] = tf.concat([results['V'], calculate.V['M'][..., tf.newaxis]], axis=-1)
-        if kind == GSA.Kind.TOTAL:
-            results['S'] = 1 - results['S']
+        correlation = (calculate.V['M'] / calculate.V2)[..., tf.newaxis]
+        results['S'] = correlation - results['S'] if kind == GSA.Kind.TOTAL else results['S']
+        results['S'] = tf.concat([results['S'], correlation], axis=-1)
         if 'WmM' in results:
             results['WmM'] = tf.concat([results['WmM'], calculate.W['mm'][..., tf.newaxis]], axis=-1)
             results["WmM_"] = results.pop('WmM')

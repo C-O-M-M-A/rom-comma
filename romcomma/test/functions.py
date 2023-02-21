@@ -137,7 +137,7 @@ def linspace(start: float, stop:float, shape: Sequence[int]) -> NP.Matrix:
 ISHIGAMI = Vector(name='ishigami',
                   standard=Scalar(**_ISHIGAMI, M_=3, A=7.0, B=0.1),
                   balanced=Scalar(**_ISHIGAMI, M_=3, A=5.0, B=1.0),
-                  inflated=Scalar(**_ISHIGAMI, M_=3, A=9.0, B=10.0),
+                  sin=Scalar(**_ISHIGAMI, M_=3, A=0.0, B=0.0),
                   )
 
 
@@ -150,7 +150,7 @@ SOBOL_G = Vector(name='sobol_g',
 
 OAKLEY2004 = Vector(name='oakley2004',
                     lin7=Scalar(**_OAKLEY2004, M_=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
-                                  M=np.zeros([10, 10])),
+                                  M=np.zeros([7, 7])),
                     quad7=Scalar(**_OAKLEY2004, M_=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
                                   M=linspace(start=7.0, stop=1.0, shape=[7, 7])),
                     balanced_quad7=Scalar(**_OAKLEY2004, M_=7, A=[linspace(start=7.0, stop=7.0/2, shape=[7, ]), ] + [np.zeros([7])] * 2,
