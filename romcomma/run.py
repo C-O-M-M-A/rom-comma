@@ -206,14 +206,13 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
     if not isinstance(repo, Fold):
         for k in repo.folds:
             names = gsa(name, Fold(repo, k), is_independent, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
-        Aggregate({'S': {}, 'V': {}} | ({'T': {}, 'Wmm': {}, 'WmM_': {}} if is_error_calculated else {}),
+        Aggregate({'S': {}, 'V': {}} | ({'T': {}, 'W': {}} if is_error_calculated else {}),
                   {name: {} for name in names}, ignore_exceptions).over_folds(repo, True)
         # Aggregate({'S': {}, 'V': {}} | ({'OO': {}, 'm0': {}, 'mm': {}, 'Mm_': {}} if is_error_calculated else {}),
         #           {name: {} for name in names}, ignore_exceptions).over_folds(repo, True)
         for name in names:
             shutil.copyfile(repo.fold_folder(repo.folds.start) / 'meta.json', repo.folder / name / 'meta.json')
     else:
-        try:
             if is_independent is None:
                 names = gsa(name, repo, True, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
                 return (names +
@@ -224,16 +223,15 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
                 return names + gsa(name, repo, is_independent, False, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
             full_name = full_name + ('.i' if is_isotropic else '.a')
             with TimingOneLiner(f'fold.{repo.meta["k"]} {full_name} GSA'):
-                gp = models.GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
-                names = []
-                for kind in kinds:
-                    folder = perform.GSA(gp, kind, m, is_error_calculated, **kwargs).folder
-                    names += [folder.relative_to(repo.folder)]
-        except BaseException as exception:
-            if not ignore_exceptions:
-                raise exception
-            else:
-                pass
+                try:
+                    gp = models.GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
+                    names = []
+                    for kind in kinds:
+                        folder = perform.GSA(gp, kind, m, is_error_calculated, **kwargs).folder
+                        names += [folder.relative_to(repo.folder)]
+                except BaseException as exception:
+                    if not ignore_exceptions:
+                        raise exception
     return names
 
 

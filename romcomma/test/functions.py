@@ -136,7 +136,7 @@ def linspace(start: float, stop:float, shape: Sequence[int]) -> NP.Matrix:
 
 ISHIGAMI = Vector(name='ishigami',
                   standard=Scalar(**_ISHIGAMI, M_=3, A=7.0, B=0.1),
-                  balanced=Scalar(**_ISHIGAMI, M_=3, A=5.0, B=1.0),
+                  balanced=Scalar(**_ISHIGAMI, M_=3, A=20.0, B=1.0),
                   sin=Scalar(**_ISHIGAMI, M_=3, A=0.0, B=0.0),
                   )
 

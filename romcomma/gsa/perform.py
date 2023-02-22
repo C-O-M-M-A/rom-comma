@@ -60,8 +60,7 @@ class GSA(Model):
                 # m0: NP.Matrix = np.atleast_2d(None)
                 # mm: NP.Matrix = np.atleast_2d(None)
                 # Mm_: NP.Matrix = np.atleast_2d(None)
-                Wmm: NP.Matrix = np.atleast_2d(None)
-                WmM_: NP.Matrix = np.atleast_2d(None)
+                W: NP.Matrix = np.atleast_2d(None)
 
             return Values
 
@@ -97,15 +96,13 @@ class GSA(Model):
             result = calculate.marginalize(m)
             if first_iteration:
                 results = {key: value[..., tf.newaxis] for key, value in result.items()}
-                results['V'] = tf.concat([calculate.V['0'][..., tf.newaxis], results['V']], axis=-1)
                 first_iteration = False
             else:
                 for key in results.keys():
                     results[key] = tf.concat([results[key], result[key][..., tf.newaxis]], axis=-1)
-        results['V'] = tf.concat([results['V'], calculate.V['M'][..., tf.newaxis]], axis=-1)
-        correlation = (calculate.V['M'] / calculate.V2)[..., tf.newaxis]
-        results['S'] = correlation - results['S'] if kind == GSA.Kind.TOTAL else results['S']
-        results['S'] = tf.concat([results['S'], correlation], axis=-1)
+        results['V'] = tf.concat([results['V'], calculate.V[1][..., tf.newaxis]], axis=-1)
+        results['S'] = calculate.S[..., tf.newaxis] - results['S'] if kind == GSA.Kind.TOTAL else results['S']
+        results['S'] = tf.concat([results['S'], calculate.S[..., tf.newaxis]], axis=-1)
         if 'WmM' in results:
             results['WmM'] = tf.concat([results['WmM'], calculate.W['mm'][..., tf.newaxis]], axis=-1)
             results["WmM_"] = results.pop('WmM')
