@@ -142,7 +142,8 @@ def gpr(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
         for k in repo.folds:
             names = gpr(name, Fold(repo, k), is_read, is_independent, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
         if test:
-            Aggregate({'test_summary': {'header': [0, 1], 'index_col': 0}}, {name: {} for name in names}, ignore_exceptions).over_folds(repo, True)
+            Aggregate({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
+                      {name: {} for name in names}, ignore_exceptions).over_folds(repo, True)
         Aggregate({'variance': {}, 'log_marginal': {}}, {f'{name}/likelihood': {} for name in names}, ignore_exceptions).over_folds(repo, True)
         Aggregate({'variance': {}, 'lengthscales': {}}, {f'{name}/kernel': {} for name in names}, ignore_exceptions).over_folds(repo, True)
         return names
@@ -208,8 +209,6 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
             names = gsa(name, Fold(repo, k), is_independent, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
         Aggregate({'S': {}, 'V': {}} | ({'T': {}, 'W': {}} if is_error_calculated else {}),
                   {name: {} for name in names}, ignore_exceptions).over_folds(repo, True)
-        # Aggregate({'S': {}, 'V': {}} | ({'OO': {}, 'm0': {}, 'mm': {}, 'Mm_': {}} if is_error_calculated else {}),
-        #           {name: {} for name in names}, ignore_exceptions).over_folds(repo, True)
         for name in names:
             shutil.copyfile(repo.fold_folder(repo.folds.start) / 'meta.json', repo.folder / name / 'meta.json')
     else:

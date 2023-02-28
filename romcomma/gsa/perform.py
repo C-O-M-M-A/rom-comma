@@ -45,21 +45,14 @@ class GSA(Model):
                 """ The parameters set of a GSA.
 
                     Attributes:
-                        Theta (NP.Matrix): The input rotation applied prior to model reduction (marginalization).
-                        m (NP.Matrix): The dimensionality of the reduced model behind this calculation.
                         S (NP.Matrix): The Sobol index/indices.
                         T (NP.Matrix): The cross covariances of the Sobol index/indices.
                         V (NP.Matrix): The conditional variances underpinning Sobol index/indices.
-                        Wmm (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
-                        WmM (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
+                        W (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
                 """
                 S: NP.Matrix = np.atleast_2d(None)
                 T: NP.Matrix = np.atleast_2d(None)
                 V: NP.Matrix = np.atleast_2d(None)
-                # OO: NP.Matrix = np.atleast_2d(None)
-                # m0: NP.Matrix = np.atleast_2d(None)
-                # mm: NP.Matrix = np.atleast_2d(None)
-                # Mm_: NP.Matrix = np.atleast_2d(None)
                 W: NP.Matrix = np.atleast_2d(None)
 
             return Values
@@ -100,12 +93,12 @@ class GSA(Model):
             else:
                 for key in results.keys():
                     results[key] = tf.concat([results[key], result[key][..., tf.newaxis]], axis=-1)
-        results['V'] = tf.concat([results['V'], calculate.V[1][..., tf.newaxis]], axis=-1)
+        results['V'] = tf.concat([results['V'], calculate.V[0][..., tf.newaxis]], axis=-1)
         results['S'] = calculate.S[..., tf.newaxis] - results['S'] if kind == GSA.Kind.TOTAL else results['S']
         results['S'] = tf.concat([results['S'], calculate.S[..., tf.newaxis]], axis=-1)
-        if 'WmM' in results:
-            results['WmM'] = tf.concat([results['WmM'], calculate.W['mm'][..., tf.newaxis]], axis=-1)
-            results["WmM_"] = results.pop('WmM')
+        if 'T' in results:
+            TT = results.pop('TT')
+            results['T'] = TT if (kind == GSA.Kind.TOTAL) else results['T']
         return results
 
     @classmethod

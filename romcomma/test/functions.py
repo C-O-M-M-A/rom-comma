@@ -150,11 +150,11 @@ SOBOL_G = Vector(name='sobol_g',
 
 OAKLEY2004 = Vector(name='oakley2004',
                     lin7=Scalar(**_OAKLEY2004, M_=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
-                                  M=np.zeros([7, 7])),
+                                M=np.zeros([7, 7])),
                     quad7=Scalar(**_OAKLEY2004, M_=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
-                                  M=linspace(start=7.0, stop=1.0, shape=[7, 7])),
-                    balanced_quad7=Scalar(**_OAKLEY2004, M_=7, A=[linspace(start=7.0, stop=7.0/2, shape=[7, ]), ] + [np.zeros([7])] * 2,
-                                  M=linspace(start=1.0, stop=7.0, shape=[7, 7])),
+                                 M=linspace(start=7.0, stop=1.0, shape=[7, 7])),
+                    balanced_quad7=Scalar(**_OAKLEY2004, M_=7, A=[-linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
+                                          M=linspace(start=1.0, stop=7.0, shape=[7, 7])),
                     )
 
 
