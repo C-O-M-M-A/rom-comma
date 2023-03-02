@@ -228,7 +228,7 @@ class ClosedIndexWithErrors(ClosedIndex):
         MIXED: Any
 
     RANK_EQUATIONS: RankEquations = RankEquations(DIAGONAL=(RankEquation(l='j', i='k', j='l', k='i'), RankEquation(l='k', i='j', j='i', k='l')),
-                                                  MIXED=(RankEquation(l='k', i='k', j='j', k='i'), RankEquation(l='j', i='j', j='i', k='l')))
+                                                  MIXED=(RankEquation(l='k', i='k', j='j', k='i'), RankEquation(l='j', i='j', j='i', k='k')))
 
     def _equate_ranks(self, liLNjkJM: TF.Tensor, rank_eq: RankEquation) -> TF.Tensor:
         """ Equate the ranks of a tensor, according to eqRanks.
@@ -244,7 +244,7 @@ class ClosedIndexWithErrors(ClosedIndex):
         eqRanks_j = 'j' if shape[4] == 1 else rank_eq.j
         eqRanks_k = 'k' if shape[5] == 1 else rank_eq.k
         liLNjkJM = tf.reshape(liLNjkJM, shape[:-2] + [-1])  # TensorFlow only does einsum up to rank 6!
-        result = (tf.einsum(f'iiLNjkS -> LNjkS', liLNjkJM) if rank_eq.l == 'i'
+        result = (tf.einsum(f'iiLNjkS -> LN{rank_eq.j}{rank_eq.k}S', liLNjkJM) if rank_eq.l == rank_eq.i
                   else tf.einsum(f'liLN{eqRanks_j}{eqRanks_k}S -> LN{rank_eq.j}{rank_eq.k}S', liLNjkJM))
         result = tf.reshape(result, result.shape[:-1].as_list() + shape[-2:])  # TensorFlow only does einsum up to rank 6!
         return tf.einsum(f'LNjjJM -> LNjJM', result)[..., tf.newaxis, :, :] if self.is_F_diagonal and rank_eq.j == 'i' else result
@@ -330,16 +330,18 @@ class ClosedIndexWithErrors(ClosedIndex):
         mu_phi_mu = 0
         for i, rank_eq in enumerate(rank_eqs):
             Omega_log_pdf[i] = list(Omega_log_pdf[i])
+            Upsilon_det = (Upsilon_log_pdf[i][1] if Upsilon_log_pdf[i][1].shape[-1] == G_log_pdf[1].shape[-1] else
+                           Upsilon_log_pdf[i][1][..., :G_log_pdf[1].shape[-1]] *
+                           tf.reduce_prod(Upsilon_log_pdf[i][1][..., G_log_pdf[1].shape[-1]:], axis=-1)[..., tf.newaxis])
             Omega_log_pdf[i][0] += Upsilon_log_pdf[i][0] - G_log_pdf[0]
-            Omega_log_pdf[i][1] *= Upsilon_log_pdf[i][1] / G_log_pdf[1]
-            if self.is_F_diagonal:
-                if rank_eq.l == 'k' and rank_eq.i == 'j':
-                    result = tf.einsum('jLN, LNjkJn, jJn -> j', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
-                    mu_phi_mu += tf.linalg.diag(tf.einsum('j, j -> j', self.mu_phi_mu['pre-factor'], result))
-                elif rank_eq.l == 'k' and rank_eq.i == 'k':
-                    result = tf.einsum('kLN, LNjkJn, jJn -> jk', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
-                    mu_phi_mu += tf.einsum('k, jk -> jk', self.mu_phi_mu['pre-factor'], result)
-                    mu_phi_mu = tf.linalg.set_diag(mu_phi_mu, 2 * tf.linalg.diag_part(mu_phi_mu))
+            Omega_log_pdf[i][1] *= Upsilon_det / G_log_pdf[1]
+            if self.is_F_diagonal and rank_eq.l == 'k' and rank_eq.i == 'j':
+                result = tf.einsum('jLN, LNjkJn, jJn -> j', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
+                mu_phi_mu += tf.linalg.diag(tf.einsum('j, j -> j', self.mu_phi_mu['pre-factor'], result))
+            elif self.is_F_diagonal and rank_eq.l == 'k' and rank_eq.i == 'k':
+                result = tf.einsum('kLN, LNjkJn, jJn -> jk', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
+                mu_phi_mu += tf.einsum('k, jk -> jk', self.mu_phi_mu['pre-factor'], result)
+                mu_phi_mu = tf.linalg.set_diag(mu_phi_mu, 2 * tf.linalg.diag_part(mu_phi_mu))
             else:
                 result = tf.einsum(f'{rank_eq.l}LN, LNjkJn, jJn -> {rank_eq.l}{rank_eq.i}', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
                 mu_phi_mu += tf.einsum(f'i{"" if self.is_F_diagonal else rank_eq.k}, li -> li', self.mu_phi_mu['pre-factor'], result)
@@ -367,29 +369,33 @@ class ClosedIndexWithErrors(ClosedIndex):
         factor = tf.squeeze(tf.linalg.triangular_solve(self.K_cho, factor), axis=-1)
         return factor
 
-    def _mu_psi_mu(self, psi_factor: TF.Tensor, rank_eqs: Tuple[RankEquation]) -> TF.Tensor:
+    def _mu_psi_mu(self, psi_factor: TF.Tensor, rank_eqs: Tuple[RankEquation], first_psi_factor: TF.Tensor = None) -> TF.Tensor:
         """
 
         Args:
-            psi_factor: liS
+            psi_factor: liS.
             rank_eqs: A tuple of RankEquators to apply.
+            first_psi_factor: liS, taken as psi_factor if not provided.
         Returns: li
         """
+        first_psi_factor = psi_factor if first_psi_factor is None else first_psi_factor
         if rank_eqs == self.rank_equations.DIAGONAL:
-            result = tf.einsum('liS, liS -> li', psi_factor, psi_factor)
+            result = tf.einsum('liS, liS -> li', first_psi_factor, psi_factor)
         else:
-            result = tf.einsum('iiS, liS -> li', psi_factor, psi_factor)
+            result = tf.einsum('iiS, liS -> li', first_psi_factor, psi_factor)
         if self.is_F_diagonal:
             return tf.linalg.set_diag(result, 2 * tf.linalg.diag_part(result))
+        elif rank_eqs == self.rank_equations.DIAGONAL:
+            return result + tf.einsum('liS, ilS -> li', first_psi_factor, psi_factor)
         else:
-            return result + tf.einsum('liS, ilS -> li', psi_factor, psi_factor)
+            return result + tf.einsum('iiS, ilS -> li', first_psi_factor, psi_factor)
 
     def _W(self, mu_phi_mu: TF.Tensor, mu_psi_mu: TF.Tensor) -> TF.Tensor:
         """ Calculate W.
 
         Returns: W[mm] if is_T_partial, else W{mm, Mm}
         """
-        W = mu_phi_mu
+        W = mu_phi_mu - mu_psi_mu
         W += tf.transpose(W)
         return W
 
@@ -446,7 +452,7 @@ class ClosedIndexWithErrors(ClosedIndex):
             Wmm = (self._W(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf.DIAGONAL, Omega_log_pdf.DIAGONAL, self.rank_equations.DIAGONAL),
                            self._mu_psi_mu(psi_factor, self.rank_equations.DIAGONAL)))
             WMm = self.RankEquations(*(self._W(self._mu_phi_mu(G_log_pdf, self.Upsilon_log_pdf[i], Omega_log_pdf[i], rank_eq),
-                                               self._mu_psi_mu(psi_factor, rank_eq)) for i, rank_eq in enumerate(self.rank_equations)))
+                                               self._mu_psi_mu(psi_factor, rank_eq, self.psi_factor)) for i, rank_eq in enumerate(self.rank_equations)))
             result |= self._T(Wmm, WMm, result['V'])
         return result
 
