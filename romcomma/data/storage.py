@@ -429,7 +429,7 @@ class Normalization:
         X_min, X_rng, Y_mean, Y_std = self._relevant_stats
         X = df.iloc[:, :self._fold.M].copy(deep=True)
         Y = df.iloc[:, self._fold.M:].copy(deep=True)
-        X = X.sub(X_min, axis=1).div(X_rng, axis=1).clip(lower=self.UNIFORM_MARGIN, upper=1 - self.UNIFORM_MARGIN)
+        X = X.sub(X_min, axis=1)[X_min.axes[0]].div(X_rng, axis=1)[X_rng.axes[0]].clip(lower=self.UNIFORM_MARGIN, upper=1 - self.UNIFORM_MARGIN)
         X.iloc[:, :] = scipy.stats.norm.ppf(X, loc=0, scale=1)
         Y = Y.sub(Y_mean, axis=1).div(Y_std, axis=1)
         return pd.concat((X, Y), axis=1)
