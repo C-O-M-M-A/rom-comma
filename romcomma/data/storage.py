@@ -446,8 +446,8 @@ class Normalization:
         X = df.iloc[:, :self._fold.M].copy(deep=True)
         Y = df.iloc[:, self._fold.M:].copy(deep=True)
         X.iloc[:, :] = scipy.stats.norm.cdf(X, loc=0, scale=1)
-        X = X.mul(X_rng, axis=1).add(X_min, axis=1)
-        Y = Y.mul(Y_std, axis=1).add(Y_mean, axis=1)
+        X = X.mul(X_rng, axis=1)[X_rng.axes[0]].add(X_min, axis=1)[X_min.axes[0]]
+        Y = Y.mul(Y_std, axis=1)[Y_std.axes[0]].add(Y_mean, axis=1)[Y_mean.axes[0]]
         return pd.concat((X, Y), axis=1)
 
     def __repr__(self) -> str:
