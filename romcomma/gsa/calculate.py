@@ -412,7 +412,7 @@ class ClosedIndexWithErrors(ClosedIndex):
 
         Returns: W[mm] if is_T_partial, else W{mm, Mm}
         """
-        W = mu_psi_mu
+        W = mu_phi_mu - mu_psi_mu
         W += tf.transpose(W)
         return W
 
@@ -443,8 +443,8 @@ class ClosedIndexWithErrors(ClosedIndex):
             TT = self.W - Wmm
         else:
             T = self._Q(Wmm, WMm.MIXED, Vm)
-            TT = self._Q(self.W.DIAGONAL - 2 * WMm.DIAGONAL + Wmm, 2 * (self.W.MIXED - WMm.MIXED), self.V[0] - Vm)
-        return {'T': T / self.V[4], 'TT': TT / self.V[4], 'W': Wmm}
+            TT = tf.math.maximum(T, self.T)
+        return {'T': T / self.V[4], 'TT': TT / self.V[4], 'W': self.W.DIAGONAL - 2 * WMm.DIAGONAL + Wmm}
 
     def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
         """ Calculate everything.
@@ -502,16 +502,10 @@ class ClosedIndexWithErrors(ClosedIndex):
                                               self._Omega_log_pdf(self.Ms, self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS_CROSS),
                                               self.RANK_EQUATIONS_CROSS),
                               self._mu_psi_mu(self.psi_factor, self.RANK_EQUATIONS_CROSS))
-            # print(self.W)
-            # print(self.Q)
             self.Q /= 4 * self.V[4]
-            print(self.Q)
-            print(self.W.DIAGONAL / self.V[4])
-            print(self.W.MIXED / self.V[4])
             diag = tf.linalg.diag_part(self.Q)
             self.Q += self.Q + diag[tf.newaxis, ...] + diag[..., tf.newaxis]
-            print(self.Q)
-            # print(self.W.DIAGONAL - 2 * self.V[0] * self.W.MIXED / self.V[1] + self.V[0] * self.V[0] * self.Q)
+            self.T = self._Q(self.W.DIAGONAL, self.W.MIXED, self.V[0])
 
 
 class RotatedClosedIndex(ClosedIndex):
