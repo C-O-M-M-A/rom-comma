@@ -505,8 +505,12 @@ class ClosedIndexWithErrors(ClosedIndex):
             # print(self.W)
             # print(self.Q)
             self.Q /= 4 * self.V[4]
+            print(self.Q)
+            print(self.W.DIAGONAL / self.V[4])
+            print(self.W.MIXED / self.V[4])
             diag = tf.linalg.diag_part(self.Q)
             self.Q += self.Q + diag[tf.newaxis, ...] + diag[..., tf.newaxis]
+            print(self.Q)
             # print(self.W.DIAGONAL - 2 * self.V[0] * self.W.MIXED / self.V[1] + self.V[0] * self.V[0] * self.Q)
 
 
