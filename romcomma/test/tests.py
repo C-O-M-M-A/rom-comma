@@ -31,18 +31,18 @@ BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/1.1.3')
 
 
 if __name__ == '__main__':
-    function_vector = functions.ISHIGAMI
+    function_vector = functions.OAKLEY2004
     models = ['diag.i.a', 'diag.d.a']
     overwrite_existing = True
     ignore_exceptions = False
-    kinds = [run.perform.GSA.Kind.CLOSED]
+    kinds = run.perform.GSA.ALL_KINDS
     is_error_calculated = True
     with run.Context('Test', device='CPU'):
         kind_names = [kind.name.lower() for kind in kinds]
         for N in (200,):
             for M in (10,):
                 for noise_magnitude in (0.2,):
-                    for is_noise_independent in (True,):
+                    for is_noise_independent in (False,):
                         with run.TimingOneLiner(f'M={M}, N={N}, noise={noise_magnitude} \n'):
                             noise_variance = sample.GaussianNoise.Variance(len(function_vector), noise_magnitude, False, False)
                             if overwrite_existing:
