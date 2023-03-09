@@ -443,7 +443,7 @@ class ClosedIndexWithErrors(ClosedIndex):
             TT = self.W - Wmm
         else:
             T = self._Q(Wmm, WMm.MIXED, Vm)
-            TT = self._Q(self.W.DIAGONAL - Wmm, self.W.MIXED - WMm.MIXED, self.V[0] - Vm)
+            TT = self._Q(self.W.DIAGONAL - 2 * WMm.DIAGONAL + Wmm, 2 * (self.W.MIXED - WMm.MIXED), self.V[0] - Vm)
         return {'T': T / self.V[4], 'TT': TT / self.V[4], 'W': Wmm}
 
     def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
