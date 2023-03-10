@@ -26,11 +26,11 @@ from __future__ import annotations
 from romcomma.base.definitions import *
 from romcomma.base.classes import Model, Parameters
 from romcomma.gpr.models import GPInterface
-from romcomma.gsa import calculate
+from romcomma.gsa import sobol
 from enum import Enum, auto
 
 
-class GSA(Model):
+class calculation(Model):
     """ Class encapsulating a general GSA, with calculation and recording facilities."""
 
     class Parameters(Parameters):
@@ -45,10 +45,10 @@ class GSA(Model):
                 """ The parameters set of a GSA.
 
                     Attributes:
-                        S (NP.Matrix): The Sobol index/indices.
-                        T (NP.Matrix): The cross covariances of the Sobol index/indices.
-                        V (NP.Matrix): The conditional variances underpinning Sobol index/indices.
-                        W (NP.Matrix): The cross covariances conditional variances underpinning Sobol index/indices.
+                        S (NP.Matrix): The Sobol index.
+                        T (NP.Matrix): The Sobol index variance.
+                        V (NP.Matrix): The conditional variances underpinning the Sobol index.
+                        W (NP.Matrix): The covariances underpinning the Sobol index variance.
                 """
                 S: NP.Matrix = np.atleast_2d(None)
                 T: NP.Matrix = np.atleast_2d(None)
@@ -72,10 +72,10 @@ class GSA(Model):
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
         """ Default calculation options. ``is_T_partial`` forces ``WmM = 0``."""
-        return calculate.ClosedIndexWithErrors.OPTIONS
+        return sobol.ClosedIndexWithErrors.OPTIONS
 
     @classmethod
-    def _calculate(cls, kind: GSA.Kind, m_dataset: tf.data.Dataset, calculate: calculate.ClosedIndex) -> Dict[str, TF.Tensor]:
+    def _calculate(cls, kind: calculation.Kind, m_dataset: tf.data.Dataset, calculate: sobol.ClosedIndex) -> Dict[str, TF.Tensor]:
         """ Perform the GSA calculation.
 
         Args:
@@ -94,11 +94,11 @@ class GSA(Model):
                 for key in results.keys():
                     results[key] = tf.concat([results[key], result[key][..., tf.newaxis]], axis=-1)
         results['V'] = tf.concat([results['V'], calculate.V[0][..., tf.newaxis]], axis=-1)
-        results['S'] = calculate.S[..., tf.newaxis] - results['S'] if kind == GSA.Kind.TOTAL else results['S']
+        results['S'] = calculate.S[..., tf.newaxis] - results['S'] if kind == calculation.Kind.TOTAL else results['S']
         results['S'] = tf.concat([results['S'], calculate.S[..., tf.newaxis]], axis=-1)
         if 'T' in results:
             TT = results.pop('TT')
-            results['T'] = TT if (kind == GSA.Kind.TOTAL) else results['T']
+            results['T'] = TT if (kind == calculation.Kind.TOTAL) else results['T']
         return results
 
     @classmethod
@@ -146,7 +146,7 @@ class GSA(Model):
         columns = len(shape)
         return pd.MultiIndex.from_product(indices, names=[f'l.{l}' for l in range(len(indices))])
 
-    def _m_dataset(self, kind: GSA.Kind, m: int, M: int) -> tf.data.Dataset:
+    def _m_dataset(self, kind: calculation.Kind, m: int, M: int) -> tf.data.Dataset:
         """ ``m`` as a tf.Dataset for iteration.
 
         Args:
@@ -157,11 +157,11 @@ class GSA(Model):
         """
         result = []
         ms = range(M) if m < 0 else [m]
-        if kind == GSA.Kind.FIRST_ORDER:
+        if kind == calculation.Kind.FIRST_ORDER:
             result = [tf.constant([m, m + 1], dtype=INT()) for m in ms]
-        elif kind == GSA.Kind.CLOSED:
+        elif kind == calculation.Kind.CLOSED:
             result = [tf.constant([0, m + 1], dtype=INT()) for m in ms]
-        elif kind == GSA.Kind.TOTAL:
+        elif kind == calculation.Kind.TOTAL:
             result = [tf.constant([m + 1, M], dtype=INT()) for m in ms]
         return tf.data.Dataset.from_tensor_slices(result)
 
@@ -171,7 +171,7 @@ class GSA(Model):
     def __str__(self) -> str:
         return self.folder.name
 
-    def __init__(self, gp: GPInterface, kind: GSA.Kind, m: int = -1, is_error_calculated: bool = False, **kwargs: Any):
+    def __init__(self, gp: GPInterface, kind: calculation.Kind, m: int = -1, is_error_calculated: bool = False, **kwargs: Any):
         """ Perform a Sobol GSA. The object created is single use and disposable: the constructor performs and records the entire GSA and the
         constructed object is basically useless once constructed.
 
@@ -187,10 +187,9 @@ class GSA(Model):
         m, name = (m, f'{kind.name.lower()}.{m}') if 0 <= m < gp.M else (-1, kind.name.lower())
         options = {'m': m} | self.OPTIONS | kwargs
         folder = gp.folder / 'gsa' / name
-        # Save Parameters and Options
         super().__init__(folder, read_parameters=False)
         self._write_options(options)
-        results = self._calculate(kind, self._m_dataset(kind, m, gp.M),
-                                  calculate.ClosedIndexWithErrors(gp, **options) if is_error_calculated else calculate.ClosedIndex(gp, **options))
-        # Compose and save results
-        results = {key: self._compose_and_save(self.parameters.csv(key), value, m, gp.M) for key, value in results.items()}
+        results = self._calculate(kind=kind, m_dataset=self._m_dataset(kind, m, gp.M),
+                                  calculate=sobol.ClosedIndexWithErrors(gp, **options) if is_error_calculated else sobol.ClosedIndex(gp, **options))
+        for key, value in results.items():
+            self._compose_and_save(self.parameters.csv(key), value, m, gp.M)
