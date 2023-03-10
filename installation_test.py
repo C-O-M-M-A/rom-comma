@@ -44,4 +44,4 @@ if __name__ == '__main__':
                     with run.Timing(f'Gaussian Process Regression for N={N}, noise={noise_magnitude}'):
                         run.gpr(name='test', repo=repo, is_read=None, is_independent=None, is_isotropic=False, optimize=True, test=True)
                     with run.Timing(f'Global Sensitivity Analysis for N={N}, noise={noise_magnitude}'):
-                        run.gsa(name='test', repo=repo, is_independent=None, is_isotropic=False)
+                        run.GSA(name='test', repo=repo, is_independent=None, is_isotropic=False)

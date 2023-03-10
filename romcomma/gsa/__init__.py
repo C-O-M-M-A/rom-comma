@@ -21,5 +21,5 @@
 
 # Contains classes to perform Global Sensitivity Analysis (GSA).
 
-from . import calculate
-from . import perform
+from . import sobol
+from . import run
