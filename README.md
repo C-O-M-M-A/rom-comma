@@ -5,11 +5,10 @@
 ## installation
 Simply place the `romcomma` package in a folder included in your `PYTHONPATH` (e.g. `site-packages`). 
 Test the installation by running the `installation_test` module, from anywhere.
+Installation dependencies are documented in `pyproject.toml`.
 
 ## documentation
-Dependencies are documented in `pyproject.toml`.
-
-Full documentation for the `romcomma` package is published on [readthedocs](https://rom-comma.readthedocs.io/en/latest/).
+All documentation for the `romcomma` package is published on [rom-comma user guide](https://c-o-m-m-a.github.io/rom-comma/).
 
 ## getting started
 The following is not intended to substitute full package documentation, but to sketch the most essential, salient and practically important architectural 
