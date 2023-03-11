@@ -12,9 +12,12 @@ author = 'Robert A. Milton'
 release = '1.0'
 
 # -- General configuration ---------------------------------------------------
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../..'))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon']
 
 templates_path = ['_templates']
 exclude_patterns = []

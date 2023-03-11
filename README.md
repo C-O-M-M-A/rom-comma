@@ -8,7 +8,7 @@ Test the installation by running the `installation_test` module, from anywhere.
 Installation dependencies are documented in `pyproject.toml`.
 
 ## documentation
-All documentation for the `romcomma` package is published on [rom-comma user guide](https://c-o-m-m-a.github.io/rom-comma/).
+All documentation for the `romcomma` package is published in the [rom-comma user guide](https://c-o-m-m-a.github.io/rom-comma/).
 
 ## getting started
 The following is not intended to substitute full package documentation, but to sketch the most essential, salient and practically important architectural 
