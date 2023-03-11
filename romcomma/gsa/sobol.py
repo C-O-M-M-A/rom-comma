@@ -32,6 +32,7 @@ from enum import IntEnum
 LogPDF = Tuple[TF.Tensor, TF.Tensor]
 
 
+
 class Gaussian(ABC):
     """ Encapsulates the calculation of a Gaussian pdf. Not instantiatable."""
 
@@ -103,7 +104,7 @@ class ClosedIndex(gf.Module):
         """
         return {}
 
-    def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
+    def marginalize(self, m: TF.Slice) -> Dict[str, TF.Tensor]:
         """ Calculate everything.
         Args:
             m: A Tf.Tensor pair of ints indicating the slice [m[0]:m[1]].
@@ -394,34 +395,22 @@ class ClosedIndexWithErrors(ClosedIndex):
         W += tf.transpose(W)
         return W
 
-    def _Q(self, Wmm: TF.Tensor, WMm: TF.Tensor = None, Vm: TF.Tensor = None) -> TF.Tensor:
-        """ Calculate Q
-
-        Args:
-            Wmm: li
-            Mm: li
-            Vm: li
-        Returns: T[mm]
-        """
-        return Wmm - 2 * Vm * WMm / self.V[1] + Vm * Vm * self.Q
-
-    def _T(self, Wmm: TF.Tensor, WMm: TF.Tensor = None, Vm: TF.Tensor = None) -> Dict[str, TF.Tensor]:
+    def _T(self, Wmm: TF.Tensor, WMm: TF.Tensor = None, Vm: TF.Tensor = None) -> TF.Tensor:
         """ Calculate T
 
         Args:
             Wmm: li
             Mm: li
             Vm: li
-        Returns: The closed index errors T[mm] and the total index error TT[mm]
+        Returns: The closed index uncertainty T.
         """
         if self.options['is_T_partial']:
-            T = TT = Wmm
+            Q = Wmm
         else:
-            T = self._Q(Wmm, WMm, Vm)
-            TT = tf.math.maximum(T, self.T)
-        return {'T': T / self.V[4], 'TT': TT / self.V[4], 'W': Wmm}
+            Q = Wmm - 2 * Vm * WMm / self.V[1] + Vm * Vm * self.Q
+        return Q / self.V[4]
 
-    def marginalize(self, m: TF.Slice) -> Dict[str, Dict[str: TF.Tensor]]:
+    def marginalize(self, m: TF.Slice) -> Dict[str: TF.Tensor]:
         """ Calculate everything.
         Args:
             m: A Tf.Tensor pair of ints indicating the slice [m[0]:m[1]].
@@ -434,8 +423,9 @@ class ClosedIndexWithErrors(ClosedIndex):
         if self.options['is_T_partial']:
             Upsilon_log_pdf = self._Upsilon_log_pdf(G, Phi, Upsilon, self.RANK_EQUATIONS.DIAGONAL)
             Omega_log_pdf = self._Omega_log_pdf(m, self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
-            result |= self._T(self._W(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf, self.RANK_EQUATIONS.DIAGONAL),
-                                      self._mu_psi_mu(psi_factor, self.RANK_EQUATIONS.DIAGONAL)))
+            Wmm = self._W(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf, self.RANK_EQUATIONS.DIAGONAL),
+                                      self._mu_psi_mu(psi_factor, self.RANK_EQUATIONS.DIAGONAL))
+            result |= {'W': Wmm, 'T': self._T(Wmm)}
         else:
             Upsilon_log_pdf = self.RankEquations(*(self._Upsilon_log_pdf(G, Phi, Upsilon, rank_eqs) for i, rank_eqs in enumerate(self.RANK_EQUATIONS)))
             Omega_log_pdf = self.RankEquations(*(self._Omega_log_pdf(m, self.G, self.Phi, self.Upsilon, rank_eqs)
@@ -444,7 +434,7 @@ class ClosedIndexWithErrors(ClosedIndex):
                            self._mu_psi_mu(psi_factor, self.RANK_EQUATIONS.DIAGONAL)))
             WMm = self._W(self._mu_phi_mu(G_log_pdf, self.Upsilon_log_pdf.MIXED, Omega_log_pdf.MIXED, self.RANK_EQUATIONS.MIXED),
                                                self._mu_psi_mu(psi_factor, self.RANK_EQUATIONS.MIXED))
-            result |= self._T(Wmm, WMm, result['V'])
+            result |= {'W': Wmm, 'T': self._T(Wmm, WMm, result['V'])}
         return result
 
     def _calculate(self):
@@ -474,8 +464,7 @@ class ClosedIndexWithErrors(ClosedIndex):
                                                   self._mu_psi_mu(self.psi_factor, rank_eq)) for i, rank_eq in enumerate(self.RANK_EQUATIONS)))
             self.Q = tf.linalg.diag_part(self.W.MIXED) / (4.0 * self.V[1] * self.V[1])
             self.Q = self.Q[tf.newaxis, ...] + self.Q[..., tf.newaxis] + 2.0 * tf.linalg.diag(self.Q)
-            self.T = self._Q(self.W.DIAGONAL, self.W.MIXED, self.V[0])
-
+            self.T = self._T(self.W.DIAGONAL, self.W.MIXED, self.V[0])
 
 class ClosedIndexWithRotation(ClosedIndex):
     """ Encapsulates the calculation of closed Sobol indices with a rotation U = Theta X."""
@@ -496,39 +485,6 @@ class ClosedIndexWithRotation(ClosedIndex):
         result = tf.linalg.cholesky(tensor)
         result = tf.linalg.triangular_solve(result, I)
         return tf.einsum(ein , result, result)
-
-    def rotate_and_calculate(self, Theta: TF.Matrix) -> Dict[str, TF.Tensor]:
-        """ Rotate the input basis by Theta, calculate and return all quantities which do not depend on marginalization,
-            but will need to be marginalized.
-
-        Args:
-            Theta: An (M,M) matrix to rotate the inputs to U = Theta X.
-
-        Returns:
-
-        """
-        I = tf.eye(self.M, batch_shape=[1, 1], dtype=FLOAT())
-        # First Moments
-        G = tf.einsum('Mm, Llm, Nm -> LlNM', Theta, self.Lambda2[-1][1], self.gp.X)
-        Phi = tf.einsum('Mm, Llm, Jm -> LlMJ', Theta, self.Lambda2[-1][1], Theta)
-        Gamma = I - Phi
-        # Second Moments
-        Upsilon = tf.einsum('Mm, Llm, Llm, Jm -> LlMJ', Theta, self.Lambda2[1][1], self.Lambda2[-1][2], Theta)
-        Gamma_inv = self.matrix_inverse(Gamma, I)
-        print(tf.einsum('LlMm, LlmJ -> LlMJ', Gamma_inv, Gamma))
-        Upsilon_inv = self.matrix_inverse(Upsilon, I)
-        print(tf.einsum('LlMm, LlmJ -> LlMJ', Upsilon_inv, Upsilon))
-        Pi = self.matrix_inverse(tf.einsum('LlMm, Llmj, LljJ -> LlMJ', Phi, Gamma_inv, Phi) + Upsilon_inv, I)
-
-    def rotate_and_marginalize(self, Theta: TF.Matrix, G: TF.Tensor, Gamma: TF.Tensor, Upsilon: TF.Tensor):
-        # Expected Value
-        Sigma = tf.expand_dims(tf.expand_dims(Gamma, axis=2), axis=2) + Gamma[tf.newaxis, tf.newaxis, ...]
-        Psi = Sigma - tf.einsum('IiMm, LlmJ -> IiLlMJ', Gamma, Gamma)
-        SigmaPsi = tf.einsum('IiLlMm, IiLlmJ -> IiLlMJ', Sigma, Psi)
-        Gamma_reshape = tf.expand_dims(Gamma, 2)
-        SigmaG = tf.einsum('IinMm, LlNm -> IinLlNM', Gamma_reshape, G) + tf.einsum('IinMm, LlNm -> LlNIinM', Gamma_reshape, G)
-        # Variance
-        sqrt_1_Upsilon = tf.linalg.band_part(tf.linalg.cholesky(I - Upsilon), -1, 0)
 
 
 def sym_check(tensor: TF.Tensor, transposition: List[int]) -> TF.Tensor:

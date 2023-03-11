@@ -33,7 +33,7 @@ BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/1.1.3')
 if __name__ == '__main__':
     function_vector = functions.OAKLEY2004
     models = ['diag.i.a', 'diag.d.a']
-    overwrite_existing = False
+    overwrite_existing = True
     ignore_exceptions = False
     kinds = gsa.run.calculation.ALL_KINDS
     is_error_calculated = True
@@ -48,12 +48,12 @@ if __name__ == '__main__':
                             if overwrite_existing:
                                 repo = sample.Function(BASE_FOLDER, sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
                                 repo = repo.into_K_folds(K=1).rotate_folds(None).repo
-                                run.gpr(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=False, ignore_exceptions=ignore_exceptions,
+                                run.GPR(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=False, ignore_exceptions=ignore_exceptions,
                                         optimize=True, test=True)
                             else:
                                 repo = sample.Function(BASE_FOLDER, sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, False).repo
-                            run.Aggregate({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}}, {repo.folder/model: {'model': model} for model in models},
-                                          ignore_exceptions).over_folders(repo.folder/'gpr', True)
+                            run.Aggregate({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
+                                          {repo.folder/model: {'model': model} for model in models}, ignore_exceptions).over_folders(repo.folder/'gpr', True)
                             run.Aggregate({'variance': {}, 'log_marginal': {}}, {f'{repo.folder/model}/likelihood': {'model': model} for model in models},
                                           ignore_exceptions).over_folders((repo.folder/'gpr')/'likelihood', True)
                             run.Aggregate({'variance': {}, 'lengthscales': {}}, {f'{repo.folder/model}/kernel': {'model': model} for model in models},

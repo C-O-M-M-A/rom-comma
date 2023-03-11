@@ -24,24 +24,40 @@
 from __future__ import annotations
 
 from romcomma.base.definitions import *
-from romcomma import run, test
-
+from romcomma import run, gsa, test
 
 
 BASE_FOLDER = Path('installation_test')
 
 
 if __name__ == '__main__':
-    with run.Context('Test', float='float64', device='CPU'):
-        function_vector = test.functions.ISHIGAMI.subVector('ishigami', ['standard', 'inflated'])
-        for N in (500,):
-            for M in (5,):
-                for noise_magnitude in (0.1,):
-                    with run.TimingOneLiner(f'sample generation for N={N}, noise={noise_magnitude}'):
-                        noise_variance = test.sample.GaussianNoise.Variance(len(function_vector), noise_magnitude, False, False)
-                        sample = test.sample.Function(BASE_FOLDER, test.sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
-                        repo = sample.into_K_folds(K=1).rotate_folds(None).repo
-                    with run.Timing(f'Gaussian Process Regression for N={N}, noise={noise_magnitude}'):
-                        run.gpr(name='test', repo=repo, is_read=None, is_independent=None, is_isotropic=False, optimize=True, test=True)
-                    with run.Timing(f'Global Sensitivity Analysis for N={N}, noise={noise_magnitude}'):
-                        run.GSA(name='test', repo=repo, is_independent=None, is_isotropic=False)
+    function_vector = test.functions.ISHIGAMI
+    models = ['diag.i.a', 'diag.d.a']
+    ignore_exceptions = False
+    kinds = gsa.run.calculation.ALL_KINDS
+    is_error_calculated = True
+    with run.Context('Test', device='CPU'):
+        kind_names = [kind.name.lower() for kind in kinds]
+        for N in (100,):
+            for M in (4,):
+                for noise_magnitude in (0.2,):
+                    for is_noise_independent in (False,):
+                        with run.TimingOneLiner(f'M={M}, N={N}, noise={noise_magnitude} \n'):
+                            noise_variance = test.sample.GaussianNoise.Variance(len(function_vector), noise_magnitude, False, False)
+                            repo = test.sample.Function(BASE_FOLDER, test.sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
+                            repo = repo.into_K_folds(K=1).rotate_folds(None).repo
+                            run.GPR(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=False, ignore_exceptions=ignore_exceptions,
+                                    optimize=True, test=True)
+                            run.Aggregate({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
+                                          {repo.folder/model: {'model': model} for model in models}, ignore_exceptions).over_folders(repo.folder/'gpr', True)
+                            run.Aggregate({'variance': {}, 'log_marginal': {}}, {f'{repo.folder/model}/likelihood': {'model': model} for model in models},
+                                          ignore_exceptions).over_folders((repo.folder/'gpr')/'likelihood', True)
+                            run.Aggregate({'variance': {}, 'lengthscales': {}}, {f'{repo.folder/model}/kernel': {'model': model} for model in models},
+                                          ignore_exceptions).over_folders((repo.folder/'gpr')/'kernel', True)
+                            run.GSA('diag', repo, is_independent=None, is_isotropic=False, kinds=kinds, is_error_calculated=is_error_calculated,
+                                    ignore_exceptions=ignore_exceptions, is_T_partial=False)
+                            run.Aggregate({'S': {}, 'V': {}} | ({'T': {}, 'W': {}} if is_error_calculated else {}),
+                                          {f'{repo.folder/model}/gsa/{kind_name}': {'model': model, 'kind': kind_name}
+                                           for kind_name in kind_names for model in models},
+                                          ignore_exceptions).over_folders((repo.folder/'gsa'), True)
+
