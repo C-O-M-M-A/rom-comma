@@ -96,9 +96,9 @@ class calculation(Model):
         results['V'] = tf.concat([results['V'], calculate.V[0][..., tf.newaxis]], axis=-1)
         results['S'] = calculate.S[..., tf.newaxis] - results['S'] if kind == calculation.Kind.TOTAL else results['S']
         results['S'] = tf.concat([results['S'], calculate.S[..., tf.newaxis]], axis=-1)
-        if 'T' in results:
-            TT = results.pop('TT')
-            results['T'] = TT if (kind == calculation.Kind.TOTAL) else results['T']
+        if 'T' in results and not calculate.options['is_T_partial']:
+            results['T'] = (calculate.T[..., tf.newaxis] + results['T'] if kind == calculation.Kind.TOTAL else results['T'])
+            results['T'] = tf.concat([results['T'], calculate.T[..., tf.newaxis]], axis=-1)
         return results
 
     @classmethod
