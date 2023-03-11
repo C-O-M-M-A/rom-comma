@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to rom-comma's documentation!
+rom-comma user guide
 =====================================
 
 .. toctree::
@@ -12,7 +12,7 @@ Welcome to rom-comma's documentation!
 
 
 
-Indices and tables
+indices and tables
 ==================
 
 * :ref:`genindex`
