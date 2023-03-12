@@ -6,11 +6,17 @@
 rom-comma user guide
 =====================================
 
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+.. autosummary:: romcomma.run
+   :recursive:
 
+
+.. automodule:: romcomma.run
+    :members:
 
 indices and tables
 ==================

@@ -71,9 +71,9 @@ def Context(name: str, device: str = '', **kwargs):
 
     Args:
         name: The name of this context, this appears as what is being run.
-        device: The device to run on. If this ends in the regex ``[C,G]PU*`` then the logical device ``/[C,G]*`` is used,
+        device: The device to run on. If this ends in the regex ``[C,G]PU*`` then the logical device ``/[C,G]PU*`` is used,
             otherwise device allocation is automatic.
-        **kwargs: Is passed straight to the implementation GPFlow manager. Note, however, that ``float=float32`` is inoperative due to sicpy.
+        **kwargs: Is passed straight to the implementation GPFlow manager. Note, however, that ``float=float32`` is inoperative due to SciPy.
     """
     with TimingOneLiner(name):
         kwargs = kwargs | {'float': 'float64'}
