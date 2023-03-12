@@ -1,0 +1,477 @@
+
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>romcomma.data.storage.Fold &#8212; rom-comma 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/cloud.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,i,b,bi|Open+Sans:400,i,b,bi|Roboto+Mono:400,i,b,bi&amp;display=swap" type="text/css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+
+    
+    
+     
+        <script src="../_static/jquery.cookie.js"></script>
+    
+
+    
+     
+        <script src="../_static/cloud.base.js"></script>
+    
+
+    
+     
+        <script src="../_static/cloud.js"></script>
+    
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="romcomma.data.storage.Frame" href="romcomma.data.storage.Frame.html" />
+    <link rel="prev" title="romcomma.data.storage" href="romcomma.data.storage.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+    <div class="relbar-top">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="romcomma.data.storage.Frame.html" title="romcomma.data.storage.Frame"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="romcomma.data.storage.html" title="romcomma.data.storage"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">rom-comma 1.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="romcomma.data.html" >romcomma.data</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="romcomma.data.storage.html" accesskey="U">romcomma.data.storage</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">romcomma.data.storage.Fold</a></li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="romcomma-data-storage-fold">
+<h1>romcomma.data.storage.Fold<a class="headerlink" href="#romcomma-data-storage-fold" title="Permalink to this heading">§</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Fold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/romcomma/data/storage.html#Fold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.data.storage.Fold" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="romcomma.data.storage.Repository.html#romcomma.data.storage.Repository" title="romcomma.data.storage.Repository"><code class="xref py py-class docutils literal notranslate"><span class="pre">Repository</span></code></a></p>
+<p>A Fold is defined as a folder containing a <code class="docutils literal notranslate"><span class="pre">data.csv</span></code>, a <code class="docutils literal notranslate"><span class="pre">meta.json</span></code> file and a <code class="docutils literal notranslate"><span class="pre">test.csv</span></code> file.
+A Fold is a Repository equipped with a test_data pd.DataFrame backed by <code class="docutils literal notranslate"><span class="pre">test.csv</span></code>.</p>
+<p>Additionally, a fold can reduce the dimensionality <code class="docutils literal notranslate"><span class="pre">M</span></code> of the input <code class="docutils literal notranslate"><span class="pre">X</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent</strong> (<a class="reference internal" href="romcomma.data.storage.Repository.html#romcomma.data.storage.Repository" title="romcomma.data.storage.Repository"><em>Repository</em></a>) – </p></li>
+<li><p><strong>k</strong> (<em>int</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/romcomma/data/storage.html#Fold.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.data.storage.Fold.__init__" title="Permalink to this definition">§</a></dt>
+<dd><p>Initialize Fold by reading existing files. Creation is handled by the classmethod Fold.from_dfs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent</strong> (<a class="reference internal" href="romcomma.data.storage.Repository.html#romcomma.data.storage.Repository" title="romcomma.data.storage.Repository"><em>Repository</em></a>) – The parent Repository.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – The index of the Fold within parent.</p></li>
+<li><p><strong>M</strong> – The number of input columns used. If not 0 &amp;lt M &amp;lt self.M, all columns are used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.Y_split" title="romcomma.data.storage.Fold.Y_split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Y_split</span></code></a>()</p></td>
+<td><p>Split this Repository into L Y_splits.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.__init__" title="romcomma.data.storage.Fold.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(parent, k, **kwargs)</p></td>
+<td><p>Initialize Fold by reading existing files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fold_folder</span></code>(k)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.from_csv" title="romcomma.data.storage.Fold.from_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_csv</span></code></a>(folder, csv[, meta])</p></td>
+<td><p>Create a Repository from a csv file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.from_df" title="romcomma.data.storage.Fold.from_df"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_df</span></code></a>(folder, df[, meta])</p></td>
+<td><p>Create a Repository from a pd.DataFrame.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.from_dfs" title="romcomma.data.storage.Fold.from_dfs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_dfs</span></code></a>(parent, k, data, test_data[, ...])</p></td>
+<td><p>Create a Fold from a pd.DataFrame.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.into_K_folds" title="romcomma.data.storage.Fold.into_K_folds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">into_K_folds</span></code></a>(K[, shuffle_before_folding, ...])</p></td>
+<td><p>Fold this repo into K Folds, indexed by range(K).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">meta_update</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CSV_OPTIONS</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.K" title="romcomma.data.storage.Fold.K"><code class="xref py py-obj docutils literal notranslate"><span class="pre">K</span></code></a></p></td>
+<td><p>The number of folds contained in this Repository.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.L" title="romcomma.data.storage.Fold.L"><code class="xref py py-obj docutils literal notranslate"><span class="pre">L</span></code></a></p></td>
+<td><p>The number of output columns in <cite>self.data</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.M" title="romcomma.data.storage.Fold.M"><code class="xref py py-obj docutils literal notranslate"><span class="pre">M</span></code></a></p></td>
+<td><p>The number of input columns in <cite>self.data</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">META</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.N" title="romcomma.data.storage.Fold.N"><code class="xref py py-obj docutils literal notranslate"><span class="pre">N</span></code></a></p></td>
+<td><p>The number of datapoints (rows of data).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.X" title="romcomma.data.storage.Fold.X"><code class="xref py py-obj docutils literal notranslate"><span class="pre">X</span></code></a></p></td>
+<td><p>The input X, as an (N,M) design Matrix with column headings.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.X_rotation" title="romcomma.data.storage.Fold.X_rotation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">X_rotation</span></code></a></p></td>
+<td><p>The rotation matrix applied to the input variables self.X, stored in __X_rotation.csv.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.Y" title="romcomma.data.storage.Fold.Y"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Y</span></code></a></p></td>
+<td><p>The output Y as an (N,L) Matrix with column headings.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.Y_splits" title="romcomma.data.storage.Fold.Y_splits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Y_splits</span></code></a></p></td>
+<td><p>Lists the index and path of every Y_split in this Repository.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">folder</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.folds" title="romcomma.data.storage.Fold.folds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">folds</span></code></a></p></td>
+<td><p>The indices of the folds contained in this Repository.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">meta</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalization</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_csv</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_data</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.test_x" title="romcomma.data.storage.Fold.test_x"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_x</span></code></a></p></td>
+<td><p>The test_data input x, as an (n,M) design Matrix with column headings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Fold.test_y" title="romcomma.data.storage.Fold.test_y"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_y</span></code></a></p></td>
+<td><p>The test_data output y as an (n,L) Matrix with column headings.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.test_x">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_x</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.test_x" title="Permalink to this definition">§</a></dt>
+<dd><p>The test_data input x, as an (n,M) design Matrix with column headings.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.test_y">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_y</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.test_y" title="Permalink to this definition">§</a></dt>
+<dd><p>The test_data output y as an (n,L) Matrix with column headings.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.X_rotation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">X_rotation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.X_rotation" title="Permalink to this definition">§</a></dt>
+<dd><p>The rotation matrix applied to the input variables self.X, stored in __X_rotation.csv. Rotations are applied and stored cumulatively.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.from_dfs">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/romcomma/data/storage.html#Fold.from_dfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.data.storage.Fold.from_dfs" title="Permalink to this definition">§</a></dt>
+<dd><p>Create a Fold from a pd.DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent</strong> (<a class="reference internal" href="romcomma.data.storage.Repository.html#romcomma.data.storage.Repository" title="romcomma.data.storage.Repository"><em>Repository</em></a>) – The parent Repository.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – The index of the fold to be created.</p></li>
+<li><p><strong>data</strong> (<em>DataFrame</em>) – Training data.</p></li>
+<li><p><strong>test_data</strong> (<em>DataFrame</em>) – Test data.</p></li>
+<li><p><strong>normalization</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – An optional normalization.csv file to use.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#romcomma.data.storage.Fold" title="romcomma.data.storage.Fold"><em>Fold</em></a></p>
+</dd>
+</dl>
+<p>Returns: The Fold created.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.K">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">K</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.K" title="Permalink to this definition">§</a></dt>
+<dd><p>The number of folds contained in this Repository.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.L">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">L</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.L" title="Permalink to this definition">§</a></dt>
+<dd><p>The number of output columns in <cite>self.data</cite>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.M">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">M</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.M" title="Permalink to this definition">§</a></dt>
+<dd><p>The number of input columns in <cite>self.data</cite>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.N">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">N</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.N" title="Permalink to this definition">§</a></dt>
+<dd><p>The number of datapoints (rows of data).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.X">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">X</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.X" title="Permalink to this definition">§</a></dt>
+<dd><p>The input X, as an (N,M) design Matrix with column headings.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.Y">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Y</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.Y" title="Permalink to this definition">§</a></dt>
+<dd><p>The output Y as an (N,L) Matrix with column headings.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.Y_split">
+<span class="sig-name descname"><span class="pre">Y_split</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.data.storage.Fold.Y_split" title="Permalink to this definition">§</a></dt>
+<dd><p>Split this Repository into L Y_splits. Each Y.l is just a Repository containing the lth output only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – if self is a Fold.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.Y_splits">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Y_splits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Path</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.data.storage.Fold.Y_splits" title="Permalink to this definition">§</a></dt>
+<dd><p>Lists the index and path of every Y_split in this Repository.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.folds">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">folds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">range</span></em><a class="headerlink" href="#romcomma.data.storage.Fold.folds" title="Permalink to this definition">§</a></dt>
+<dd><p>The indices of the folds contained in this Repository.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.from_csv">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.data.storage.Fold.from_csv" title="Permalink to this definition">§</a></dt>
+<dd><p>Create a Repository from a csv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em>) – The location (folder) of the target Repository.</p></li>
+<li><p><strong>csv</strong> (<em>str</em><em> | </em><em>Path</em>) – The file containing the data to record in [Return].csv.</p></li>
+<li><p><strong>meta</strong> (<em>Dict</em><em> | </em><em>None</em>) – The metadata to record in [Return].meta.json.</p></li>
+<li><p><strong>kwargs</strong> – Updates Repository.CSV_OPTIONS for reading the csv file, as detailed in
+<a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html">https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html</a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.data.storage.Repository.html#romcomma.data.storage.Repository" title="romcomma.data.storage.Repository"><em>Repository</em></a></p>
+</dd>
+</dl>
+<p>Returns: A new Repository located in folder.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.from_df">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meta=&lt;classmethod(&lt;property</span> <span class="pre">object&gt;)&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.data.storage.Fold.from_df" title="Permalink to this definition">§</a></dt>
+<dd><p>Create a Repository from a pd.DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em>) – The location (folder) of the Repository.</p></li>
+<li><p><strong>df</strong> (<em>DataFrame</em>) – The data to record in [Return].csv.</p></li>
+<li><p><strong>meta</strong> (<em>Dict</em>) – The metadata to record in [Return].meta.json.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.data.storage.Repository.html#romcomma.data.storage.Repository" title="romcomma.data.storage.Repository"><em>Repository</em></a></p>
+</dd>
+</dl>
+<p>Returns: A new Repository.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Fold.into_K_folds">
+<span class="sig-name descname"><span class="pre">into_K_folds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle_before_folding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.data.storage.Fold.into_K_folds" title="Permalink to this definition">§</a></dt>
+<dd><p>Fold this repo into K Folds, indexed by range(K).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K</strong> (<em>int</em>) – The number of Folds, of absolute value between 1 and N inclusive.
+An improper Fold, indexed by K and including all data for both training and testing is included by default.
+To suppress this give K as a negative integer.</p></li>
+<li><p><strong>shuffle_before_folding</strong> (<em>bool</em>) – Whether to shuffle the data before sampling.</p></li>
+<li><p><strong>normalization</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – An optional normalization.csv file to use.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>IndexError</strong> – Unless 1 &amp;lt= K &amp;lt= N.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sphinx-toc sphinxlocaltoc">
+    <h3><a href="../index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">romcomma.data.storage.Fold</a><ul>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold"><code class="docutils literal notranslate"><span class="pre">Fold</span></code></a><ul>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.__init__"><code class="docutils literal notranslate"><span class="pre">Fold.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.test_x"><code class="docutils literal notranslate"><span class="pre">Fold.test_x</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.test_y"><code class="docutils literal notranslate"><span class="pre">Fold.test_y</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.X_rotation"><code class="docutils literal notranslate"><span class="pre">Fold.X_rotation</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.from_dfs"><code class="docutils literal notranslate"><span class="pre">Fold.from_dfs()</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.K"><code class="docutils literal notranslate"><span class="pre">Fold.K</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.L"><code class="docutils literal notranslate"><span class="pre">Fold.L</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.M"><code class="docutils literal notranslate"><span class="pre">Fold.M</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.N"><code class="docutils literal notranslate"><span class="pre">Fold.N</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.X"><code class="docutils literal notranslate"><span class="pre">Fold.X</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.Y"><code class="docutils literal notranslate"><span class="pre">Fold.Y</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.Y_split"><code class="docutils literal notranslate"><span class="pre">Fold.Y_split()</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.Y_splits"><code class="docutils literal notranslate"><span class="pre">Fold.Y_splits</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.folds"><code class="docutils literal notranslate"><span class="pre">Fold.folds</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.from_csv"><code class="docutils literal notranslate"><span class="pre">Fold.from_csv()</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.from_df"><code class="docutils literal notranslate"><span class="pre">Fold.from_df()</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Fold.into_K_folds"><code class="docutils literal notranslate"><span class="pre">Fold.into_K_folds()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="romcomma.data.storage.html"
+                          title="Previous page">&larr; romcomma.data.storage</a></p>
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="romcomma.data.storage.Frame.html"
+                          title="Next page">&rarr; romcomma.data.storage.Frame</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/_autosummary/romcomma.data.storage.Fold.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+    
+    
+        <div class="sidebar-toggle-group no-js">
+            
+            <button class="sidebar-toggle" id="sidebar-hide" title="Hide the sidebar menu">
+                 «
+                <span class="show-for-small">hide menu</span>
+                
+            </button>
+            <button class="sidebar-toggle" id="sidebar-show" title="Show the sidebar menu">
+                
+                <span class="show-for-small">menu</span>
+                <span class="hide-for-small">sidebar</span>
+                 »
+            </button>
+        </div>
+    
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="romcomma.data.storage.Frame.html" title="romcomma.data.storage.Frame"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="romcomma.data.storage.html" title="romcomma.data.storage"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">rom-comma 1.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="romcomma.data.html" >romcomma.data</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="romcomma.data.storage.html" >romcomma.data.storage</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">romcomma.data.storage.Fold</a></li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Robert A. Milton.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

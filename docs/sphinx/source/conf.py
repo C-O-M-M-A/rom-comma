@@ -22,11 +22,13 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.coverage'
 autodoc_member_order = 'bysource'
 autodoc_typehints = 'description'
 
-# autosummary_generate = True
+autosummary_generate = True
 
 templates_path = ['_templates']
 exclude_patterns = []
 
+add_module_names = False
+modindex_common_prefix = ['romcomma.']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

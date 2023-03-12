@@ -1,0 +1,291 @@
+
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>romcomma.test.functions &#8212; rom-comma 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/cloud.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,i,b,bi|Open+Sans:400,i,b,bi|Roboto+Mono:400,i,b,bi&amp;display=swap" type="text/css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+
+    
+    
+     
+        <script src="../../../_static/jquery.cookie.js"></script>
+    
+
+    
+     
+        <script src="../../../_static/cloud.base.js"></script>
+    
+
+    
+     
+        <script src="../../../_static/cloud.js"></script>
+    
+
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+    <div class="relbar-top">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../index.html">rom-comma 1.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">romcomma.test.functions</a></li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for romcomma.test.functions</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  BSD 3-Clause License.</span>
+<span class="c1"># </span>
+<span class="c1">#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.</span>
+<span class="c1"># </span>
+<span class="c1">#  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</span>
+<span class="c1"># </span>
+<span class="c1">#  1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</span>
+<span class="c1"># </span>
+<span class="c1">#  2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the</span>
+<span class="c1">#     documentation and/or other materials provided with the distribution.</span>
+<span class="c1"># </span>
+<span class="c1">#  3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this</span>
+<span class="c1">#     software without specific prior written permission.</span>
+<span class="c1"># </span>
+<span class="c1">#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1">#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR</span>
+<span class="c1">#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1">#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF</span>
+<span class="c1">#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
+<span class="c1">#  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot; Contains a suite of functions designed to test_data GSA and order reduction with high-dimensional distributions.</span>
+
+<span class="sd">All functions herein are taken from https://salib.readthedocs.io/en/latest/api/SALib.test_functions.html.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">romcomma.base.definitions</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">SALib.test_functions.Ishigami</span><span class="o">,</span> <span class="nn">SALib.test_functions.Sobol_G</span><span class="o">,</span> <span class="nn">SALib.test_functions.oakley2004</span>
+
+
+<div class="viewcode-block" id="Scalar"><a class="viewcode-back" href="../../../_autosummary/romcomma.test.functions.Scalar.html#romcomma.test.functions.Scalar">[docs]</a><span class="k">class</span> <span class="nc">Scalar</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A scalar test function, which calls ``self.call(self.loc + self.scale * X[:, :M], **(self.kwargs | kwargs)``.&quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">loc</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NP</span><span class="o">.</span><span class="n">VectorLike</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NP</span><span class="o">.</span><span class="n">VectorLike</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">M_</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NP</span><span class="o">.</span><span class="n">VectorLike</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_loc</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">],</span> <span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span> <span class="o">|</span> <span class="n">kwargs</span><span class="p">)),</span> <span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Scalar.__init__"><a class="viewcode-back" href="../../../_autosummary/romcomma.test.functions.Scalar.html#romcomma.test.functions.Scalar.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">call</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">loc</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">VectorLike</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">VectorLike</span><span class="p">,</span> <span class="n">M_</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; A Test function, which calls ``call(loc + scale * X[:, :M_], **kwargs)``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            call: This function called.</span>
+<span class="sd">            loc: Input offset.</span>
+<span class="sd">            scale: Input scale.</span>
+<span class="sd">            M_: The number of input dimensions.</span>
+<span class="sd">            **kwargs: Function parameters applied to call.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_call</span> <span class="o">=</span> <span class="n">call</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_loc</span> <span class="o">=</span> <span class="n">loc</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="n">M_</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kwargs</span> <span class="o">=</span> <span class="n">kwargs</span></div></div>
+
+
+<div class="viewcode-block" id="Vector"><a class="viewcode-back" href="../../../_autosummary/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector">[docs]</a><span class="k">class</span> <span class="nc">Vector</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; A vector test functon, which is little more than a named dictionary of Scalar functions, such that Vector(X, **kwargs) concatenates</span>
+<span class="sd">    Scalar(X, **kwargs) for each dictionary item key: Scalar. &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">concat</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">vectors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Vector</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">vector</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">:</span> <span class="n">scalar</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">scalar</span> <span class="ow">in</span> <span class="n">vector</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;call&#39;</span><span class="p">:</span> <span class="p">{</span><span class="n">l</span><span class="p">:</span> <span class="n">function</span> <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">function</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">())}}</span>
+
+<div class="viewcode-block" id="Vector.subVector"><a class="viewcode-back" href="../../../_autosummary/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.subVector">[docs]</a>    <span class="k">def</span> <span class="nf">subVector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">scalars</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Create a subVector of ``self``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: The name of the subVector.</span>
+<span class="sd">            scalars: The keys of the items of ``self`` to be included in subVector.</span>
+<span class="sd">        Returns: A new instance of Vector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="n">scalar</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="n">scalar</span><span class="p">]</span> <span class="k">for</span> <span class="n">scalar</span> <span class="ow">in</span> <span class="n">scalars</span><span class="p">})</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">scalar</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">scalar</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">()],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Vector.__init__"><a class="viewcode-back" href="../../../_autosummary/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Scalar</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name: The name of this Vector.</span>
+<span class="sd">            **kwargs: The dict of scalars comprising this Vector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span></div></div>
+
+
+<span class="n">_ISHIGAMI</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;call&#39;</span><span class="p">:</span> <span class="n">SALib</span><span class="o">.</span><span class="n">test_functions</span><span class="o">.</span><span class="n">Ishigami</span><span class="o">.</span><span class="n">evaluate</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">}</span>
+<span class="n">_SOBOL_G</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;call&#39;</span><span class="p">:</span> <span class="n">SALib</span><span class="o">.</span><span class="n">test_functions</span><span class="o">.</span><span class="n">Sobol_G</span><span class="o">.</span><span class="n">evaluate</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="n">_OAKLEY2004</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;call&#39;</span><span class="p">:</span> <span class="n">SALib</span><span class="o">.</span><span class="n">test_functions</span><span class="o">.</span><span class="n">oakley2004</span><span class="o">.</span><span class="n">evaluate</span><span class="p">,</span> <span class="s1">&#39;loc&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;scale&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="linspace"><a class="viewcode-back" href="../../../_autosummary/romcomma.test.functions.linspace.html#romcomma.test.functions.linspace">[docs]</a><span class="k">def</span> <span class="nf">linspace</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">stop</span><span class="p">:</span><span class="nb">float</span><span class="p">,</span> <span class="n">shape</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        start:</span>
+<span class="sd">        stop:</span>
+<span class="sd">        shape:</span>
+<span class="sd">    Returns:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">stop</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">)),</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">shape</span><span class="p">)</span></div>
+
+
+<span class="n">ISHIGAMI</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ishigami&#39;</span><span class="p">,</span>
+                  <span class="n">standard</span><span class="o">=</span><span class="n">Scalar</span><span class="p">(</span><span class="o">**</span><span class="n">_ISHIGAMI</span><span class="p">,</span> <span class="n">M_</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mf">0.1</span><span class="p">),</span>
+                  <span class="n">balanced</span><span class="o">=</span><span class="n">Scalar</span><span class="p">(</span><span class="o">**</span><span class="n">_ISHIGAMI</span><span class="p">,</span> <span class="n">M_</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>
+                  <span class="n">sin</span><span class="o">=</span><span class="n">Scalar</span><span class="p">(</span><span class="o">**</span><span class="n">_ISHIGAMI</span><span class="p">,</span> <span class="n">M_</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
+                  <span class="p">)</span>
+
+
+<span class="n">SOBOL_G</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;sobol_g&#39;</span><span class="p">,</span>
+                 <span class="n">weak5_2</span><span class="o">=</span><span class="n">Scalar</span><span class="p">(</span><span class="o">**</span><span class="n">_SOBOL_G</span><span class="p">,</span> <span class="n">M_</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">27</span><span class="p">]),</span> <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,))</span> <span class="o">*</span> <span class="mf">2.0</span><span class="p">),</span>
+                 <span class="n">strong5_2</span><span class="o">=</span><span class="n">Scalar</span><span class="p">(</span><span class="o">**</span><span class="n">_SOBOL_G</span><span class="p">,</span> <span class="n">M_</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">]),</span> <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,))</span> <span class="o">*</span> <span class="mf">2.0</span><span class="p">),</span>
+                 <span class="n">strong5_4</span><span class="o">=</span><span class="n">Scalar</span><span class="p">(</span><span class="o">**</span><span class="n">_SOBOL_G</span><span class="p">,</span> <span class="n">M_</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">]),</span> <span class="n">alpha</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,))</span> <span class="o">*</span> <span class="mf">4.0</span><span class="p">),</span>
+                 <span class="p">)</span>
+
+
+<span class="n">OAKLEY2004</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;oakley2004&#39;</span><span class="p">,</span>
+                    <span class="n">lin7</span><span class="o">=</span><span class="n">Scalar</span><span class="p">(</span><span class="o">**</span><span class="n">_OAKLEY2004</span><span class="p">,</span> <span class="n">M_</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="n">linspace</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mf">7.0</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="p">]),</span> <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">7</span><span class="p">])]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                                <span class="n">M</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">])),</span>
+                    <span class="n">quad7</span><span class="o">=</span><span class="n">Scalar</span><span class="p">(</span><span class="o">**</span><span class="n">_OAKLEY2004</span><span class="p">,</span> <span class="n">M_</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="n">linspace</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mf">7.0</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="p">]),</span> <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">7</span><span class="p">])]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                                 <span class="n">M</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">])),</span>
+                    <span class="n">balanced_quad7</span><span class="o">=</span><span class="n">Scalar</span><span class="p">(</span><span class="o">**</span><span class="n">_OAKLEY2004</span><span class="p">,</span> <span class="n">M_</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="n">linspace</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mf">7.0</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="p">]),</span> <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">7</span><span class="p">])]</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span>
+                                          <span class="n">M</span><span class="o">=</span><span class="n">linspace</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mf">7.0</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">])),</span>
+                    <span class="p">)</span>
+
+
+<span class="n">ALL</span> <span class="o">=</span> <span class="n">Vector</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">vectors</span><span class="o">=</span><span class="p">(</span><span class="n">ISHIGAMI</span><span class="p">,</span> <span class="n">SOBOL_G</span><span class="p">,</span> <span class="n">OAKLEY2004</span><span class="p">))</span>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+    
+    
+        <div class="sidebar-toggle-group no-js">
+            
+            <button class="sidebar-toggle" id="sidebar-hide" title="Hide the sidebar menu">
+                 «
+                <span class="show-for-small">hide menu</span>
+                
+            </button>
+            <button class="sidebar-toggle" id="sidebar-show" title="Show the sidebar menu">
+                
+                <span class="show-for-small">menu</span>
+                <span class="hide-for-small">sidebar</span>
+                 »
+            </button>
+        </div>
+    
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../index.html">rom-comma 1.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">romcomma.test.functions</a></li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Robert A. Milton.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

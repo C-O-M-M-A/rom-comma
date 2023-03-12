@@ -12,6 +12,7 @@ romcomma.gpf.tests
    .. rubric:: Functions
 
    .. autosummary::
+      :toctree:
    
       covariance
       increment

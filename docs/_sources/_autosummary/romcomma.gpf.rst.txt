@@ -25,6 +25,7 @@ romcomma.gpf
 
 .. autosummary::
    :toctree:
+   :template: custom-module-template.rst
    :recursive:
 
    romcomma.gpf.base

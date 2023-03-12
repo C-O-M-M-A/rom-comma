@@ -12,6 +12,7 @@ romcomma.base.definitions
    .. rubric:: Functions
 
    .. autosummary::
+      :toctree:
    
       FLOAT
       INT
@@ -23,6 +24,8 @@ romcomma.base.definitions
    .. rubric:: Classes
 
    .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
    
       NP
       TF

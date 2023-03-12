@@ -25,6 +25,7 @@ romcomma.test
 
 .. autosummary::
    :toctree:
+   :template: custom-module-template.rst
    :recursive:
 
    romcomma.test.functions

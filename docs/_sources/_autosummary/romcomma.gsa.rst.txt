@@ -25,6 +25,7 @@ romcomma.gsa
 
 .. autosummary::
    :toctree:
+   :template: custom-module-template.rst
    :recursive:
 
    romcomma.gsa.run

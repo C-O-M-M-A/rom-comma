@@ -194,7 +194,8 @@ class Model(ABC):
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
         """Returns: Default options."""
-        raise NotImplementedError
+        pass
+        # raise NotImplementedError
 
     @property
     def folder(self) -> Path:

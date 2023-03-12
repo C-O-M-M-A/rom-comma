@@ -1,4 +1,4 @@
-romcomma.data
+﻿romcomma.data
 =============
 
 .. automodule:: romcomma.data
@@ -25,6 +25,7 @@ romcomma.data
 
 .. autosummary::
    :toctree:
+   :template: custom-module-template.rst
    :recursive:
 
    romcomma.data.storage

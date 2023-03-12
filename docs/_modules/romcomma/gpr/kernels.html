@@ -1,0 +1,306 @@
+
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>romcomma.gpr.kernels &#8212; rom-comma 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/cloud.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,i,b,bi|Open+Sans:400,i,b,bi|Roboto+Mono:400,i,b,bi&amp;display=swap" type="text/css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+
+    
+    
+     
+        <script src="../../../_static/jquery.cookie.js"></script>
+    
+
+    
+     
+        <script src="../../../_static/cloud.base.js"></script>
+    
+
+    
+     
+        <script src="../../../_static/cloud.js"></script>
+    
+
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+    <div class="relbar-top">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../index.html">rom-comma 1.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">romcomma.gpr.kernels</a></li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for romcomma.gpr.kernels</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  BSD 3-Clause License.</span>
+<span class="c1"># </span>
+<span class="c1">#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.</span>
+<span class="c1"># </span>
+<span class="c1">#  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</span>
+<span class="c1"># </span>
+<span class="c1">#  1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</span>
+<span class="c1"># </span>
+<span class="c1">#  2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the</span>
+<span class="c1">#     documentation and/or other materials provided with the distribution.</span>
+<span class="c1"># </span>
+<span class="c1">#  3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this</span>
+<span class="c1">#     software without specific prior written permission.</span>
+<span class="c1"># </span>
+<span class="c1">#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot; AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1">#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR</span>
+<span class="c1">#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,</span>
+<span class="c1">#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF</span>
+<span class="c1">#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
+<span class="c1">#  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="sd">&quot;&quot;&quot; Contains Kernel classes for gpr. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span> <span class="nn">romcomma.base.definitions</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">romcomma.base.classes</span> <span class="kn">import</span> <span class="n">Parameters</span><span class="p">,</span> <span class="n">Model</span>
+
+
+<div class="viewcode-block" id="Kernel"><a class="viewcode-back" href="../../../_autosummary/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel">[docs]</a><span class="k">class</span> <span class="nc">Kernel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Abstract interface to a Kernel. Essentially this is the code contract with the GP interface.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Kernel.Parameters"><a class="viewcode-back" href="../../../_autosummary/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters">[docs]</a>    <span class="k">class</span> <span class="nc">Parameters</span><span class="p">(</span><span class="n">Parameters</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; The Parameters set of a Kernel.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Kernel.Parameters.Values"><a class="viewcode-back" href="../../../_autosummary/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters.Values">[docs]</a>        <span class="nd">@classmethod</span>
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">Values</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">NamedTuple</span><span class="p">]:</span>
+
+            <span class="k">class</span> <span class="nc">Values</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot; The parameters set of a Kernel.</span>
+
+<span class="sd">                Attributes:</span>
+<span class="sd">                    variance: An (L,L) or (1,L) Matrix of kernel variances. (1,L) represents a diagonal (L,L) variance matrix.</span>
+<span class="sd">                        (1,1) means a single kernel shared by all outputs.</span>
+<span class="sd">                    lengthscales: A (L,M) Matrix of anisotropic lengthscales, or a (L,1) Vector of isotropic lengthscales,</span>
+<span class="sd">                        where L=1 or L=variance.shape[1]*(variance.shape[0]+ 1)/2.</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="n">variance</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+                <span class="n">lengthscales</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">Values</span></div></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">OPTIONS</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;variance&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;diagonal&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;off_diagonal&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span> <span class="s1">&#39;lengthscales&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;independent&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;dependent&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}}</span>
+
+<div class="viewcode-block" id="Kernel.optimize"><a class="viewcode-back" href="../../../_autosummary/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.optimize">[docs]</a>    <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Merely sets which parameters are trainable. &quot;&quot;&quot;</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span> <span class="o">|</span> <span class="n">kwargs</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_independent</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">implementation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span><span class="p">:</span>
+                <span class="n">gf</span><span class="o">.</span><span class="n">set_trainable</span><span class="p">(</span><span class="n">implementation</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;variance&#39;</span><span class="p">][</span><span class="s1">&#39;diagonal&#39;</span><span class="p">])</span>
+                <span class="n">gf</span><span class="o">.</span><span class="n">set_trainable</span><span class="p">(</span><span class="n">implementation</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">,</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;lengthscales&#39;</span><span class="p">][</span><span class="s1">&#39;independent&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gf</span><span class="o">.</span><span class="n">set_trainable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">_cholesky_diagonal</span><span class="p">,</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;variance&#39;</span><span class="p">][</span><span class="s1">&#39;diagonal&#39;</span><span class="p">])</span>
+            <span class="n">gf</span><span class="o">.</span><span class="n">set_trainable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">_cholesky_lower_triangle</span><span class="p">,</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;variance&#39;</span><span class="p">][</span><span class="s1">&#39;off_diagonal&#39;</span><span class="p">])</span>
+            <span class="n">gf</span><span class="o">.</span><span class="n">set_trainable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">,</span> <span class="n">options</span><span class="p">[</span><span class="s1">&#39;lengthscales&#39;</span><span class="p">][</span><span class="s1">&#39;dependent&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">options</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">TYPE_IDENTIFIER</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; The type of this Kernel object or class as &#39;__module__.Kernel.__name__&#39;.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__module__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+
+<div class="viewcode-block" id="Kernel.TypeFromIdentifier"><a class="viewcode-back" href="../../../_autosummary/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.TypeFromIdentifier">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">TypeFromIdentifier</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">TypeIdentifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">Kernel</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Convert a TypeIdentifier to a Kernel Type.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            TypeIdentifier: A string generated by Kernel.TypeIdentifier().</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            The type of Kernel that _TypeIdentifier specifies.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">KernelType</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">KernelType</span><span class="o">.</span><span class="n">TYPE_IDENTIFIER</span> <span class="o">==</span> <span class="n">TypeIdentifier</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">KernelType</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Kernel.TypeIdentifier() of unrecognizable type.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Kernel.TypeFromParameters"><a class="viewcode-back" href="../../../_autosummary/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.TypeFromParameters">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">TypeFromParameters</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">Kernel</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Recognize the Type of a Kernel from its Parameters.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            parameters: A Kernel.Parameters array to recognize.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            The type of Kernel that parameters defines.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">kernel_type</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">kernel_type</span><span class="o">.</span><span class="n">Parameters</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">kernel_type</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Kernel Parameters array of unrecognizable type.&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">L</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; The output (Y) dimensionality, or 1 for a single kernel shared across all outputs.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_L</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">M</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; The input (X) dimensionality, or 1 for an isotropic kernel.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_independent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="Kernel.broadcast_parameters"><a class="viewcode-back" href="../../../_autosummary/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.broadcast_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">broadcast_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">M</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Kernel</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Broadcast this kernel to higher dimensions. Shrinkage raises errors, unchanged dimensions silently nop.</span>
+<span class="sd">        A diagonal variance matrix broadcast to a square matrix is initially diagonal. All other expansions are straightforward broadcasts.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            variance_shape: The new shape for the variance, must be (1, L) or (L, L).</span>
+<span class="sd">            M: The number of input Lengthscales per output.</span>
+<span class="sd">            folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).</span>
+<span class="sd">        Returns: ``self``, for chaining calls.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            IndexError: If an attempt is made to shrink a parameter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">variance_shape</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">broadcast_value</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder</span><span class="p">),</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;variance&quot;</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="n">variance_shape</span><span class="p">,</span> <span class="n">is_diagonal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">folder</span><span class="o">=</span><span class="n">folder</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_L</span> <span class="o">=</span> <span class="n">variance_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">lengthscales</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">broadcast_value</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder</span><span class="p">),</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;lengthscales&quot;</span><span class="p">,</span> <span class="n">target_shape</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">,</span> <span class="n">M</span><span class="p">),</span> <span class="n">is_diagonal</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">folder</span><span class="o">=</span><span class="n">folder</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="n">M</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">implementation</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">implementation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; The implementation of this Kernel, for use in GP.implementation.</span>
+<span class="sd">            If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.</span>
+<span class="sd">            If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Kernel.__init__"><a class="viewcode-back" href="../../../_autosummary/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">read_parameters</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Construct a Kernel. This must be called as a matter of priority by all implementations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            folder: The model file location.</span>
+<span class="sd">            read_parameters: If True, the parameters are read from ``folder``, otherwise defaults are used.</span>
+<span class="sd">            **kwargs: The model.parameters fields=values to replace after reading from file/defaults.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">read_parameters</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">lengthscales</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RBF"><a class="viewcode-back" href="../../../_autosummary/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF">[docs]</a><span class="k">class</span> <span class="nc">RBF</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">implementation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; The implemented_in_??? version of this Kernel, for use in the implemented_in_??? GP.</span>
+<span class="sd">            If ``self.variance.shape == (1,1)`` a 1-tuple of kernels is returned.</span>
+<span class="sd">            If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.</span>
+<span class="sd">            If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">gf</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">RBF</span><span class="p">(</span><span class="n">variance</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">variance</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">l</span><span class="p">],</span> <span class="mf">1.00001E-6</span><span class="p">),</span> <span class="n">lengthscales</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">[</span><span class="n">l</span><span class="p">])</span>
+                                <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span> <span class="o">=</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">RBF</span><span class="p">(</span><span class="n">variance</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="n">lengthscales</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">),</span> <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+    
+    
+        <div class="sidebar-toggle-group no-js">
+            
+            <button class="sidebar-toggle" id="sidebar-hide" title="Hide the sidebar menu">
+                 «
+                <span class="show-for-small">hide menu</span>
+                
+            </button>
+            <button class="sidebar-toggle" id="sidebar-show" title="Show the sidebar menu">
+                
+                <span class="show-for-small">menu</span>
+                <span class="hide-for-small">sidebar</span>
+                 »
+            </button>
+        </div>
+    
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../../index.html">rom-comma 1.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">romcomma.gpr.kernels</a></li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Robert A. Milton.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

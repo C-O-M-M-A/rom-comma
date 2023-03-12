@@ -1,0 +1,268 @@
+
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>romcomma.data.storage.Normalization &#8212; rom-comma 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/cloud.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,i,b,bi|Open+Sans:400,i,b,bi|Roboto+Mono:400,i,b,bi&amp;display=swap" type="text/css" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+
+    
+    
+     
+        <script src="../_static/jquery.cookie.js"></script>
+    
+
+    
+     
+        <script src="../_static/cloud.base.js"></script>
+    
+
+    
+     
+        <script src="../_static/cloud.js"></script>
+    
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="romcomma.data.storage.Repository" href="romcomma.data.storage.Repository.html" />
+    <link rel="prev" title="romcomma.data.storage.Frame" href="romcomma.data.storage.Frame.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head><body>
+    <div class="relbar-top">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="romcomma.data.storage.Repository.html" title="romcomma.data.storage.Repository"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="romcomma.data.storage.Frame.html" title="romcomma.data.storage.Frame"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">rom-comma 1.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="romcomma.data.html" >romcomma.data</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="romcomma.data.storage.html" accesskey="U">romcomma.data.storage</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">romcomma.data.storage.Normalization</a></li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="romcomma-data-storage-normalization">
+<h1>romcomma.data.storage.Normalization<a class="headerlink" href="#romcomma-data-storage-normalization" title="Permalink to this heading">§</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="romcomma.data.storage.Normalization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Normalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/romcomma/data/storage.html#Normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.data.storage.Normalization" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Encapsulates the normalization of data.
+X data is assumed to follow a Uniform distribution, which is normalized to U[0,1] , then inverse probability transformed to N[0,1].
+Y data is normalized to zero mean and unit variance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fold</strong> (<a class="reference internal" href="romcomma.data.storage.Fold.html#romcomma.data.storage.Fold" title="romcomma.data.storage.Fold"><em>Fold</em></a>) – </p></li>
+<li><p><strong>data</strong> (<em>Optional</em><em>[</em><em>pd.DataFrame</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Normalization.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/romcomma/data/storage.html#Normalization.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.data.storage.Normalization.__init__" title="Permalink to this definition">§</a></dt>
+<dd><p>Initialize this Normalization. If the fold has already been Normalized, that Normalization is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fold</strong> (<a class="reference internal" href="romcomma.data.storage.Fold.html#romcomma.data.storage.Fold" title="romcomma.data.storage.Fold"><em>Fold</em></a>) – The fold to Normalize.</p></li>
+<li><p><strong>data</strong> (<em>DataFrame</em><em> | </em><em>None</em>) – The data from which to calculate Normalization.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Normalization.__init__" title="romcomma.data.storage.Normalization.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(fold[, data])</p></td>
+<td><p>Initialize this Normalization.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Normalization.apply_to" title="romcomma.data.storage.Normalization.apply_to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_to</span></code></a>(df)</p></td>
+<td><p>Apply this normalization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Normalization.undo_from" title="romcomma.data.storage.Normalization.undo_from"><code class="xref py py-obj docutils literal notranslate"><span class="pre">undo_from</span></code></a>(df)</p></td>
+<td><p>Undo this normalization.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UNIFORM_MARGIN</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">csv</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">frame</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Normalization.apply_to">
+<span class="sig-name descname"><span class="pre">apply_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/romcomma/data/storage.html#Normalization.apply_to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.data.storage.Normalization.apply_to" title="Permalink to this definition">§</a></dt>
+<dd><p>Apply this normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>DataFrame</em>) – The pd.DataFrame to Normalize.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>DataFrame</em></p>
+</dd>
+</dl>
+<p>Returns: df, Normalized.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Normalization.undo_from">
+<span class="sig-name descname"><span class="pre">undo_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/romcomma/data/storage.html#Normalization.undo_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.data.storage.Normalization.undo_from" title="Permalink to this definition">§</a></dt>
+<dd><p>Undo this normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> (<em>DataFrame</em>) – The (Normalized) pd.DataFrame to UnNormalize.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>DataFrame</em></p>
+</dd>
+</dl>
+<p>Returns: df, UnNormalized.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="sphinx-toc sphinxlocaltoc">
+    <h3><a href="../index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">romcomma.data.storage.Normalization</a><ul>
+<li><a class="reference internal" href="#romcomma.data.storage.Normalization"><code class="docutils literal notranslate"><span class="pre">Normalization</span></code></a><ul>
+<li><a class="reference internal" href="#romcomma.data.storage.Normalization.__init__"><code class="docutils literal notranslate"><span class="pre">Normalization.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Normalization.apply_to"><code class="docutils literal notranslate"><span class="pre">Normalization.apply_to()</span></code></a></li>
+<li><a class="reference internal" href="#romcomma.data.storage.Normalization.undo_from"><code class="docutils literal notranslate"><span class="pre">Normalization.undo_from()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="romcomma.data.storage.Frame.html"
+                          title="Previous page">&larr; romcomma.data.storage.Frame</a></p>
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="romcomma.data.storage.Repository.html"
+                          title="Next page">&rarr; romcomma.data.storage.Repository</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/_autosummary/romcomma.data.storage.Normalization.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+    
+    
+        <div class="sidebar-toggle-group no-js">
+            
+            <button class="sidebar-toggle" id="sidebar-hide" title="Hide the sidebar menu">
+                 «
+                <span class="show-for-small">hide menu</span>
+                
+            </button>
+            <button class="sidebar-toggle" id="sidebar-show" title="Show the sidebar menu">
+                
+                <span class="show-for-small">menu</span>
+                <span class="hide-for-small">sidebar</span>
+                 »
+            </button>
+        </div>
+    
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="romcomma.data.storage.Repository.html" title="romcomma.data.storage.Repository"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="romcomma.data.storage.Frame.html" title="romcomma.data.storage.Frame"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">rom-comma 1.0 documentation</a> &#187;</li>
+
+          <li class="nav-item nav-item-1"><a href="romcomma.data.html" >romcomma.data</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="romcomma.data.storage.html" >romcomma.data.storage</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">romcomma.data.storage.Normalization</a></li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Robert A. Milton.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

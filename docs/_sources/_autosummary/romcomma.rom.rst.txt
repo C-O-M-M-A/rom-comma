@@ -25,6 +25,7 @@ romcomma.rom
 
 .. autosummary::
    :toctree:
+   :template: custom-module-template.rst
    :recursive:
 
    romcomma.rom.old

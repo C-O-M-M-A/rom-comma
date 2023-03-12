@@ -12,6 +12,7 @@ romcomma.gsa.sobol
    .. rubric:: Functions
 
    .. autosummary::
+      :toctree:
    
       det
       mean
@@ -27,6 +28,8 @@ romcomma.gsa.sobol
    .. rubric:: Classes
 
    .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
    
       ClosedIndex
       ClosedIndexWithErrors

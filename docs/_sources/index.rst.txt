@@ -3,23 +3,35 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+
 rom-comma user guide
 =====================================
 
+abstract
+---------
+
+Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield
+
+.. currentmodule:: romcomma
+
+contents
+---------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+
+   pages/installation
 
 .. autosummary::
    :toctree: _autosummary
+   :template: custom-module-template.rst
    :recursive:
 
-   romcomma
+   data
 
 
 indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

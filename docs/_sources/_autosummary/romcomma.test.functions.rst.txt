@@ -12,6 +12,7 @@ romcomma.test.functions
    .. rubric:: Functions
 
    .. autosummary::
+      :toctree:
    
       linspace
    
@@ -22,6 +23,8 @@ romcomma.test.functions
    .. rubric:: Classes
 
    .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
    
       Scalar
       Vector
