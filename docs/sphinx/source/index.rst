@@ -11,12 +11,12 @@ rom-comma user guide
    :maxdepth: 2
    :caption: Contents:
 
-.. autosummary:: romcomma.run
+.. autosummary::
+   :toctree: _autosummary
    :recursive:
 
+   romcomma
 
-.. automodule:: romcomma.run
-    :members:
 
 indices and tables
 ==================

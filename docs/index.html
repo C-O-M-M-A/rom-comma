@@ -34,7 +34,8 @@
     
 
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="romcomma" href="_autosummary/romcomma.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head><body>
     <div class="relbar-top">
@@ -48,6 +49,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="_autosummary/romcomma.html" title="romcomma"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
     <li><a href="#">rom-comma 1.0 documentation</a> &#187;</li>
 
         <li class="nav-item nav-item-this"><a href="">rom-comma user guide</a></li> 
@@ -67,181 +71,11 @@
 </div>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#module-romcomma.run" title="romcomma.run"><code class="xref py py-obj docutils literal notranslate"><span class="pre">romcomma.run</span></code></a></p></td>
-<td><p>Contains routines for running models.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="_autosummary/romcomma.html#module-romcomma" title="romcomma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">romcomma</span></code></a></p></td>
+<td><p>Contains the romcomma library.</p></td>
 </tr>
 </tbody>
 </table>
-<span class="target" id="module-romcomma.run"></span><p>Contains routines for running models.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="romcomma.run.TimingOneLiner">
-<span class="sig-prename descclassname"><span class="pre">romcomma.run.</span></span><span class="sig-name descname"><span class="pre">TimingOneLiner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/romcomma/run.html#TimingOneLiner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.TimingOneLiner" title="Permalink to this definition">§</a></dt>
-<dd><p>Context Manager for timing operations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of this context, this appears as what is being timed. The empty string will not be timed.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="romcomma.run.Timing">
-<span class="sig-prename descclassname"><span class="pre">romcomma.run.</span></span><span class="sig-name descname"><span class="pre">Timing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/romcomma/run.html#Timing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.Timing" title="Permalink to this definition">§</a></dt>
-<dd><p>Context Manager for timing operations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of this context, this appears as what is being timed. The empty string will not be timed.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="romcomma.run.Context">
-<span class="sig-prename descclassname"><span class="pre">romcomma.run.</span></span><span class="sig-name descname"><span class="pre">Context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/romcomma/run.html#Context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.Context" title="Permalink to this definition">§</a></dt>
-<dd><p>Context Manager for running operations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – The name of this context, this appears as what is being run.</p></li>
-<li><p><strong>device</strong> (<em>str</em>) – The device to run on. If this ends in the regex <code class="docutils literal notranslate"><span class="pre">[C,G]PU*</span></code> then the logical device <code class="docutils literal notranslate"><span class="pre">/[C,G]PU*</span></code> is used,
-otherwise device allocation is automatic.</p></li>
-<li><p><strong>**kwargs</strong> – Is passed straight to the implementation GPFlow manager. Note, however, that <code class="docutils literal notranslate"><span class="pre">float=float32</span></code> is inoperative due to SciPy.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="romcomma.run.copy">
-<span class="sig-prename descclassname"><span class="pre">romcomma.run.</span></span><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/romcomma/run.html#copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.copy" title="Permalink to this definition">§</a></dt>
-<dd><p>Service routine to copy a model across the Folds in a Repository, or in a single Fold.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>src</strong> (<em>str</em>) – The model to be copied.</p></li>
-<li><p><strong>dst</strong> (<em>str</em>) – The name of the copy.</p></li>
-<li><p><strong>repo</strong> (<em>Repository</em>) – The source of the training data.csv. May be a Fold, or a Repository which contains Folds.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>FileNotFoundError</strong> – If repo is not a Fold, and contains no Folds.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="romcomma.run.GPR">
-<span class="sig-prename descclassname"><span class="pre">romcomma.run.</span></span><span class="sig-name descname"><span class="pre">GPR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_read</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_independent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_isotropic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_exceptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/romcomma/run.html#GPR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.GPR" title="Permalink to this definition">§</a></dt>
-<dd><p>Service routine to recursively run GPs the Folds in a Repository, or on a single Fold.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – The GP name.</p></li>
-<li><p><strong>repo</strong> (<em>Repository</em>) – The source of the training data.csv. May be a Fold, or a Repository which contains Folds.</p></li>
-<li><p><strong>is_read</strong> (<em>bool</em><em> | </em><em>None</em>) – If True, the GP.kernel.parameters and GP.parameters are read from <code class="docutils literal notranslate"><span class="pre">fold.folder/name</span></code>, otherwise defaults are used.
-If None, the nearest available GP down the hierarchy is broadcast, constructing from scratch if no nearby GP is available.</p></li>
-<li><p><strong>is_independent</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.</p></li>
-<li><p><strong>is_isotropic</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.</p></li>
-<li><p><strong>ignore_exceptions</strong> (<em>bool</em>) – Whether to continue when the GP provider throws an exception.</p></li>
-<li><p><strong>kernel_parameters</strong> (<em>Parameters</em><em> | </em><em>None</em>) – A base.Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
-If None, the kernel is read from file, or set to the default base.Kernel.Parameters(), according to read_from_file.</p></li>
-<li><p><strong>parameters</strong> (<em>Parameters</em><em> | </em><em>None</em>) – The GP.parameters fields=values to replace after reading from file/defaults.</p></li>
-<li><p><strong>optimize</strong> (<em>bool</em>) – Whether to optimize each GP.</p></li>
-<li><p><strong>test</strong> (<em>bool</em>) – Whether to test_data each GP.</p></li>
-<li><p><strong>kwargs</strong> – A Dict of implementation-dependent optimizer options, similar to (and documented in) models.GP.Optimize().</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A list of the GP names which have been run.</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>FileNotFoundError</strong> – If repo is not a Fold, and contains no Folds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>List</em>[str]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="romcomma.run.GSA">
-<span class="sig-prename descclassname"><span class="pre">romcomma.run.</span></span><span class="sig-name descname"><span class="pre">GSA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name,</span> <span class="pre">repo,</span> <span class="pre">is_independent,</span> <span class="pre">is_isotropic,</span> <span class="pre">kinds=[&lt;Kind.FIRST_ORDER:</span> <span class="pre">1&gt;,</span> <span class="pre">&lt;Kind.CLOSED:</span> <span class="pre">2&gt;,</span> <span class="pre">&lt;Kind.TOTAL:</span> <span class="pre">3&gt;],</span> <span class="pre">m=-1,</span> <span class="pre">ignore_exceptions=False,</span> <span class="pre">is_error_calculated=False,</span> <span class="pre">**kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/romcomma/run.html#GSA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.GSA" title="Permalink to this definition">§</a></dt>
-<dd><p>Service routine to recursively run GSAs on the Folds in a Repository, or on a single Fold.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – The GP name.</p></li>
-<li><p><strong>repo</strong> (<em>Repository</em>) – The source of the training data.csv. May be a Fold, or a Repository which contains Folds.</p></li>
-<li><p><strong>is_independent</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether the gp kernel for each output is independent of the other outputs. None results in independent followed by dependent.</p></li>
-<li><p><strong>is_isotropic</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.</p></li>
-<li><p><strong>kinds</strong> (<em>Sequence</em><em>[</em><em>Kind</em><em>]</em>) – The gsa.run.calculate.Kind of index to calculate - first order, closed or total. A Sequence of Kinds will be run consecutively.</p></li>
-<li><p><strong>is_error_calculated</strong> (<em>bool</em>) – Whether to calculate variances (errors) on the Sobol indices.
-The calculation of is memory intensive, so leave this flag as False unless you are sure you need errors.
-Furthermore, errors will only be calculated if the kernel of the gp has diagonal variance F.</p></li>
-<li><p><strong>m</strong> (<em>int</em>) – The dimensionality of the reduced model. For a single calculation it is required that <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">m</span> <span class="pre">&lt;</span> <span class="pre">gp.M</span></code>.
-Any m outside this range results the Sobol index of kind being calculated for all <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">in</span> <span class="pre">range(1,</span> <span class="pre">M+1)</span></code>.</p></li>
-<li><p><strong>ignore_exceptions</strong> (<em>bool</em>) – Whether to ignore exceptions (e.g. file not found) when they are encountered, or halt.</p></li>
-<li><p><strong>kwargs</strong> – A Dict of gsa calculation options, which updates the default gsa.run.calculation.OPTIONS.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>FileNotFoundError</strong> – If repo is not a Fold, and contains no Folds.</p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A list of the calculation names which have been run, relative to repo.folder.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>List</em>[<em>Path</em>]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="romcomma.run.Aggregate">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">romcomma.run.</span></span><span class="sig-name descname"><span class="pre">Aggregate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csvs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folders</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/romcomma/run.html#Aggregate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.Aggregate" title="Permalink to this definition">§</a></dt>
-<dd><p>A device for aggregating csvs across folders.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>csvs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>folders</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>ignore_missing</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>kwargs</strong> (<em>Any</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.run.Aggregate.over_folders">
-<span class="sig-name descname"><span class="pre">over_folders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/romcomma/run.html#Aggregate.over_folders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.Aggregate.over_folders" title="Permalink to this definition">§</a></dt>
-<dd><p>Aggregate self.csvs over self.folders.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dst</strong> (<em>Path</em><em> | </em><em>str</em>) – The destination folder, to house self.csvs, aggregated over self.folders.</p></li>
-<li><p><strong>delete_existing</strong> – Whether to delete and recreate an existing dst.</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – Write options passed straight to pd.to_csv.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.run.Aggregate.over_folds">
-<span class="sig-name descname"><span class="pre">over_folds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_existing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/romcomma/run.html#Aggregate.over_folds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.Aggregate.over_folds" title="Permalink to this definition">§</a></dt>
-<dd><p>Aggregate self.csvs in dst.fold[k]/self.folders over k – i.e. the folds of dst.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dst</strong> (<em>Repository</em>) – The destination repo, to house csv files listed as the keys in aggregators.</p></li>
-<li><p><strong>delete_existing</strong> – Whether to delete and recreate an existing dst.</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – Write options passed straight to pd.to_csv.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
 </section>
 <section id="indices-and-tables">
 <h1>indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">§</a></h1>
@@ -262,22 +96,16 @@ Any m outside this range results the Sobol index of kind being calculated for al
     <h3><a href="#">Page contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">rom-comma user guide</a><ul>
-<li><a class="reference internal" href="#romcomma.run.TimingOneLiner"><code class="docutils literal notranslate"><span class="pre">TimingOneLiner()</span></code></a></li>
-<li><a class="reference internal" href="#romcomma.run.Timing"><code class="docutils literal notranslate"><span class="pre">Timing()</span></code></a></li>
-<li><a class="reference internal" href="#romcomma.run.Context"><code class="docutils literal notranslate"><span class="pre">Context()</span></code></a></li>
-<li><a class="reference internal" href="#romcomma.run.copy"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
-<li><a class="reference internal" href="#romcomma.run.GPR"><code class="docutils literal notranslate"><span class="pre">GPR()</span></code></a></li>
-<li><a class="reference internal" href="#romcomma.run.GSA"><code class="docutils literal notranslate"><span class="pre">GSA()</span></code></a></li>
-<li><a class="reference internal" href="#romcomma.run.Aggregate"><code class="docutils literal notranslate"><span class="pre">Aggregate</span></code></a><ul>
-<li><a class="reference internal" href="#romcomma.run.Aggregate.over_folders"><code class="docutils literal notranslate"><span class="pre">Aggregate.over_folders()</span></code></a></li>
-<li><a class="reference internal" href="#romcomma.run.Aggregate.over_folds"><code class="docutils literal notranslate"><span class="pre">Aggregate.over_folds()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">indices and tables</a></li>
 </ul>
 
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="_autosummary/romcomma.html"
+                          title="Next page">&rarr; romcomma</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -328,6 +156,9 @@ Any m outside this range results the Sobol index of kind being calculated for al
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="_autosummary/romcomma.html" title="romcomma"
+             >next</a> &nbsp; &nbsp;</li>
     <li><a href="#">rom-comma 1.0 documentation</a> &#187;</li>
 
         <li class="nav-item nav-item-this"><a href="">rom-comma user guide</a></li> 
