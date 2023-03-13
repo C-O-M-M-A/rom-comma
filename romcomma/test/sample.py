@@ -159,13 +159,20 @@ class Function:
         """
         return {'folder': self._repo.folder / child_folder, 'N': self._N, 'noise': self._noise_variance.magnitude}
 
-    def into_K_folds(self, K: int) -> Function:
-        """ Fold Repository into K folds.
+    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> Function:
+        """ Fold repository into K Folds, indexed by range(K).
 
         Args:
-            K: The number of Folds &ge 1.
+            K: The number of Folds, of absolute value between 1 and N inclusive.
+                An improper Fold, indexed by K and including all data for both training and testing is included by default.
+                To suppress this give K as a negative integer.
+            shuffle_before_folding: Whether to shuffle the data before sampling.
+            normalization: An optional normalization.csv file to use.
+
+        Raises:
+            IndexError: Unless 1 &lt= K &lt= N.
         """
-        self._repo.into_K_folds(K)
+        self._repo.into_K_folds(K, shuffle_before_folding, normalization)
         return self
 
     def random_rotation(self) -> NP.Matrix:

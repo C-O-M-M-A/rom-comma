@@ -7,10 +7,15 @@
 rom-comma user guide
 =====================================
 
+
+.. warning:: This documentation is currently under construction
+
+
 abstract
 ---------
 
 Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield
+
 
 .. currentmodule:: romcomma
 
