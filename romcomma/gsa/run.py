@@ -72,7 +72,7 @@ class calculation(Model):
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
         """ Default calculation options. ``is_T_partial`` forces ``WmM = 0``."""
-        return sobol.ClosedIndexWithErrors.OPTIONS
+        return sobol.ClosedIndexWithError.OPTIONS
 
     @classmethod
     def _calculate(cls, kind: calculation.Kind, m_dataset: tf.data.Dataset, calculate: sobol.ClosedIndex) -> Dict[str, TF.Tensor]:
@@ -97,7 +97,7 @@ class calculation(Model):
         results['S'] = calculate.S[..., tf.newaxis] - results['S'] if kind == calculation.Kind.TOTAL else results['S']
         results['S'] = tf.concat([results['S'], calculate.S[..., tf.newaxis]], axis=-1)
         if 'T' in results and not calculate.options['is_T_partial']:
-            results['T'] = (calculate.T[..., tf.newaxis] + results['T'] if kind == calculation.Kind.TOTAL else results['T'])
+            results['T'] = calculate.T[..., tf.newaxis] + results['T'] if kind == calculation.Kind.TOTAL else results['T']
             results['T'] = tf.concat([results['T'], calculate.T[..., tf.newaxis]], axis=-1)
         return results
 
@@ -190,6 +190,6 @@ class calculation(Model):
         super().__init__(folder, read_parameters=False)
         self._write_options(options)
         results = self._calculate(kind=kind, m_dataset=self._m_dataset(kind, m, gp.M),
-                                  calculate=sobol.ClosedIndexWithErrors(gp, **options) if is_error_calculated else sobol.ClosedIndex(gp, **options))
+                                  calculate=sobol.ClosedIndexWithError(gp, **options) if is_error_calculated else sobol.ClosedIndex(gp, **options))
         for key, value in results.items():
             self._compose_and_save(self.parameters.csv(key), value, m, gp.M)

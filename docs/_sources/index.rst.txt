@@ -4,22 +4,22 @@
    contain the root `toctree` directive.
 
 
-rom-comma user guide
+**rom-comma user guide**
 =====================================
 
 
 .. warning:: This documentation is currently under construction
 
 
-abstract
+Abstract
 ---------
 
-Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield
+**Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield**
 
 
 .. currentmodule:: romcomma
 
-contents
+Contents
 ---------
 
 .. toctree::

@@ -205,7 +205,7 @@ class ClosedIndex(gf.Module):
         self._calculate()
 
 
-class ClosedIndexWithErrors(ClosedIndex):
+class ClosedIndexWithError(ClosedIndex):
     """ Calculates closed Sobol Indices with Errors."""
 
     @classmethod
@@ -408,7 +408,7 @@ class ClosedIndexWithErrors(ClosedIndex):
             Q = Wmm
         else:
             Q = Wmm - 2 * Vm * WMm / self.V[1] + Vm * Vm * self.Q
-        return Q / self.V[4]
+        return tf.sqrt(Q / self.V[4])
 
     def marginalize(self, m: TF.Slice) -> Dict[str: TF.Tensor]:
         """ Calculate everything.

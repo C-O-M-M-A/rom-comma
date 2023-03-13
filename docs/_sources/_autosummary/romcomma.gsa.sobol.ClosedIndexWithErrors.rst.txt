@@ -1,9 +1,9 @@
-romcomma.gsa.sobol.ClosedIndexWithErrors
+romcomma.gsa.sobol.ClosedIndexWithError
 ========================================
 
 .. currentmodule:: romcomma.gsa.sobol
 
-.. autoclass:: ClosedIndexWithErrors
+.. autoclass:: ClosedIndexWithError
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,9 +16,9 @@ romcomma.gsa.sobol.ClosedIndexWithErrors
 
    .. autosummary::
    
-      ~ClosedIndexWithErrors.__init__
-      ~ClosedIndexWithErrors.marginalize
-      ~ClosedIndexWithErrors.with_name_scope
+      ~ClosedIndexWithError.__init__
+      ~ClosedIndexWithError.marginalize
+      ~ClosedIndexWithError.with_name_scope
    
    
 
@@ -28,15 +28,15 @@ romcomma.gsa.sobol.ClosedIndexWithErrors
 
    .. autosummary::
    
-      ~ClosedIndexWithErrors.OPTIONS
-      ~ClosedIndexWithErrors.RANK_EQUATIONS
-      ~ClosedIndexWithErrors.name
-      ~ClosedIndexWithErrors.name_scope
-      ~ClosedIndexWithErrors.non_trainable_variables
-      ~ClosedIndexWithErrors.parameters
-      ~ClosedIndexWithErrors.submodules
-      ~ClosedIndexWithErrors.trainable_parameters
-      ~ClosedIndexWithErrors.trainable_variables
-      ~ClosedIndexWithErrors.variables
+      ~ClosedIndexWithError.OPTIONS
+      ~ClosedIndexWithError.RANK_EQUATIONS
+      ~ClosedIndexWithError.name
+      ~ClosedIndexWithError.name_scope
+      ~ClosedIndexWithError.non_trainable_variables
+      ~ClosedIndexWithError.parameters
+      ~ClosedIndexWithError.submodules
+      ~ClosedIndexWithError.trainable_parameters
+      ~ClosedIndexWithError.trainable_variables
+      ~ClosedIndexWithError.variables
    
    
