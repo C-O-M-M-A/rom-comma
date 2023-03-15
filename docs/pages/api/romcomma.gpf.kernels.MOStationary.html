@@ -1,0 +1,584 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>romcomma.gpf.kernels.MOStationary &#8212; rom-comma 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/insipid.css" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script defer src="../../_static/insipid.js"></script>
+    <script defer src="../../_static/insipid-sidebar.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="romcomma.gpf.kernels.RBF" href="romcomma.gpf.kernels.RBF.html" />
+    <link rel="prev" title="romcomma.gpf.kernels" href="romcomma.gpf.kernels.html" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+  </head><body>
+    <script type="text/javascript">
+        document.body.classList.add('js');
+    </script>
+    <input type="checkbox" id="sidebar-checkbox" style="display: none;">
+    <label id="overlay" for="sidebar-checkbox"></label>
+    <div class="sidebar-resize-handle"></div>
+    <script type="text/javascript">
+        try {
+            let sidebar = localStorage.getItem('sphinx-sidebar');
+            const sidebar_width = localStorage.getItem('sphinx-sidebar-width');
+            if (sidebar_width) {
+                document.documentElement.style.setProperty('--sidebar-width', sidebar_width);
+            }
+            // show sidebar on wide screen
+            if (!sidebar && window.matchMedia('(min-width: 100rem)').matches) {
+                sidebar = 'visible';
+                // NB: We don't store the value in localStorage!
+            }
+            if (sidebar === 'visible') {
+                document.getElementById('sidebar-checkbox').checked = true;
+            }
+        } catch(e) {
+            console.info(e);
+        }
+    </script>
+    <header id="topbar-placeholder">
+      <div id="topbar">
+        <div id="titlebar">
+          <div class="buttons">
+            <label for="sidebar-checkbox" id="sidebar-button" role="button" tabindex="0" aria-controls="sphinxsidebar" accesskey="M">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
+            </label>
+            <button id="search-button" type="button" title="Search" aria-label="Search" aria-expanded="false" aria-controls="search-form" accesskey="S">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+            </button>
+          </div>
+          <div class="title">
+            <a class="parent" href="romcomma.gpf.kernels.html" accesskey="U">romcomma.gpf.kernels</a>
+            <a class="top" href="#">romcomma.gpf.kernels.MOStationary</a>
+          </div>
+          <div class="buttons">
+            <button id="fullscreen-button" type="button" aria-hidden="true">
+              <span class="enable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M212.686 315.314L120 408l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C10.697 480 0 469.255 0 456V344c0-21.382 25.803-32.09 40.922-16.971L72 360l92.686-92.686c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.249 6.248 6.249 16.378 0 22.627zm22.628-118.628L328 104l-32.922-31.029C279.958 57.851 290.666 32 312.048 32h112C437.303 32 448 42.745 448 56v112c0 21.382-25.803 32.09-40.922 16.971L376 152l-92.686 92.686c-6.248 6.248-16.379 6.248-22.627 0l-25.373-25.373c-6.249-6.248-6.249-16.378 0-22.627z"/></svg>
+              </span>
+              <span class="disable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M4.686 427.314L104 328l-32.922-31.029C55.958 281.851 66.666 256 88.048 256h112C213.303 256 224 266.745 224 280v112c0 21.382-25.803 32.09-40.922 16.971L152 376l-99.314 99.314c-6.248 6.248-16.379 6.248-22.627 0L4.686 449.941c-6.248-6.248-6.248-16.379 0-22.627zM443.314 84.686L344 184l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C234.697 256 224 245.255 224 232V120c0-21.382 25.803-32.09 40.922-16.971L296 136l99.314-99.314c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.248 6.248 6.248 16.379 0 22.627z"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+        <div id="searchbox" role="search">
+          <form id="search-form" class="search" style="display: none" action="../../search.html" method="get">
+            <input type="search" name="q" placeholder="Search ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button>Go</button>
+          </form>
+        </div>
+      </div>
+    </header>
+    <nav>
+      <a href="romcomma.gpf.kernels.html" class="nav-icon previous" title="previous:&#13;romcomma.gpf.kernels" aria-label="Previous topic" accesskey="P" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
+      </a>
+      <a href="romcomma.gpf.kernels.RBF.html" class="nav-icon next" title="next:&#13;romcomma.gpf.kernels.RBF" aria-label="Next topic" accesskey="N" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg>
+      </a>
+    </nav>
+
+    <nav class="relbar">
+      <a class="previous" href="romcomma.gpf.kernels.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            romcomma.gpf.kernels
+          </span>
+        </div>
+      </a>
+      <a class="next" href="romcomma.gpf.kernels.RBF.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            romcomma.gpf.kernels.RBF
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<section id="romcomma-gpf-kernels-mostationary">
+<h1>romcomma.gpf.kernels.MOStationary<a class="headerlink" href="#romcomma-gpf-kernels-mostationary" title="Permalink to this heading">§</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MOStationary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscales</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Kernel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">AnisotropicStationary</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Kernel</span></code></p>
+<p>Base class for stationary kernels, i.e. kernels that only
+depend on</p>
+<blockquote>
+<div><p>d = x - x’</p>
+</div></blockquote>
+<p>Derived classes should implement K_d(self, d): Returns the kernel evaluated
+on d, which is the pairwise difference matrix, scaled by the lengthscale
+parameter ℓ (i.e. [(X - X2ᵀ) / ℓ]). The last axis corresponds to the
+input dimension.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscales</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Kernel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.__init__" title="Permalink to this definition">§</a></dt>
+<dd><p>Kernel Constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variance</strong> – An (L,L) symmetric, positive definite matrix for the signal variance.</p></li>
+<li><p><strong>lengthscales</strong> – An (L,M) matrix of positive definite lengthscales.</p></li>
+<li><p><strong>is_lengthscales_trainable</strong> – Whether the lengthscales of this kernel are trainable.</p></li>
+<li><p><strong>name</strong> – The name of this kernel.</p></li>
+<li><p><strong>active_dims</strong> – Which of the input dimensions are used. The default None means all of them.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">K</span></code>(X[, X2])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.K_d" title="romcomma.gpf.kernels.MOStationary.K_d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">K_d</span></code></a>(d)</p></td>
+<td><p>The kernel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.K_d_apply_variance" title="romcomma.gpf.kernels.MOStationary.K_d_apply_variance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">K_d_apply_variance</span></code></a>(K_d_unit_variance)</p></td>
+<td><p>Multiply the unit variance kernel by the kernel variance, and reshape.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.K_d_unit_variance" title="romcomma.gpf.kernels.MOStationary.K_d_unit_variance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">K_d_unit_variance</span></code></a>(d)</p></td>
+<td><p>The kernel with variance=ones().</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.K_diag" title="romcomma.gpf.kernels.MOStationary.K_diag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">K_diag</span></code></a>(X)</p></td>
+<td><p>The kernel diagonal.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.K_unit_variance" title="romcomma.gpf.kernels.MOStationary.K_unit_variance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">K_unit_variance</span></code></a>(X[, X2])</p></td>
+<td><p>The kernel with variance=ones().</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.__init__" title="romcomma.gpf.kernels.MOStationary.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(variance, lengthscales[, name, ...])</p></td>
+<td><p>Kernel Constructor.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.on_separate_dims" title="romcomma.gpf.kernels.MOStationary.on_separate_dims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">on_separate_dims</span></code></a>(other)</p></td>
+<td><p>Checks if the dimensions, over which the kernels are specified, overlap.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale</span></code>(X)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.scaled_difference_matrix" title="romcomma.gpf.kernels.MOStationary.scaled_difference_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scaled_difference_matrix</span></code></a>(X[, X2])</p></td>
+<td><p>Returns [(X - X2ᵀ) / ℓ].</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.slice" title="romcomma.gpf.kernels.MOStationary.slice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slice</span></code></a>(X[, X2])</p></td>
+<td><p>Slice the correct dimensions for use in the kernel, as indicated by <cite>self.active_dims</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.slice_cov" title="romcomma.gpf.kernels.MOStationary.slice_cov"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slice_cov</span></code></a>(cov)</p></td>
+<td><p>Slice the correct dimensions for use in the kernel, as indicated by <cite>self.active_dims</cite> for covariance matrices.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.with_name_scope" title="romcomma.gpf.kernels.MOStationary.with_name_scope"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_name_scope</span></code></a>(method)</p></td>
+<td><p>Decorator to automatically enter the module name scope.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">L</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">M</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">active_dims</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.ard" title="romcomma.gpf.kernels.MOStationary.ard"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ard</span></code></a></p></td>
+<td><p>Whether ARD behaviour is active.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.lengthscales_neat" title="romcomma.gpf.kernels.MOStationary.lengthscales_neat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lengthscales_neat</span></code></a></p></td>
+<td><p>The kernel lengthscales as an (L,M) matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.name" title="romcomma.gpf.kernels.MOStationary.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
+<td><p>Returns the name of this module as passed or determined in the ctor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.name_scope" title="romcomma.gpf.kernels.MOStationary.name_scope"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name_scope</span></code></a></p></td>
+<td><p>Returns a <cite>tf.name_scope</cite> instance for this class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.non_trainable_variables" title="romcomma.gpf.kernels.MOStationary.non_trainable_variables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">non_trainable_variables</span></code></a></p></td>
+<td><p>Sequence of non-trainable variables owned by this module and its submodules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.submodules" title="romcomma.gpf.kernels.MOStationary.submodules"><code class="xref py py-obj docutils literal notranslate"><span class="pre">submodules</span></code></a></p></td>
+<td><p>Sequence of all sub-modules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trainable_parameters</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.trainable_variables" title="romcomma.gpf.kernels.MOStationary.trainable_variables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trainable_variables</span></code></a></p></td>
+<td><p>Sequence of trainable variables owned by this module and its submodules.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpf.kernels.MOStationary.variables" title="romcomma.gpf.kernels.MOStationary.variables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">variables</span></code></a></p></td>
+<td><p>Sequence of variables owned by this module and its submodules.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.lengthscales_neat">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lengthscales_neat</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.lengthscales_neat" title="Permalink to this definition">§</a></dt>
+<dd><p>The kernel lengthscales as an (L,M) matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_diag">
+<span class="sig-name descname"><span class="pre">K_diag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_diag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_diag" title="Permalink to this definition">§</a></dt>
+<dd><p>The kernel diagonal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> – An (N,M) Tensor.</p>
+</dd>
+</dl>
+<p>Returns: An (L, N, L, N) Tensor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_unit_variance">
+<span class="sig-name descname"><span class="pre">K_unit_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_unit_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_unit_variance" title="Permalink to this definition">§</a></dt>
+<dd><p>The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> – An (n,M) Tensor.</p></li>
+<li><p><strong>X2</strong> – An (N,M) Tensor.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: An (L,N,L,N) Tensor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_d_unit_variance">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">K_d_unit_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_d_unit_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_d_unit_variance" title="Permalink to this definition">§</a></dt>
+<dd><p>The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>d</strong> – An (L,N,L,N,M) Tensor.</p>
+</dd>
+</dl>
+<p>Returns: An (L,N,L,N) Tensor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_d_apply_variance">
+<span class="sig-name descname"><span class="pre">K_d_apply_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K_d_unit_variance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_d_apply_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_d_apply_variance" title="Permalink to this definition">§</a></dt>
+<dd><p>Multiply the unit variance kernel by the kernel variance, and reshape.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>K_d_unit_variance</strong> – An (L,N,L,N) Tensor.</p>
+</dd>
+</dl>
+<p>Returns: An (LN,LN) Tensor</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_d">
+<span class="sig-name descname"><span class="pre">K_d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_d" title="Permalink to this definition">§</a></dt>
+<dd><p>The kernel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>d</strong> – An (L,N,L,N,M) Tensor.</p>
+</dd>
+</dl>
+<p>Returns: An (LN,LN) Tensor.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.ard">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ard</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.ard" title="Permalink to this definition">§</a></dt>
+<dd><p>Whether ARD behaviour is active.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.name" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns the name of this module as passed or determined in the ctor.</p>
+<p>NOTE: This is not the same as the <cite>self.name_scope.name</cite> which includes
+parent module names.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.name_scope">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name_scope</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.name_scope" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a <cite>tf.name_scope</cite> instance for this class.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.non_trainable_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">non_trainable_variables</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.non_trainable_variables" title="Permalink to this definition">§</a></dt>
+<dd><p>Sequence of non-trainable variables owned by this module and its submodules.</p>
+<p>Note: this method uses reflection to find variables on the current instance
+and submodules. For performance reasons you may wish to cache the result
+of calling this method if you don’t expect the return value to change.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of variables for the current module (sorted by attribute
+name) followed by variables from all submodules recursively (breadth
+first).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.on_separate_dims">
+<span class="sig-name descname"><span class="pre">on_separate_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.on_separate_dims" title="Permalink to this definition">§</a></dt>
+<dd><p>Checks if the dimensions, over which the kernels are specified, overlap.
+Returns True if they are defined on different/separate dimensions and False otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> (<em>Kernel</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.scaled_difference_matrix">
+<span class="sig-name descname"><span class="pre">scaled_difference_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.scaled_difference_matrix" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns [(X - X2ᵀ) / ℓ]. If X has shape […, N, D] and
+X2 has shape […, M, D], the output will have shape […, N, M, D].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em>) – </p></li>
+<li><p><strong>X2</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em><em> | </em><em>None</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.slice">
+<span class="sig-name descname"><span class="pre">slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.slice" title="Permalink to this definition">§</a></dt>
+<dd><p>Slice the correct dimensions for use in the kernel, as indicated by <cite>self.active_dims</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em>) – Input 1 [N, D].</p></li>
+<li><p><strong>X2</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em><em> | </em><em>None</em>) – Input 2 [M, D], can be None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Sliced X, X2, [N, I], I - input dimension.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>, <a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.slice_cov">
+<span class="sig-name descname"><span class="pre">slice_cov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cov</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.slice_cov" title="Permalink to this definition">§</a></dt>
+<dd><p>Slice the correct dimensions for use in the kernel, as indicated by
+<cite>self.active_dims</cite> for covariance matrices. This requires slicing the
+rows <em>and</em> columns. This will also turn flattened diagonal
+matrices into a tensor of full diagonal matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>cov</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em>) – Tensor of covariance matrices, [N, D, D] or [N, D].</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>[N, I, I].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.submodules">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">submodules</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.submodules" title="Permalink to this definition">§</a></dt>
+<dd><p>Sequence of all sub-modules.</p>
+<p>Submodules are modules which are properties of this module, or found as
+properties of modules which are properties of this module (and so on).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Module</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Module</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Module</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">submodules</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">submodules</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span><span class="n">c</span><span class="p">]</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">submodules</span><span class="p">)</span> <span class="o">==</span> <span class="p">[]</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of all submodules.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.trainable_variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trainable_variables</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.trainable_variables" title="Permalink to this definition">§</a></dt>
+<dd><p>Sequence of trainable variables owned by this module and its submodules.</p>
+<p>Note: this method uses reflection to find variables on the current instance
+and submodules. For performance reasons you may wish to cache the result
+of calling this method if you don’t expect the return value to change.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of variables for the current module (sorted by attribute
+name) followed by variables from all submodules recursively (breadth
+first).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variables</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.variables" title="Permalink to this definition">§</a></dt>
+<dd><p>Sequence of variables owned by this module and its submodules.</p>
+<p>Note: this method uses reflection to find variables on the current instance
+and submodules. For performance reasons you may wish to cache the result
+of calling this method if you don’t expect the return value to change.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A sequence of variables for the current module (sorted by attribute
+name) followed by variables from all submodules recursively (breadth
+first).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.with_name_scope">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">with_name_scope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.with_name_scope" title="Permalink to this definition">§</a></dt>
+<dd><p>Decorator to automatically enter the module name scope.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyModule</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="nd">@tf</span><span class="o">.</span><span class="n">Module</span><span class="o">.</span><span class="n">with_name_scope</span>
+<span class="gp">... </span>  <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">):</span>
+<span class="gp">... </span>      <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">]))</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">w</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using the above module would produce <a href="#id1"><span class="problematic" id="id2">`</span></a>tf.Variable`s and <a href="#id3"><span class="problematic" id="id4">`</span></a>tf.Tensor`s whose
+names included the module name:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mod</span> <span class="o">=</span> <span class="n">MyModule</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mod</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+<span class="go">&lt;tf.Tensor: shape=(1, 3), dtype=float32, numpy=..., dtype=float32)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mod</span><span class="o">.</span><span class="n">w</span>
+<span class="go">&lt;tf.Variable &#39;my_module/Variable:0&#39; shape=(2, 3) dtype=float32,</span>
+<span class="go">numpy=..., dtype=float32)&gt;</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>method</strong> – The method to wrap.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The original method wrapped such that it enters the module’s name scope.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+
+          <div class="sidebar-resize-handle"></div>
+
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../start.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="romcomma.base.html">romcomma.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.data.html">romcomma.data</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="romcomma.gpf.html">romcomma.gpf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.gpr.html">romcomma.gpr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.gsa.html">romcomma.gsa</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.rom.html">romcomma.rom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.run.html">romcomma.run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.test.html">romcomma.test</a></li>
+</ul>
+</li>
+</ul>
+
+<div><hr class="docutils"></div>
+<ul>
+  <li class="toctree-l1"><a class="reference internal" href="../../genindex.html" accesskey="I">General Index</a></li>
+  <li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+</ul>
+<div id="ethical-ad-placement"></div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+    <nav class="relbar">
+      <a class="previous" href="romcomma.gpf.kernels.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            romcomma.gpf.kernels
+          </span>
+        </div>
+      </a>
+      <a class="next" href="romcomma.gpf.kernels.RBF.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            romcomma.gpf.kernels.RBF
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>
+
+    <footer role="contentinfo">
+      &#169; Copyright 2023, Robert A. Milton.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
+<a class="reference internal" href="../../_sources/pages/api/romcomma.gpf.kernels.MOStationary.rst.txt" rel="nofollow">Show Source</a>.
+    </footer>
+  </body>
+</html>

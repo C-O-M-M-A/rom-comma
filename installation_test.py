@@ -34,7 +34,7 @@ if __name__ == '__main__':
     function_vector = test.functions.ISHIGAMI
     models = ['diag.i.a', 'diag.d.a']
     ignore_exceptions = False
-    kinds = gsa.run.calculation.ALL_KINDS
+    kinds = gsa.do.calculation.ALL_KINDS
     is_error_calculated = True
     with run.Context('Test', device='CPU'):
         kind_names = [kind.name.lower() for kind in kinds]

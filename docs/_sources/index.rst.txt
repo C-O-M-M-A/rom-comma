@@ -1,42 +1,25 @@
-.. rom-comma documentation master file, created by
-   sphinx-quickstart on Sat Mar 11 23:36:02 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
 
+rom-comma User Guide
+==========================================================================================================================================
 
-**rom-comma user guide**
-=====================================
+.. rubric:: Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by Robert A. Milton of The University of Sheffield
 
 
 .. warning:: This documentation is currently under construction
 
 
-Abstract
----------
-
-**Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield**
-
-
-.. currentmodule:: romcomma
-
 Contents
----------
+----------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   pages/installation
-
-.. autosummary::
-   :toctree: _autosummary
-   :template: custom-module-template.rst
-   :recursive:
-
-   data
+   pages/start
+   pages/api/reference
 
 
-indices and tables
-------------------
+Indices and Tables
+--------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

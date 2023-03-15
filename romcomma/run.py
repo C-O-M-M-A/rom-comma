@@ -180,7 +180,7 @@ def GPR(name: str, repo: Repository, is_read: Optional[bool], is_independent: Op
 
 
 def GSA(name: str, repo: Repository, is_independent: Optional[bool], is_isotropic: Optional[bool],
-        kinds: Sequence[gsa.run.calculation.Kind] = gsa.run.calculation.ALL_KINDS, m: int = -1, ignore_exceptions: bool = False,
+        kinds: Sequence[gsa.do.calculation.Kind] = gsa.do.calculation.ALL_KINDS, m: int = -1, ignore_exceptions: bool = False,
         is_error_calculated: bool = False, **kwargs) -> List[Path]:
     """ Service routine to recursively run GSAs on the Folds in a Repository, or on a single Fold.
 
@@ -202,7 +202,7 @@ def GSA(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
     Returns:
         A list of the calculation names which have been run, relative to repo.folder.
     """
-    kinds = (kinds,) if isinstance(kinds, gsa.run.calculation.Kind) else kinds
+    kinds = (kinds,) if isinstance(kinds, gsa.do.calculation.Kind) else kinds
     if not isinstance(repo, Fold):
         for k in repo.folds:
             names = GSA(name, Fold(repo, k), is_independent, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
@@ -225,7 +225,7 @@ def GSA(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
                     gp = gpr.models.GP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
                     names = []
                     for kind in kinds:
-                        folder = gsa.run.calculation(gp, kind, m, is_error_calculated, **kwargs).folder
+                        folder = gsa.do.calculation(gp, kind, m, is_error_calculated, **kwargs).folder
                         names += [folder.relative_to(repo.folder)]
                 except BaseException as exception:
                     if not ignore_exceptions:

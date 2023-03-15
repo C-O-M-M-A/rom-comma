@@ -1,0 +1,21 @@
+
+Getting Started
+==========================================================================================================================================
+
+Welcome to the rom-comma python library.
+
+
+Installation
+---------------
+
+Simply place the ``romcomma`` package in a folder included in your ``PYTHONPATH`` (e.g. ``site-packages``).
+Test the installation by running the ``installation_test`` module, from anywhere.
+Installation dependencies are documented in `pyproject.toml <https://github.com/C-O-M-M-A/rom-comma/blob/main/pyproject.toml>`_.
+
+Contents
+----------
+
+.. toctree::
+   :maxdepth: 2
+
+   installation

@@ -1,6 +1,4 @@
 
-
-
 <!DOCTYPE html>
 
 <html lang="en">
@@ -8,52 +6,84 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index &#8212; rom-comma 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/cloud.css" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noticia+Text:400,i,b,bi|Open+Sans:400,i,b,bi|Roboto+Mono:400,i,b,bi&amp;display=swap" type="text/css" />
-    
+    <link rel="stylesheet" type="text/css" href="_static/insipid.css" />
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
-
-    
-    
-     
-        <script src="_static/jquery.cookie.js"></script>
-    
-
-    
-     
-        <script src="_static/cloud.base.js"></script>
-    
-
-    
-     
-        <script src="_static/cloud.js"></script>
-    
-
+    <script defer src="_static/insipid.js"></script>
+    <script defer src="_static/insipid-sidebar.js"></script>
     <link rel="index" title="Index" href="#" />
-    <link rel="search" title="Search" href="search.html" /> 
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="search" title="Search" href="search.html" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
   </head><body>
-    <div class="relbar-top">
-        
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="#" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="index.html">rom-comma 1.0 documentation</a> &#187;</li>
+    <script type="text/javascript">
+        document.body.classList.add('js');
+    </script>
+    <input type="checkbox" id="sidebar-checkbox" style="display: none;">
+    <label id="overlay" for="sidebar-checkbox"></label>
+    <div class="sidebar-resize-handle"></div>
+    <script type="text/javascript">
+        try {
+            let sidebar = localStorage.getItem('sphinx-sidebar');
+            const sidebar_width = localStorage.getItem('sphinx-sidebar-width');
+            if (sidebar_width) {
+                document.documentElement.style.setProperty('--sidebar-width', sidebar_width);
+            }
+            // show sidebar on wide screen
+            if (!sidebar && window.matchMedia('(min-width: 100rem)').matches) {
+                sidebar = 'visible';
+                // NB: We don't store the value in localStorage!
+            }
+            if (sidebar === 'visible') {
+                document.getElementById('sidebar-checkbox').checked = true;
+            }
+        } catch(e) {
+            console.info(e);
+        }
+    </script>
+    <header id="topbar-placeholder">
+      <div id="topbar">
+        <div id="titlebar">
+          <div class="buttons">
+            <label for="sidebar-checkbox" id="sidebar-button" role="button" tabindex="0" aria-controls="sphinxsidebar" accesskey="M">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
+            </label>
+            <button id="search-button" type="button" title="Search" aria-label="Search" aria-expanded="false" aria-controls="search-form" accesskey="S">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+            </button>
+          </div>
+          <div class="title">
+            <a class="parent" href="index.html" accesskey="U">rom-comma 1.0 documentation</a>
+            <a class="top" href="#">Index</a>
+          </div>
+          <div class="buttons">
+            <button id="fullscreen-button" type="button" aria-hidden="true">
+              <span class="enable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M212.686 315.314L120 408l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C10.697 480 0 469.255 0 456V344c0-21.382 25.803-32.09 40.922-16.971L72 360l92.686-92.686c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.249 6.248 6.249 16.378 0 22.627zm22.628-118.628L328 104l-32.922-31.029C279.958 57.851 290.666 32 312.048 32h112C437.303 32 448 42.745 448 56v112c0 21.382-25.803 32.09-40.922 16.971L376 152l-92.686 92.686c-6.248 6.248-16.379 6.248-22.627 0l-25.373-25.373c-6.249-6.248-6.249-16.378 0-22.627z"/></svg>
+              </span>
+              <span class="disable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M4.686 427.314L104 328l-32.922-31.029C55.958 281.851 66.666 256 88.048 256h112C213.303 256 224 266.745 224 280v112c0 21.382-25.803 32.09-40.922 16.971L152 376l-99.314 99.314c-6.248 6.248-16.379 6.248-22.627 0L4.686 449.941c-6.248-6.248-6.248-16.379 0-22.627zM443.314 84.686L344 184l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C234.697 256 224 245.255 224 232V120c0-21.382 25.803-32.09 40.922-16.971L296 136l99.314-99.314c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.248 6.248 6.248 16.379 0 22.627z"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+        <div id="searchbox" role="search">
+          <form id="search-form" class="search" style="display: none" action="search.html" method="get">
+            <input type="search" name="q" placeholder="Search ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button>Go</button>
+          </form>
+        </div>
+      </div>
+    </header>
+    <nav>
+    </nav>
 
-        <li class="nav-item nav-item-this"><a href="">Index</a></li> 
-      </ul>
-    </div>
-    </div>
-  
+    <nav class="relbar">
+    </nav>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -66,16 +96,25 @@
 <div class="genindex-jumpbox">
  <a href="#_"><strong>_</strong></a>
  | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#J"><strong>J</strong></a>
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  | <a href="#X"><strong>X</strong></a>
  | <a href="#Y"><strong>Y</strong></a>
@@ -84,14 +123,64 @@
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.__init__">__init__() (Fold method)</a>
+      <li><a href="pages/api/romcomma.run.Aggregate.html#romcomma.run.Aggregate.__init__">__init__() (Aggregate method)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.__init__">(Frame method)</a>
+        <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.__init__">(calculation method)</a>
 </li>
-        <li><a href="_autosummary/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.__init__">(Normalization method)</a>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.__init__">(ClosedIndex method)</a>
 </li>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.__init__">(Repository method)</a>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.__init__">(ClosedIndexWithError method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.__init__">(ClosedIndexWithRotation method)</a>
+</li>
+        <li><a href="pages/api/romcomma.test.sample.DOE.html#romcomma.test.sample.DOE.__init__">(DOE method)</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.__init__">(Fold method)</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.__init__">(Frame method)</a>
+</li>
+        <li><a href="pages/api/romcomma.test.sample.Function.html#romcomma.test.sample.Function.__init__">(Function method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.Gaussian.html#romcomma.gsa.sobol.Gaussian.__init__">(Gaussian method)</a>
+</li>
+        <li><a href="pages/api/romcomma.test.sample.GaussianNoise.html#romcomma.test.sample.GaussianNoise.__init__">(GaussianNoise method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.__init__">(GP method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.__init__">(GPInterface method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.__init__">(Kernel method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.__init__">(Likelihood method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.__init__">(Model method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.__init__">(MOGaussian method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.__init__">(MOGPR method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.__init__">(MOMeanFunction method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.__init__">(MOStationary method)</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.__init__">(Normalization method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.__init__">(NP method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters.__init__">(Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.__init__">(RBF method)</a>, <a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.__init__">[1]</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.__init__">(Repository method)</a>
+</li>
+        <li><a href="pages/api/romcomma.test.functions.Scalar.html#romcomma.test.functions.Scalar.__init__">(Scalar method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.__init__">(TF method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.__init__">(Variance method)</a>
+</li>
+        <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.__init__">(Vector method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -100,15 +189,169 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.apply_to">apply_to() (Normalization method)</a>
+      <li><a href="pages/api/romcomma.run.Aggregate.html#romcomma.run.Aggregate">Aggregate (class in romcomma.run)</a>
 </li>
+      <li><a href="pages/api/romcomma.test.sample.Function.html#romcomma.test.sample.Function.aggregator">aggregator() (Function method)</a>
+</li>
+      <li><a href="pages/api/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.apply_to">apply_to() (Normalization method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.ard">ard (MOStationary property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.ard">(RBF property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Array">Array (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Array">(TF attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.broadcast_parameters">broadcast_parameters() (GP method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.broadcast_parameters">(GPInterface method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.broadcast_parameters">(Kernel method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.broadcast_parameters">(RBF method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.broadcast_value">broadcast_value() (calculation.Parameters method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.Parameters.broadcast_value">(GP.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.Parameters.broadcast_value">(GPInterface.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters.broadcast_value">(Kernel.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.Parameters.broadcast_value">(Likelihood.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters.broadcast_value">(Model.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters.broadcast_value">(Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.Parameters.broadcast_value">(RBF.Parameters method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.CSV_OPTIONS">CSV_OPTIONS (Frame property)</a>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.calc_num_latent_gps">calc_num_latent_gps() (MOGPR static method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.calc_num_latent_gps_from_data">calc_num_latent_gps_from_data() (MOGPR static method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation">calculation (class in romcomma.gsa.do)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Kind">calculation.Kind (class in romcomma.gsa.do)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters">calculation.Parameters (class in romcomma.gsa.do)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.Values">calculation.Parameters.Values (class in romcomma.gsa.do)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.check_K_inv_Y">check_K_inv_Y() (GP method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.cholesky">cholesky (Variance property)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.clear">clear() (Vector method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex">ClosedIndex (class in romcomma.gsa.sobol)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError">ClosedIndexWithError (class in romcomma.gsa.sobol)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquation">ClosedIndexWithError.RankEquation (class in romcomma.gsa.sobol)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquations">ClosedIndexWithError.RankEquations (class in romcomma.gsa.sobol)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation">ClosedIndexWithRotation (class in romcomma.gsa.sobol)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.conditional_mean">conditional_mean() (MOGaussian method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.conditional_variance">conditional_variance() (MOGaussian method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.consumers">consumers() (TF.Tensor method)</a>
+</li>
+      <li><a href="pages/api/romcomma.run.Context.html#romcomma.run.Context">Context() (in module romcomma.run)</a>
+</li>
+      <li><a href="pages/api/romcomma.run.copy.html#romcomma.run.copy">copy() (in module romcomma.run)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.copy">(Vector method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.Values.count">count() (calculation.Parameters.Values method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquation.count">(ClosedIndexWithError.RankEquation method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquations.count">(ClosedIndexWithError.RankEquations method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.Parameters.Values.count">(GP.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.Parameters.Values.count">(GPInterface.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters.Values.count">(Kernel.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.Parameters.Values.count">(Likelihood.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters.Values.count">(Model.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.Parameters.Values.count">(RBF.Parameters.Values method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.tests.covariance.html#romcomma.gpf.tests.covariance">covariance() (in module romcomma.gpf.tests)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Covector">Covector (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Covector">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.CSV_OPTIONS">CSV_OPTIONS (Frame property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gsa.sobol.det.html#romcomma.gsa.sobol.det">det() (in module romcomma.gsa.sobol)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.device">device (TF.Tensor property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquations.DIAGONAL">DIAGONAL (ClosedIndexWithError.RankEquations attribute)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.sample.DOE.html#romcomma.test.sample.DOE">DOE (class in romcomma.test.sample)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.dtype">dtype (TF.Tensor property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.eval">eval() (TF.Tensor method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.experimental_ref">experimental_ref() (TF.Tensor method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -116,31 +359,83 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold">Fold (class in romcomma.data.storage)</a>
+      <li><a href="pages/api/romcomma.base.definitions.FLOAT.html#romcomma.base.definitions.FLOAT">FLOAT() (in module romcomma.base.definitions)</a>
 </li>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.folds">folds (Fold property)</a>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold">Fold (class in romcomma.data.storage)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.fold">fold (GP property)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.folds">(Repository property)</a>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.fold">(GPInterface property)</a>
 </li>
       </ul></li>
-      <li><a href="_autosummary/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame">Frame (class in romcomma.data.storage)</a>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.folds">folds (Fold property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.folds">(Repository property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame">Frame (class in romcomma.data.storage)</a>
+</li>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.from_csv">from_csv() (Fold class method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.from_csv">(Repository class method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.from_df">from_df() (Fold class method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.from_df">(Repository class method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.from_dfs">from_dfs() (Fold class method)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.fromkeys">fromkeys() (Vector method)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.sample.DOE.html#romcomma.test.sample.DOE.full_factorial">full_factorial() (DOE static method)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.sample.Function.html#romcomma.test.sample.Function">Function (class in romcomma.test.sample)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.functions">functions (MOMeanFunction property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gsa.sobol.Gaussian.html#romcomma.gsa.sobol.Gaussian">Gaussian (class in romcomma.gsa.sobol)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.sample.GaussianNoise.html#romcomma.test.sample.GaussianNoise">GaussianNoise (class in romcomma.test.sample)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.sample.GaussianNoise.html#romcomma.test.sample.GaussianNoise.Variance">GaussianNoise.Variance (class in romcomma.test.sample)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.get">get() (Vector method)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.get_shape">get_shape() (TF.Tensor method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP">GP (class in romcomma.gpr.models)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.Parameters">GP.Parameters (class in romcomma.gpr.models)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.from_csv">from_csv() (Fold class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.from_csv">(Repository class method)</a>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.Parameters.Values">GP.Parameters.Values (class in romcomma.gpr.models)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.from_df">from_df() (Fold class method)</a>
-
-      <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.from_df">(Repository class method)</a>
+      <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface">GPInterface (class in romcomma.gpr.models)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.from_dfs">from_dfs() (Fold class method)</a>
+      <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.Parameters">GPInterface.Parameters (class in romcomma.gpr.models)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.Parameters.Values">GPInterface.Parameters.Values (class in romcomma.gpr.models)</a>
+</li>
+      <li><a href="pages/api/romcomma.run.GPR.html#romcomma.run.GPR">GPR() (in module romcomma.run)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.graph">graph (TF.Tensor property)</a>
+</li>
+      <li><a href="pages/api/romcomma.run.GSA.html#romcomma.run.GSA">GSA() (in module romcomma.run)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -148,15 +443,63 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.into_K_folds">into_K_folds() (Fold method)</a>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquation.i">i (ClosedIndexWithError.RankEquation attribute)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.implementation">implementation (GP property)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.into_K_folds">(Repository method)</a>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.implementation">(GPInterface property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.implementation">(Kernel property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.implementation">(RBF property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.tests.increment.html#romcomma.gpf.tests.increment">increment() (in module romcomma.gpf.tests)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.Values.index">index() (calculation.Parameters.Values method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquation.index">(ClosedIndexWithError.RankEquation method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquations.index">(ClosedIndexWithError.RankEquations method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.Parameters.Values.index">(GP.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.Parameters.Values.index">(GPInterface.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters.Values.index">(Kernel.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.Parameters.Values.index">(Likelihood.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters.Values.index">(Model.Parameters.Values method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.Parameters.Values.index">(RBF.Parameters.Values method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.is_empty">is_empty (Frame property)</a>
+      <li><a href="pages/api/romcomma.base.definitions.INT.html#romcomma.base.definitions.INT">INT() (in module romcomma.base.definitions)</a>
+</li>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.into_K_folds">into_K_folds() (Fold method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.test.sample.Function.html#romcomma.test.sample.Function.into_K_folds">(Function method)</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.into_K_folds">(Repository method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.is_empty">is_empty (Frame property)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.items">items() (Vector method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquation.j">j (ClosedIndexWithError.RankEquation attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -164,62 +507,454 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.K">K (Fold property)</a>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquation.k">k (ClosedIndexWithError.RankEquation attribute)</a>
+</li>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.K">K (Fold property)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.K">(Repository property)</a>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.K">(Repository property)</a>
 </li>
       </ul></li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.K_cho">K_cho (GP property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.K_cho">(GPInterface property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d">K_d() (MOStationary method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.K_d">(RBF method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_apply_variance">K_d_apply_variance() (MOStationary method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.K_d_apply_variance">(RBF method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_unit_variance">K_d_unit_variance() (MOStationary method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.K_d_unit_variance">(RBF method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_diag">K_diag() (MOStationary method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.K_diag">(RBF method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.K_inv_Y">K_inv_Y (GP property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.K_inv_Y">(GPInterface property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_unit_variance">K_unit_variance() (MOStationary method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.K_unit_variance">(RBF method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel">Kernel (class in romcomma.gpr.kernels)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#id0">kernel (GP.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.Parameters.Values.kernel">[1]</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#id0">(GPInterface.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.Parameters.Values.kernel">[1]</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.tests.kernel.html#romcomma.gpf.tests.kernel">kernel() (in module romcomma.gpf.tests)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters">Kernel.Parameters (class in romcomma.gpr.kernels)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters.Values">Kernel.Parameters.Values (class in romcomma.gpr.kernels)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.KERNEL_FOLDER_NAME">KERNEL_FOLDER_NAME (GP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.KERNEL_FOLDER_NAME">(GPInterface property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.keys">keys() (Vector method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.L">L (Fold property)</a>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquation.l">l (ClosedIndexWithError.RankEquation attribute)</a>
+</li>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.L">L (Fold property)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.L">(Repository property)</a>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.L">(GP property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.L">(GPInterface property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.L">(Kernel property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.L">(MOGPR property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.L">(RBF property)</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.L">(Repository property)</a>
 </li>
       </ul></li>
+      <li><a href="pages/api/romcomma.test.sample.DOE.html#romcomma.test.sample.DOE.latin_hypercube">latin_hypercube() (DOE static method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#id0">lengthscales (Kernel.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters.Values.lengthscales">[1]</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#id0">(RBF.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.Parameters.Values.lengthscales">[1]</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.lengthscales_neat">lengthscales_neat (MOStationary property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.lengthscales_neat">(RBF property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood">Likelihood (class in romcomma.gpr.models)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.tests.likelihood.html#romcomma.gpf.tests.likelihood">likelihood() (in module romcomma.gpf.tests)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.Parameters">Likelihood.Parameters (class in romcomma.gpr.models)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.Parameters.Values">Likelihood.Parameters.Values (class in romcomma.gpr.models)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.linspace.html#romcomma.test.functions.linspace">linspace() (in module romcomma.test.functions)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#id0">log_marginal (Likelihood.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.Parameters.Values.log_marginal">[1]</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.log_marginal_likelihood">log_marginal_likelihood() (MOGPR method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.Gaussian.html#romcomma.gsa.sobol.Gaussian.log_pdf">log_pdf() (Gaussian static method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.log_posterior_density">log_posterior_density() (MOGPR method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.log_prior_density">log_prior_density() (MOGPR method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.log_prob">log_prob() (MOGaussian method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.M">M (Fold property)</a>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.M">M (Fold property)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.M">(Repository property)</a>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.M">(GP property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.M">(GPInterface property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.M">(Kernel property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.M">(MOGPR property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.M">(RBF property)</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.M">(Repository property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.marginalize">marginalize() (ClosedIndex method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.marginalize">(ClosedIndexWithError method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.marginalize">(ClosedIndexWithRotation method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Matrix">Matrix (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Matrix">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.maximum_log_likelihood_objective">maximum_log_likelihood_objective() (MOGPR method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.mean.html#romcomma.gsa.sobol.mean">mean() (in module romcomma.gsa.sobol)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.RankEquations.MIXED">MIXED (ClosedIndexWithError.RankEquations attribute)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model">Model (class in romcomma.base.classes)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters">Model.Parameters (class in romcomma.base.classes)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters.Values">Model.Parameters.Values (class in romcomma.base.classes)</a>
+</li>
       <li>
     module
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.html#module-romcomma.data">romcomma.data</a>
+        <li><a href="pages/api/reference.html#module-romcomma">romcomma</a>
 </li>
-        <li><a href="_autosummary/romcomma.data.storage.html#module-romcomma.data.storage">romcomma.data.storage</a>
+        <li><a href="pages/api/romcomma.base.html#module-romcomma.base">romcomma.base</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.html#module-romcomma.base.classes">romcomma.base.classes</a>
+</li>
+        <li><a href="pages/api/romcomma.base.definitions.html#module-romcomma.base.definitions">romcomma.base.definitions</a>
+</li>
+        <li><a href="pages/api/romcomma.data.html#module-romcomma.data">romcomma.data</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.html#module-romcomma.data.storage">romcomma.data.storage</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.html#module-romcomma.gpf">romcomma.gpf</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.base.html#module-romcomma.gpf.base">romcomma.gpf.base</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.html#module-romcomma.gpf.kernels">romcomma.gpf.kernels</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.html#module-romcomma.gpf.likelihoods">romcomma.gpf.likelihoods</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.html#module-romcomma.gpf.mean_functions">romcomma.gpf.mean_functions</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.html#module-romcomma.gpf.models">romcomma.gpf.models</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.tests.html#module-romcomma.gpf.tests">romcomma.gpf.tests</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.html#module-romcomma.gpr">romcomma.gpr</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.html#module-romcomma.gpr.kernels">romcomma.gpr.kernels</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.html#module-romcomma.gpr.models">romcomma.gpr.models</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.html#module-romcomma.gsa">romcomma.gsa</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.do.html#module-romcomma.gsa.do">romcomma.gsa.do</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.html#module-romcomma.gsa.sobol">romcomma.gsa.sobol</a>
+</li>
+        <li><a href="pages/api/romcomma.rom.html#module-romcomma.rom">romcomma.rom</a>
+</li>
+        <li><a href="pages/api/romcomma.rom.old.html#module-romcomma.rom.old">romcomma.rom.old</a>
+</li>
+        <li><a href="pages/api/romcomma.run.html#module-romcomma.run">romcomma.run</a>
+</li>
+        <li><a href="pages/api/romcomma.test.html#module-romcomma.test">romcomma.test</a>
+</li>
+        <li><a href="pages/api/romcomma.test.functions.html#module-romcomma.test.functions">romcomma.test.functions</a>
+</li>
+        <li><a href="pages/api/romcomma.test.sample.html#module-romcomma.test.sample">romcomma.test.sample</a>
+</li>
+        <li><a href="pages/api/romcomma.test.tests.html#module-romcomma.test.tests">romcomma.test.tests</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian">MOGaussian (class in romcomma.gpf.likelihoods)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR">MOGPR (class in romcomma.gpf.models)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction">MOMeanFunction (class in romcomma.gpf.mean_functions)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary">MOStationary (class in romcomma.gpf.kernels)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ms.html#romcomma.gsa.sobol.ms">ms() (in module romcomma.gsa.sobol)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.N">N (Fold property)</a>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.N">N (Fold property)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.N">(Repository property)</a>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.N">(GP property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.N">(GPInterface property)</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.N">(Repository property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.N">N() (MOGaussian method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.name">name (ClosedIndex property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.name">(ClosedIndexWithError property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.name">(ClosedIndexWithRotation property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.name">(MOGaussian property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.name">(MOGPR property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.name">(MOMeanFunction property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.name">(MOStationary property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.name">(RBF property)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.name">(TF.Tensor property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.name">(Variance property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.name_scope">name_scope (ClosedIndex property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.name_scope">(ClosedIndexWithError property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.name_scope">(ClosedIndexWithRotation property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.name_scope">(MOGaussian property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.name_scope">(MOGPR property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.name_scope">(MOMeanFunction property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.name_scope">(MOStationary property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.name_scope">(RBF property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.name_scope">(Variance property)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization">Normalization (class in romcomma.data.storage)</a>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.non_trainable_variables">non_trainable_variables (ClosedIndex property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.non_trainable_variables">(ClosedIndexWithError property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.non_trainable_variables">(ClosedIndexWithRotation property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.non_trainable_variables">(MOGaussian property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.non_trainable_variables">(MOGPR property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.non_trainable_variables">(MOMeanFunction property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.non_trainable_variables">(MOStationary property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.non_trainable_variables">(RBF property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.non_trainable_variables">(Variance property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization">Normalization (class in romcomma.data.storage)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters.Values.NotImplemented">NotImplemented (Model.Parameters.Values attribute)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP">NP (class in romcomma.base.definitions)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.on_separate_dims">on_separate_dims() (MOStationary method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.on_separate_dims">(RBF method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.op">op (TF.Tensor property)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.optimize">optimize() (GP method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.optimize">(Kernel method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.optimize">(Likelihood method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.optimize">(RBF method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.OPTIONS">OPTIONS (calculation property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.OPTIONS">(ClosedIndex property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.OPTIONS">(ClosedIndexWithError property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.OPTIONS">(ClosedIndexWithRotation attribute)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.OPTIONS">(GP property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.OPTIONS">(GPInterface property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.OPTIONS">(Kernel property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.OPTIONS">(Likelihood property)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.OPTIONS">(Model property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.OPTIONS">(RBF attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.output_dim">output_dim (MOMeanFunction property)</a>
+</li>
+      <li><a href="pages/api/romcomma.run.Aggregate.html#romcomma.run.Aggregate.over_folders">over_folders() (Aggregate method)</a>
+</li>
+      <li><a href="pages/api/romcomma.run.Aggregate.html#romcomma.run.Aggregate.over_folds">over_folds() (Aggregate method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.PairOfInts">PairOfInts (TF attribute)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters">Parameters (class in romcomma.base.classes)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.params">params (calculation property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.params">(GP property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.params">(GPInterface property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.params">(Kernel property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.params">(Likelihood property)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.params">(Model property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.params">(RBF property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gsa.sobol.Gaussian.html#romcomma.gsa.sobol.Gaussian.pdf">pdf() (Gaussian static method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.pop">pop() (Vector method)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.popitem">popitem() (Vector method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.predict">predict() (GP method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.predict">(GPInterface method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.predict_f">predict_f() (MOGPR method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.predict_f_samples">predict_f_samples() (MOGPR method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.predict_log_density">predict_log_density() (MOGaussian method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.predict_log_density">(MOGPR method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.predict_mean_and_var">predict_mean_and_var() (MOGaussian method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.predict_y">predict_y() (MOGPR method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -227,67 +962,567 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository">Repository (class in romcomma.data.storage)</a>
+      <li><a href="pages/api/romcomma.test.sample.Function.html#romcomma.test.sample.Function.random_rotation">random_rotation() (Function method)</a>
 </li>
+      <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF">RBF (class in romcomma.gpf.kernels)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF">(class in romcomma.gpr.kernels)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.Parameters">RBF.Parameters (class in romcomma.gpr.kernels)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.Parameters.Values">RBF.Parameters.Values (class in romcomma.gpr.kernels)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.read">read() (calculation.Parameters method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.Parameters.read">(GP.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.Parameters.read">(GPInterface.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters.read">(Kernel.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.Parameters.read">(Likelihood.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters.read">(Model.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters.read">(Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.Parameters.read">(RBF.Parameters method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.ref">ref() (TF.Tensor method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.tests.regression_data.html#romcomma.gpf.tests.regression_data">regression_data() (in module romcomma.gpf.tests)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.sample.Function.html#romcomma.test.sample.Function.repo">repo (Function property)</a>
+</li>
+      <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository">Repository (class in romcomma.data.storage)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.rms.html#romcomma.gsa.sobol.rms">rms() (in module romcomma.gsa.sobol)</a>
+</li>
+      <li>
+    romcomma
+
+      <ul>
+        <li><a href="pages/api/reference.html#module-romcomma">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.base
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.html#module-romcomma.base">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.base.classes
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.classes.html#module-romcomma.base.classes">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.base.definitions
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.html#module-romcomma.base.definitions">module</a>
+</li>
+      </ul></li>
       <li>
     romcomma.data
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.html#module-romcomma.data">module</a>
+        <li><a href="pages/api/romcomma.data.html#module-romcomma.data">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.data.storage
+
+      <ul>
+        <li><a href="pages/api/romcomma.data.storage.html#module-romcomma.data.storage">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gpf
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.html#module-romcomma.gpf">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gpf.base
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.base.html#module-romcomma.gpf.base">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gpf.kernels
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.html#module-romcomma.gpf.kernels">module</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
-    romcomma.data.storage
+    romcomma.gpf.likelihoods
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.html#module-romcomma.data.storage">module</a>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.html#module-romcomma.gpf.likelihoods">module</a>
 </li>
       </ul></li>
+      <li>
+    romcomma.gpf.mean_functions
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.html#module-romcomma.gpf.mean_functions">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gpf.models
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.models.html#module-romcomma.gpf.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gpf.tests
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.tests.html#module-romcomma.gpf.tests">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gpr
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.html#module-romcomma.gpr">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gpr.kernels
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.kernels.html#module-romcomma.gpr.kernels">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gpr.models
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.html#module-romcomma.gpr.models">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gsa
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.html#module-romcomma.gsa">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gsa.do
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.do.html#module-romcomma.gsa.do">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.gsa.sobol
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.html#module-romcomma.gsa.sobol">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.rom
+
+      <ul>
+        <li><a href="pages/api/romcomma.rom.html#module-romcomma.rom">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.rom.old
+
+      <ul>
+        <li><a href="pages/api/romcomma.rom.old.html#module-romcomma.rom.old">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.run
+
+      <ul>
+        <li><a href="pages/api/romcomma.run.html#module-romcomma.run">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.test
+
+      <ul>
+        <li><a href="pages/api/romcomma.test.html#module-romcomma.test">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.test.functions
+
+      <ul>
+        <li><a href="pages/api/romcomma.test.functions.html#module-romcomma.test.functions">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.test.sample
+
+      <ul>
+        <li><a href="pages/api/romcomma.test.sample.html#module-romcomma.test.sample">module</a>
+</li>
+      </ul></li>
+      <li>
+    romcomma.test.tests
+
+      <ul>
+        <li><a href="pages/api/romcomma.test.tests.html#module-romcomma.test.tests">module</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.test.sample.Function.html#romcomma.test.sample.Function.rotate_folds">rotate_folds() (Function method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#id0">S (calculation.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.Values.S">[1]</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Scalar.html#romcomma.test.functions.Scalar">Scalar (class in romcomma.test.functions)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.scaled_difference_matrix">scaled_difference_matrix() (MOStationary method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.scaled_difference_matrix">(RBF method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.set_shape">set_shape() (TF.Tensor method)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.setdefault">setdefault() (Vector method)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.shape">shape (TF.Tensor property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.shape">(Variance property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Slice">Slice (TF attribute)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.slice">slice() (MOStationary method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.slice">(RBF method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.slice_cov">slice_cov() (MOStationary method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.slice_cov">(RBF method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gsa.sobol.sos.html#romcomma.gsa.sobol.sos">sos() (in module romcomma.gsa.sobol)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.split_axis_shape">split_axis_shape() (MOGaussian method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.submodules">submodules (ClosedIndex property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.submodules">(ClosedIndexWithError property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.submodules">(ClosedIndexWithRotation property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.submodules">(MOGaussian property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.submodules">(MOGPR property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.submodules">(MOMeanFunction property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.submodules">(MOStationary property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.submodules">(RBF property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.submodules">(Variance property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.subVector">subVector() (Vector method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.sym_check.html#romcomma.gsa.sobol.sym_check">sym_check() (in module romcomma.gsa.sobol)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.test_x">test_x (Fold property)</a>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#id1">T (calculation.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.Values.T">[1]</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Tensor">Tensor (NP attribute)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Tensor1">Tensor1 (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor1">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Tensor2">Tensor2 (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor2">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Tensor3">Tensor3 (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor3">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Tensor4">Tensor4 (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor4">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Tensor5">Tensor5 (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor5">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Tensor6">Tensor6 (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor6">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Tensor7">Tensor7 (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor7">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Tensor8">Tensor8 (NP attribute)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor8">(TF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.test">test() (GP method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.test">(GPInterface method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.test_x">test_x (Fold property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.test_y">test_y (Fold property)</a>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.test_y">test_y (Fold property)</a>
 </li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF">TF (class in romcomma.base.definitions)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor">TF.Tensor (class in romcomma.base.definitions)</a>
+</li>
+      <li><a href="pages/api/romcomma.run.Timing.html#romcomma.run.Timing">Timing() (in module romcomma.run)</a>
+</li>
+      <li><a href="pages/api/romcomma.run.TimingOneLiner.html#romcomma.run.TimingOneLiner">TimingOneLiner() (in module romcomma.run)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.trainable_variables">trainable_variables (ClosedIndex property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.trainable_variables">(ClosedIndexWithError property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.trainable_variables">(ClosedIndexWithRotation property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.trainable_variables">(MOGaussian property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.trainable_variables">(MOGPR property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.trainable_variables">(MOMeanFunction property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.trainable_variables">(MOStationary property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.trainable_variables">(RBF property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.trainable_variables">(Variance property)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.training_loss">training_loss() (MOGPR method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.training_loss_closure">training_loss_closure() (MOGPR method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.TYPE_IDENTIFIER">TYPE_IDENTIFIER (Kernel property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.TYPE_IDENTIFIER">(RBF attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.TypeFromIdentifier">TypeFromIdentifier() (Kernel class method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.TypeFromIdentifier">(RBF class method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.TypeFromParameters">TypeFromParameters() (Kernel class method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.TypeFromParameters">(RBF class method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.undo_from">undo_from() (Normalization method)</a>
+      <li><a href="pages/api/romcomma.test.sample.Function.html#romcomma.test.sample.Function.un_rotate_folds">un_rotate_folds() (Function method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.undo_from">undo_from() (Normalization method)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.update">update() (Vector method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#id2">V (calculation.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.Values.V">[1]</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.value">value (Variance property)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor.value_index">value_index (TF.Tensor property)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.value_times_eye">value_times_eye() (Variance method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.value_to_broadcast">value_to_broadcast (Variance property)</a>
+</li>
+      <li><a href="pages/api/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters.Values">Values (Parameters property)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector.values">values() (Vector method)</a>
+</li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.variables">variables (ClosedIndex property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.variables">(ClosedIndexWithError property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.variables">(ClosedIndexWithRotation property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.variables">(MOGaussian property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.variables">(MOGPR property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.variables">(MOMeanFunction property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.variables">(MOStationary property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.variables">(RBF property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.variables">(Variance property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance">Variance (class in romcomma.gpf.base)</a>
+</li>
+      <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#id1">variance (Kernel.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters.Values.variance">[1]</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#id1">(Likelihood.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.Parameters.Values.variance">[1]</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#id1">(RBF.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.Parameters.Values.variance">[1]</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.variational_expectations">variational_expectations() (MOGaussian method)</a>
+</li>
+      <li><a href="pages/api/romcomma.test.functions.Vector.html#romcomma.test.functions.Vector">Vector (class in romcomma.test.functions)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.base.definitions.NP.html#romcomma.base.definitions.NP.Vector">(NP attribute)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Vector">(TF attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.write">write() (Frame method)</a>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#id3">W (calculation.Parameters.Values attribute)</a>, <a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.Values.W">[1]</a>
 </li>
+      <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndex.html#romcomma.gsa.sobol.ClosedIndex.with_name_scope">with_name_scope() (ClosedIndex class method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithError.html#romcomma.gsa.sobol.ClosedIndexWithError.with_name_scope">(ClosedIndexWithError class method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gsa.sobol.ClosedIndexWithRotation.html#romcomma.gsa.sobol.ClosedIndexWithRotation.with_name_scope">(ClosedIndexWithRotation class method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.likelihoods.MOGaussian.html#romcomma.gpf.likelihoods.MOGaussian.with_name_scope">(MOGaussian class method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.with_name_scope">(MOGPR class method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.with_name_scope">(MOMeanFunction class method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.with_name_scope">(MOStationary class method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.with_name_scope">(RBF class method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpf.base.Variance.html#romcomma.gpf.base.Variance.with_name_scope">(Variance class method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pages/api/romcomma.gsa.do.calculation.html#romcomma.gsa.do.calculation.Parameters.write">write() (calculation.Parameters method)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.write">(Frame method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.Parameters.write">(GP.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.Parameters.write">(GPInterface.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters.write">(Kernel.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.Likelihood.html#romcomma.gpr.models.Likelihood.Parameters.write">(Likelihood.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters.write">(Model.Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters.write">(Parameters method)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF.Parameters.write">(RBF.Parameters method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="X">X</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.X">X (Fold property)</a>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.X">X (Fold property)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.X">(Repository property)</a>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.X">(GP property)</a>
+</li>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.X">(GPInterface property)</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.X">(Repository property)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.X_rotation">X_rotation (Fold property)</a>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.X_rotation">X_rotation (Fold property)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -295,24 +1530,28 @@
 <h2 id="Y">Y</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.Y">Y (Fold property)</a>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.Y">Y (Fold property)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.Y">(Repository property)</a>
+        <li><a href="pages/api/romcomma.gpr.models.GP.html#romcomma.gpr.models.GP.Y">(GP property)</a>
 </li>
-      </ul></li>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.Y_split">Y_split() (Fold method)</a>
-
-      <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.Y_split">(Repository method)</a>
+        <li><a href="pages/api/romcomma.gpr.models.GPInterface.html#romcomma.gpr.models.GPInterface.Y">(GPInterface property)</a>
+</li>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.Y">(Repository property)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_autosummary/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.Y_splits">Y_splits (Fold property)</a>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.Y_split">Y_split() (Fold method)</a>
 
       <ul>
-        <li><a href="_autosummary/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.Y_splits">(Repository property)</a>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.Y_split">(Repository method)</a>
+</li>
+      </ul></li>
+      <li><a href="pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.Y_splits">Y_splits (Fold property)</a>
+
+      <ul>
+        <li><a href="pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.Y_splits">(Repository property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -326,59 +1565,33 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
+
+          <div class="sidebar-resize-handle"></div>
+
+<h3><a href="index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pages/start.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pages/api/reference.html">API Reference</a></li>
+</ul>
+
+<div><hr class="docutils"></div>
+<ul>
+  <li class="toctree-l1"><a class="reference internal" href="#" accesskey="I">General Index</a></li>
+  <li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+</ul>
+<div id="ethical-ad-placement"></div>
         </div>
       </div>
-    
-    
-        <div class="sidebar-toggle-group no-js">
-            
-            <button class="sidebar-toggle" id="sidebar-hide" title="Hide the sidebar menu">
-                 «
-                <span class="show-for-small">hide menu</span>
-                
-            </button>
-            <button class="sidebar-toggle" id="sidebar-show" title="Show the sidebar menu">
-                
-                <span class="show-for-small">menu</span>
-                <span class="hide-for-small">sidebar</span>
-                 »
-            </button>
-        </div>
-    
       <div class="clearer"></div>
     </div>
-    <div class="relbar-bottom">
-        
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="#" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="index.html">rom-comma 1.0 documentation</a> &#187;</li>
 
-        <li class="nav-item nav-item-this"><a href="">Index</a></li> 
-      </ul>
-    </div>
-    </div>
+    <nav class="relbar">
+    </nav>
 
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2023, Robert A. Milton.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
-    </div>
-    <!-- cloud_sptheme 1.4 -->
+    <footer role="contentinfo">
+      &#169; Copyright 2023, Robert A. Milton.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
+    </footer>
   </body>
 </html>

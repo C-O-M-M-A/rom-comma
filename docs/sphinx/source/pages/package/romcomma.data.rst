@@ -1,0 +1,32 @@
+﻿romcomma.data
+=============
+
+.. automodule:: romcomma.data
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   romcomma.data.storage
+

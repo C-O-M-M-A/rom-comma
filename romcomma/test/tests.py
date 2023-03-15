@@ -35,7 +35,7 @@ if __name__ == '__main__':
     models = ['diag.i.a', 'diag.d.a']
     overwrite_existing = True
     ignore_exceptions = False
-    kinds = gsa.run.calculation.ALL_KINDS
+    kinds = gsa.do.calculation.ALL_KINDS
     is_error_calculated = True
     is_T_partial = False
     with run.Context('Test', device='GPU'):
