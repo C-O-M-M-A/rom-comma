@@ -47,7 +47,7 @@ class MOMeanFunction(MeanFunction):
         return self._functions
 
     def __call__(self, X):
-        """ Given N datapoints in X, returns an output_dim * N vector of flatten(functions(X))."""
+        """ Given N samples in X, returns an output_dim * N vector of flatten(functions(X))."""
         return tf.reshape(tf.concat([f(X) for f in self._functions], axis=0), [-1])
 
     def __init__(self, output_dim: int, mean_functions: Union[MOMeanFunction, MeanFunction, Sequence[MeanFunction]] = Zero()):

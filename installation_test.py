@@ -19,22 +19,21 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Run this module first thing, to test your installation of romcomma. """
+""" Run this module first thing, to user your installation of romcomma. """
 
 from __future__ import annotations
 
 from romcomma.base.definitions import *
-from romcomma import run, gsa, test
-
+from romcomma import gsa, user
 
 BASE_FOLDER = Path('installation_test')
 
 
 if __name__ == '__main__':
-    function_vector = test.functions.ISHIGAMI
+    function_vector = user.function.ISHIGAMI
     models = ['diag.i.a', 'diag.d.a']
     ignore_exceptions = False
-    kinds = gsa.do.calculation.ALL_KINDS
+    kinds = gsa.undertake.calculation.ALL_KINDS
     is_error_calculated = True
     with run.Context('Test', device='CPU'):
         kind_names = [kind.name.lower() for kind in kinds]
@@ -43,16 +42,16 @@ if __name__ == '__main__':
                 for noise_magnitude in (0.2,):
                     for is_noise_independent in (False,):
                         with run.TimingOneLiner(f'M={M}, N={N}, noise={noise_magnitude} \n'):
-                            noise_variance = test.sample.GaussianNoise.Variance(len(function_vector), noise_magnitude, False, False)
-                            repo = test.sample.Function(BASE_FOLDER, test.sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
+                            noise_variance = user.sample.GaussianNoise.Variance(len(function_vector), noise_magnitude, False, False)
+                            repo = user.sample.Function(BASE_FOLDER, user.sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
                             repo = repo.into_K_folds(K=1).rotate_folds(None).repo
                             run.GPR(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=False, ignore_exceptions=ignore_exceptions,
                                     optimize=True, test=True)
-                            run.Aggregate({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
+                            run.Aggregate({'user': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
                                           {repo.folder/model: {'model': model} for model in models}, ignore_exceptions).over_folders(repo.folder/'gpr', True)
-                            run.Aggregate({'variance': {}, 'log_marginal': {}}, {f'{repo.folder/model}/likelihood': {'model': model} for model in models},
+                            run.Aggregate({'variance': {}, 'log_marginal': {}}, {f'{repo.folder / model}/likelihood': {'model': model} for model in models},
                                           ignore_exceptions).over_folders((repo.folder/'gpr')/'likelihood', True)
-                            run.Aggregate({'variance': {}, 'lengthscales': {}}, {f'{repo.folder/model}/kernel': {'model': model} for model in models},
+                            run.Aggregate({'variance': {}, 'lengthscales': {}}, {f'{repo.folder / model}/kernel': {'model': model} for model in models},
                                           ignore_exceptions).over_folders((repo.folder/'gpr')/'kernel', True)
                             run.GSA('diag', repo, is_independent=None, is_isotropic=False, kinds=kinds, is_error_calculated=is_error_calculated,
                                     ignore_exceptions=ignore_exceptions, is_T_partial=False)

@@ -12,15 +12,18 @@ Contents
 ----------
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   pages/start
-   pages/package/reference
+    pages/start
+    pages/package/reference
+    glossary
 
 
 Indices and Tables
 --------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+:ref:`genindex`
+
+:ref:`modindex`
+
+:ref:`search`

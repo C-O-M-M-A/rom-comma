@@ -90,6 +90,13 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
+<nav class="crumbs">
+  <ul>
+    <li><a href="../../../index.html" aria-label="rom-comma 1.0 documentation"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M280.37 148.26L96 300.11V464a16 16 0 0 0 16 16l112.06-.29a16 16 0 0 0 15.92-16V368a16 16 0 0 1 16-16h64a16 16 0 0 1 16 16v95.64a16 16 0 0 0 16 16.05L464 480a16 16 0 0 0 16-16V300L295.67 148.26a12.19 12.19 0 0 0-15.3 0zM571.6 251.47L488 182.56V44.05a12 12 0 0 0-12-12h-56a12 12 0 0 0-12 12v72.61L318.47 43a48 48 0 0 0-61 0L4.34 251.47a12 12 0 0 0-1.6 16.9l25.5 31A12 12 0 0 0 45.15 301l235.22-193.74a12.19 12.19 0 0 1 15.3 0L530.9 301a12 12 0 0 0 16.9-1.6l25.5-31a12 12 0 0 0-1.7-16.93z"/></svg></a> &#187;</li>
+    <li><a href="../../index.html">Module code</a> &#187;</li>
+    <li><a href="">romcomma.gpf.mean_functions</a></li> 
+  </ul>
+</nav>
 <h1>Source code for romcomma.gpf.mean_functions</h1><div class="highlight"><pre>
 <span></span><span class="c1">#  BSD 3-Clause License.</span>
 <span class="c1">#</span>
@@ -120,7 +127,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">gpflow.mean_functions</span> <span class="kn">import</span> <span class="n">MeanFunction</span><span class="p">,</span> <span class="n">Zero</span>
 
-<div class="viewcode-block" id="MOMeanFunction"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction">[docs]</a><span class="k">class</span> <span class="nc">MOMeanFunction</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">):</span>
+<div class="viewcode-block" id="MOMeanFunction"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction">[docs]</a><span class="k">class</span> <span class="nc">MOMeanFunction</span><span class="p">(</span><span class="n">MeanFunction</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Mean functions for MOGPR. Basically a wrapper for a Sequence of gpflow.mean_functions.MeanFunctions, one for each output_dim.</span>
 <span class="sd">    These functions constitute the prior mean predictions f(x) in the absence of any training data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -140,10 +147,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Given N datapoints in X, returns an output_dim * N vector of flatten(functions(X)).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Given N samples in X, returns an output_dim * N vector of flatten(functions(X)).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_functions</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
 
-<div class="viewcode-block" id="MOMeanFunction.__init__"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mean_functions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MOMeanFunction</span><span class="p">,</span> <span class="n">MeanFunction</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">MeanFunction</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Zero</span><span class="p">()):</span>
+<div class="viewcode-block" id="MOMeanFunction.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.mean_functions.MOMeanFunction.html#romcomma.gpf.mean_functions.MOMeanFunction.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mean_functions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MOMeanFunction</span><span class="p">,</span> <span class="n">MeanFunction</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">MeanFunction</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Zero</span><span class="p">()):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Args:</span>
@@ -168,7 +175,7 @@
 <h3><a href="../../../index.html">Table of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../pages/start.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../pages/api/reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pages/package/reference.html">Package Reference</a></li>
 </ul>
 
 <div><hr class="docutils"></div>

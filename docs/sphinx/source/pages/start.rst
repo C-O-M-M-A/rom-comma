@@ -20,12 +20,31 @@ Simply place the ``romcomma`` package (or its parent ``rom-comma``) in a folder 
 Test the installation by running the rom-comma ``installation_test`` module, from anywhere.
 Runtime dependencies are documented in `pyproject.toml <https://github.com/C-O-M-M-A/rom-comma/blob/main/pyproject.toml>`_.
 
-Package Structure
------------------
+
+Module Hierarchy
+------------------
 The ``romcomma`` package is organized in a modular hierarchy
 
 .. toctree::
    :maxdepth: 3
 
-   package/reference
+   romcomma <package/reference>
 
+No module depends on any module below it in this table.
+We refer to items in this list as modules, even if they are technically packages.
+
+User functionality is exposed in the final module, :ref:`romcomma.user`. Any direct call to functionality outside `romcomma.user` is regarded as bespoke, if not
+ advanced.
+
+
+
+Glossary
+---------
+
+.. glossary:
+
+package
+    Python package
+
+module
+    Python package or module.

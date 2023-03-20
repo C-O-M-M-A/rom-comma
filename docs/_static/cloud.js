@@ -180,7 +180,7 @@
             var section = header.parent();
             header.addClass("html-toggle-button");
 
-            // helper to test if url hash is within this section
+            // helper to user if url hash is within this section
             function contains_hash() {
                 var hash = document.location.hash;
                 return hash && (section[0].id == hash.substr(1) ||

@@ -90,6 +90,13 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
+<nav class="crumbs">
+  <ul>
+    <li><a href="../../../index.html" aria-label="rom-comma 1.0 documentation"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M280.37 148.26L96 300.11V464a16 16 0 0 0 16 16l112.06-.29a16 16 0 0 0 15.92-16V368a16 16 0 0 1 16-16h64a16 16 0 0 1 16 16v95.64a16 16 0 0 0 16 16.05L464 480a16 16 0 0 0 16-16V300L295.67 148.26a12.19 12.19 0 0 0-15.3 0zM571.6 251.47L488 182.56V44.05a12 12 0 0 0-12-12h-56a12 12 0 0 0-12 12v72.61L318.47 43a48 48 0 0 0-61 0L4.34 251.47a12 12 0 0 0-1.6 16.9l25.5 31A12 12 0 0 0 45.15 301l235.22-193.74a12.19 12.19 0 0 1 15.3 0L530.9 301a12 12 0 0 0 16.9-1.6l25.5-31a12 12 0 0 0-1.7-16.93z"/></svg></a> &#187;</li>
+    <li><a href="../../index.html">Module code</a> &#187;</li>
+    <li><a href="">romcomma.data.storage</a></li> 
+  </ul>
+</nav>
 <h1>Source code for romcomma.data.storage</h1><div class="highlight"><pre>
 <span></span><span class="c1">#  BSD 3-Clause License.</span>
 <span class="c1"># </span>
@@ -112,9 +119,7 @@
 <span class="c1">#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
 <span class="c1">#  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
 
-<span class="sd">&quot;&quot;&quot; Contains data storage structures.</span>
-<span class="sd">----------------------------------------</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; Data structures for storage &quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
@@ -128,7 +133,7 @@
 <span class="kn">import</span> <span class="nn">json</span>
 
 
-<div class="viewcode-block" id="Frame"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame">[docs]</a><span class="k">class</span> <span class="nc">Frame</span><span class="p">:</span>
+<div class="viewcode-block" id="Frame"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame">[docs]</a><span class="k">class</span> <span class="nc">Frame</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Encapsulates a pd.DataFrame (df) backed by a source file.&quot;&quot;&quot;</span>
 
     <span class="nd">@classmethod</span>
@@ -146,7 +151,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Defines the empty Frame as that having an empty Path.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">0</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Frame.write"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Frame.write"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Write to csv, according to Frame.CSV_OPTIONS.&quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_empty</span><span class="p">,</span> <span class="s1">&#39;Cannot write when frame.is_empty.&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">path_or_buf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_csv</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="n">Frame</span><span class="o">.</span><span class="n">CSV_OPTIONS</span><span class="p">[</span><span class="s1">&#39;sep&#39;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
@@ -158,7 +163,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csv</span><span class="o">.</span><span class="n">name</span>
 
     <span class="c1"># noinspection PyDefaultArgument</span>
-<div class="viewcode-block" id="Frame.__init__"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csv</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(),</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Frame.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Frame.html#romcomma.data.storage.Frame.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csv</span><span class="p">:</span> <span class="n">PathLike</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(),</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Initialize Frame.</span>
 
 <span class="sd">        Args:</span>
@@ -180,7 +185,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="Repository"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository">[docs]</a><span class="k">class</span> <span class="nc">Repository</span><span class="p">:</span>
+<div class="viewcode-block" id="Repository"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository">[docs]</a><span class="k">class</span> <span class="nc">Repository</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; A ``repo`` object is defined as a folder containing a ``data.csv`` file and a ``meta.json`` file.</span>
 
 <span class="sd">    These files specify the global dataset to be analyzed. This dataset must be further split into Folds contained within the Repository.</span>
@@ -204,7 +209,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The output Y as an (N,L) Matrix with column headings.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;Y_heading&#39;</span><span class="p">]]</span>
 
-    <span class="k">def</span> <span class="nf">_read_meta_json</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_read_meta_json</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta_json</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
 
@@ -213,7 +218,7 @@
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">meta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span>
 
     <span class="k">def</span> <span class="nf">meta_update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -225,7 +230,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">N</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; The number of datapoints (rows of data).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; The number of samples (rows of data).&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_meta</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;N&#39;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
@@ -253,7 +258,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;has_improper_fold&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Repository.into_K_folds"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.into_K_folds">[docs]</a>    <span class="k">def</span> <span class="nf">into_K_folds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">shuffle_before_folding</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">normalization</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="Repository.into_K_folds"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.into_K_folds">[docs]</a>    <span class="k">def</span> <span class="nf">into_K_folds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">shuffle_before_folding</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">normalization</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Fold this repo into K Folds, indexed by range(K).</span>
 
 <span class="sd">        Args:</span>
@@ -296,7 +301,7 @@
     <span class="k">def</span> <span class="nf">fold_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">/</span> <span class="sa">f</span><span class="s1">&#39;fold.</span><span class="si">{</span><span class="n">k</span><span class="si">:</span><span class="s1">d</span><span class="si">}</span><span class="s1">&#39;</span>
 
-<div class="viewcode-block" id="Repository.Y_split"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.Y_split">[docs]</a>    <span class="k">def</span> <span class="nf">Y_split</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Repository.Y_split"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.Y_split">[docs]</a>    <span class="k">def</span> <span class="nf">Y_split</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Split this Repository into L Y_splits. Each Y.l is just a Repository containing the lth output only.</span>
 
 <span class="sd">        Raises:</span>
@@ -332,7 +337,7 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">.</span><span class="n">name</span>
 
-<div class="viewcode-block" id="Repository.__init__"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Repository.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_meta_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">/</span> <span class="s1">&#39;meta.json&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_X_rotation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">/</span> <span class="s1">&#39;X_rotation.csv&#39;</span>
@@ -352,7 +357,7 @@
     <span class="k">def</span> <span class="nf">META</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;csv_kwargs&#39;</span><span class="p">:</span> <span class="n">Frame</span><span class="o">.</span><span class="n">CSV_OPTIONS</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;K&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;shuffle before folding&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
 
-<div class="viewcode-block" id="Repository.from_df"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.from_df">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Repository.from_df"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.from_df">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_df</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">META</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Repository</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Create a Repository from a pd.DataFrame.</span>
 
@@ -373,7 +378,7 @@
     <span class="k">def</span> <span class="nf">CSV_OPTIONS</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;skiprows&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;index_col&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
 
-<div class="viewcode-block" id="Repository.from_csv"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.from_csv">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Repository.from_csv"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Repository.html#romcomma.data.storage.Repository.from_csv">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_csv</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">csv</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Repository</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Create a Repository from a csv file.</span>
 
@@ -393,9 +398,9 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_df</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">df</span><span class="p">,</span> <span class="n">meta</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="Fold"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold">[docs]</a><span class="k">class</span> <span class="nc">Fold</span><span class="p">(</span><span class="n">Repository</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; A Fold is defined as a folder containing a ``data.csv``, a ``meta.json`` file and a ``test.csv`` file.</span>
-<span class="sd">    A Fold is a Repository equipped with a test_data pd.DataFrame backed by ``test.csv``.</span>
+<div class="viewcode-block" id="Fold"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold">[docs]</a><span class="k">class</span> <span class="nc">Fold</span><span class="p">(</span><span class="n">Repository</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; A Fold is defined as a folder containing a ``data.csv``, a ``meta.json`` file and a ``user.csv`` file.</span>
+<span class="sd">    A Fold is a Repository equipped with a test_data pd.DataFrame backed by ``user.csv``.</span>
 
 <span class="sd">    Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -445,7 +450,7 @@
         <span class="n">old_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X_rotation</span>
         <span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_X_rotation</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">old_value</span><span class="p">,</span> <span class="n">value</span><span class="p">)))</span>
 
-<div class="viewcode-block" id="Fold.__init__"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">Repository</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Fold.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">Repository</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Initialize Fold by reading existing files. Creation is handled by the classmethod Fold.from_dfs.</span>
 
 <span class="sd">        Args:</span>
@@ -455,12 +460,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">init_mode</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;init_mode&#39;</span><span class="p">,</span> <span class="n">Repository</span><span class="o">.</span><span class="n">_InitMode</span><span class="o">.</span><span class="n">READ</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">fold_folder</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">init_mode</span><span class="o">=</span><span class="n">init_mode</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_test_csv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">folder</span> <span class="o">/</span> <span class="s1">&#39;test.csv&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_test_csv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">folder</span> <span class="o">/</span> <span class="s1">&#39;user.csv&#39;</span>
         <span class="k">if</span> <span class="n">init_mode</span> <span class="o">==</span> <span class="n">Repository</span><span class="o">.</span><span class="n">_InitMode</span><span class="o">.</span><span class="n">READ</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_test_data</span> <span class="o">=</span> <span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_test_csv</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_normalization</span> <span class="o">=</span> <span class="n">Normalization</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Fold.from_dfs"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.from_dfs">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Fold.from_dfs"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Fold.html#romcomma.data.storage.Fold.from_dfs">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dfs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parent</span><span class="p">:</span> <span class="n">Repository</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">test_data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
                  <span class="n">normalization</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PathLike</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Fold</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Create a Fold from a pd.DataFrame.</span>
@@ -488,7 +493,7 @@
         <span class="k">return</span> <span class="n">fold</span></div></div>
 
 
-<div class="viewcode-block" id="Normalization"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization">[docs]</a><span class="k">class</span> <span class="nc">Normalization</span><span class="p">:</span>
+<div class="viewcode-block" id="Normalization"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization">[docs]</a><span class="k">class</span> <span class="nc">Normalization</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Encapsulates the normalization of data.</span>
 <span class="sd">        X data is assumed to follow a Uniform distribution, which is normalized to U[0,1] , then inverse probability transformed to N[0,1].</span>
 <span class="sd">        Y data is normalized to zero mean and unit variance.</span>
@@ -513,7 +518,7 @@
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="s1">&#39;min&#39;</span><span class="p">),</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_fold</span><span class="o">.</span><span class="n">M</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="s1">&#39;rng&#39;</span><span class="p">),</span> <span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">_fold</span><span class="o">.</span><span class="n">M</span><span class="p">],</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="s1">&#39;mean&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fold</span><span class="o">.</span><span class="n">M</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_loc</span><span class="p">(</span><span class="s1">&#39;std&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fold</span><span class="o">.</span><span class="n">M</span><span class="p">:])</span>
 
-<div class="viewcode-block" id="Normalization.apply_to"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.apply_to">[docs]</a>    <span class="k">def</span> <span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<div class="viewcode-block" id="Normalization.apply_to"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.apply_to">[docs]</a>    <span class="k">def</span> <span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Apply this normalization.</span>
 
 <span class="sd">        Args:</span>
@@ -529,7 +534,7 @@
         <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">Y_mean</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">Y_std</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Normalization.undo_from"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.undo_from">[docs]</a>    <span class="k">def</span> <span class="nf">undo_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<div class="viewcode-block" id="Normalization.undo_from"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.undo_from">[docs]</a>    <span class="k">def</span> <span class="nf">undo_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Undo this normalization.</span>
 
 <span class="sd">        Args:</span>
@@ -551,7 +556,7 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="o">.</span><span class="n">name</span>
 
-<div class="viewcode-block" id="Normalization.__init__"><a class="viewcode-back" href="../../../pages/api/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fold</span><span class="p">:</span> <span class="n">Fold</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Normalization.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.data.storage.Normalization.html#romcomma.data.storage.Normalization.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fold</span><span class="p">:</span> <span class="n">Fold</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Initialize this Normalization. If the fold has already been Normalized, that Normalization is returned.</span>
 
 <span class="sd">        Args:</span>
@@ -589,7 +594,7 @@
 <h3><a href="../../../index.html">Table of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../pages/start.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../pages/api/reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pages/package/reference.html">Package Reference</a></li>
 </ul>
 
 <div><hr class="docutils"></div>

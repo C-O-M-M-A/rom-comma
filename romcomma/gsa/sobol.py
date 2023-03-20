@@ -158,7 +158,7 @@ class ClosedIndex(gf.Module):
         self.V |= {2: tf.einsum('l, i -> li', V, V)}
         self.S = self.V[0]/self.V[2]
 
-    def _Lambda2(self) -> dict[int, Tuple[TF.Tensor]]:
+    def _Lambda2(self) -> Dict[int, Tuple[TF.Tensor]]:
         """ Calculate and cache the required powers of <Lambda^2 + J>.
 
         Returns: {1: <Lambda^2 + J>, -1: <Lambda^2 + J>^(-1)} for J in {0,1,2}.

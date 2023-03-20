@@ -1,0 +1,737 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>romcomma.base.definitions.TF &#8212; rom-comma 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/insipid.css" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <script defer src="../../_static/insipid.js"></script>
+    <script defer src="../../_static/insipid-sidebar.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="romcomma.data" href="romcomma.data.html" />
+    <link rel="prev" title="romcomma.base.definitions.NP" href="romcomma.base.definitions.NP.html" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+  </head><body>
+    <script type="text/javascript">
+        document.body.classList.add('js');
+    </script>
+    <input type="checkbox" id="sidebar-checkbox" style="display: none;">
+    <label id="overlay" for="sidebar-checkbox"></label>
+    <div class="sidebar-resize-handle"></div>
+    <script type="text/javascript">
+        try {
+            let sidebar = localStorage.getItem('sphinx-sidebar');
+            const sidebar_width = localStorage.getItem('sphinx-sidebar-width');
+            if (sidebar_width) {
+                document.documentElement.style.setProperty('--sidebar-width', sidebar_width);
+            }
+            // show sidebar on wide screen
+            if (!sidebar && window.matchMedia('(min-width: 100rem)').matches) {
+                sidebar = 'visible';
+                // NB: We don't store the value in localStorage!
+            }
+            if (sidebar === 'visible') {
+                document.getElementById('sidebar-checkbox').checked = true;
+            }
+        } catch(e) {
+            console.info(e);
+        }
+    </script>
+    <header id="topbar-placeholder">
+      <div id="topbar">
+        <div id="titlebar">
+          <div class="buttons">
+            <label for="sidebar-checkbox" id="sidebar-button" role="button" tabindex="0" aria-controls="sphinxsidebar" accesskey="M">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
+            </label>
+            <button id="search-button" type="button" title="Search" aria-label="Search" aria-expanded="false" aria-controls="search-form" accesskey="S">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+            </button>
+          </div>
+          <div class="title">
+            <a class="parent" href="romcomma.base.definitions.html" accesskey="U">romcomma.base.definitions</a>
+            <a class="top" href="#">romcomma.base.definitions.TF</a>
+          </div>
+          <div class="buttons">
+            <button id="fullscreen-button" type="button" aria-hidden="true">
+              <span class="enable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M212.686 315.314L120 408l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C10.697 480 0 469.255 0 456V344c0-21.382 25.803-32.09 40.922-16.971L72 360l92.686-92.686c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.249 6.248 6.249 16.378 0 22.627zm22.628-118.628L328 104l-32.922-31.029C279.958 57.851 290.666 32 312.048 32h112C437.303 32 448 42.745 448 56v112c0 21.382-25.803 32.09-40.922 16.971L376 152l-92.686 92.686c-6.248 6.248-16.379 6.248-22.627 0l-25.373-25.373c-6.249-6.248-6.249-16.378 0-22.627z"/></svg>
+              </span>
+              <span class="disable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M4.686 427.314L104 328l-32.922-31.029C55.958 281.851 66.666 256 88.048 256h112C213.303 256 224 266.745 224 280v112c0 21.382-25.803 32.09-40.922 16.971L152 376l-99.314 99.314c-6.248 6.248-16.379 6.248-22.627 0L4.686 449.941c-6.248-6.248-6.248-16.379 0-22.627zM443.314 84.686L344 184l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C234.697 256 224 245.255 224 232V120c0-21.382 25.803-32.09 40.922-16.971L296 136l99.314-99.314c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.248 6.248 6.248 16.379 0 22.627z"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+        <div id="searchbox" role="search">
+          <form id="search-form" class="search" style="display: none" action="../../search.html" method="get">
+            <input type="search" name="q" placeholder="Search ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button>Go</button>
+          </form>
+        </div>
+      </div>
+    </header>
+    <nav>
+      <a href="romcomma.base.definitions.NP.html" class="nav-icon previous" title="previous:&#13;romcomma.base.definitions.NP" aria-label="Previous topic" accesskey="P" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
+      </a>
+      <a href="romcomma.data.html" class="nav-icon next" title="next:&#13;romcomma.data" aria-label="Next topic" accesskey="N" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg>
+      </a>
+    </nav>
+
+    <nav class="relbar">
+      <a class="previous" href="romcomma.base.definitions.NP.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            romcomma.base.definitions.NP
+          </span>
+        </div>
+      </a>
+      <a class="next" href="romcomma.data.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            romcomma.data
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<section id="romcomma-base-definitions-tf">
+<h1>romcomma.base.definitions.TF<a class="headerlink" href="#romcomma-base-definitions-tf" title="Permalink to this heading">§</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TF</span></span><a class="reference internal" href="../../_modules/romcomma/base/definitions.html#TF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.definitions.TF" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Extended tensorflow types, and constants.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.definitions.TF.__init__" title="Permalink to this definition">§</a></dt>
+<dd></dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.base.definitions.TF.__init__" title="romcomma.base.definitions.TF.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArrayLike</span></code></p></td>
+<td><p>alias of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]], <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]]]]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CovectorLike</span></code></p></td>
+<td><p>alias of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MatrixLike</span></code></p></td>
+<td><p>alias of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">NaN</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TensorLike</span></code></p></td>
+<td><p>alias of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]], <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]]]]]]</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">VectorLike</span></code></p></td>
+<td><p>alias of <code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]], <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a>]</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">VectorOrMatrix</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Array">
+<span class="sig-name descname"><span class="pre">Array</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Array" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NativeObject</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></p>
+<p>A <cite>tf.Tensor</cite> represents a multidimensional array of elements.</p>
+<p>All elements are of a single known data type.</p>
+<p>When writing a TensorFlow program, the main object that is
+manipulated and passed around is the <cite>tf.Tensor</cite>.</p>
+<p>A <cite>tf.Tensor</cite> has the following properties:</p>
+<ul class="simple">
+<li><p>a single data type (float32, int32, or string, for example)</p></li>
+<li><p>a shape</p></li>
+</ul>
+<p>TensorFlow supports eager execution and graph execution.  In eager
+execution, operations are evaluated immediately.  In graph
+execution, a computational graph is constructed for later
+evaluation.</p>
+<p>TensorFlow defaults to eager execution.  In the example below, the
+matrix multiplication results are calculated immediately.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Compute some values using a Tensor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">tf.Tensor(</span>
+<span class="go">[[1. 3.]</span>
+<span class="go"> [3. 7.]], shape=(2, 2), dtype=float32)</span>
+</pre></div>
+</div>
+<p>Note that during eager execution, you may discover your <cite>Tensors</cite> are actually
+of type <cite>EagerTensor</cite>.  This is an internal detail, but it does give you
+access to a useful function, <cite>numpy</cite>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">&lt;class &#39;...ops.EagerTensor&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+<span class="go">  [[1. 3.]</span>
+<span class="go">   [3. 7.]]</span>
+</pre></div>
+</div>
+<p>In TensorFlow, <a href="#id1"><span class="problematic" id="id2">`</span></a>tf.function`s are a common way to define graph execution.</p>
+<p>A Tensor’s shape (that is, the rank of the Tensor and the size of
+each dimension) may not always be fully known.  In <cite>tf.function</cite>
+definitions, the shape may only be partially known.</p>
+<p>Most operations produce tensors of fully-known shapes if the shapes of their
+inputs are also fully known, but in some cases it’s only possible to find the
+shape of a tensor at execution time.</p>
+<p>A number of specialized tensors are available: see <cite>tf.Variable</cite>,
+<cite>tf.constant</cite>, <cite>tf.placeholder</cite>, <cite>tf.sparse.SparseTensor</cite>, and
+<cite>tf.RaggedTensor</cite>.</p>
+<p>Caution: when constructing a tensor from a numpy array or pandas dataframe
+the underlying buffer may be re-used:</p>
+<p><code class="docutils literal notranslate"><span class="pre">`python</span>
+<span class="pre">a</span> <span class="pre">=</span> <span class="pre">np.array([1,</span> <span class="pre">2,</span> <span class="pre">3])</span>
+<span class="pre">b</span> <span class="pre">=</span> <span class="pre">tf.constant(a)</span>
+<span class="pre">a[0]</span> <span class="pre">=</span> <span class="pre">4</span>
+<span class="pre">print(b)</span>&#160; <span class="pre">#</span> <span class="pre">tf.Tensor([4</span> <span class="pre">2</span> <span class="pre">3],</span> <span class="pre">shape=(3,),</span> <span class="pre">dtype=int64)</span>
+<span class="pre">`</span></code></p>
+<p>Note: this is an implementation detail that is subject to change and users
+should not rely on this behaviour.</p>
+<p>For more on Tensors, see the [guide](<a class="reference external" href="https://tensorflow.org/guide/tensor">https://tensorflow.org/guide/tensor</a>).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.consumers">
+<span class="sig-name descname"><span class="pre">consumers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.consumers" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a list of <a href="#id3"><span class="problematic" id="id4">`</span></a>Operation`s that consume this tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of <a href="#id5"><span class="problematic" id="id6">`</span></a>Operation`s.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.device">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.device" title="Permalink to this definition">§</a></dt>
+<dd><p>The name of the device on which this tensor will be produced, or None.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.dtype">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dtype</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.dtype" title="Permalink to this definition">§</a></dt>
+<dd><p>The <cite>DType</cite> of elements in this tensor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.eval">
+<span class="sig-name descname"><span class="pre">eval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feed_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.eval" title="Permalink to this definition">§</a></dt>
+<dd><p>Evaluates this tensor in a <cite>Session</cite>.</p>
+<p>Note: If you are not using <cite>compat.v1</cite> libraries, you should not need this,
+(or <cite>feed_dict</cite> or <cite>Session</cite>).  In eager execution (or within <cite>tf.function</cite>)
+you do not need to call <cite>eval</cite>.</p>
+<p>Calling this method will execute all preceding operations that
+produce the inputs needed for the operation that produces this
+tensor.</p>
+<p><em>N.B.</em> Before invoking <cite>Tensor.eval()</cite>, its graph must have been
+launched in a session, and either a default session must be
+available, or <cite>session</cite> must be specified explicitly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feed_dict</strong> – A dictionary that maps <cite>Tensor</cite> objects to feed values. See
+<cite>tf.Session.run</cite> for a description of the valid feed values.</p></li>
+<li><p><strong>session</strong> – (Optional.) The <cite>Session</cite> to be used to evaluate this tensor. If
+none, the default session will be used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy array corresponding to the value of this tensor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.experimental_ref">
+<span class="sig-name descname"><span class="pre">experimental_ref</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.experimental_ref" title="Permalink to this definition">§</a></dt>
+<dd><p>DEPRECATED FUNCTION</p>
+<p>Deprecated: THIS FUNCTION IS DEPRECATED. It will be removed in a future version.
+Instructions for updating:
+Use ref() instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.get_shape">
+<span class="sig-name descname"><span class="pre">get_shape</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.get_shape" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a <cite>tf.TensorShape</cite> that represents the shape of this tensor.</p>
+<p>In eager execution the shape is always fully-known.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(2, 3)</span>
+</pre></div>
+</div>
+<p><cite>tf.Tensor.get_shape()</cite> is equivalent to <cite>tf.Tensor.shape</cite>.</p>
+<p>When executing in a <cite>tf.function</cite> or building a model using
+<cite>tf.keras.Input</cite>, <cite>Tensor.shape</cite> may return a partial shape (including
+<cite>None</cite> for unknown dimensions). See <cite>tf.TensorShape</cite> for more details.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">inputs</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Unknown batch size</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(None, 10)</span>
+</pre></div>
+</div>
+<p>The shape is computed using shape inference functions that are
+registered for each <cite>tf.Operation</cite>.</p>
+<p>The returned <cite>tf.TensorShape</cite> is determined at <em>build</em> time, without
+executing the underlying kernel. It is not a <cite>tf.Tensor</cite>. If you need a
+shape <em>tensor</em>, either convert the <cite>tf.TensorShape</cite> to a <cite>tf.constant</cite>, or
+use the <cite>tf.shape(tensor)</cite> function, which returns the tensor’s shape at
+<em>execution</em> time.</p>
+<p>This is useful for debugging and providing early errors. For
+example, when tracing a <cite>tf.function</cite>, no ops are being executed, shapes
+may be unknown (See the [Concrete Functions
+Guide](<a class="reference external" href="https://www.tensorflow.org/guide/concrete_function">https://www.tensorflow.org/guide/concrete_function</a>) for details).</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">my_matmul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">result</span> <span class="o">=</span> <span class="n">a</span><span class="nd">@b</span>
+<span class="gp">... </span>  <span class="c1"># the `print` executes during tracing.</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Result shape: &quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="k">return</span> <span class="n">result</span>
+</pre></div>
+</div>
+<p>The shape inference functions propagate shapes to the extent possible:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">my_matmul</span><span class="o">.</span><span class="n">get_concrete_function</span><span class="p">(</span>
+<span class="gp">... </span>  <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span>
+<span class="gp">... </span>  <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">]))</span>
+<span class="go">Result shape: (None, 5)</span>
+</pre></div>
+</div>
+<p>Tracing may fail if a shape missmatch can be detected:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">my_matmul</span><span class="o">.</span><span class="n">get_concrete_function</span><span class="p">(</span>
+<span class="gp">... </span>  <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span>
+<span class="gp">... </span>  <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">]))</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">Dimensions must be equal, but are 3 and 4 for &#39;matmul&#39; (op:</span>
+<span class="go">&#39;MatMul&#39;) with input shapes: [?,3], [4,5].</span>
+</pre></div>
+</div>
+<p>In some cases, the inferred shape may have unknown dimensions. If
+the caller has additional information about the values of these
+dimensions, <cite>tf.ensure_shape</cite> or <cite>Tensor.set_shape()</cite> can be used to augment
+the inferred shape.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">my_fun</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">a</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ensure_shape</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="gp">... </span>  <span class="c1"># the `print` executes during tracing.</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Result shape: &quot;</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="k">return</span> <span class="n">a</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">my_fun</span><span class="o">.</span><span class="n">get_concrete_function</span><span class="p">(</span>
+<span class="gp">... </span>  <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]))</span>
+<span class="go">Result shape: (5, 5)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <cite>tf.TensorShape</cite> representing the shape of this tensor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.graph">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">graph</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.graph" title="Permalink to this definition">§</a></dt>
+<dd><p>The <cite>Graph</cite> that contains this tensor.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.name" title="Permalink to this definition">§</a></dt>
+<dd><p>The string name of this tensor.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.op">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">op</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.op" title="Permalink to this definition">§</a></dt>
+<dd><p>The <cite>Operation</cite> that produces this tensor as an output.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.ref">
+<span class="sig-name descname"><span class="pre">ref</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.ref" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a hashable reference object to this Tensor.</p>
+<p>The primary use case for this API is to put tensors in a set/dictionary.
+We can’t put tensors in a set/dictionary as <cite>tensor.__hash__()</cite> is no longer
+available starting Tensorflow 2.0.</p>
+<p>The following will raise an exception starting 2.0</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tensor_set</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">}</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">  </span><span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">Tensor is unhashable. Instead, use tensor.ref() as the key.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tensor_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="s1">&#39;five&#39;</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="s1">&#39;ten&#39;</span><span class="p">}</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w">  </span><span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">Tensor is unhashable. Instead, use tensor.ref() as the key.</span>
+</pre></div>
+</div>
+<p>Instead, we can use <cite>tensor.ref()</cite>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tensor_set</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="n">ref</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">ref</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">ref</span><span class="p">()}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">ref</span><span class="p">()</span> <span class="ow">in</span> <span class="n">tensor_set</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tensor_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">x</span><span class="o">.</span><span class="n">ref</span><span class="p">():</span> <span class="s1">&#39;five&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">ref</span><span class="p">():</span> <span class="s1">&#39;ten&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">.</span><span class="n">ref</span><span class="p">():</span> <span class="s1">&#39;ten&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tensor_dict</span><span class="p">[</span><span class="n">y</span><span class="o">.</span><span class="n">ref</span><span class="p">()]</span>
+<span class="go">&#39;ten&#39;</span>
+</pre></div>
+</div>
+<p>Also, the reference object provides <cite>.deref()</cite> function that returns the
+original Tensor.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">ref</span><span class="p">()</span><span class="o">.</span><span class="n">deref</span><span class="p">()</span>
+<span class="go">&lt;tf.Tensor: shape=(), dtype=int32, numpy=5&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.set_shape">
+<span class="sig-name descname"><span class="pre">set_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.set_shape" title="Permalink to this definition">§</a></dt>
+<dd><p>Updates the shape of this tensor.</p>
+<p>Note: It is recommended to use <cite>tf.ensure_shape</cite> instead of
+<cite>Tensor.set_shape</cite>, because <cite>tf.ensure_shape</cite> provides better checking for
+programming errors and can create guarantees for compiler
+optimization.</p>
+<p>With eager execution this operates as a shape assertion.
+Here the shapes match:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Passing a <cite>None</cite> in the new shape allows any value for that axis:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="kc">None</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>An error is raised if an incompatible shape is passed.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">Tensor&#39;s shape (1, 3) is not compatible with supplied</span>
+<span class="go">shape [1, 5]</span>
+</pre></div>
+</div>
+<p>When executing in a <cite>tf.function</cite>, or building a model using
+<cite>tf.keras.Input</cite>, <cite>Tensor.set_shape</cite> will <em>merge</em> the given <cite>shape</cite> with
+the current shape of this tensor, and set the tensor’s shape to the
+merged value (see <cite>tf.TensorShape.merge_with</cite> for details):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(None, None, None, 3)</span>
+</pre></div>
+</div>
+<p>Dimensions set to <cite>None</cite> are not updated:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(None, 224, 224, 3)</span>
+</pre></div>
+</div>
+<p>The main use case for this is to provide additional shape information
+that cannot be inferred from the graph alone.</p>
+<p>For example if you know all the images in a dataset have shape [28,28,3] you
+can set it with <cite>tf.set_shape</cite>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">load_image</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">raw</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="n">image</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">decode_png</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">channels</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="c1"># the `print` executes during tracing.</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initial shape: &quot;</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="n">image</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final shape: &quot;</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="k">return</span> <span class="n">image</span>
+</pre></div>
+</div>
+<p>Trace the function, see the [Concrete Functions
+Guide](<a class="reference external" href="https://www.tensorflow.org/guide/concrete_function">https://www.tensorflow.org/guide/concrete_function</a>) for details.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cf</span> <span class="o">=</span> <span class="n">load_image</span><span class="o">.</span><span class="n">get_concrete_function</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">string</span><span class="p">))</span>
+<span class="go">Initial shape:  (None, None, 3)</span>
+<span class="go">Final shape: (28, 28, 3)</span>
+</pre></div>
+</div>
+<p>Similarly the <cite>tf.io.parse_tensor</cite> function could return a tensor with
+any shape, even the <cite>tf.rank</cite> is unknown. If you know that all your
+serialized tensors will be 2d, set it with <cite>set_shape</cite>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">my_parse</span><span class="p">(</span><span class="n">string_tensor</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="n">result</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">parse_tensor</span><span class="p">(</span><span class="n">string_tensor</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="c1"># the `print` executes during tracing.</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initial shape: &quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="n">result</span><span class="o">.</span><span class="n">set_shape</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final shape: &quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="gp">... </span>  <span class="k">return</span> <span class="n">result</span>
+</pre></div>
+</div>
+<p>Trace the function</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">concrete_parse</span> <span class="o">=</span> <span class="n">my_parse</span><span class="o">.</span><span class="n">get_concrete_function</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">tf</span><span class="o">.</span><span class="n">TensorSpec</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">string</span><span class="p">))</span>
+<span class="go">Initial shape:  &lt;unknown&gt;</span>
+<span class="go">Final shape:  (None, None)</span>
+</pre></div>
+</div>
+<p>Make sure it works:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">serialized</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">serialize_tensor</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">serialized</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+<span class="go">&lt;dtype: &#39;string&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">serialized</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span> <span class="o">=</span> <span class="n">concrete_parse</span><span class="p">(</span><span class="n">serialized</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(5, 3)</span>
+</pre></div>
+</div>
+<p>Caution: <cite>set_shape</cite> ensures that the applied shape is compatible with
+the existing shape, but it does not check at runtime. Setting
+incorrect shapes can result in inconsistencies between the
+statically-known graph and the runtime value of tensors. For runtime
+validation of the shape, use <cite>tf.ensure_shape</cite> instead. It also modifies
+the <cite>shape</cite> of the tensor.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Serialize a rank-3 tensor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">serialized</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">serialize_tensor</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The function still runs, even though it `set_shape([None,None])`</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t2</span> <span class="o">=</span> <span class="n">concrete_parse</span><span class="p">(</span><span class="n">serialized</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">t2</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="go">(5, 5, 5)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>shape</strong> – A <cite>TensorShape</cite> representing the shape of this tensor, a
+<cite>TensorShapeProto</cite>, a list, a tuple, or None.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>shape</cite> is not compatible with the current shape of
+    this tensor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.shape">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.shape" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a <cite>tf.TensorShape</cite> that represents the shape of this tensor.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">TensorShape([5])</span>
+</pre></div>
+</div>
+<p><cite>tf.Tensor.shape</cite> is equivalent to <cite>tf.Tensor.get_shape()</cite>.</p>
+<p>In a <cite>tf.function</cite> or when building a model using
+<cite>tf.keras.Input</cite>, they return the build-time shape of the
+tensor, which may be partially unknown.</p>
+<p>A <cite>tf.TensorShape</cite> is not a tensor. Use <cite>tf.shape(t)</cite> to get a tensor
+containing the shape, calculated at runtime.</p>
+<p>See <cite>tf.Tensor.get_shape()</cite>, and <cite>tf.TensorShape</cite> for details and examples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor.value_index">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value_index</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor.value_index" title="Permalink to this definition">§</a></dt>
+<dd><p>The index of this tensor in the outputs of its <cite>Operation</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor1">
+<span class="sig-name descname"><span class="pre">Tensor1</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor1" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor2">
+<span class="sig-name descname"><span class="pre">Tensor2</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor2" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Vector">
+<span class="sig-name descname"><span class="pre">Vector</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Vector" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Covector">
+<span class="sig-name descname"><span class="pre">Covector</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Covector" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Matrix">
+<span class="sig-name descname"><span class="pre">Matrix</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Matrix" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor3">
+<span class="sig-name descname"><span class="pre">Tensor3</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor3" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor4">
+<span class="sig-name descname"><span class="pre">Tensor4</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor4" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor5">
+<span class="sig-name descname"><span class="pre">Tensor5</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor5" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor6">
+<span class="sig-name descname"><span class="pre">Tensor6</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor6" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor7">
+<span class="sig-name descname"><span class="pre">Tensor7</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor7" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Tensor8">
+<span class="sig-name descname"><span class="pre">Tensor8</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Tensor8" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.Slice">
+<span class="sig-name descname"><span class="pre">Slice</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.Slice" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.base.definitions.TF.PairOfInts">
+<span class="sig-name descname"><span class="pre">PairOfInts</span></span><a class="headerlink" href="#romcomma.base.definitions.TF.PairOfInts" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <a class="reference internal" href="#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+
+          <div class="sidebar-resize-handle"></div>
+
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../start.html">Getting Started</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../start.html#installation">Installation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../start.html#module-hierarchy">Module Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../start.html#glossary">Glossary</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="reference.html">Module Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="romcomma.base.html">romcomma.base</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.data.html">romcomma.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.gpf.html">romcomma.gpf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.gpr.html">romcomma.gpr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.gsa.html">romcomma.gsa</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.rom.html">romcomma.rom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.user.html">romcomma.user</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+</ul>
+
+<div><hr class="docutils"></div>
+<ul>
+  <li class="toctree-l1"><a class="reference internal" href="../../genindex.html" accesskey="I">General Index</a></li>
+  <li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Python Module Index</a></li>
+</ul>
+<div id="ethical-ad-placement"></div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+    <nav class="relbar">
+      <a class="previous" href="romcomma.base.definitions.NP.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            romcomma.base.definitions.NP
+          </span>
+        </div>
+      </a>
+      <a class="next" href="romcomma.data.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            romcomma.data
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>
+
+    <footer role="contentinfo">
+      &#169; Copyright 2023, Robert A. Milton.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
+<a class="reference internal" href="../../_sources/pages/package/romcomma.base.definitions.TF.rst.txt" rel="nofollow">Show Source</a>.
+    </footer>
+  </body>
+</html>

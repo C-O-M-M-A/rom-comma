@@ -19,9 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains data storage structures.
-----------------------------------------
-"""
+""" Data structures for storage """
 
 from __future__ import annotations
 
@@ -111,7 +109,7 @@ class Repository:
         """ The output Y as an (N,L) Matrix with column headings."""
         return self._data.df[self._meta['data']['Y_heading']]
 
-    def _read_meta_json(self) -> dict:
+    def _read_meta_json(self) -> Dict[str, Any]:
         with open(self._meta_json, mode='r') as file:
             return json.load(file)
 
@@ -120,7 +118,7 @@ class Repository:
             json.dump(self._meta, file, indent=8)
 
     @property
-    def meta(self) -> dict:
+    def meta(self) -> Dict[str, Any]:
         return self._meta
 
     def meta_update(self):
@@ -132,7 +130,7 @@ class Repository:
 
     @property
     def N(self) -> int:
-        """ The number of datapoints (rows of data)."""
+        """ The number of samples (rows of data)."""
         return self._meta['data']['N']
 
     @property
@@ -301,8 +299,8 @@ class Repository:
 
 
 class Fold(Repository):
-    """ A Fold is defined as a folder containing a ``data.csv``, a ``meta.json`` file and a ``test.csv`` file.
-    A Fold is a Repository equipped with a test_data pd.DataFrame backed by ``test.csv``.
+    """ A Fold is defined as a folder containing a ``data.csv``, a ``meta.json`` file and a ``user.csv`` file.
+    A Fold is a Repository equipped with a test_data pd.DataFrame backed by ``user.csv``.
 
     Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
     """
@@ -362,7 +360,7 @@ class Fold(Repository):
         """
         init_mode = kwargs.get('init_mode', Repository._InitMode.READ)
         super().__init__(parent.fold_folder(k), init_mode=init_mode)
-        self._test_csv = self.folder / 'test.csv'
+        self._test_csv = self.folder / 'user.csv'
         if init_mode == Repository._InitMode.READ:
             self._test_data = Frame(self._test_csv)
             self._normalization = Normalization(self)

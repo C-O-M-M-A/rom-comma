@@ -122,7 +122,7 @@ class GPInterface(Model):
 
     @property
     def test_csv(self) -> Path:
-        return self._folder / "test.csv"
+        return self._folder / "user.csv"
 
     @property
     def test_summary_csv(self) -> Path:
@@ -197,7 +197,7 @@ class GPInterface(Model):
         """
 
     def test(self) -> Frame:
-        """ Tests the GP on the test data in self._fold.test_data. Test results comprise three values for each output at each datapoint:
+        """ Tests the GP on the user data in self._fold.test_data. Test results comprise three values for each output at each sample:
         The mean prediction, the std error of prediction and the Z score of prediction (i.e. error of prediction scaled by std error of prediction).
 
         Returns: The test_data results as a Frame backed by GP.test_result_csv.

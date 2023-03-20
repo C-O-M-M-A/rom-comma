@@ -90,6 +90,13 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
+<nav class="crumbs">
+  <ul>
+    <li><a href="../../../index.html" aria-label="rom-comma 1.0 documentation"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M280.37 148.26L96 300.11V464a16 16 0 0 0 16 16l112.06-.29a16 16 0 0 0 15.92-16V368a16 16 0 0 1 16-16h64a16 16 0 0 1 16 16v95.64a16 16 0 0 0 16 16.05L464 480a16 16 0 0 0 16-16V300L295.67 148.26a12.19 12.19 0 0 0-15.3 0zM571.6 251.47L488 182.56V44.05a12 12 0 0 0-12-12h-56a12 12 0 0 0-12 12v72.61L318.47 43a48 48 0 0 0-61 0L4.34 251.47a12 12 0 0 0-1.6 16.9l25.5 31A12 12 0 0 0 45.15 301l235.22-193.74a12.19 12.19 0 0 1 15.3 0L530.9 301a12 12 0 0 0 16.9-1.6l25.5-31a12 12 0 0 0-1.7-16.93z"/></svg></a> &#187;</li>
+    <li><a href="../../index.html">Module code</a> &#187;</li>
+    <li><a href="">romcomma.gpf.models</a></li> 
+  </ul>
+</nav>
 <h1>Source code for romcomma.gpf.models</h1><div class="highlight"><pre>
 <span></span><span class="c1">#  BSD 3-Clause License.</span>
 <span class="c1"># </span>
@@ -123,7 +130,7 @@
 <span class="kn">from</span> <span class="nn">gpflow.conditionals</span> <span class="kn">import</span> <span class="n">base_conditional</span>
 <span class="kn">import</span> <span class="nn">romcomma.gpf</span> <span class="k">as</span> <span class="nn">mf</span>
 
-<div class="viewcode-block" id="MOGPR"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR">[docs]</a><span class="k">class</span> <span class="nc">MOGPR</span><span class="p">(</span><span class="n">GPModel</span><span class="p">,</span> <span class="n">InternalDataTrainingLossMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="MOGPR"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR">[docs]</a><span class="k">class</span> <span class="nc">MOGPR</span><span class="p">(</span><span class="n">GPModel</span><span class="p">,</span> <span class="n">InternalDataTrainingLossMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Gaussian Process Regression.</span>
 
@@ -160,10 +167,10 @@
     <span class="k">def</span> <span class="nf">KXX</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_X</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_X</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">lengthscales</span><span class="o">.</span><span class="n">trainable</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">K_d_apply_variance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_K_unit_variance</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MOGPR.maximum_log_likelihood_objective"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.maximum_log_likelihood_objective">[docs]</a>    <span class="k">def</span> <span class="nf">maximum_log_likelihood_objective</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<div class="viewcode-block" id="MOGPR.maximum_log_likelihood_objective"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.maximum_log_likelihood_objective">[docs]</a>    <span class="k">def</span> <span class="nf">maximum_log_likelihood_objective</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_marginal_likelihood</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="MOGPR.log_marginal_likelihood"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.log_marginal_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">log_marginal_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<div class="viewcode-block" id="MOGPR.log_marginal_likelihood"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.log_marginal_likelihood">[docs]</a>    <span class="k">def</span> <span class="nf">log_marginal_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Computes the log marginal likelihood.</span>
 
@@ -174,7 +181,7 @@
         <span class="n">L</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">likelihood</span><span class="o">.</span><span class="n">add_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">KXX</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mean</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="MOGPR.predict_f"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.predict_f">[docs]</a>    <span class="k">def</span> <span class="nf">predict_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Xnew</span><span class="p">:</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">full_cov</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">full_output_cov</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MeanAndVariance</span><span class="p">:</span>
+<div class="viewcode-block" id="MOGPR.predict_f"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.predict_f">[docs]</a>    <span class="k">def</span> <span class="nf">predict_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Xnew</span><span class="p">:</span> <span class="n">InputData</span><span class="p">,</span> <span class="n">full_cov</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">full_output_cov</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MeanAndVariance</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This method computes predictions at X \in R^{N \x D} input points</span>
 
@@ -203,7 +210,7 @@
         <span class="n">perm</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">f_var</span><span class="p">))))</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">f_mean</span><span class="p">),</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">f_var</span><span class="p">,</span> <span class="n">perm</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MOGPR.__init__"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">RegressionData</span><span class="p">,</span> <span class="n">kernel</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">MOStationary</span><span class="p">,</span> <span class="n">mean_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">mf</span><span class="o">.</span><span class="n">mean_functions</span><span class="o">.</span><span class="n">MOMeanFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="MOGPR.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.models.MOGPR.html#romcomma.gpf.models.MOGPR.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">RegressionData</span><span class="p">,</span> <span class="n">kernel</span><span class="p">:</span> <span class="n">mf</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">MOStationary</span><span class="p">,</span> <span class="n">mean_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">mf</span><span class="o">.</span><span class="n">mean_functions</span><span class="o">.</span><span class="n">MOMeanFunction</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                  <span class="n">noise_variance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
@@ -243,7 +250,7 @@
 <h3><a href="../../../index.html">Table of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../pages/start.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../pages/api/reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pages/package/reference.html">Package Reference</a></li>
 </ul>
 
 <div><hr class="docutils"></div>

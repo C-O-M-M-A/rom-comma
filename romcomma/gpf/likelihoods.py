@@ -54,7 +54,7 @@ class MOGaussian(QuadratureLikelihood):
         super().__init__(latent_dim=self.variance.shape[0], observation_dim=self.variance.shape[0])
 
     def N(self, data) -> int:
-        """ The number of datapoints in data, assuming the last 2 dimensions have been concatenated to LN. """
+        """ The number of samples in data, assuming the last 2 dimensions have been concatenated to LN. """
         return int(data.shape[-1] / self.latent_dim)
 
     def split_axis_shape(self, data) -> Tuple[int, int]:

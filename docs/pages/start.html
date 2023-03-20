@@ -18,7 +18,7 @@
     <script defer src="../_static/insipid-sidebar.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="API Reference" href="api/reference.html" />
+    <link rel="next" title="Module Reference" href="package/reference.html" />
     <link rel="prev" title="rom-comma User Guide" href="../index.html" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -86,7 +86,7 @@
       <a href="../index.html" class="nav-icon previous" title="previous:&#13;rom-comma User Guide" aria-label="Previous topic" accesskey="P" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
       </a>
-      <a href="api/reference.html" class="nav-icon next" title="next:&#13;API Reference" aria-label="Next topic" accesskey="N" tabindex="-1">
+      <a href="package/reference.html" class="nav-icon next" title="next:&#13;Module Reference" aria-label="Next topic" accesskey="N" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg>
       </a>
     </nav>
@@ -103,11 +103,11 @@
           </span>
         </div>
       </a>
-      <a class="next" href="api/reference.html" aria-label="Next topic" >
+      <a class="next" href="package/reference.html" aria-label="Next topic" >
         <div class="title">
           <span class="text">
             <span class="direction">next</span>
-            API Reference
+            Module Reference
           </span>
         </div>
         <div class="icon">
@@ -137,10 +137,72 @@ Those unfamiliar with these subjects may wish to follow the hyperlinks in this p
 Test the installation by running the rom-comma <code class="docutils literal notranslate"><span class="pre">installation_test</span></code> module, from anywhere.
 Runtime dependencies are documented in <a class="reference external" href="https://github.com/C-O-M-M-A/rom-comma/blob/main/pyproject.toml">pyproject.toml</a>.</p>
 </section>
-<section id="data-preparation">
-<h2>Data Preparation<a class="headerlink" href="#data-preparation" title="Permalink to this heading">§</a></h2>
+<section id="module-hierarchy">
+<h2>Module Hierarchy<a class="headerlink" href="#module-hierarchy" title="Permalink to this heading">§</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">romcomma</span></code> package is organized in a modular hierarchy</p>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="package/reference.html">romcomma</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="package/romcomma.base.html">romcomma.base</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.base.classes.html">romcomma.base.classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.base.definitions.html">romcomma.base.definitions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="package/romcomma.data.html">romcomma.data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.data.storage.html">romcomma.data.storage</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="package/romcomma.gpf.html">romcomma.gpf</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gpf.base.html">romcomma.gpf.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gpf.kernels.html">romcomma.gpf.kernels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gpf.likelihoods.html">romcomma.gpf.likelihoods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gpf.mean_functions.html">romcomma.gpf.mean_functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gpf.models.html">romcomma.gpf.models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gpf.tests.html">romcomma.gpf.tests</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="package/romcomma.gpr.html">romcomma.gpr</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gpr.kernels.html">romcomma.gpr.kernels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gpr.models.html">romcomma.gpr.models</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="package/romcomma.gsa.html">romcomma.gsa</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gsa.sobol.html">romcomma.gsa.sobol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.gsa.undertake.html">romcomma.gsa.undertake</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="package/romcomma.rom.html">romcomma.rom</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.rom.old.html">romcomma.rom.old</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="package/romcomma.user.html">romcomma.user</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.context.html">romcomma.user.context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.function.html">romcomma.user.function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.results.html">romcomma.user.results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.run.html">romcomma.user.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.sample.html">romcomma.user.sample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.scripts.html">romcomma.user.scripts</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 </div>
+<p>No module depends on any module below it in this table.
+We refer to items in this list as modules, even if they are technically packages.</p>
+<dl class="simple">
+<dt>User functionality is exposed in the final module, <a class="reference internal" href="package/romcomma.user.html#module-romcomma.user"><span class="std std-ref">romcomma.user</span></a>. Any direct call to functionality outside <cite>romcomma.user</cite> is regarded as bespoke, if not</dt><dd><p>advanced.</p>
+</dd>
+</dl>
+</section>
+<section id="glossary">
+<h2>Glossary<a class="headerlink" href="#glossary" title="Permalink to this heading">§</a></h2>
+<dl class="simple">
+<dt>package</dt><dd><p>Python package</p>
+</dd>
+<dt>module</dt><dd><p>Python package or module.</p>
+</dd>
+</dl>
 </section>
 </section>
 
@@ -157,12 +219,12 @@ Runtime dependencies are documented in <a class="reference external" href="https
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#data-preparation">Data Preparation</a><ul class="simple">
+<li class="toctree-l2"><a class="reference internal" href="#module-hierarchy">Module Hierarchy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#glossary">Glossary</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api/reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package/reference.html">Module Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 </ul>
 
 <div><hr class="docutils"></div>
@@ -188,11 +250,11 @@ Runtime dependencies are documented in <a class="reference external" href="https
           </span>
         </div>
       </a>
-      <a class="next" href="api/reference.html" aria-label="Next topic" >
+      <a class="next" href="package/reference.html" aria-label="Next topic" >
         <div class="title">
           <span class="text">
             <span class="direction">next</span>
-            API Reference
+            Module Reference
           </span>
         </div>
         <div class="icon">

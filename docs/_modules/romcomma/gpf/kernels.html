@@ -90,6 +90,13 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
+<nav class="crumbs">
+  <ul>
+    <li><a href="../../../index.html" aria-label="rom-comma 1.0 documentation"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M280.37 148.26L96 300.11V464a16 16 0 0 0 16 16l112.06-.29a16 16 0 0 0 15.92-16V368a16 16 0 0 1 16-16h64a16 16 0 0 1 16 16v95.64a16 16 0 0 0 16 16.05L464 480a16 16 0 0 0 16-16V300L295.67 148.26a12.19 12.19 0 0 0-15.3 0zM571.6 251.47L488 182.56V44.05a12 12 0 0 0-12-12h-56a12 12 0 0 0-12 12v72.61L318.47 43a48 48 0 0 0-61 0L4.34 251.47a12 12 0 0 0-1.6 16.9l25.5 31A12 12 0 0 0 45.15 301l235.22-193.74a12.19 12.19 0 0 1 15.3 0L530.9 301a12 12 0 0 0 16.9-1.6l25.5-31a12 12 0 0 0-1.7-16.93z"/></svg></a> &#187;</li>
+    <li><a href="../../index.html">Module code</a> &#187;</li>
+    <li><a href="">romcomma.gpf.kernels</a></li> 
+  </ul>
+</nav>
 <h1>Source code for romcomma.gpf.kernels</h1><div class="highlight"><pre>
 <span></span><span class="c1">#  BSD 3-Clause License.</span>
 <span class="c1"># </span>
@@ -127,7 +134,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<div class="viewcode-block" id="MOStationary"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary">[docs]</a><span class="k">class</span> <span class="nc">MOStationary</span><span class="p">(</span><span class="n">AnisotropicStationary</span><span class="p">,</span> <span class="n">Kernel</span><span class="p">):</span>
+<div class="viewcode-block" id="MOStationary"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary">[docs]</a><span class="k">class</span> <span class="nc">MOStationary</span><span class="p">(</span><span class="n">AnisotropicStationary</span><span class="p">,</span> <span class="n">Kernel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for stationary kernels, i.e. kernels that only</span>
 <span class="sd">    depend on</span>
@@ -153,7 +160,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel lengthscales as an (L,M) matrix.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">))</span>
 
-<div class="viewcode-block" id="MOStationary.K_diag"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_diag">[docs]</a>    <span class="k">def</span> <span class="nf">K_diag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<div class="viewcode-block" id="MOStationary.K_diag"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_diag">[docs]</a>    <span class="k">def</span> <span class="nf">K_diag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel diagonal.</span>
 
 <span class="sd">        Args:</span>
@@ -164,7 +171,7 @@
         <span class="n">tf</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape=</span><span class="si">{</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s1"> does not obey.&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">N</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MOStationary.K_unit_variance"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_unit_variance">[docs]</a>    <span class="k">def</span> <span class="nf">K_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MOStationary.K_unit_variance"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_unit_variance">[docs]</a>    <span class="k">def</span> <span class="nf">K_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.</span>
 
 <span class="sd">        Args:</span>
@@ -174,7 +181,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K_d_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scaled_difference_matrix</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X</span> <span class="k">if</span> <span class="n">X2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">X2</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="MOStationary.K_d_unit_variance"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_unit_variance">[docs]</a>    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="MOStationary.K_d_unit_variance"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_unit_variance">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">K_d_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.</span>
 
@@ -184,7 +191,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;You must implement K_d_unit_variance(self, d) in </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MOStationary.K_d_apply_variance"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_apply_variance">[docs]</a>    <span class="k">def</span> <span class="nf">K_d_apply_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K_d_unit_variance</span><span class="p">):</span>
+<div class="viewcode-block" id="MOStationary.K_d_apply_variance"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_apply_variance">[docs]</a>    <span class="k">def</span> <span class="nf">K_d_apply_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K_d_unit_variance</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Multiply the unit variance kernel by the kernel variance, and reshape.</span>
 
 <span class="sd">        Args:</span>
@@ -196,7 +203,7 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="n">K_d_unit_variance</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">value_to_broadcast</span> <span class="o">*</span> <span class="n">K_d_unit_variance</span><span class="p">,</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span></div>
 
-<div class="viewcode-block" id="MOStationary.K_d"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d">[docs]</a>    <span class="k">def</span> <span class="nf">K_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+<div class="viewcode-block" id="MOStationary.K_d"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d">[docs]</a>    <span class="k">def</span> <span class="nf">K_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel.</span>
 
 <span class="sd">        Args:</span>
@@ -208,7 +215,7 @@
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">presliced</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">presliced</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MOStationary.__init__"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">lengthscales</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Kernel&#39;</span><span class="p">,</span> <span class="n">active_dims</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MOStationary.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">lengthscales</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Kernel&#39;</span><span class="p">,</span> <span class="n">active_dims</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Kernel Constructor.</span>
 
 <span class="sd">        Args:</span>
@@ -230,7 +237,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_ard_active_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span></div></div>
 
 
-<div class="viewcode-block" id="RBF"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF">[docs]</a><span class="k">class</span> <span class="nc">RBF</span><span class="p">(</span><span class="n">MOStationary</span><span class="p">):</span>
+<div class="viewcode-block" id="RBF"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF">[docs]</a><span class="k">class</span> <span class="nc">RBF</span><span class="p">(</span><span class="n">MOStationary</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The radial basis function (RBF) or squared exponential kernel. The kernel equation is</span>
 
@@ -243,7 +250,7 @@
 <span class="sd">    Functions drawn from a GP with this kernel are infinitely differentiable!</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="RBF.K_d_unit_variance"><a class="viewcode-back" href="../../../pages/api/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.K_d_unit_variance">[docs]</a>    <span class="k">def</span> <span class="nf">K_d_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+<div class="viewcode-block" id="RBF.K_d_unit_variance"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.K_d_unit_variance">[docs]</a>    <span class="k">def</span> <span class="nf">K_d_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...M, ...M -&gt; ...&#39;</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span></div></div>
 </pre></div>
             <div class="clearer"></div>
@@ -258,7 +265,7 @@
 <h3><a href="../../../index.html">Table of Contents</a></h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../pages/start.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../pages/api/reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pages/package/reference.html">Package Reference</a></li>
 </ul>
 
 <div><hr class="docutils"></div>
