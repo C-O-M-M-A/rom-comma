@@ -1,0 +1,34 @@
+﻿romcomma.gsa
+============
+
+.. automodule:: romcomma.gsa
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :template: custom-module-template.rst
+   :recursive:
+
+   romcomma.gsa.base
+   romcomma.gsa.calculators
+   romcomma.gsa.models
+

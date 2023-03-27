@@ -14,11 +14,12 @@
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script defer src="_static/insipid.js"></script>
     <script defer src="_static/insipid-sidebar.js"></script>
-    <link rel="index" title="ClosedSobol" href="genindex.html" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="romcomma.user.scripts.BASE_FOLDER" href="pages/package/romcomma.user.scripts.BASE_FOLDER.html" />
+    <link rel="prev" title="romcomma.user.repo_from_function.ROTATIONS" href="pages/package/romcomma.user.repo_from_function.ROTATIONS.html" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
   </head><body>
@@ -82,20 +83,20 @@
       </div>
     </header>
     <nav>
-      <a href="pages/package/romcomma.user.scripts.BASE_FOLDER.html" class="nav-icon previous" title="previous:&#13;romcomma.user.scripts.BASE_FOLDER" aria-label="Previous topic" accesskey="P" tabindex="-1">
+      <a href="pages/package/romcomma.user.repo_from_function.ROTATIONS.html" class="nav-icon previous" title="previous:&#13;romcomma.user.repo_from_function.ROTATIONS" aria-label="Previous topic" accesskey="P" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
       </a>
     </nav>
 
     <nav class="relbar">
-      <a class="previous" href="pages/package/romcomma.user.scripts.BASE_FOLDER.html" aria-label="Previous topic" >
+      <a class="previous" href="pages/package/romcomma.user.repo_from_function.ROTATIONS.html" aria-label="Previous topic" >
         <div class="icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
         </div>
         <div class="title">
           <span class="text">
             <span class="direction">previous</span>
-            romcomma.user.scripts.BASE_FOLDER
+            romcomma.user.repo_from_function.ROTATIONS
           </span>
         </div>
       </a>
@@ -110,10 +111,24 @@
 <span id="id1"></span><h1>Glossary<a class="headerlink" href="#glossary" title="Permalink to this heading">§</a></h1>
 <p class="rubric">Getting Started</p>
 <hr class="docutils" />
-<dl class="simple">
-<dt>package</dt><dd><p>Python package</p>
+<dl class="simple glossary">
+<dt id="term-package">package<a class="headerlink" href="#term-package" title="Permalink to this term">§</a></dt><dd><p>Python package</p>
 </dd>
-<dt>module</dt><dd><p>Python package or module.</p>
+<dt id="term-module">module<a class="headerlink" href="#term-module" title="Permalink to this term">§</a></dt><dd><p>Python package or module.</p>
+</dd>
+<dt id="term-ROM">ROM<a class="headerlink" href="#term-ROM" title="Permalink to this term">§</a></dt><dd><p>Reduction of Order by Marginalization. A novel approach to locating an Active Subspace (AS) using conditional variances or Sobol’ indices. In the Active
+Subsapce technique [<a class="reference external" href="https://epubs.siam.org/doi/book/10.1137/1.9781611973860">Constantine 2014</a>] the input basis is rotated to align with the
+eigenvectors of the squared Jacobian vector. In ROM, the input basis is rotated to maximise the the Sobol’ index of the first <span class="math notranslate nohighlight">\(m\)</span> inputs.</p>
+</dd>
+<dt id="term-GSA">GSA<a class="headerlink" href="#term-GSA" title="Permalink to this term">§</a></dt><dd><p>Global Sensitivity Analysis.
+This Assesses and ranks the relevance of a system’s inputs to its outputs by a variety of methods covered broadly in
+[<a class="reference external" href="https://onlinelibrary.wiley.com/doi/book/10.1002/9780470725184">Saltelli et al. 2007</a>] and
+[<a class="reference external" href="https://doi.org/10.1016/j.envsoft.2020.104954">Razavi et al. 2021</a>]. rom-comma deals exclusively with the variance based method of Ilya M. Sobol.
+This has been somewhat extended, as described in gory technical detail in
+[<cite>Milton et al. 2023 &lt;https://github.com/C-O-M-M-A/rom-papers/blob/main/Theory/Coefficient%20of%20Determination.pdf&gt;</cite>].</p>
+</dd>
+<dt id="term-GPR">GPR<a class="headerlink" href="#term-GPR" title="Permalink to this term">§</a></dt><dd><p>GaussianWithout2Pi Process Regression. A quite general technique for representing a functional dataset as a (GaussianWithout2Pi) stochastic process
+described thoroughly in [<a class="reference external" href="https://direct.mit.edu/books/book/2320/GaussianWithout2Pi-Processes-for-Machine-Learning">Rasmussen and Williams 2005</a>].</p>
 </dd>
 </dl>
 <p class="rubric">Package Reference</p>
@@ -131,12 +146,6 @@
 <dt id="term-tf"><code class="docutils literal notranslate"><span class="pre">tf</span></code><a class="headerlink" href="#term-tf" title="Permalink to this term">§</a></dt><dd><p><code class="docutils literal notranslate"><span class="pre">tensorflow</span></code></p>
 </dd>
 </dl>
-<section id="indices-and-tables">
-<h2>Indices and Tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">§</a></h2>
-<p><a class="reference internal" href="genindex.html"><span class="std std-ref">ClosedSobol</span></a></p>
-<p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module ClosedSobol</span></a></p>
-<p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p>
-</section>
 </section>
 
             <div class="clearer"></div>
@@ -152,16 +161,13 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="pages/start.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pages/package/reference.html">Module Reference</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Glossary</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#indices-and-tables">Indices and Tables</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Glossary</a></li>
 </ul>
 
 <div><hr class="docutils"></div>
 <ul>
-  <li class="toctree-l1"><a class="reference internal" href="genindex.html" accesskey="I">General ClosedSobol</a></li>
-  <li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module ClosedSobol</a></li>
+  <li class="toctree-l1"><a class="reference internal" href="genindex.html" accesskey="I">General Index</a></li>
+  <li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
 </ul>
 <div id="ethical-ad-placement"></div>
         </div>
@@ -170,14 +176,14 @@
     </div>
 
     <nav class="relbar">
-      <a class="previous" href="pages/package/romcomma.user.scripts.BASE_FOLDER.html" aria-label="Previous topic" >
+      <a class="previous" href="pages/package/romcomma.user.repo_from_function.ROTATIONS.html" aria-label="Previous topic" >
         <div class="icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
         </div>
         <div class="title">
           <span class="text">
             <span class="direction">previous</span>
-            romcomma.user.scripts.BASE_FOLDER
+            romcomma.user.repo_from_function.ROTATIONS
           </span>
         </div>
       </a>

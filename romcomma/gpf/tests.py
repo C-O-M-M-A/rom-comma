@@ -23,10 +23,10 @@
 
 
 from romcomma.gpf import base, kernels, likelihoods, models
-from romcomma.run import run
 import numpy as np
 import gpflow as gf
 import tensorflow as tf
+from romcomma.run import context
 
 def covariance():
     a = np.array([[0.9, -0.5], [-0.5, 0.75]])
@@ -60,7 +60,7 @@ def increment(x: tf.Tensor) -> tf.Tensor:
     return {'x': x}
 
 if __name__ == '__main__':
-    with run.Context('Test', float='float64'):
+    with context.Setup('Test', float='float64'):
         lh = likelihood()
         X, Y = regression_data()
         print(X)
