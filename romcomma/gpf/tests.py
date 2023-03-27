@@ -23,7 +23,7 @@
 
 
 from romcomma.gpf import base, kernels, likelihoods, models
-from romcomma.user import run
+from romcomma.run import run
 import numpy as np
 import gpflow as gf
 import tensorflow as tf

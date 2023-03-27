@@ -28,7 +28,7 @@ from romcomma.base.classes import Parameters, Model
 
 
 class Kernel(Model):
-    """ Abstract interface to a Kernel. Essentially this is the code contract with the GP interface."""
+    """ Abstract interface to a Kernel. Essentially this is the code contract with the MOGP interface."""
 
     class Parameters(Parameters):
         """ The Parameters set of a Kernel."""
@@ -141,7 +141,7 @@ class Kernel(Model):
     @property
     @abstractmethod
     def implementation(self) -> Tuple[Any, ...]:
-        """ The implementation of this Kernel, for use in GP.implementation.
+        """ The implementation of this Kernel, for use in MOGP.implementation.
             If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
@@ -163,7 +163,7 @@ class RBF(Kernel):
 
     @property
     def implementation(self) -> Tuple[Any, ...]:
-        """ The implemented_in_??? version of this Kernel, for use in the implemented_in_??? GP.
+        """ The implemented_in_??? version of this Kernel, for use in the implemented_in_??? MOGP.
             If ``self.variance.shape == (1,1)`` a 1-tuple of kernels is returned.
             If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.

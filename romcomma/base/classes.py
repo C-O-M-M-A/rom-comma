@@ -241,9 +241,11 @@ class Model(ABC):
             json.dump(options, file, indent=8)
 
     def __repr__(self) -> str:
+        """ Returns the folder path."""
         return str(self._folder)
 
     def __str__(self) -> str:
+        """ Returns the folder name."""
         return self._folder.name
 
     @abstractmethod

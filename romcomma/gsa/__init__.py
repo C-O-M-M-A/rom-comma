@@ -21,5 +21,5 @@
 
 """ Global Sensitivity Analysis (GSA) functionality """
 
-from . import sobol
-from . import undertake
+from . import calculators
+from . import models

@@ -147,7 +147,7 @@ class RBF(MOStationary):
     r   is the Euclidean distance between the input points, scaled by the lengthscales parameter ℓ.
     σ²  is the variance parameter
 
-    Functions drawn from a GP with this kernel are infinitely differentiable!
+    Functions drawn from a MOGP with this kernel are infinitely differentiable!
     """
 
     def K_d_unit_variance(self, d):

@@ -32,9 +32,9 @@ import romcomma.gpf as mf
 
 class MOGPR(GPModel, InternalDataTrainingLossMixin):
     r"""
-    Gaussian Process Regression.
+    GaussianWithout2Pi Process Regression.
 
-    This is a vanilla implementation of GP regression with a Gaussian
+    This is a vanilla implementation of MOGP regression with a GaussianWithout2Pi
     likelihood.  Multiple columns of Y are treated independently.
 
     The log likelihood of this model is given by
@@ -88,7 +88,7 @@ class MOGPR(GPModel, InternalDataTrainingLossMixin):
         .. math::
             p(F* | Y)
 
-        where F* are points on the GP at new data points, Y are noisy observations at training data points.
+        where F* are points on the MOGP at new data points, Y are noisy observations at training data points.
         Note that full_cov => full_output_cov (regardless of the ordinate given for full_output_cov), to avoid ambiguity.
         """
         full_output_cov = True if full_cov else full_output_cov

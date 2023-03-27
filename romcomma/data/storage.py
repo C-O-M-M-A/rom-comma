@@ -153,12 +153,10 @@ class Repository:
         """ The indices of the folds contained in this Repository."""
         if isinstance(self, Fold) or self.K < 1:
             return range(0, 0)
-        elif self.K == 1:
-            return range(1, 2)
         else:
             return range(self.K + (1 if self.meta['has_improper_fold'] else 0))
 
-    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> int:
+    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> Repository:
         """ Fold this repo into K Folds, indexed by range(K).
 
         Args:
@@ -167,7 +165,7 @@ class Repository:
                 To suppress this give K as a negative integer.
             shuffle_before_folding: Whether to shuffle the data before sampling.
             normalization: An optional normalization.csv file to use.
-
+        Returns: ``self``, for chaining calls.
         Raises:
             IndexError: Unless 1 &lt= K &lt= N.
         """
@@ -177,26 +175,26 @@ class Repository:
             raise IndexError(f'K={K:d} does not lie between 1 and N={N:d} inclusive.')
         for k in range(max(abs(K), self.K) + 1):
             shutil.rmtree(self.fold_folder(k), ignore_errors=True)
-        self._meta.update({'K': abs(K), 'shuffle before folding': shuffle_before_folding, 'has_improper_fold': K > 0})
-        self._write_meta_json()
         index = list(range(N))
         if shuffle_before_folding:
             random.shuffle(index)
-        if K >= 1:
+        self._meta.update({'K': abs(K), 'shuffle before folding': shuffle_before_folding, 'has_improper_fold': K > 0})
+        self._write_meta_json()
+        if K > 0:
             Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         K = abs(K)
-        if K > 1:
-            K_blocks = [list(range(K)) for dummy in range(int(N / K))]
-            K_blocks.append(list(range(N % K)))
-            for K_range in K_blocks:
-                random.shuffle(K_range)
-            indicator = list(itertools.chain(*K_blocks))
-            for k in range(K):
-                indicated = tuple(zip(index, indicator))
-                data_index = [index for index, indicator in indicated if k != indicator]
-                test_index = [index for index, indicator in indicated if k == indicator]
-                Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization)
-        return K
+        K_blocks = [list(range(K)) for dummy in range(int(N / K))]
+        K_blocks.append(list(range(N % K)))
+        for K_range in K_blocks:
+            random.shuffle(K_range)
+        indicator = list(itertools.chain(*K_blocks))
+        for k in range(K):
+            indicated = tuple(zip(index, indicator))
+            data_index = [index for index, indicator in indicated if k != indicator]
+            test_index = [index for index, indicator in indicated if k == indicator]
+            data_index = test_index if data_index == [] else data_index
+            Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization)
+        return self
 
     def fold_folder(self, k: int) -> Path:
         return self._folder / f'fold.{k:d}'
@@ -258,7 +256,7 @@ class Repository:
         return {'csv_kwargs': Frame.CSV_OPTIONS, 'data': {}, 'K': 0, 'shuffle before folding': False}
 
     @classmethod
-    def from_df(cls, folder: PathLike, df: pd.DataFrame, meta: Dict = META) -> Repository:
+    def from_df(cls, folder: PathLike, df: pd.DataFrame, meta: Dict | None = None) -> Repository:
         """ Create a Repository from a pd.DataFrame.
 
         Args:
@@ -268,7 +266,7 @@ class Repository:
         Returns: A new Repository.
         """
         repo = Repository(folder, init_mode=Repository._InitMode.CREATE)
-        repo._meta = cls.META | meta
+        repo._meta = cls.META | ({} if meta is None else meta)
         repo._data = Frame(repo._csv, df)
         repo.meta_update()
         return repo
@@ -360,7 +358,7 @@ class Fold(Repository):
         """
         init_mode = kwargs.get('init_mode', Repository._InitMode.READ)
         super().__init__(parent.fold_folder(k), init_mode=init_mode)
-        self._test_csv = self.folder / 'user.csv'
+        self._test_csv = self.folder / 'test.csv'
         if init_mode == Repository._InitMode.READ:
             self._test_data = Frame(self._test_csv)
             self._normalization = Normalization(self)

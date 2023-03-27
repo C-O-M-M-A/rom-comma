@@ -58,24 +58,24 @@
 #
 #     OPTIMIZER_OPTIONS = {'iterations': 1, 'guess_identity_after_iteration': 1, 'sobol_options': Sobol.OPTIMIZER_OPTIONS,
 #                                  'gp_initializer': GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE,
-#                                  'gp_options': GP.OPTIONS}
+#                                  'gp_options': MOGP.OPTIONS}
 #     """
 #         **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(options['sobol_options'])
-#             followed by GP.optimize(options['gp_options'])).
+#             followed by MOGP.optimize(options['gp_options'])).
 #
 #         **sobol_options*** -- A Dict of Sobol optimizer options, similar to (and documented in) Sobol.OPTIMIZER_OPTIONS.
 #
 #         **guess_identity_after_iteration** -- After this many ROM iterations, Sobol.optimize does no exploration,
 #             just gradient descending from Theta = Identity Matrix.
 #
-#         **reuse_original_gp** -- True if GP.optimize is initialized each time from the GP originally provided.
+#         **reuse_original_gp** -- True if MOGP.optimize is initialized each time from the MOGP originally provided.
 #
-#         **gp_options** -- A Dict of GP optimizer options, similar to (and documented in) GP.OPTIMIZER_OPTIONS.
+#         **gp_options** -- A Dict of MOGP optimizer options, similar to (and documented in) MOGP.OPTIMIZER_OPTIONS.
 #     """
 #
 #     @classmethod
 #     @abstractmethod
-#     def from_ROM(cls, fold: Fold, name: str, suffix: str = ".0", Mu: int = -1, rbf_parameters: Optional[GP.Parameters] = None) -> ROM:
+#     def from_ROM(cls, fold: Fold, name: str, suffix: str = ".0", Mu: int = -1, rbf_parameters: Optional[MOGP.Parameters] = None) -> ROM:
 #         """ Create a ROM object from a saved ROM folder.
 #
 #         Args:
@@ -96,13 +96,13 @@
 #     @classmethod
 #     @abstractmethod
 #     def from_GP(cls, fold: Fold, name: str, source_gp_name: str, options: Dict, Mu: int = -1,
-#                 rbf_parameters: Optional[GP.Parameters] = None) -> ROM:
-#         """ Create a ROM object from a saved GP folder.
+#                 rbf_parameters: Optional[MOGP.Parameters] = None) -> ROM:
+#         """ Create a ROM object from a saved MOGP folder.
 #
 #         Args:
 #             fold: The Fold housing the ROM to load.
 #             name: The name of the saved ROM to create from.
-#             source_gp_name: The source GP folder.
+#             source_gp_name: The source MOGP folder.
 #             Mu: The dimensionality of the rotated input basis u. If this is not in range(1, fold.M+1), Mu=fold.M is used.
 #             options: A Dict of ROM optimizer options.
 #
@@ -129,7 +129,7 @@
 #
 #     @property
 #     def gp(self) -> Sobol:
-#         """ The GP underpinning this ROM."""
+#         """ The MOGP underpinning this ROM."""
 #         return self._gp
 #
 #     @property
@@ -138,13 +138,13 @@
 #         return self._semi_norm
 #
 #     def gp_name(self, iteration: int) -> str:
-#         """ The name of the GP produced by iteration."""
+#         """ The name of the MOGP produced by iteration."""
 #         if iteration >= 0:
 #             return "{0}.{1:d}".format(self.name, iteration)
 #         else:
 #             return "{0}{1}".format(self.name, self.OPTIMIZED_GB_EXT)
 #
-#     def _initialize_gp(self, iteration: int) -> GP:
+#     def _initialize_gp(self, iteration: int) -> MOGP:
 #         if self._rbf_parameters is not None:
 #             gp_initializer = self.GP_Initializer.RBF
 #             parameters = self._rbf_parameters
@@ -152,7 +152,7 @@
 #             gp_rbf.optimize(**self._options[-1]['gp_options'])
 #             gp_dir = gp_rbf.folder.parent / self.gp_name(iteration)
 #             Model.copy(gp_rbf.folder, gp_dir)
-#             kernel = type(self._gp.kernel)(None, None, gp_dir / GP.KERNEL_DIR_NAME)
+#             kernel = type(self._gp.kernel)(None, None, gp_dir / MOGP.KERNEL_DIR_NAME)
 #             kernel.make_ard(self._gp.M)
 #             return self.GPType(self._fold, self.gp_name(iteration), parameters=None)
 #         gp_initializer = self._options[-1]['gp_initializer']
@@ -242,7 +242,7 @@
 #         self._sobol = self.SobolType(self._gp)
 #
 #     def __init__(self, name: str, sobol: Sobol, options: Dict = OPTIMIZER_OPTIONS,
-#                  rbf_parameters: Optional[GP.Parameters] = None):
+#                  rbf_parameters: Optional[MOGP.Parameters] = None):
 #         """ Initialize ROM object.
 #
 #         Args:

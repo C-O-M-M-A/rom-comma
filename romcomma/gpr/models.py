@@ -19,7 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains the GP class implementing Gaussian Process Regression. """
+""" Contains the MOGP class implementing GaussianWithout2Pi Process Regression. """
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from romcomma.gpr.kernels import Kernel
 class Likelihood(Model):
 
     class Parameters(Parameters):
-        """ The Parameters set of a GP."""
+        """ The Parameters set of a MOGP."""
 
         @classmethod
         @property
@@ -40,7 +40,7 @@ class Likelihood(Model):
             """ The NamedTuple underpinning this Parameters set."""
 
             class Values(NamedTuple):
-                """ The parameters set of a GP.
+                """ The parameters set of a MOGP.
 
                 Attributes:
                     variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
@@ -76,24 +76,24 @@ class Likelihood(Model):
             gf.set_trainable(self._parent._implementation[0].likelihood.variance._cholesky_lower_triangle, options['variance']['off_diagonal'])
         return options
 
-    def __init__(self, parent: GPInterface, read_parameters: bool = False, **kwargs: NP.Matrix):
+    def __init__(self, parent: GPR, read_parameters: bool = False, **kwargs: NP.Matrix):
         super().__init__(parent.folder / 'likelihood', read_parameters, **kwargs)
         self._parent = parent
 
 
 # noinspection PyPep8Naming
-class GPInterface(Model):
-    """ Interface to a Gaussian Process."""
+class GPR(Model):
+    """ Interface to a GaussianWithout2Pi Process."""
 
     class Parameters(Parameters):
-        """ The Parameters set of a GP."""
+        """ The Parameters set of a MOGP."""
 
         @classmethod
         @property
         def Values(cls) -> Type[NamedTuple]:
             """ The NamedTuple underpinning this Parameters set."""
             class Values(NamedTuple):
-                """ The parameters set of a GP.
+                """ The parameters set of a MOGP.
 
                 Attributes:
                     kernel (NP.Matrix): A numpy [[str]] identifying the type of Kernel, as returned by gp.kernel.TypeIdentifier(). This is never set externally.
@@ -139,7 +139,7 @@ class GPInterface(Model):
     @property
     @abstractmethod
     def implementation(self) -> Tuple[Any, ...]:
-        """ The implementation of this GP in GPFlow.
+        """ The implementation of this MOGP in GPFlow.
             If ``noise_variance.shape == (1,L)`` an L-tuple of kernels is returned.
             If ``noise_variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
@@ -197,10 +197,10 @@ class GPInterface(Model):
         """
 
     def test(self) -> Frame:
-        """ Tests the GP on the user data in self._fold.test_data. Test results comprise three values for each output at each sample:
+        """ Tests the MOGP on the user data in self._fold.test_data. Test results comprise three values for each output at each sample:
         The mean prediction, the std error of prediction and the Z score of prediction (i.e. error of prediction scaled by std error of prediction).
 
-        Returns: The test_data results as a Frame backed by GP.test_result_csv.
+        Returns: The test_data results as a Frame backed by MOGP.test_result_csv.
         """
         result = Frame(self.test_csv, self._fold.test_data.df)
         Y_heading = self._fold.meta['data']['Y_heading']
@@ -233,8 +233,8 @@ class GPInterface(Model):
         summary = Frame(self.test_summary_csv, summary)
         return result
 
-    def broadcast_parameters(self, is_independent: bool, is_isotropic: bool, folder: Optional[PathLike] = None) -> GPInterface:
-        """ Broadcast the parameters of the GP (including kernels) to higher dimensions.
+    def broadcast_parameters(self, is_independent: bool, is_isotropic: bool, folder: Optional[PathLike] = None) -> GPR:
+        """ Broadcast the parameters of the MOGP (including kernels) to higher dimensions.
         Shrinkage raises errors, unchanged dimensions silently do nothing.
 
         Args:
@@ -257,14 +257,14 @@ class GPInterface(Model):
         """ Set up parameters, and checks dimensions.
 
         Args:
-            name: The name of this GP.
-            fold: The Fold housing this GP.
-            is_read: If True, the GP.kernel.parameters and GP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
+            name: The name of this MOGP.
+            fold: The Fold housing this MOGP.
+            is_read: If True, the MOGP.kernel.parameters and MOGP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
             is_independent: Whether the outputs will be treated as independent.
             is_isotropic: Whether to restrict the kernel to be isotropic.
-            kernel_parameters: A Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
+            kernel_parameters: A Kernel.Parameters to use for MOGP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
                 If None, the kernel is read from file, or set to the default Kernel.Parameters(), according to read_from_file.
-            **kwargs: The GP.parameters fields=values to replace after reading from file/defaults.
+            **kwargs: The MOGP.parameters fields=values to replace after reading from file/defaults.
         Raises:
             IndexError: If a parameter is mis-shaped.
         """
@@ -286,8 +286,8 @@ class GPInterface(Model):
 
 
 # noinspection PyPep8Naming
-class GP(GPInterface):
-    """ Implementation of a Gaussian Process."""
+class MOGP(GPR):
+    """ Implementation of a GaussianWithout2Pi Process."""
 
     @classmethod
     @property
@@ -308,11 +308,11 @@ class GP(GPInterface):
         return self._implementation
 
     def optimize(self, method: str = 'L-BFGS-B', **kwargs) -> Dict[str, Any]:
-        """ Optimize the GP hyper-parameters.
+        """ Optimize the MOGP hyper-parameters.
 
         Args:
             method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
-            kwargs: A Dict of implementation-dependent optimizer options, following the format of GPInterface.OPTIONS.
+            kwargs: A Dict of implementation-dependent optimizer options, following the format of GPR.OPTIONS.
                 Options for the kernel should be passed as kernel={see kernel.OPTIONS for format}.
                 Options for the likelihood should be passed as likelihood={see likelihood.OPTIONS for format}.
         """
@@ -402,17 +402,17 @@ class GP(GPInterface):
 
     def __init__(self, name: str, fold: Fold, is_read: bool, is_independent: bool, is_isotropic: bool,
                  kernel_parameters: Optional[Kernel.Parameters] = None, **kwargs: NP.Matrix):
-        """ GP Constructor. Calls __init__ to setup parameters, then checks dimensions.
+        """ MOGP Constructor. Calls __init__ to setup parameters, then checks dimensions.
 
         Args:
-            name: The name of this GP.
-            fold: The Fold housing this GP.
-            is_read: If True, the GP.kernel.parameters and GP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
+            name: The name of this MOGP.
+            fold: The Fold housing this MOGP.
+            is_read: If True, the MOGP.kernel.parameters and MOGP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
             is_independent: Whether the outputs will be treated as independent.
             is_isotropic: Whether to restrict the kernel to be isotropic.
-            kernel_parameters: A Kernel.Parameters to use for GP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
+            kernel_parameters: A Kernel.Parameters to use for MOGP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
                 If None, the kernel is read from file, or set to the default Kernel.Parameters(), according to read_from_file.
-            **kwargs: The GP.parameters fields=values to replace after reading from file/defaults.
+            **kwargs: The MOGP.parameters fields=values to replace after reading from file/defaults.
         Raises:
             IndexError: If a parameter is mis-shaped.
         """
