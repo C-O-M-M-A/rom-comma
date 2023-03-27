@@ -28,7 +28,7 @@ import SALib.test_functions.Ishigami, SALib.test_functions.Sobol_G, SALib.test_f
 
 
 class Scalar:
-    """A scalar user function ``scalar`` such that ``scalar(X, kwargs)`` calls ``self.call(self.loc + self.scale * X[:, :self.m], **(self.kwargs | kwargs)``."""
+    """A scalar function ``scalar`` such that ``scalar(X, kwargs)`` calls ``self.call(self.loc + self.scale * X[:, :self.m], **(self.kwargs | kwargs)``."""
 
     @property
     def call(self) -> Callable[..., float]:
@@ -54,7 +54,7 @@ class Scalar:
         return np.reshape(self._call(self._loc + self._scale * X[:, :self._m], **(self._kwargs | kwargs)), (X.shape[0], 1))
 
     def __init__(self, call: Callable[NP.Matrix, float], loc: NP.VectorLike, scale: NP.VectorLike, m: int, **kwargs):
-        """ A scalar user function, which calls ``call(loc + scale * X[:, :m], **kwargs)``.
+        """ A scalar function, which calls ``call(loc + scale * X[:, :m], **kwargs)``.
 
         Args:
             call: This function called.
@@ -71,7 +71,7 @@ class Scalar:
 
 
 class Vector(dict):
-    """ A vector user functon, which is little more than a named dictionary of Scalar functions, such that ``vector(X, **kwargs)`` concatenates
+    """ A vector functon, which is little more than a named dictionary of Scalar functions, such that ``vector(X, **kwargs)`` concatenates
     ``scalar(X, **kwargs)`` for each dictionary item ``key: Scalar``. """
 
     @classmethod
@@ -113,7 +113,7 @@ class Vector(dict):
         return np.concatenate([scalar(X, **kwargs) for scalar in self.values()], axis=1)
 
     def __init__(self, name: str, **kwargs: Scalar):
-        """ Construct a user vector function.
+        """ Construct a vector function.
 
         Args:
             name: The name of this ``Vector``.

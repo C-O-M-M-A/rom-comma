@@ -297,8 +297,8 @@ class Repository:
 
 
 class Fold(Repository):
-    """ A Fold is defined as a folder containing a ``data.csv``, a ``meta.json`` file and a ``user.csv`` file.
-    A Fold is a Repository equipped with a test_data pd.DataFrame backed by ``user.csv``.
+    """ A Fold is defined as a folder containing a ``data.csv``, a ``meta.json`` file and a ``test.csv`` file.
+    A Fold is a Repository equipped with a test_data pd.DataFrame backed by ``test.csv``.
 
     Additionally, a fold can reduce the dimensionality ``M`` of the input ``X``.
     """

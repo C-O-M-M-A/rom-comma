@@ -24,12 +24,13 @@
 from __future__ import annotations
 
 from romcomma.base.definitions import *
-from romcomma.run import context, function, sample, summarised
+from romcomma.run import context, function, sample, summarised, results
 
 
-ROOT: Path = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/2.2')     #: The root folder to house all data repositories.
+ROOT: Path = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/2.3')     #: The root folder to house all data repositories.
 READ: bool = False    #: Whether to read an existing Repository, or create a new one overwriting it.
-K: int = -1   #: The number of Folds in a new repository.
+IGNORE_EXCEPTIONS: bool = False    #: Whether to ignore exceptions, normally due to failed GPR optimisation.
+K: int = 2   #: The number of Folds in a new repository.
 Ms: Tuple[int] = (5, )   #: The number of inputs.
 Ns: Tuple[int] = (400, )   #: The number of samples (datapoints).
 DOE: sample.DOE.Method = sample.DOE.latin_hypercube    #: The Design Of Experiments to generate the sample inputs.
@@ -38,6 +39,9 @@ NOISE_MAGNITUDES: Tuple[float] = (0.25,)   #: The noise-to-signal ratio, which i
 IS_NOISE_COVARIANT: Tuple[bool] = (False,)   #: Whether the Gaussian noise applied to the outputs is statistically independent between outputs.
 IS_NOISE_VARIANCE_RANDOM: Tuple[bool] = (False,)    #: Whether the noise variance is stochastic or fixed.
 ROTATIONS = (None,)     #: Rotation applied to the input basis after the function vector has been sampled.
+IS_READ: bool | None = None    #: Whether to read the GPR model from file.
+IS_COVARIANT: bool | None = None    #: Whether the GPR likelihood is covariant.
+IS_ISOTROPIC: bool | None = None    #: Whether the GPR kernel is isotropic.
 
 if __name__ == '__main__':
     with context.Setup('Test', device='GPU'):
@@ -54,7 +58,15 @@ if __name__ == '__main__':
                                     if READ:
                                         repo = sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), False).repo
                                     else:
-                                        repo = (sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), False)
+                                        repo = (sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), True)
                                                 .into_K_folds(K).rotate_folds(rotation).repo)
-                                    models = summarised.gpr(name='gpr', repo=repo, is_read=None, is_isotropic=None, is_independent=None)
+                                    models = summarised.gpr(name='gpr', repo=repo, is_read=IS_READ, is_covariant=IS_COVARIANT, is_isotropic=IS_ISOTROPIC,
+                                                            ignore_exceptions=IGNORE_EXCEPTIONS, likelihood_variance=0.0)
+                                results.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
+                                            {repo.folder / model: {'model': model} for model in models}, IGNORE_EXCEPTIONS).from_folders(repo.folder / 'gpr',
+                                                                                                                                         True)
+                                results.Collect({'variance': {}, 'log_marginal': {}}, {f'{repo.folder / model}/likelihood': {'model': model} for model in models},
+                                            IGNORE_EXCEPTIONS).from_folders((repo.folder / 'gpr') / 'likelihood', True)
+                                results.Collect({'variance': {}, 'lengthscales': {}}, {f'{repo.folder / model}/kernel': {'model': model} for model in models},
+                                            IGNORE_EXCEPTIONS).from_folders((repo.folder / 'gpr') / 'kernel', True)
                                 ext += 1

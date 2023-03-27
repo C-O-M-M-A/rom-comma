@@ -54,19 +54,19 @@ class Kernel(Model):
     @classmethod
     @property
     def OPTIONS(cls) -> Dict[str, Any]:
-        return {'variance': {'diagonal': True, 'off_diagonal': False}, 'lengthscales': {'independent': True, 'dependent': False}}
+        return {'variance': True, 'covariance': False, 'lengthscales': {'variant': True, 'covariant': False}}
 
     def optimize(self, **kwargs: Any) -> Dict[str, Any]:
         """ Merely sets which parameters are trainable. """
         options = self.OPTIONS | kwargs
-        if self.is_independent:
-            for implementation in self._implementation:
-                gf.set_trainable(implementation.variance, options['variance']['diagonal'])
-                gf.set_trainable(implementation.lengthscales, options['lengthscales']['independent'])
+        if self.is_covariant:
+            gf.set_trainable(self._implementation[0].variance._cholesky_diagonal, options['variance'])
+            gf.set_trainable(self._implementation[0].variance._cholesky_lower_triangle, options['covariance'])
+            gf.set_trainable(self._implementation[0].lengthscales, options['lengthscales']['covariant'])
         else:
-            gf.set_trainable(self._implementation[0].variance._cholesky_diagonal, options['variance']['diagonal'])
-            gf.set_trainable(self._implementation[0].variance._cholesky_lower_triangle, options['variance']['off_diagonal'])
-            gf.set_trainable(self._implementation[0].lengthscales, options['lengthscales']['dependent'])
+            for implementation in self._implementation:
+                gf.set_trainable(implementation.variance, options['variance'])
+                gf.set_trainable(implementation.lengthscales, options['lengthscales']['variant'])
         return options
 
     @classmethod
@@ -114,8 +114,9 @@ class Kernel(Model):
         return self._M
 
     @property
-    def is_independent(self) -> bool:
-        return self.params.variance.shape[0] == 1
+    def is_covariant(self) -> bool:
+        """ Whether the kernel is covariant between outputs. """
+        return self.params.variance.shape[0] > 1
 
     def broadcast_parameters(self, variance_shape: Tuple[int, int], M, folder: Optional[PathLike] = None) -> Kernel:
         """ Broadcast this kernel to higher dimensions. Shrinkage raises errors, unchanged dimensions silently nop.
@@ -170,7 +171,7 @@ class RBF(Kernel):
         """
         if self._implementation is None:
             if self.params.variance.shape[0] == 1:
-                self._implementation = tuple(gf.kernels.RBF(variance=max(self.params.variance[0, l], 1.00001E-6), lengthscales=self.params.lengthscales[l])
+                self._implementation = tuple(gf.kernels.RBF(variance=max(self.params.variance[0, l], 1.0005E-6), lengthscales=self.params.lengthscales[l])
                                 for l in range(self.params.variance.shape[1]))
             else:
                 self._implementation = (mf.kernels.RBF(variance=self.params.variance, lengthscales=self.params.lengthscales), )

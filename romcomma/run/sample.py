@@ -90,7 +90,7 @@ class GaussianNoise:
             return self.matrix
 
         def __format__(self, format_spec: Any) -> str:
-            """ The label for this Variance, to help name user samples informatively. The description is ``r.`` (random) or ``f.`` (fixed),
+            """ The label for this Variance, to help name samples informatively. The description is ``r.`` (random) or ``f.`` (fixed),
             followed by ``v.`` (diagonal variance) or ``c.`` (non-diagonal covariance), followed by ``100 * self.magnitude:.2f``."""
             return f'{"r." if self.is_random else "f."}{"c." if self.is_covariant else "v."}{100 * self.magnitude:.2f}'
 
@@ -181,10 +181,6 @@ class Function:
         self._repo.into_K_folds(K, shuffle_before_folding, normalization)
         return self
 
-    def stochastic_rotation(self) -> NP.Matrix:
-        """Returns: An (M,M) stochastic rotation matrix. """
-        return scipy.stats.ortho_group.rvs(self._repo.M)
-
     def rotate_folds(self, rotation: Optional[NP.Matrix]) -> Function:
         """ Uniformly rotate the Folds in a Repository. The rotation (like normalization) applies to each fold, not the repo itself.
 
@@ -217,7 +213,7 @@ class Function:
         Args:
             folder: The Repository folder.
             X: An (N,M) design matrix of inputs.
-            function_vector: An (L,) Vector of user.functions.
+            function_vector: An (L,) function.Vector.
             noise: An (N,L) design matrix of noise.
             origin_meta: A Dict of meta specifying the origin of the sample.
         Returns: The ``(X, f(X) + noise)`` sample design matrix Repository, before folding or rotating.
@@ -231,7 +227,7 @@ class Function:
 
     def __init__(self, root: PathLike, doe: DOE.Method, function_vector: functions.Vector, N: int, M: int, noise_variance: GaussianNoise.Variance,
                  ext: str | None = None, overwrite_existing: bool = False, **kwargs: Any):
-        """ Construct a user Repository by sampling a function over a DOE.
+        """ Construct a Repository by sampling a function over a DOE.
 
         Args:
             root: The folder under which the Repository will sit.

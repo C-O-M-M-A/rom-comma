@@ -48,17 +48,17 @@ if __name__ == '__main__':
                             if overwrite_existing:
                                 repo = sample.Function(BASE_FOLDER, sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
                                 repo = repo.into_K_folds(K=2).rotate_folds(None).repo
-                                summarised.gpr(name='diag', repo=repo, is_read=None, is_independent=None, is_isotropic=False,
+                                summarised.gpr(name='diag', repo=repo, is_read=None, is_covariant=None, is_isotropic=False,
                                               ignore_exceptions=ignore_exceptions, optimize=True, test=True)
                             else:
                                 repo = sample.Function(BASE_FOLDER, sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, False).repo
-                            run.Collect({'user': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
+                            run.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
                                           {repo.folder/model: {'model': model} for model in models}, ignore_exceptions).over_folders(repo.folder/'gpr', True)
                             run.Collect({'variance': {}, 'log_marginal': {}}, {f'{repo.folder / model}/likelihood': {'model': model} for model in models},
                                           ignore_exceptions).over_folders((repo.folder/'gpr')/'likelihood', True)
                             run.Collect({'variance': {}, 'lengthscales': {}}, {f'{repo.folder / model}/kernel': {'model': model} for model in models},
                                           ignore_exceptions).over_folders((repo.folder/'gpr')/'kernel', True)
-                            run.GSA('diag', repo, is_independent=None, is_isotropic=False, kinds=kinds, is_error_calculated=is_error_calculated,
+                            run.GSA('diag', repo, is_covariant=None, is_isotropic=False, kinds=kinds, is_error_calculated=is_error_calculated,
                                     ignore_exceptions=ignore_exceptions, is_T_partial=is_T_partial)
                             run.Collect({'S': {}, 'V': {}} | ({'T': {}, 'W': {}} if is_error_calculated else {}),
                                           {f'{repo.folder/model}/gsa/{kind_name}': {'model': model, 'kind': kind_name}

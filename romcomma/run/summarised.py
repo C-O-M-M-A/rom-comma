@@ -32,22 +32,22 @@ from romcomma.run import context, results
 import shutil
 
 
-def gpr(name: str, repo: Repository, is_read: bool | None, is_independent: bool | None, is_isotropic: bool | None, ignore_exceptions: bool = False,
-        kernel_parameters: Kernel.Parameters | None = None, parameters: MOGP.Parameters | None = None,
+def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | None, is_isotropic: bool | None, ignore_exceptions: bool = False,
+        kernel_parameters: Kernel.Parameters | None = None, likelihood_variance: NP.Matrix | None = None,
         optimize: bool = True, test: bool = True, **kwargs) -> List[str]:
     """ Undertake GPR on a Fold, or recursively across the Folds in a Repository.
 
     Args:
         name: The MOGP name.
         repo: A Fold to house the MOGP, or a Repository containing Folds to house the GPs.
-        is_read: If True, MOGP kernel parameters and MOGP parameters are read from ``fold.folder/name``, otherwise defaults are used.
+        is_read: If True, MOGP kernel parameters and likelihood_variance are read from ``fold.folder/name``, otherwise defaults are used.
             If None, the nearest ancestor MOGP in the independence/isotropy hierarchy is recursively constructed from its nearest ancestor MOGP if necessary,
             then read and broadcast available.
-        is_independent: Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.
+        is_covariant: Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.
         is_isotropic: Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.
         ignore_exceptions: Whether to continue when the MOGP provider throws an exception.
-        kernel_parameters: If not None, this replaces the Kernel specified by the MOGP file (if MOGP is being read) or MOGP default.
-        parameters: If not None MOGP.Parameters replace after reading from file/defaults.
+        kernel_parameters: If not None, this replaces the Kernel specified by the MOGP default.
+        likelihood_variance: If not None this replaces the likelihood_variance specified by the MOGP default.
         optimize: Whether to optimize each MOGP.
         test: Whether to test_data each MOGP.
         kwargs: A Dict of implementation-dependent passes straight to MOGP.Optimize().
@@ -58,37 +58,39 @@ def gpr(name: str, repo: Repository, is_read: bool | None, is_independent: bool 
     """
     if not isinstance(repo, Fold):
         for k in repo.folds:
-            names = gpr(name, Fold(repo, k), is_read, is_independent, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
+            names = gpr(name, Fold(repo, k), is_read, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, optimize, test, **kwargs)
         if test:
-            results.Collect({'user': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
+            results.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
                       {name: {} for name in names}, ignore_exceptions).from_folds(repo, True)
         results.Collect({'variance': {}, 'log_marginal': {}}, {f'{name}/likelihood': {} for name in names}, ignore_exceptions).from_folds(repo, True)
         results.Collect({'variance': {}, 'lengthscales': {}}, {f'{name}/kernel': {} for name in names}, ignore_exceptions).from_folds(repo, True)
         return names
     else:
-        if is_independent is None:
-            names = gpr(name, repo, is_read, True, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
+        if is_covariant is None:
+            names = gpr(name, repo, is_read, False, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, optimize, test, **kwargs)
             return (names +
-                    gpr(name, repo, None, False, False if is_isotropic is None else is_isotropic, ignore_exceptions,
-                        kernel_parameters, parameters, optimize, test, **kwargs))
-        full_name = name + ('.i' if is_independent else '.d')
+                    gpr(name, repo, None, True, False if is_isotropic is None else is_isotropic, ignore_exceptions,
+                        kernel_parameters, likelihood_variance, optimize, test, **kwargs))
+        full_name = name + ('.c' if is_covariant else '.v')
         if is_isotropic is None:
-            names = gpr(name, repo, is_read, is_independent, True, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
-            return names + gpr(name, repo, None, is_independent, False, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
+            names = gpr(name, repo, is_read, is_covariant, True, ignore_exceptions, kernel_parameters, likelihood_variance, optimize, test, **kwargs)
+            return names + gpr(name, repo, None, is_covariant, False, ignore_exceptions, kernel_parameters, likelihood_variance, optimize, test, **kwargs)
         full_name = full_name + ('.i' if is_isotropic else '.a')
         if is_read is None:
             if not (repo.folder / full_name).exists():
-                nearest_name = name + '.i' + full_name[-2:]
-                if is_independent or not (repo.folder / nearest_name).exists():
+                nearest_name = name + '.v' + full_name[-2:]
+                if not (is_covariant and (repo.folder / nearest_name).exists()):
                     nearest_name = full_name[:-2] + '.i'
                     if not (repo.folder / nearest_name).exists():
-                        return gpr(name, repo, False, is_independent, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
+                        return gpr(name, repo, False, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, optimize, test, **kwargs)
                 MOGP.copy(src_folder=repo.folder / nearest_name, dst_folder=repo.folder / full_name)
-            return gpr(name, repo, True, is_independent, is_isotropic, ignore_exceptions, kernel_parameters, parameters, optimize, test, **kwargs)
+            return gpr(name, repo, True, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, optimize, test, **kwargs)
         with context.Timer(f'fold.{repo.meta["k"]} {full_name} MOGP Regression'):
             try:
-                gp = MOGP(full_name, repo, is_read, is_independent, is_isotropic, kernel_parameters,
-                          **({} if parameters is None else parameters.as_dict()))
+                if is_read:
+                    gp = MOGP(full_name, repo, is_read, is_covariant, is_isotropic)
+                else:
+                    gp = MOGP(full_name, repo, is_read, is_covariant, is_isotropic, kernel_parameters, likelihood_variance)
                 if optimize:
                     gp.optimize(**kwargs)
                 if test:
@@ -99,7 +101,7 @@ def gpr(name: str, repo: Repository, is_read: bool | None, is_independent: bool 
         return [full_name]
 
 
-def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropic: Optional[bool],
+def gsa(name: str, repo: Repository, is_covariant: Optional[bool], is_isotropic: Optional[bool],
         kinds: GSA.Kind | Sequence[GSA.Kind] = GSA.ALL_KINDS, m: int = -1,
         ignore_exceptions: bool = False, is_error_calculated: bool = False, **kwargs) -> List[Path]:
     """ Undertake GSA on a Fold, or recursively across the Folds in a Repository.
@@ -107,7 +109,7 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
     Args:
         name: The GSA name.
         repo: A Fold to house the GSA, or a Repository containing Folds to house the GSAs.
-        is_independent: Whether the gp kernel for each output is independent of the other outputs. None results in independent followed by dependent.
+        is_covariant: Whether the gp kernel for each output is independent of the other outputs. None results in independent followed by dependent.
         is_isotropic: Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.
         kinds: Kind of index to calculate - first_order, closed or total. A Sequence of Kinds will be run consecutively.
         is_error_calculated: Whether to calculate variances (errors) on the Sobol indices.
@@ -125,24 +127,24 @@ def gsa(name: str, repo: Repository, is_independent: Optional[bool], is_isotropi
     kinds = (kinds,) if isinstance(kinds, GSA.Kind) else kinds
     if not isinstance(repo, Fold):
         for k in repo.folds:
-            names = gsa(name, Fold(repo, k), is_independent, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
+            names = gsa(name, Fold(repo, k), is_covariant, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
         results.Collect({'S': {}, 'V': {}} | ({'T': {}, 'W': {}} if is_error_calculated else {}),
                         {name: {} for name in names}, ignore_exceptions).from_folds(repo, True)
         for name in names:
             shutil.copyfile(repo.fold_folder(repo.folds.start) / 'meta.json', repo.folder / name / 'meta.json')
     else:
-        if is_independent is None:
+        if is_covariant is None:
             names = gsa(name, repo, True, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
             return (names +
                     gsa(name, repo, False, False if is_isotropic is None else is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs))
-        full_name = name + ('.i' if is_independent else '.d')
+        full_name = name + ('.i' if is_covariant else '.d')
         if is_isotropic is None:
-            names = gsa(name, repo, is_independent, True, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
-            return names + gsa(name, repo, is_independent, False, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
+            names = gsa(name, repo, is_covariant, True, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
+            return names + gsa(name, repo, is_covariant, False, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
         full_name = full_name + ('.i' if is_isotropic else '.a')
         with context.Timer(f'fold.{repo.meta["k"]} {full_name} GSA'):
             try:
-                gp = MOGP(full_name, repo, is_read=True, is_independent=is_independent, is_isotropic=is_isotropic)
+                gp = MOGP(full_name, repo, is_read=True, is_covariant=is_covariant, is_isotropic=is_isotropic)
                 names = []
                 for kind in kinds:
                     folder = GSA(gp, kind, m, is_error_calculated, **kwargs).folder

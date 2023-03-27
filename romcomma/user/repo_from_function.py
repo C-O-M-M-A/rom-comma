@@ -54,6 +54,6 @@ if __name__ == '__main__':
                                     if READ:
                                         repo = sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), False).repo
                                     else:
-                                        repo = (sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), False)
+                                        repo = (sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), True)
                                                 .into_K_folds(K).rotate_folds(rotation).repo)
                                 ext += 1
