@@ -26,8 +26,8 @@ from __future__ import annotations
 from romcomma.base.definitions import *
 from romcomma.data.storage import Repository, Fold
 from romcomma.gpr.kernels import Kernel
-from romcomma.gpr.models import MOGP
-from romcomma.gsa.models import GSA
+from romcomma.gpr.models import GPR, MOGP
+from romcomma.gsa.models import GSA, Sobol
 from romcomma.run import context, results
 import shutil
 
@@ -83,7 +83,7 @@ def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | 
                     nearest_name = full_name[:-2] + '.i'
                     if not (repo.folder / nearest_name).exists():
                         return gpr(name, repo, False, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, optimize, test, **kwargs)
-                MOGP.copy(src_folder=repo.folder / nearest_name, dst_folder=repo.folder / full_name)
+                GPR.copy(src_folder=repo.folder / nearest_name, dst_folder=repo.folder / full_name)
             return gpr(name, repo, True, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, optimize, test, **kwargs)
         with context.Timer(f'fold.{repo.meta["k"]} {full_name} MOGP Regression'):
             try:
@@ -109,12 +109,12 @@ def gsa(name: str, repo: Repository, is_covariant: Optional[bool], is_isotropic:
     Args:
         name: The GSA name.
         repo: A Fold to house the GSA, or a Repository containing Folds to house the GSAs.
-        is_covariant: Whether the gp kernel for each output is independent of the other outputs. None results in independent followed by dependent.
+        is_covariant: Whether each output is independent of the other outputs. None results in variant (independent) followed by covariant (dependent).
         is_isotropic: Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.
         kinds: Kind of index to calculate - first_order, closed or total. A Sequence of Kinds will be run consecutively.
         is_error_calculated: Whether to calculate variances (errors) on the Sobol indices.
-            The calculation of is memory intensive, so leave this flag as False unless you are sure you need errors.
-            Furthermore, errors will only be calculated if the kernel of the gp has diagonal variance F.
+            The calculation of error is memory intensive, so leave this flag as False unless you are sure you need errors.
+            Furthermore, errors will only be calculated if the kernel of the GP has diagonal variance F.
         m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
             Any m outside this range results the Sobol index of each kind being calculated for all ``m in range(1, M+1)``.
         ignore_exceptions: Whether to ignore exceptions (e.g. file not found) when they are encountered, or halt.
@@ -134,10 +134,10 @@ def gsa(name: str, repo: Repository, is_covariant: Optional[bool], is_isotropic:
             shutil.copyfile(repo.fold_folder(repo.folds.start) / 'meta.json', repo.folder / name / 'meta.json')
     else:
         if is_covariant is None:
-            names = gsa(name, repo, True, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
+            names = gsa(name, repo, False, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
             return (names +
-                    gsa(name, repo, False, False if is_isotropic is None else is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs))
-        full_name = name + ('.i' if is_covariant else '.d')
+                    gsa(name, repo, True, False if is_isotropic is None else is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs))
+        full_name = name + ('.c' if is_covariant else '.v')
         if is_isotropic is None:
             names = gsa(name, repo, is_covariant, True, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
             return names + gsa(name, repo, is_covariant, False, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
@@ -147,7 +147,7 @@ def gsa(name: str, repo: Repository, is_covariant: Optional[bool], is_isotropic:
                 gp = MOGP(full_name, repo, is_read=True, is_covariant=is_covariant, is_isotropic=is_isotropic)
                 names = []
                 for kind in kinds:
-                    folder = GSA(gp, kind, m, is_error_calculated, **kwargs).folder
+                    folder = Sobol(gp, kind, m, is_error_calculated, **kwargs).folder
                     names += [folder.relative_to(repo.folder)]
             except BaseException as exception:
                 if not ignore_exceptions:

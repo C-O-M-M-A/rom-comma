@@ -377,7 +377,7 @@ class MOGP(GPR):
 
     @property
     def K_inv_Y(self) -> TF.Tensor:
-        Y = tf.reshape(tf.transpose(self.Y), [-1, 1] if self._likelihood.is_covariant else tf.transpose(self.Y)[..., tf.newaxis])
+        Y = tf.reshape(tf.transpose(self.Y), [-1, 1]) if self._likelihood.is_covariant else tf.transpose(self.Y)[..., tf.newaxis]
         return tf.reshape(tf.linalg.cholesky_solve(self.K_cho, Y), [self._L, 1, self._N])
 
     def check_K_inv_Y(self, x: NP.Matrix) -> NP.Matrix:

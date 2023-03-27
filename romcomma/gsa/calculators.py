@@ -135,7 +135,7 @@ class ClosedSobol(gf.Module, Calculator):
         self.is_F_diagonal = self.options.pop('is_F_diagonal', None)
         if self.is_F_diagonal is None:
             gp_options = self.gp._read_options() if self.gp._options_json.exists() else self.gp.OPTIONS
-            self.is_F_diagonal = not gp_options.pop('kernel', {}).pop("variance", {}).pop('off_diagonal', False)
+            self.is_F_diagonal = not gp_options.pop('kernel', {}).pop("covariance", False)
         # Reshape according to is_F_diagonal
         if self.is_F_diagonal:
             self.F = self.F if self.F.shape[0] == 1 else tf.linalg.diag_part(self.F)

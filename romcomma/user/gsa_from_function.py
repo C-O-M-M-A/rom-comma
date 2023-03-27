@@ -28,7 +28,7 @@ from romcomma.run import context, function, sample, summarised, results
 
 
 ROOT: Path = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/2.3')     #: The root folder to house all data repositories.
-READ: bool = False    #: Whether to read an existing Repository, or create a new one overwriting it.
+READ: bool = True    #: Whether to read an existing Repository, or create a new one overwriting it.
 IGNORE_EXCEPTIONS: bool = False    #: Whether to ignore exceptions, normally due to failed GPR optimisation.
 K: int = 2   #: The number of Folds in a new repository.
 Ms: Tuple[int] = (5, )   #: The number of inputs.
@@ -42,9 +42,12 @@ ROTATIONS = (None,)     #: Rotation applied to the input basis after the functio
 IS_READ: bool | None = None    #: Whether to read the GPR model from file.
 IS_COVARIANT: bool | None = None    #: Whether the GPR likelihood is covariant.
 IS_ISOTROPIC: bool | None = None    #: Whether the GPR kernel is isotropic.
+KINDS: List[summarised.GSA.Kind] = summarised.GSA.ALL_KINDS    #: A list of the kinds of GSA to do.
+IS_ERROR_CALCULATED: bool = True
+IS_T_PARTIAL: bool = True
 
 if __name__ == '__main__':
-    with context.Setup('Test', device='GPU'):
+    with context.Setup('Test', device='CPU'):
         for M in Ms:
             for N in Ns:
                 for noise_magnitude in NOISE_MAGNITUDES:
@@ -60,13 +63,17 @@ if __name__ == '__main__':
                                     else:
                                         repo = (sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), True)
                                                 .into_K_folds(K).rotate_folds(rotation).repo)
-                                    models = summarised.gpr(name='gpr', repo=repo, is_read=IS_READ, is_covariant=IS_COVARIANT, is_isotropic=IS_ISOTROPIC,
-                                                            ignore_exceptions=IGNORE_EXCEPTIONS)
-                                results.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
-                                            {repo.folder / model: {'model': model} for model in models}, IGNORE_EXCEPTIONS).from_folders(repo.folder / 'gpr',
-                                                                                                                                         True)
-                                results.Collect({'variance': {}, 'log_marginal': {}}, {f'{repo.folder / model}/likelihood': {'model': model} for model in models},
-                                            IGNORE_EXCEPTIONS).from_folders((repo.folder / 'gpr') / 'likelihood', True)
-                                results.Collect({'variance': {}, 'lengthscales': {}}, {f'{repo.folder / model}/kernel': {'model': model} for model in models},
-                                            IGNORE_EXCEPTIONS).from_folders((repo.folder / 'gpr') / 'kernel', True)
+                                        models = summarised.gpr(name='gpr', repo=repo, is_read=IS_READ, is_covariant=IS_COVARIANT, is_isotropic=IS_ISOTROPIC,
+                                                                ignore_exceptions=IGNORE_EXCEPTIONS)
+                                        results.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
+                                                        {repo.folder / model: {'model': model} for model in models},
+                                                        IGNORE_EXCEPTIONS).from_folders(repo.folder / 'gpr', True)
+                                        results.Collect({'variance': {}, 'log_marginal': {}},
+                                                        {f'{repo.folder / model}/likelihood': {'model': model} for model in models},
+                                                        IGNORE_EXCEPTIONS).from_folders((repo.folder / 'gpr') / 'likelihood', True)
+                                        results.Collect({'variance': {}, 'lengthscales': {}},
+                                                        {f'{repo.folder / model}/kernel': {'model': model} for model in models},
+                                                        IGNORE_EXCEPTIONS).from_folders((repo.folder / 'gpr') / 'kernel', True)
+                                    summarised.gsa('gpr', repo, is_covariant=IS_COVARIANT, is_isotropic=False, kinds=KINDS,
+                                                   is_error_calculated=IS_ERROR_CALCULATED, ignore_exceptions=IGNORE_EXCEPTIONS, is_T_partial=IS_T_PARTIAL)
                                 ext += 1
