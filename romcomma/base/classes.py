@@ -19,7 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains base classes for romcomma Models and Parameters."""
+""" Base classes for romcomma Models."""
 
 from __future__ import annotations
 
@@ -31,49 +31,77 @@ import json
 from abc import ABC
 
 
-class Frame(pd.DataFrame):
-    """ Encapsulates a pd.DataFrame (df) backed by a source file."""
+class Frame:
+    """ Encapsulates a pandas DataFrame backed by a source file."""
 
-    @classmethod
-    @property
-    def CSV_OPTIONS(cls) -> Dict[str, Any]:
-        """ The default options (kwargs) to pass to pandas.pd.read_csv."""
-        return {'sep': ',', 'header': [0, 1], 'index_col': 0, }
+    csv: Path   #: The csv file path, without ``.csv``.
 
     @property
-    def csv(self) -> Path:
-        return self._csv
+    def df(self) -> pd.DataFrame:
+        return self._df
 
-    def write(self):
-        """ Write to csv, according to Frame.CSV_OPTIONS."""
-        self.df.to_csv(path_or_buf=self._csv, sep=Frame.CSV_OPTIONS['sep'], index=True)
+    @property
+    def np(self) -> NP.Matrix:
+        return self._df.values
+
+    @np.setter
+    def np(self, value: NP.Matrix):
+        self._df.iloc[:, :] = value
+        self.write()
+
+    @property
+    def tf(self) -> TF.Matrix:
+        return tf. convert_to_tensor(self.np)
+
+    @tf.setter
+    def tf(self, value: TF.Matrix):
+        self._df.iloc[:, :] = value.numpy()
+        self.write()
+
+    def write(self, **kwargs: Any) -> Frame:
+        """ Write to csv. This is called whenever the data in the Frame changes.
+        Args:
+            **kwargs: Options passed straight to ``self.to_csv()``.
+
+        Returns: ``self``, for call chaining.
+        """
+        self._write_options = self._write_options | kwargs
+        self._df.to_csv(self.csv.with_suffix(f'{self.csv.suffix}.csv'), **self._write_options)
+        return self
+
+    def __call__(self, *args, **kwargs):
+        """ Returns ``self.np``, as this is automatically cast by tf, np and pd."""
+        return self.np
 
     def __repr__(self) -> str:
-        return str(self._csv)
+        return str(self.csv)
 
     def __str__(self) -> str:
-        return self._csv.stem
+        return self.csv.name
 
     # noinspection PyDefaultArgument
-    def __init__(self, csv: PathLike, df: pd.DataFrame = pd.DataFrame(), write_options: Dict[str, Any] = {}, **kwargs):
-        """ Initialize Frame.
+    def __init__(self, csv: Path | str, data: pd.DataFrame | NP.Array | Iterable | Dict = None, index: pd.Index | NP.ArrayLike = None,
+                 columns: pd.Index | NP.ArrayLike = None, dtype: np.dtype | None = None, copy: bool | None = None, **kwargs):
+        """ Construct a Frame, from csv or pd.DataFrame. If ``data is None``, the Frame is read from csv. Otherwise the Frame is written to csv.
 
         Args:
-            csv: The csv file.
-            df: The initial data. If this is empty, it is read from csv, otherwise it overwrites (or creates) csv.
-        write_options:
-            kwargs: Updates Frame.CSV_OPTIONS for csv reading as detailed in
-                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
-        Keyword Args:
-            kwargs: Updates Frame.CSV_OPTIONS for csv reading as detailed in
-                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
+            csv: The csv file path, without ``.csv``.
+            data: The data to store. If None, a pd.DataFrame is read from csv. 
+            See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+            index: See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+            columns: See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+            dtype: See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+            copy: See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+            **kwargs: Passed straight to `pd.read_csv <https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html>`_
+            or `DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>
         """
-        self._csv = Path(csv)
-        if df.empty:
-            self.df = pd.read_csv(self._csv, **{**Frame.CSV_OPTIONS, **kwargs})
+        self.csv = Path(csv)
+        self._write_options = {}
+        if data is None:
+            self._df = (pd.read_csv(self.csv.with_suffix(f'{self.csv.suffix}.csv'), **kwargs))
         else:
-            self.df = df
-            self.write()
+            self._df = pd.DataFrame(data, index, columns, dtype, copy)
+            self.write(**kwargs)
 
 
 # noinspection PyProtectedMember
@@ -89,10 +117,6 @@ class Parameters(ABC):
     @abstractmethod
     def Values(cls) -> Type[NamedTuple]:
         """ The NamedTuple underpinning this Parameters set."""
-
-    @classmethod
-    def make(cls, iterable: Iterable) -> Parameters:
-        return cls.Values._make(iterable)
 
     @classmethod
     @property
@@ -118,7 +142,7 @@ class Parameters(ABC):
         return self._folder
 
     @folder.setter
-    def folder(self, value: Optional[PathLike]):
+    def folder(self, value: Optional[Path | str]):
         if value is not None:
             self._folder = Path(value)
             self._csvs = tuple((self._folder / field).with_suffix(".csv") for field in self.fields)
@@ -137,7 +161,7 @@ class Parameters(ABC):
         self._values = self.Values(*(np.atleast_2d(val) for val in value))
 
     def broadcast_value(self, model_name: str, field: str, target_shape: Tuple[int, int], is_diagonal: bool = True,
-                        folder: Optional[PathLike] = None) -> Parameters:
+                        folder: Optional[Path | str] = None) -> Parameters:
         """ Broadcast a parameter ordinate.
 
         Args:
@@ -172,7 +196,7 @@ class Parameters(ABC):
         self._values = self.Values(**{key: Frame(self._csvs[i], header=[0]).df.values for i, key in enumerate(self.fields)})
         return self
 
-    def write(self, folder: Optional[PathLike] = None) -> Parameters:
+    def write(self, folder: Optional[Path | str] = None) -> Parameters:
         """  Write Parameters to their csv files.
 
         Args:
@@ -192,7 +216,7 @@ class Parameters(ABC):
     def __str__(self) -> str:
         return self._folder.name
 
-    def __init__(self, folder: Optional[PathLike] = None, **kwargs: NP.Matrix):
+    def __init__(self, folder: Optional[Path | str] = None, **kwargs: NP.Matrix):
         """ Parameters Constructor. Shouldn't need to be overridden. Does not write to file.
 
         Args:
@@ -228,11 +252,11 @@ class Model(ABC):
             return Values
 
     @staticmethod
-    def delete(folder: PathLike, ignore_errors: bool = True):
+    def delete(folder: Path | str, ignore_errors: bool = True):
         shutil.rmtree(folder, ignore_errors=ignore_errors)
 
     @staticmethod
-    def copy(src_folder: PathLike, dst_folder: PathLike, ignore_errors: bool = True):
+    def copy(src_folder: Path | str, dst_folder: Path | str, ignore_errors: bool = True):
         shutil.rmtree(dst_folder, ignore_errors=ignore_errors)
         shutil.copytree(src=src_folder, dst=dst_folder)
 
@@ -295,7 +319,7 @@ class Model(ABC):
         return self._folder.name
 
     @abstractmethod
-    def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
+    def __init__(self, folder: Path | str, read_parameters: bool = False, **kwargs: NP.Matrix):
         """ Model constructor, to be called by all subclasses as a matter of priority.
 
         Args:

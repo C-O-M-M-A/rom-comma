@@ -44,10 +44,6 @@ def FLOAT() -> Type:
     return gf.config.default_float()
 
 
-Numeric = Union[int, float]
-PathLike = Union[str, Path]
-
-
 # noinspection PyPep8Naming
 class NP:
     """ Extended numpy types."""
@@ -64,11 +60,10 @@ class NP:
     Tensor6 = Tensor
     Tensor7 = Tensor
     Tensor8 = Tensor
-    VectorLike = Union[Numeric, Sequence[Numeric], Array]
-    MatrixLike = Union[VectorLike, Sequence[VectorLike]]
+    VectorLike = int | float | Sequence[int | float] | Array
+    MatrixLike = VectorLike | Sequence[VectorLike]
     CovectorLike = MatrixLike
-    ArrayLike = TensorLike = Union[MatrixLike, Sequence[MatrixLike], Sequence[Sequence[MatrixLike]]]
-    VectorOrMatrix = TypeVar('VectorOrMatrix', Vector, Matrix)
+    ArrayLike = TensorLike = MatrixLike | Sequence[MatrixLike] | Sequence[Sequence[MatrixLike]]
 
 
 # noinspection PyPep8Naming
@@ -87,11 +82,10 @@ class TF:
     Tensor6 = Tensor
     Tensor7 = Tensor
     Tensor8 = Tensor
-    VectorLike = Union[Numeric, Sequence[Numeric], Array]
+    VectorLike = int | float | Sequence[int | float] | Array
     MatrixLike = Union[VectorLike, Sequence[VectorLike]]
     CovectorLike = MatrixLike
-    ArrayLike = TensorLike = Union[MatrixLike, Sequence[MatrixLike], Sequence[Sequence[MatrixLike]]]
-    VectorOrMatrix = TypeVar('VectorOrMatrix', Vector, Matrix)
+    ArrayLike = TensorLike = MatrixLike | Sequence[MatrixLike] | Sequence[Sequence[MatrixLike]]
     Slice = PairOfInts = tf.Tensor
 
     NaN: TF.Tensor = tf.constant(np.NaN, dtype=FLOAT())

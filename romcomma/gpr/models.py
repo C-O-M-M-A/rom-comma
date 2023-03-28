@@ -233,7 +233,7 @@ class GPR(Model):
         summary = Frame(self.test_summary_csv, summary)
         return result
 
-    def broadcast_parameters(self, is_covariant: bool, is_isotropic: bool, folder: Optional[PathLike] = None) -> GPR:
+    def broadcast_parameters(self, is_covariant: bool, is_isotropic: bool, folder: Optional[Path | str] = None) -> GPR:
         """ Broadcast the parameters of the MOGP (including kernels) to higher dimensions.
         Shrinkage raises errors, unchanged dimensions silently do nothing.
 

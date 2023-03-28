@@ -62,7 +62,7 @@ class DOE:
         """
         NM = N // M
         N1 = N - M * NM
-        return np.concatenate([1/(2 * N1) + np.linspace(0, 1, N1, False),] + (M-1) * [1/(2 * NM) + np.linspace(0, 1, NM, False),], axis=1)
+        return np.concatenate([1/(2 * N1) + np.linspace(0, 1, N1, False),] + (M-1) * [1/(2 * NM) + np.linspace(0, 1, NM, False), ], axis=1)
 
 
 class GaussianNoise:
@@ -165,7 +165,7 @@ class Function:
         """
         return {'folder': self._repo.folder / sub_folder, 'N': self._N, 'noise': self._noise_variance.magnitude}
 
-    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> Function:
+    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[Path | str] = None) -> Function:
         """ Fold ``self.repo`` into ``K`` Folds, indexed by range(K).
 
         Args:
@@ -207,7 +207,7 @@ class Function:
         Frame(self._repo.folder / 'undo_from.csv', fold.normalization.undo_from(fold.test_data.df))
         return self
 
-    def _construct(self, folder: PathLike, X: NP.Matrix, function_vector: functions.Vector, noise: NP.Matrix, origin_meta: Dict[str, Any]) -> Repository:
+    def _construct(self, folder: Path | str, X: NP.Matrix, function_vector: functions.Vector, noise: NP.Matrix, origin_meta: Dict[str, Any]) -> Repository:
         """ Construct Repository housing the sample design matrix ``(X, f(X) + noise)``.
 
         Args:
@@ -225,7 +225,7 @@ class Function:
         df = pd.DataFrame(np.concatenate((X, Y), axis=1), columns=pd.MultiIndex.from_tuples(columns), dtype=float)
         return Repository.from_df(folder=folder, df=df, meta={'origin': origin_meta})
 
-    def __init__(self, root: PathLike, doe: DOE.Method, function_vector: functions.Vector, N: int, M: int, noise_variance: GaussianNoise.Variance,
+    def __init__(self, root: Path | str, doe: DOE.Method, function_vector: functions.Vector, N: int, M: int, noise_variance: GaussianNoise.Variance,
                  ext: str | None = None, overwrite_existing: bool = False, **kwargs: Any):
         """ Construct a Repository by sampling a function over a DOE.
 

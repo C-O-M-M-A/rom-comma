@@ -29,7 +29,7 @@ from romcomma.data.storage import Repository, Fold
 from shutil import rmtree
 
 
-def copy(src: PathLike, dst: PathLike, repo: Repository):
+def copy(src: Path | str, dst: Path | str, repo: Repository):
     """ Copy a folder within a Fold, or recursively across the Folds in a Repository.
 
     Args:

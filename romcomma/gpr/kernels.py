@@ -118,7 +118,7 @@ class Kernel(Model):
         """ Whether the kernel is covariant between outputs. """
         return self.params.variance.shape[0] > 1
 
-    def broadcast_parameters(self, variance_shape: Tuple[int, int], M, folder: Optional[PathLike] = None) -> Kernel:
+    def broadcast_parameters(self, variance_shape: Tuple[int, int], M, folder: Optional[Path | str] = None) -> Kernel:
         """ Broadcast this kernel to higher dimensions. Shrinkage raises errors, unchanged dimensions silently nop.
         A diagonal variance matrix broadcast to a square matrix is initially diagonal. All other expansions are straightforward broadcasts.
         Args:
@@ -147,7 +147,7 @@ class Kernel(Model):
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
 
-    def __init__(self, folder: PathLike, read_parameters: bool = False, **kwargs: NP.Matrix):
+    def __init__(self, folder: Path | str, read_parameters: bool = False, **kwargs: NP.Matrix):
         """ Construct a Kernel. This must be called as a matter of priority by all implementations.
 
         Args:

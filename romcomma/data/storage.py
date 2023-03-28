@@ -63,7 +63,7 @@ class Frame:
         return self._csv.name
 
     # noinspection PyDefaultArgument
-    def __init__(self, csv: PathLike = Path(), df: pd.DataFrame = pd.DataFrame(), **kwargs):
+    def __init__(self, csv: Path | str = Path(), df: pd.DataFrame = pd.DataFrame(), **kwargs):
         """ Initialize Frame.
 
         Args:
@@ -148,7 +148,7 @@ class Repository:
         """ The number of folds contained in this Repository."""
         return self._meta['K']
 
-    def clean_copy(self, dst: PathLike):
+    def clean_copy(self, dst: Path | str):
         """ Make a clean copy of this repo.
 
         Args:
@@ -162,7 +162,7 @@ class Repository:
         else:
             return range(self.K + (1 if self.meta['has_improper_fold'] else 0))
 
-    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[PathLike] = None) -> Repository:
+    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[Path | str] = None) -> Repository:
         """ Fold this repo into K Folds, indexed by range(K).
 
         Args:
@@ -241,7 +241,7 @@ class Repository:
     def __str__(self) -> str:
         return self._folder.name
 
-    def __init__(self, folder: PathLike, **kwargs):
+    def __init__(self, folder: Path | str, **kwargs):
         self._folder = Path(folder)
         self._meta_json = self._folder / 'meta.json'
         self._csv = self._folder / 'data.csv'
@@ -261,7 +261,7 @@ class Repository:
         return {'csv_kwargs': Frame.CSV_OPTIONS, 'data': {}, 'K': 0, 'shuffle before folding': False}
 
     @classmethod
-    def from_df(cls, folder: PathLike, df: pd.DataFrame, meta: Dict | None = None) -> Repository:
+    def from_df(cls, folder: Path | str, df: pd.DataFrame, meta: Dict | None = None) -> Repository:
         """ Create a Repository from a pd.DataFrame.
 
         Args:
@@ -282,7 +282,7 @@ class Repository:
         return {'skiprows': None, 'index_col': 0}
 
     @classmethod
-    def from_csv(cls, folder: PathLike, csv: PathLike, meta: Dict = None, **kwargs) -> Repository:
+    def from_csv(cls, folder: Path | str, csv: Path | str, meta: Dict = None, **kwargs) -> Repository:
         """ Create a Repository from a csv file.
 
         Args:
@@ -371,7 +371,7 @@ class Fold(Repository):
 
     @classmethod
     def from_dfs(cls, parent: Repository, k: int, data: pd.DataFrame, test_data: pd.DataFrame,
-                 normalization: Optional[PathLike] = None) -> Fold:
+                 normalization: Optional[Path | str] = None) -> Fold:
         """ Create a Fold from a pd.DataFrame.
 
         Args:
