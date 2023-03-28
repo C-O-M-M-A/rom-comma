@@ -32,7 +32,7 @@ romcomma.gsa.base
       :template: custom-class-template.rst
    
       Calculator
-      GaussianWithout2Pi
+      Gaussian
    
    
 

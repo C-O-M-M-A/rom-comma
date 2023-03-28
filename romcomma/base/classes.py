@@ -23,11 +23,57 @@
 
 from __future__ import annotations
 
+import pandas as pd
+
 from romcomma.base.definitions import *
-from romcomma.data.storage import Frame
 import shutil
 import json
 from abc import ABC
+
+
+class Frame(pd.DataFrame):
+    """ Encapsulates a pd.DataFrame (df) backed by a source file."""
+
+    @classmethod
+    @property
+    def CSV_OPTIONS(cls) -> Dict[str, Any]:
+        """ The default options (kwargs) to pass to pandas.pd.read_csv."""
+        return {'sep': ',', 'header': [0, 1], 'index_col': 0, }
+
+    @property
+    def csv(self) -> Path:
+        return self._csv
+
+    def write(self):
+        """ Write to csv, according to Frame.CSV_OPTIONS."""
+        self.df.to_csv(path_or_buf=self._csv, sep=Frame.CSV_OPTIONS['sep'], index=True)
+
+    def __repr__(self) -> str:
+        return str(self._csv)
+
+    def __str__(self) -> str:
+        return self._csv.stem
+
+    # noinspection PyDefaultArgument
+    def __init__(self, csv: PathLike, df: pd.DataFrame = pd.DataFrame(), write_options: Dict[str, Any] = {}, **kwargs):
+        """ Initialize Frame.
+
+        Args:
+            csv: The csv file.
+            df: The initial data. If this is empty, it is read from csv, otherwise it overwrites (or creates) csv.
+        write_options:
+            kwargs: Updates Frame.CSV_OPTIONS for csv reading as detailed in
+                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
+        Keyword Args:
+            kwargs: Updates Frame.CSV_OPTIONS for csv reading as detailed in
+                https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html.
+        """
+        self._csv = Path(csv)
+        if df.empty:
+            self.df = pd.read_csv(self._csv, **{**Frame.CSV_OPTIONS, **kwargs})
+        else:
+            self.df = df
+            self.write()
 
 
 # noinspection PyProtectedMember

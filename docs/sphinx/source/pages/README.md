@@ -1,6 +1,6 @@
 # rom-comma
 
-**GaussianWithout2Pi Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield**
+**Gaussian Process Regression, Global Sensitivity Analysis and Reduced Order Modelling by COMMA Research at The University of Sheffield**
 
 ## installation
 Simply place the `romcomma` package in a folder included in your `PYTHONPATH` (e.g. `site-packages`). 
@@ -13,7 +13,7 @@ All documentation for the `romcomma` package is published in the [rom-comma user
 ## getting started
 The following is not intended to substitute full package documentation, but to sketch the most essential, salient and practically important architectural 
 features of the `romcomma` package. These are introduced by module (or package) name, in order of workflow priority. 
-Presumably this will reflect the package users' first steps. Familiarity with GaussianWithout2Pi Processes (GPs), Global Sensitivity Analysis (GSA) and 
+Presumably this will reflect the package users' first steps. Familiarity with Gaussian Processes (GPs), Global Sensitivity Analysis (GSA) and 
 Reduction of Order by Marginalization (ROM) is largely assumed.
 
 ### `data`

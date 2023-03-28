@@ -127,8 +127,8 @@
 <dt class="sig sig-object py" id="romcomma.gpf.likelihoods.MOGaussian">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MOGaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/likelihoods.html#MOGaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.likelihoods.MOGaussian" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QuadratureLikelihood</span></code></p>
-<p>A non-diagonal, multivariate likelihood, extending gpflow. The code is the multivariate version of gf.likelihoods.GaussianWithout2Pi.</p>
-<p>The GaussianWithout2Pi likelihood is appropriate where uncertainties associated with
+<p>A non-diagonal, multivariate likelihood, extending gpflow. The code is the multivariate version of gf.likelihoods.Gaussian.</p>
+<p>The Gaussian likelihood is appropriate where uncertainties associated with
 the data are believed to follow a normal distribution, with constant
 variance.</p>
 <p>Very small uncertainties can lead to numerical instability during the
@@ -537,6 +537,7 @@ names included the module name:</p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../start.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../start.html#conceptual-hierarchy">Conceptual Hierarchy</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../start.html#module-hierarchy">Module Hierarchy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../start.html#glossary">Glossary</a></li>
 </ul>
@@ -548,6 +549,7 @@ names included the module name:</p>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.gpr.html">romcomma.gpr</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.gsa.html">romcomma.gsa</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.rom.html">romcomma.rom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.run.html">romcomma.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.user.html">romcomma.user</a></li>
 </ul>
 </li>

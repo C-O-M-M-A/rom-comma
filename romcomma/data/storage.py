@@ -121,7 +121,7 @@ class Repository:
     def meta(self) -> Dict[str, Any]:
         return self._meta
 
-    def meta_update(self):
+    def _update_meta(self):
         self._meta.update({'data': {'X_heading': self._data.df.columns.values[0][0],
                                     'Y_heading': self._data.df.columns.values[-1][0]}})
         self._meta['data'].update({'N': self.data.df.shape[0], 'M': self.X.shape[1],
@@ -148,6 +148,12 @@ class Repository:
         """ The number of folds contained in this Repository."""
         return self._meta['K']
 
+    def clean_copy(self, dst: PathLike):
+        """ Make a clean copy of this repo.
+
+        Args:
+            dst: The location of the copy.
+        """
     @property
     def folds(self) -> range:
         """ The indices of the folds contained in this Repository."""
@@ -238,7 +244,6 @@ class Repository:
     def __init__(self, folder: PathLike, **kwargs):
         self._folder = Path(folder)
         self._meta_json = self._folder / 'meta.json'
-        self._X_rotation = self._folder / 'X_rotation.csv'
         self._csv = self._folder / 'data.csv'
         self._data = None
         init_mode = kwargs.get('init_mode', Repository._InitMode.READ)
@@ -268,7 +273,7 @@ class Repository:
         repo = Repository(folder, init_mode=Repository._InitMode.CREATE)
         repo._meta = cls.META | ({} if meta is None else meta)
         repo._data = Frame(repo._csv, df)
-        repo.meta_update()
+        repo._update_meta()
         return repo
 
     @classmethod
@@ -358,6 +363,7 @@ class Fold(Repository):
         """
         init_mode = kwargs.get('init_mode', Repository._InitMode.READ)
         super().__init__(parent.fold_folder(k), init_mode=init_mode)
+        self._X_rotation = self.folder / 'X_rotation.csv'
         self._test_csv = self.folder / 'test.csv'
         if init_mode == Repository._InitMode.READ:
             self._test_data = Frame(self._test_csv)
@@ -387,7 +393,7 @@ class Fold(Repository):
             shutil.copy(Path(normalization), fold._normalization.csv)
         fold._data = Frame(fold._csv, fold.normalization.apply_to(data))
         fold._test_data = Frame(fold._test_csv, fold.normalization.apply_to(test_data))
-        fold.meta_update()
+        fold._update_meta()
         return fold
 
 

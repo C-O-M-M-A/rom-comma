@@ -147,7 +147,7 @@ constructed object is basically useless once constructed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>gp</strong> (<a class="reference internal" href="romcomma.gpr.models.GPR.html#romcomma.gpr.models.GPR" title="romcomma.gpr.models.GPR"><em>GPR</em></a>) – The underlying GaussianWithout2Pi Process.</p></li>
+<li><p><strong>gp</strong> (<a class="reference internal" href="romcomma.gpr.models.GPR.html#romcomma.gpr.models.GPR" title="romcomma.gpr.models.GPR"><em>GPR</em></a>) – The underlying Gaussian Process.</p></li>
 <li><p><strong>kind</strong> (<a class="reference internal" href="romcomma.gsa.models.GSA.html#romcomma.gsa.models.GSA.Kind" title="romcomma.gsa.models.GSA.Kind"><em>Kind</em></a>) – The kind of index to calculate - first order, closed or total.</p></li>
 <li><p><strong>m</strong> (<em>int</em>) – The final index of the reduced model. For a single calculation it is required that <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&amp;le</span> <span class="pre">m</span> <span class="pre">&amp;lt</span> <span class="pre">gp.M</span></code>.
 Any m outside this range results the Sobol index of kind being calculated for all <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">in</span> <span class="pre">range(1,</span> <span class="pre">M+1)</span></code>.</p></li>
@@ -422,6 +422,7 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../start.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../start.html#conceptual-hierarchy">Conceptual Hierarchy</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../start.html#module-hierarchy">Module Hierarchy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../start.html#glossary">Glossary</a></li>
 </ul>
@@ -433,6 +434,7 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 <li class="toctree-l2"><a class="reference internal" href="romcomma.gpr.html">romcomma.gpr</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="romcomma.gsa.html">romcomma.gsa</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.rom.html">romcomma.rom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.run.html">romcomma.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.user.html">romcomma.user</a></li>
 </ul>
 </li>

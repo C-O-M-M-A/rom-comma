@@ -1,9 +1,9 @@
-romcomma.gsa.base.GaussianWithout2Pi
+romcomma.gsa.base.Gaussian
 ====================================
 
 .. currentmodule:: romcomma.gsa.base
 
-.. autoclass:: GaussianWithout2Pi
+.. autoclass:: Gaussian
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,10 +16,10 @@ romcomma.gsa.base.GaussianWithout2Pi
 
    .. autosummary::
    
-      ~GaussianWithout2Pi.__init__
-      ~GaussianWithout2Pi.det
-      ~GaussianWithout2Pi.log_pdf
-      ~GaussianWithout2Pi.pdf
+      ~Gaussian.__init__
+      ~Gaussian.det
+      ~Gaussian.log_pdf
+      ~Gaussian.pdf
    
    
 
@@ -29,6 +29,6 @@ romcomma.gsa.base.GaussianWithout2Pi
 
    .. autosummary::
    
-      ~GaussianWithout2Pi.LogPDF
+      ~Gaussian.LogPDF
    
    

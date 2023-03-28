@@ -128,7 +128,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;This is an abstract class.&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GaussianWithout2Pi"><a class="viewcode-back" href="../../../pages/package/romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.GaussianWithout2Pi">[docs]</a><span class="k">class</span> <span class="nc">GaussianWithout2Pi</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="GaussianWithout2Pi"><a class="viewcode-back" href="../../../pages/package/romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.GaussianWithout2Pi">[docs]</a><span class="k">class</span> <span class="nc">Gaussian</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Encapsulates the calculation of a Gaussian pdf. For numerical stability the 2 Pi factor is not included.&quot;&quot;&quot;</span>
 
     <span class="n">LogPDF</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>  <span class="c1">#: Type mnemonic for a (mean, variance_cho_diagonal) tuple.</span>
@@ -139,30 +139,30 @@
 
 <div class="viewcode-block" id="GaussianWithout2Pi.pdf"><a class="viewcode-back" href="../../../pages/package/romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.GaussianWithout2Pi.pdf">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="n">exponent</span><span class="p">:</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">variance_cho_diagonal</span><span class="p">:</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calculate the GaussianWithout2Pi pdf from the output of GaussianWithout2Pi.log_pdf.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Calculate the Gaussian pdf from the output of Gaussian.log_pdf.</span>
 <span class="sd">        Args:</span>
-<span class="sd">            exponent: The exponent in the GaussianWithout2Pi pdf.</span>
+<span class="sd">            exponent: The exponent in the Gaussian pdf.</span>
 <span class="sd">            variance_cho_diagonal: The diagonal of the variance Cholesky decomposition.</span>
 
-<span class="sd">        Returns: The GaussianWithout2Pi pdf.</span>
+<span class="sd">        Returns: The Gaussian pdf.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">exponent</span><span class="p">)</span> <span class="o">/</span> <span class="n">GaussianWithout2Pi</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">variance_cho_diagonal</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">exponent</span><span class="p">)</span> <span class="o">/</span> <span class="n">Gaussian</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">variance_cho_diagonal</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="GaussianWithout2Pi.log_pdf"><a class="viewcode-back" href="../../../pages/package/romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.GaussianWithout2Pi.log_pdf">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">log_pdf</span><span class="p">(</span><span class="n">mean</span><span class="p">:</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">variance_cho</span><span class="p">:</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">is_variance_diagonal</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
                 <span class="n">ordinate</span><span class="p">:</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">FLOAT</span><span class="p">()),</span> <span class="n">LBunch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LogPDF</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.</span>
-<span class="sd">        Taking the product ``2 * Pi * GaussianWithout2Pi.det(variance_cho_diagonal)`` gives the normalization factor for the gaussian pdf.</span>
+<span class="sd">        Taking the product ``2 * Pi * Gaussian.det(variance_cho_diagonal)`` gives the normalization factor for the gaussian pdf.</span>
 <span class="sd">        Batch dimensions of ordinate, mean and variance are internally broadcast to match each other.</span>
 <span class="sd">        This function is used to minimize exponentiation, for efficiency and accuracy purposes, in calculating ratios of gaussian pdfs.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            mean: GaussianWithout2Pi population mean. Should be of adequate rank to broadcast Ls.</span>
-<span class="sd">            variance_cho: The lower triangular Cholesky decomposition of the GaussianWithout2Pi population variance. Is automatically broadcast to embrace Ns</span>
+<span class="sd">            mean: Gaussian population mean. Should be of adequate rank to broadcast Ls.</span>
+<span class="sd">            variance_cho: The lower triangular Cholesky decomposition of the Gaussian population variance. Is automatically broadcast to embrace Ns</span>
 <span class="sd">            is_variance_diagonal: True if variance is an M-vector</span>
-<span class="sd">            ordinate: The ordinate (z-value) to calculate the GaussianWithout2Pi density for. Should be of adequate rank to broadcast Ls. If not supplied, 0 is assumed.</span>
+<span class="sd">            ordinate: The ordinate (z-value) to calculate the Gaussian density for. Should be of adequate rank to broadcast Ls. If not supplied, 0 is assumed.</span>
 <span class="sd">            LBunch: The number of consecutive output (L) dimensions to count before inserting an N for broadcasting. Usually 2, sometimes 3.</span>
-<span class="sd">        Returns: The tensor GaussianWithout2Pi pdf, and the diagonal of variance_cho.</span>
+<span class="sd">        Returns: The tensor Gaussian pdf, and the diagonal of variance_cho.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Broadcast ordinate - mean.</span>
         <span class="k">if</span> <span class="n">ordinate</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">mean</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
@@ -176,7 +176,7 @@
         <span class="n">insertions</span> <span class="o">-=</span> <span class="n">insertions</span> <span class="o">%</span> <span class="n">LBunch</span>
         <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">insertions</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">LBunch</span><span class="p">):</span>
             <span class="n">variance_cho</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">variance_cho</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
-        <span class="c1"># Calculate the GaussianWithout2Pi pdf.</span>
+        <span class="c1"># Calculate the Gaussian pdf.</span>
         <span class="k">if</span> <span class="n">is_variance_diagonal</span><span class="p">:</span>
             <span class="n">exponent</span> <span class="o">=</span> <span class="n">ordinate</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">variance_cho</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">variance_cho</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">ordinate</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>

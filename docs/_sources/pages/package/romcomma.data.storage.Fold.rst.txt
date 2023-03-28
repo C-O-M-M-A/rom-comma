@@ -23,7 +23,7 @@ romcomma.data.storage.Fold
       ~Fold.from_df
       ~Fold.from_dfs
       ~Fold.into_K_folds
-      ~Fold.meta_update
+      ~Fold._update_meta
    
    
 

@@ -22,13 +22,13 @@
 [project]
 name = "rom-comma"
 version = "1.0.0"
-description = "Reduced Order Modelling software, implementing Global Sensitivity Analysis using GaussianWithout2Pi Processes."
+description = "Reduced Order Modelling software, implementing Global Sensitivity Analysis using Gaussian Processes."
 authors = [
     {name = "Robert Milton", email="r.a.milton@sheffield.ac.uk"}
 ]
 license = { text = "BSD 3-Clause" }
 readme = "README.md"
-keywords = ["Reduced Order Modelling", "Global Sensitivity Analysis", "GaussianWithout2Pi Process", "Sobol ClosedSobol", "Screening"]
+keywords = ["Reduced Order Modelling", "Global Sensitivity Analysis", "Gaussian Process", "Sobol ClosedSobol", "Screening"]
 classifiers = ["Topic :: Scientific/Engineering :: Artificial Intelligence",
                 "Intended Audience :: Science/Research", "Development Status :: 4 - Beta"]
 

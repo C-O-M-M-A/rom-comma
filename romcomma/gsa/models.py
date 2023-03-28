@@ -146,7 +146,7 @@ class GSA(Model):
         constructed object is basically useless once constructed.
 
         Args:
-            gp: The underlying GaussianWithout2Pi Process.
+            gp: The underlying Gaussian Process.
             kind: The kind of index to calculate - first order, closed or total.
             m: The final index of the reduced model. For a single calculation it is required that ``0 &le m &lt gp.M``.
                 Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.

@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from romcomma.base.definitions import *
 from romcomma.gpr.models import GPR
-from romcomma.gsa.base import Calculator, GaussianWithout2Pi
+from romcomma.gsa.base import Calculator, Gaussian
 from abc import ABC
 from enum import IntEnum
 
@@ -74,12 +74,12 @@ class ClosedSobol(gf.Module, Calculator):
         PsiPhi = tf.einsum('lLjJM, lLM -> lLjJM', Psi, Phi)    # Symmetric in L^4
         PhiG = tf.expand_dims(tf.einsum('lLM, jJnM -> lLjJnM', Phi, G), axis=2)    # Symmetric in L^4 N^2
         # print(sym_check(PhiG, [3, 4, 5, 0, 1, 2, 6])) note the symmetry.
-        Phi_pdf, Phi_diag = GaussianWithout2Pi.log_pdf(mean=G, variance_cho=tf.sqrt(Phi), is_variance_diagonal=True, LBunch=2)
-        Psi_pdf, Psi_diag = GaussianWithout2Pi.log_pdf(mean=PhiG, variance_cho=tf.sqrt(PsiPhi), ordinate=G[..., tf.newaxis, tf.newaxis, tf.newaxis, :],
+        Phi_pdf, Phi_diag = Gaussian.log_pdf(mean=G, variance_cho=tf.sqrt(Phi), is_variance_diagonal=True, LBunch=2)
+        Psi_pdf, Psi_diag = Gaussian.log_pdf(mean=PhiG, variance_cho=tf.sqrt(PsiPhi), ordinate=G[..., tf.newaxis, tf.newaxis, tf.newaxis, :],
                                              is_variance_diagonal=True, LBunch=2)
         H = tf.exp(Psi_pdf - Phi_pdf[..., tf.newaxis, tf.newaxis, tf.newaxis])   # Symmetric in L^4 N^2
         # print(sym_check(H, [0, 1, 2, 4, 3, 5])) note the symmetry.
-        V = tf.einsum('lLN, lLNjJn, jJn -> lLjJ', self.g0KY, H, self.g0KY) / tf.sqrt(GaussianWithout2Pi.det(Psi))         # Only one symmetry in L^4
+        V = tf.einsum('lLN, lLNjJn, jJn -> lLjJ', self.g0KY, H, self.g0KY) / tf.sqrt(Gaussian.det(Psi))         # Only one symmetry in L^4
         # print(sym_check(V, [2, 3, 0, 1])) note the symmetry.
         V = tf.einsum('lLjJ -> lj', V)        # Symmetric in L^2
         return V
@@ -88,9 +88,9 @@ class ClosedSobol(gf.Module, Calculator):
         """ Called by constructor to calculate all available quantities prior to marginalization.
         These quantities suffice to calculate V[0], V[M].
         """
-        pre_factor = tf.sqrt(GaussianWithout2Pi.det(self.Lambda2[1][0] * self.Lambda2[-1][1])) * self.F
-        self.g0, _ = GaussianWithout2Pi.log_pdf(mean=self.gp.X[tf.newaxis, tf.newaxis, ...],
-                                       variance_cho=tf.sqrt(self.Lambda2[1][1]), is_variance_diagonal=True, LBunch=2)
+        pre_factor = tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][1])) * self.F
+        self.g0, _ = Gaussian.log_pdf(mean=self.gp.X[tf.newaxis, tf.newaxis, ...],
+                                      variance_cho=tf.sqrt(self.Lambda2[1][1]), is_variance_diagonal=True, LBunch=2)
         self.g0 = pre_factor[..., tf.newaxis] * tf.exp(self.g0)     # Symmetric in L^2
         self.g0KY = self.g0 * self.K_inv_Y     # NOT symmetric in L^2
         self.g0KY -= tf.einsum('lLN -> l', self.g0KY)[..., tf.newaxis, tf.newaxis]/tf.cast(tf.reduce_prod(self.g0KY.shape[1:]), dtype=FLOAT())
@@ -196,7 +196,7 @@ class ClosedSobolWithError(ClosedSobol):
         result = tf.reshape(result, result.shape[:-1].as_list() + shape[-2:])  # TensorFlow only does einsum up to rank 6!
         return tf.einsum(f'LNjjJM -> LNjJM', result)[..., tf.newaxis, :, :] if rank_eq.j == 'i' else result
 
-    def _equated_ranks_gaussian_log_pdf(self, mean: TF.Tensor, variance: TF.Tensor, ordinate: TF.Tensor, rank_eqs: Tuple[RankEquation]) -> List[GaussianWithout2Pi.LogPDF]:
+    def _equated_ranks_gaussian_log_pdf(self, mean: TF.Tensor, variance: TF.Tensor, ordinate: TF.Tensor, rank_eqs: Tuple[RankEquation]) -> List[Gaussian.LogPDF]:
         """ Equate ranks and calculate GaussianWithout2PiWithout2Pi log PDF.
 
         Args:
@@ -215,10 +215,10 @@ class ClosedSobolWithError(ClosedSobol):
             eq_ranks_mean = self._equate_ranks(mean, rank_eq)[..., tf.newaxis, :]
             shape = tf.concat([eq_ranks_mean.shape[:-2], ordinate.shape[-2:]], axis=0) if tf.rank(ordinate) > 2 else None
             eq_ranks_mean = (eq_ranks_mean if shape is None else tf.broadcast_to(eq_ranks_mean, shape)) - ordinate
-            result += [GaussianWithout2Pi.log_pdf(mean=eq_ranks_mean, variance_cho=eq_ranks_variance_cho, is_variance_diagonal=True, LBunch=10000)]
+            result += [Gaussian.log_pdf(mean=eq_ranks_mean, variance_cho=eq_ranks_variance_cho, is_variance_diagonal=True, LBunch=10000)]
         return result
 
-    def _Omega_log_pdf(self, mp: TF.Slice, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor, rank_eqs: Tuple[RankEquation]) -> List[GaussianWithout2Pi.LogPDF]:
+    def _Omega_log_pdf(self, mp: TF.Slice, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor, rank_eqs: Tuple[RankEquation]) -> List[Gaussian.LogPDF]:
         """ The Omega integral for m=mp or m=mp=[:M]. Does not apply when m=[0:0].
 
         Args:
@@ -248,7 +248,7 @@ class ClosedSobolWithError(ClosedSobol):
             G = G[..., mp[0]:mp[1]]
         return self._equated_ranks_gaussian_log_pdf(mean, variance, G[:, tf.newaxis, ...], rank_eqs)
 
-    def _Upsilon_log_pdf(self, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor, rank_eqs: Tuple[RankEquation]) -> List[GaussianWithout2Pi.LogPDF]:
+    def _Upsilon_log_pdf(self, G: TF.Tensor, Phi: TF.Tensor, Upsilon: TF.Tensor, rank_eqs: Tuple[RankEquation]) -> List[Gaussian.LogPDF]:
         """ The Upsilon integral.
 
         Args:
@@ -263,7 +263,7 @@ class ClosedSobolWithError(ClosedSobol):
         variance = 1 - tf.einsum('ikM, lLM, ikM -> liLkM', Upsilon_cho, Phi, Upsilon_cho)[..., tf.newaxis, :, tf.newaxis, :]
         return self._equated_ranks_gaussian_log_pdf(mean, variance, tf.constant(0, dtype=FLOAT()), rank_eqs)
 
-    def _mu_phi_mu(self, G_log_pdf: GaussianWithout2Pi.LogPDF, Upsilon_log_pdf: List[GaussianWithout2Pi.LogPDF], Omega_log_pdf: List[GaussianWithout2Pi.LogPDF], rank_eqs: Tuple[RankEquation]) -> TF.Tensor:
+    def _mu_phi_mu(self, G_log_pdf: Gaussian.LogPDF, Upsilon_log_pdf: List[Gaussian.LogPDF], Omega_log_pdf: List[Gaussian.LogPDF], rank_eqs: Tuple[RankEquation]) -> TF.Tensor:
         """ Calculate E_m E_mp (mu[m] phi[m][mp] mu[mp]).
 
         Args:
@@ -284,18 +284,18 @@ class ClosedSobolWithError(ClosedSobol):
                 Omega_log_pdf[i][1] /= G_log_pdf[1]
                 Omega_log_pdf[i][1] = (tf.reduce_prod(Omega_log_pdf[i][1], axis=-1) * tf.reduce_prod(Upsilon_log_pdf[i][1], axis=-1))[..., tf.newaxis]
             if rank_eq in self.RANK_EQUATIONS.MIXED:
-                result = tf.einsum('kLN, LNjkJn, jJn -> jk', self.g0KY, GaussianWithout2Pi.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
+                result = tf.einsum('kLN, LNjkJn, jJn -> jk', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
                 mu_phi_mu += tf.einsum('k, jk -> jk', self.mu_phi_mu['pre-factor'], result)
                 mu_phi_mu = tf.linalg.set_diag(mu_phi_mu, 2 * tf.linalg.diag_part(mu_phi_mu))
             elif rank_eq.l == 'k' and rank_eq.i == 'j':
-                result = tf.einsum('jLN, LNjkJn, jJn -> j', self.g0KY, GaussianWithout2Pi.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
+                result = tf.einsum('jLN, LNjkJn, jJn -> j', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
                 mu_phi_mu += tf.linalg.diag(tf.einsum('j, j -> j', self.mu_phi_mu['pre-factor'], result))
             else:
-                result = tf.einsum(f'jLN, LNjkJn, jJn -> jk', self.g0KY, GaussianWithout2Pi.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
+                result = tf.einsum(f'jLN, LNjkJn, jJn -> jk', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
                 mu_phi_mu += tf.einsum(f'k, jk -> jk', self.mu_phi_mu['pre-factor'], result)
         return mu_phi_mu
 
-    def _psi_factor(self, G: TF.Tensor, Phi: TF.Tensor, G_log_pdf: GaussianWithout2Pi.LogPDF) -> TF.Tensor:
+    def _psi_factor(self, G: TF.Tensor, Phi: TF.Tensor, G_log_pdf: Gaussian.LogPDF) -> TF.Tensor:
         """ Calculate the psi_factor E_m or E_mp for E_m E_mp (mu[m] psi[m][mp] mu[mp])
 
         Args:
@@ -307,10 +307,10 @@ class ClosedSobolWithError(ClosedSobol):
         D = Phi[..., tf.newaxis, tf.newaxis, :] - tf.einsum('lLM, iIM, lLM -> lLiIM', Phi, Phi, Phi)
         mean = tf.einsum('lLM, iInM -> lLiInM', Phi, G)
         mean = mean[:, :, tf.newaxis, ...] - G[..., tf.newaxis, tf.newaxis, tf.newaxis, :]
-        log_pdf = list(GaussianWithout2Pi.log_pdf(mean=mean, variance_cho=tf.sqrt(D), is_variance_diagonal=True, LBunch=2))
+        log_pdf = list(Gaussian.log_pdf(mean=mean, variance_cho=tf.sqrt(D), is_variance_diagonal=True, LBunch=2))
         log_pdf[0] -= G_log_pdf[0][..., tf.newaxis, tf.newaxis, tf.newaxis]
         log_pdf[1] /= G_log_pdf[1][..., tf.newaxis, tf.newaxis, tf.newaxis, :]
-        factor = tf.einsum('lLN, iIn, lLNiIn -> liIn', self.g0KY, self.g0, GaussianWithout2Pi.pdf(*tuple(log_pdf)))
+        factor = tf.einsum('lLN, iIn, lLNiIn -> liIn', self.g0KY, self.g0, Gaussian.pdf(*tuple(log_pdf)))
         if tf.rank(self.K_cho) == 2 and factor.shape[-2] == 1:
             factor = tf.einsum('lNiI -> liIN', tf.linalg.diag(tf.einsum('liIN -> lNi', factor)))
         factor = tf.reshape(factor, factor.shape[:-2].as_list() + [-1, 1])
@@ -362,7 +362,7 @@ class ClosedSobolWithError(ClosedSobol):
         """
         result = super().marginalize(m)
         G, Phi, Upsilon = tuple(tensor[..., m[0]:m[1]] for tensor in (self.G, self.Phi, self.Upsilon))
-        G_log_pdf = GaussianWithout2Pi.log_pdf(G, tf.sqrt(Phi), is_variance_diagonal=True, LBunch=2)
+        G_log_pdf = Gaussian.log_pdf(G, tf.sqrt(Phi), is_variance_diagonal=True, LBunch=2)
         psi_factor = self._psi_factor(G, Phi, G_log_pdf)
         if self.options['is_T_partial']:
             Upsilon_log_pdf = self._Upsilon_log_pdf(G, Phi, Upsilon, self.RANK_EQUATIONS.DIAGONAL)
@@ -390,9 +390,9 @@ class ClosedSobolWithError(ClosedSobol):
             raise NotImplementedError('If the MOGP kernel covariance is not diagonal, the Sobol error calculation is unstable.')
         self.Upsilon = self.Lambda2[-1][2]
         self.V |= {4: tf.einsum('li, li -> li', self.V[2], self.V[2])}
-        self.mu_phi_mu = {'pre-factor': tf.reshape(tf.sqrt(GaussianWithout2Pi.det(self.Lambda2[1][0] * self.Lambda2[-1][2])) * self.F, [-1])}
+        self.mu_phi_mu = {'pre-factor': tf.reshape(tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][2])) * self.F, [-1])}
         self.mu_phi_mu['pre-factor'] = tf.reshape(self.mu_phi_mu['pre-factor'], [-1])
-        self.G_log_pdf = GaussianWithout2Pi.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
+        self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
         self.psi_factor = self._psi_factor(self.G, self.Phi, self.G_log_pdf)
         if self.options['is_T_partial']:
             self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)

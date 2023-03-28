@@ -32,9 +32,9 @@ import romcomma.gpf as mf
 
 class MOGPR(GPModel, InternalDataTrainingLossMixin):
     r"""
-    GaussianWithout2Pi Process Regression.
+    Gaussian Process Regression.
 
-    This is a vanilla implementation of MOGP regression with a GaussianWithout2Pi
+    This is a vanilla implementation of MOGP regression with a Gaussian
     likelihood.  Multiple columns of Y are treated independently.
 
     The log likelihood of this model is given by

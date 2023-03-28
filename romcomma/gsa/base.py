@@ -35,10 +35,11 @@ class Calculator(ABC):
         raise NotImplementedError('This is an abstract class.')
 
 
-class GaussianWithout2Pi(ABC):
-    """ Encapsulates the calculation of a Gaussian pdf. For numerical stability the 2 Pi factor is not included."""
+class Gaussian(ABC):
+    """ Encapsulates a Gaussian pdf. For numerical stability the 2 Pi factor is not included."""
 
-    LogPDF = Tuple[TF.Tensor, TF.Tensor]  #: Type mnemonic for a (mean, variance_cho_diagonal) tuple.
+    exponent: TF.Tensor  #: The exponent of a Gaussian pdf, :math:`- z^{\intercal} \Sigma^{-1} z / 2`.
+    determinant_vector: TF.Tensor    #: The diagonal of the Cholesky decomposition of the Gaussian covariance matrix.
 
     @staticmethod
     def det(variance_cho_diagonal):
@@ -46,30 +47,30 @@ class GaussianWithout2Pi(ABC):
 
     @staticmethod
     def pdf(exponent: TF.Tensor, variance_cho_diagonal: TF.Tensor):
-        """ Calculate the GaussianWithout2Pi pdf from the output of GaussianWithout2Pi.log_pdf.
+        """ Calculate the Gaussian pdf from the output of Gaussian.log_pdf.
         Args:
-            exponent: The exponent in the GaussianWithout2Pi pdf.
+            exponent: The exponent in the Gaussian pdf.
             variance_cho_diagonal: The diagonal of the variance Cholesky decomposition.
 
-        Returns: The GaussianWithout2Pi pdf.
+        Returns: The Gaussian pdf.
         """
-        return tf.exp(exponent) / GaussianWithout2Pi.det(variance_cho_diagonal)
+        return tf.exp(exponent) / Gaussian.det(variance_cho_diagonal)
 
     @staticmethod
     def log_pdf(mean: TF.Tensor, variance_cho: TF.Tensor, is_variance_diagonal: bool,
                 ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT()), LBunch: int = 2) -> LogPDF:
         """ Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.
-        Taking the product ``2 * Pi * GaussianWithout2Pi.det(variance_cho_diagonal)`` gives the normalization factor for the gaussian pdf.
+        Taking the product ``2 * Pi * Gaussian.det(variance_cho_diagonal)`` gives the normalization factor for the gaussian pdf.
         Batch dimensions of ordinate, mean and variance are internally broadcast to match each other.
         This function is used to minimize exponentiation, for efficiency and accuracy purposes, in calculating ratios of gaussian pdfs.
 
         Args:
-            mean: GaussianWithout2Pi population mean. Should be of adequate rank to broadcast Ls.
-            variance_cho: The lower triangular Cholesky decomposition of the GaussianWithout2Pi population variance. Is automatically broadcast to embrace Ns
+            mean: Gaussian population mean. Should be of adequate rank to broadcast Ls.
+            variance_cho: The lower triangular Cholesky decomposition of the Gaussian population variance. Is automatically broadcast to embrace Ns
             is_variance_diagonal: True if variance is an M-vector
-            ordinate: The ordinate (z-value) to calculate the GaussianWithout2Pi density for. Should be of adequate rank to broadcast Ls. If not supplied, 0 is assumed.
+            ordinate: The ordinate (z-value) to calculate the Gaussian density for. Should be of adequate rank to broadcast Ls. If not supplied, 0 is assumed.
             LBunch: The number of consecutive output (L) dimensions to count before inserting an N for broadcasting. Usually 2, sometimes 3.
-        Returns: The tensor GaussianWithout2Pi pdf, and the diagonal of variance_cho.
+        Returns: The tensor Gaussian pdf, and the diagonal of variance_cho.
         """
         # Broadcast ordinate - mean.
         if ordinate.shape == mean.shape:
@@ -83,7 +84,7 @@ class GaussianWithout2Pi(ABC):
         insertions -= insertions % LBunch
         for axis in range(insertions, 0, -LBunch):
             variance_cho = tf.expand_dims(variance_cho, axis=axis)
-        # Calculate the GaussianWithout2Pi pdf.
+        # Calculate the Gaussian pdf.
         if is_variance_diagonal:
             exponent = ordinate / tf.broadcast_to(variance_cho, tf.concat([variance_cho.shape[:-2], ordinate.shape[-2:]], axis=0))
         else:

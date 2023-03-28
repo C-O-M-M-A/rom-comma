@@ -32,9 +32,9 @@ import tensorflow as tf
 
 
 class MOGaussian(QuadratureLikelihood):
-    """ A non-diagonal, multivariate likelihood, extending gpflow. The code is the multivariate version of gf.likelihoods.GaussianWithout2Pi.
+    """ A non-diagonal, multivariate likelihood, extending gpflow. The code is the multivariate version of gf.likelihoods.Gaussian.
 
-    The GaussianWithout2Pi likelihood is appropriate where uncertainties associated with
+    The Gaussian likelihood is appropriate where uncertainties associated with
     the data are believed to follow a normal distribution, with constant
     variance.
 

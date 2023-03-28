@@ -66,7 +66,7 @@ class DOE:
 
 
 class GaussianNoise:
-    """ Sample multivariate, zero-mean GaussianWithout2Pi noise. """
+    """ Sample multivariate, zero-mean Gaussian noise. """
 
     class Variance:
         """ An artificially generated (co)variance matrix for GaussianNoise, with a useful labelling scheme."""
@@ -119,7 +119,7 @@ class GaussianNoise:
         return self._variance
 
     def __call__(self, repo: Repository | None = None) -> NP.Matrix:
-        """ Generate N samples of L-dimensional GaussianWithout2Pi noise, sampled from :math:`N[0,self.variance]`.
+        """ Generate N samples of L-dimensional Gaussian noise, sampled from :math:`N[0,self.variance]`.
         The constructor generates the sample, so repeated calls to any method always refer to the same GaussianNoise.
 
         Args:
@@ -133,7 +133,7 @@ class GaussianNoise:
         return self._rvs
 
     def __init__(self, N: int, variance: NP.MatrixLike):
-        """ Generate N samples of L-dimensional GaussianWithout2Pi noise, sampled from :math:`\mathsf{N}[0,variance]`.
+        """ Generate N samples of L-dimensional Gaussian noise, sampled from :math:`\mathsf{N}[0,variance]`.
 
         Args:
             N: Number of samples (rows).
