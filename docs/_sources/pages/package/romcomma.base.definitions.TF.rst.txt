@@ -32,6 +32,5 @@ romcomma.base.definitions.TF
       ~TF.NaN
       ~TF.TensorLike
       ~TF.VectorLike
-      ~TF.VectorOrMatrix
    
    

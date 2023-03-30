@@ -23,8 +23,6 @@
 
 from __future__ import annotations
 
-import pandas as pd
-
 from romcomma.base.definitions import *
 import shutil
 import json
@@ -60,9 +58,9 @@ class Frame:
 
     def write(self, **kwargs: Any) -> Frame:
         """ Write to csv. This is called whenever the data in the Frame changes.
+
         Args:
             **kwargs: Options passed straight to ``self.to_csv()``.
-
         Returns: ``self``, for call chaining.
         """
         self._write_options = self._write_options | kwargs
@@ -87,13 +85,13 @@ class Frame:
         Args:
             csv: The csv file path, without ``.csv``.
             data: The data to store. If None, a pd.DataFrame is read from csv. 
-            See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+                See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
             index: See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
             columns: See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
             dtype: See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
             copy: See `pd.DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
             **kwargs: Passed straight to `pd.read_csv <https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html>`_
-            or `DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>
+                or `DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>`_.
         """
         self.csv = Path(csv)
         self._write_options = {}
@@ -105,33 +103,35 @@ class Frame:
 
 
 # noinspection PyProtectedMember
-class Parameters(ABC):
-    """ Abstraction of the parameters of a Model. Essentially a NamedTuple backed by files in a folder.
-    Note that file writing is lazy, it must be called explicitly, but the Parameters are designed for chained calls.
-
-    Most Parameters methods are simple wrappers for annoyingly underscored methods of `NamedTuple
+class Data(ABC):
+    """ Abstraction of Model Data. Essentially a NamedTuple of Frames in a folder.
+    Most Data methods are simple wrappers for annoyingly underscored methods of `NamedTuple
     <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_."""
 
+    Matrix: Type = Frame | pd.DataFrame | NP.Matrix | TF.Matrix
+
+    class NamedTuple(NamedTuple):
+        """ A NamedTuple of data. Must be overridden."""
+        NotImplemented: Data.Matrix = np.atleast_2d('NotImplemented')   #: NamedTuple can have any number of members.
+
     @classmethod
-    @property
-    @abstractmethod
-    def Values(cls) -> Type[NamedTuple]:
-        """ The NamedTuple underpinning this Parameters set."""
+    def make(cls, iterable: Iterable) -> NamedTuple:
+        return cls.NamedTuple._make(iterable)
 
     @classmethod
     @property
     def fields(cls) -> Tuple[str, ...]:
-        return cls.Values._fields
+        return cls.NamedTuple._fields
 
     @classmethod
     @property
     def field_defaults(cls) -> Dict[str, Any]:
-        return cls.Values._field_defaults
+        return cls.NamedTuple._field_defaults
 
-    def as_dict(self) -> Dict[str, Any]:
+    def asdict(self) -> Dict[str, Any]:
         return self._values._asdict()
 
-    def replace(self, **kwargs: NP.Matrix) -> Parameters:
+    def replace(self, **kwargs: NP.Matrix) -> Data:
         for key, value in kwargs.items():
             kwargs[key] = np.atleast_2d(value)
         self._values = self._values._replace(**kwargs)
@@ -141,73 +141,22 @@ class Parameters(ABC):
     def folder(self) -> Path:
         return self._folder
 
-    @folder.setter
-    def folder(self, value: Optional[Path | str]):
-        if value is not None:
-            self._folder = Path(value)
-            self._csvs = tuple((self._folder / field).with_suffix(".csv") for field in self.fields)
-
-    def csv(self, field: str) -> Path:
-        assert getattr(self, '_csvs', None) is not None, 'Cannot perform file operations before self._folder and self._csvs are set.'
-        i = self.fields.index(field)
-        return self._csvs[i]
-
     @property
-    def values(self) -> Values:
+    def values(self) -> NamedTuple:
         return self._values
 
-    @values.setter
-    def values(self, value: Values):
-        self._values = self.Values(*(np.atleast_2d(val) for val in value))
+    def __call__(self, *args, **kwargs):
+        """ Returns ``self.values``."""
+        return self._values
 
-    def broadcast_value(self, model_name: str, field: str, target_shape: Tuple[int, int], is_diagonal: bool = True,
-                        folder: Optional[Path | str] = None) -> Parameters:
-        """ Broadcast a parameter ordinate.
-
-        Args:
-            model_name: Used only in error reporting.
-            field: The name of the field whose ordinate we are broadcasting.
-            target_shape: The shape to broadcast to.
-            is_diagonal: Whether to zero the off-diagonal elements of a square matrix.
-            folder:
-
-        Returns: Self, for chaining calls.
-        Raises:
-            IndexError: If broadcasting is impossible.
-        """
-        replacement = {field: getattr(self.values, field)}
-        try:
-            replacement[field] = np.array(np.broadcast_to(replacement[field], target_shape))
-        except ValueError:
-            raise IndexError(f'The {model_name} {field} has shape {replacement[field].shape} '
-                             f' which cannot be broadcast to {target_shape}.')
-        if is_diagonal and target_shape[0] > 1:
-            replacement[field] = np.diag(np.diagonal(replacement[field]))
-        return self.replace(**replacement).write(folder)
-
-    def read(self) -> Parameters:
-        """ Read Parameters from their csv files.
-
-        Returns: ``self``, for chaining calls.
-        Raises:
-            AssertionError: If self.csv is not set.
-        """
-        assert getattr(self, '_csvs', None) is not None, 'Cannot perform file operations before self._folder and self._csvs are set.'
-        self._values = self.Values(**{key: Frame(self._csvs[i], header=[0]).df.values for i, key in enumerate(self.fields)})
-        return self
-
-    def write(self, folder: Optional[Path | str] = None) -> Parameters:
-        """  Write Parameters to their csv files.
+    def move(self, dst_folder: Path | str) -> Data:
+        """  Move ``self`` to ``dst_folder``.
 
         Args:
-            folder: The file location is changed to ``folder`` unless ``folder`` is ``None`` (the default).
-        Returns: ``self``, for chaining calls.
-        Raises:
-            AssertionError: If self.csv is not set.
+            dst_folder: The folder to move to. If this exists, it will be emptied.
+        Returns: ``self`` for chaining calls.
         """
-        self.folder = folder
-        assert getattr(self, '_csvs', None) is not None, 'Cannot perform file operations before self._folder and self._csvs are set.'
-        tuple(Frame(self._csvs[i], pd.DataFrame(p)) for i, p in enumerate(self._values))
+        self._folder = Data(self.empty(dst_folder), **self.asdict()).folder
         return self
 
     def __repr__(self) -> str:
@@ -216,53 +165,75 @@ class Parameters(ABC):
     def __str__(self) -> str:
         return self._folder.name
 
-    def __init__(self, folder: Optional[Path | str] = None, **kwargs: NP.Matrix):
-        """ Parameters Constructor. Shouldn't need to be overridden. Does not write to file.
+    def __init__(self, folder: Path | str, **kwargs: Data.Matrix):
+        """ Data Constructor.
 
         Args:
-            folder: The folder to record the parameters.
-            **kwargs: key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs). It is the caller's responsibility to ensure
-                that every ordinate is of type NP.Matrix. Missing fields receive their defaults, so Parameters(folder) is the default parameter set.
+            folder: The folder to record the data. Must exist.
+            **kwargs: Initial pairs of NamedTuple fields, precisely as in ``NamedTuple(**kwargs)``.
+                Missing fields receive their defaults, so ``Data(folder)`` is the default parameter set.
         """
+        self._folder = Path(folder)
+        kwargs = self.NamedTuple(**kwargs)._asdict()
         for key, value in kwargs.items():
-            kwargs[key] = np.atleast_2d(value)
-        self.folder = folder
-        self._values = self.Values(**kwargs)
+            value = value.numpy() if isinstance(value, TF.Tensor) else value
+            kwargs[key] = value if isinstance(value, Frame) else Frame(folder / key, np.atleast_2d(value))
+        self._values = self.NamedTuple(**kwargs)
+
+    @classmethod
+    def read(cls, folder: Path | str) -> Data:
+        """ Read ``Data`` from ``folder``.
+
+        Args:
+            folder: The folder to record the data. Must exist
+            **kwargs: key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs).
+                Missing fields receive their defaults, so ``Data(folder)`` is the default ``Data``.
+        Returns: The ``Data`` stored in ``folder``.
+        """
+        folder = Path(folder)
+        asdict = {field: Frame(folder / field) for field in cls.fields}
+        return cls(folder, **asdict)
+
+    @staticmethod
+    def delete(folder: Path | str) -> Path:
+        """ Returns a non-existent ``folder``."""
+        folder = Path(folder)
+        shutil.rmtree(folder, ignore_errors=True)
+        return folder
+
+    @staticmethod
+    def empty(folder: Path | str) -> Path:
+        """ Returns an empty ``folder``."""
+        folder = Data.delete(folder)
+        folder.mkdir(mode=0o777, parents=True, exist_ok=False)
+        return folder
+
+    @staticmethod
+    def copy(src_folder: Path | str, dst_folder: Path | str) -> Path:
+        """ Returns a copy of ``src_folder`` at dst_folder, deleting anything existing at the destination."""
+        dst_folder = Data.delete(dst_folder)
+        shutil.copytree(src=src_folder, dst=dst_folder)
+        return dst_folder
 
 
 class Model(ABC):
     """ Abstract base class for any model. This base class implements generic file storage and parameter handling.
-    The latter is dealt with by each subclass overriding ``Parameters.Values`` with its own ``Type[NamedTuple]``
-    defining the parameter set it takes. ``model.parameters.values`` is a ``Model.Parameters.Values`` of NP.Matrices.
+    The latter is dealt with by each subclass overriding ``Data.NamedTuple`` with its own ``NamedTuple[NamedTuple]``
+    defining the parameter set it takes. ``model.data.values`` is a ``Model.Data.NamedTuple`` of NP.Matrices.
 
-    A Model also may include an optimize method taking options stored in an options.json file, which default to cls.OPTIONS.
+    A Model also may include an optimize method taking options stored in an options.json file, which default to cls.META.
     """
 
-    class Parameters(Parameters):
+    class Data(Data):
         """ This is a placeholder which must be overridden in any implementation."""
 
-        @classmethod
-        @property
-        def Values(cls) -> Type[NamedTuple]:
-
-            class Values(NamedTuple):
-                """ The parameters set of a Model."""
-                NotImplemented: NP.Matrix = np.atleast_2d('Not Implemented')
-
-            return Values
-
-    @staticmethod
-    def delete(folder: Path | str, ignore_errors: bool = True):
-        shutil.rmtree(folder, ignore_errors=ignore_errors)
-
-    @staticmethod
-    def copy(src_folder: Path | str, dst_folder: Path | str, ignore_errors: bool = True):
-        shutil.rmtree(dst_folder, ignore_errors=ignore_errors)
-        shutil.copytree(src=src_folder, dst=dst_folder)
+        class NamedTuple(NamedTuple):
+            """ A NamedTuple of data. Must be overridden."""
+            NotImplemented: Data.Matrix = np.atleast_2d('NotImplemented')  #: NamedTuple can have any number of members.
 
     @classmethod
     @property
-    def OPTIONS(cls) -> Dict[str, Any]:
+    def META(cls) -> Dict[str, Any]:
         """Returns: Default options."""
         pass
         # raise NotImplementedError
@@ -272,40 +243,33 @@ class Model(ABC):
         return self._folder
 
     @property
-    def parameters(self) -> Parameters:
-        return self._parameters
+    def data(self) -> Data:
+        return self._data
 
-    @parameters.setter
-    def parameters(self, value: Parameters):
-        self._parameters = value
+    @data.setter
+    def data(self, value: Data):
+        self._data = value
 
-    @property
-    def params(self) -> Parameters.Values:
-        """ A shorthand to save typing.
-
-        Returns: ``self._parameters.values``
-        """
-        return self._parameters.values
-
+    @abstractmethod
     def optimize(self, method: str, **kwargs) -> Dict[str, Any]:
         if method != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks.':
             raise NotImplementedError('base.optimize() must never be called.')
         else:
-            options = self.OPTIONS | kwargs
+            options = self.META | kwargs
             options = (options if options is not None
-                       else self._read_options() if self._options_json.exists() else self.OPTIONS)
+                       else self.read_meta() if self._options_json.exists() else self.META)
             options.pop('result', default=None)
             options = {**options, 'result': 'OPTIMIZE HERE !!!'}
-            self._write_options(options)
-            self.parameters = self._parameters.replace('WITH OPTIMAL PARAMETERS!!!').write(self.folder)   # Remember to write optimization results.
+            self.write_meta(options)
+            self.data = self._data.replace('WITH OPTIMAL PARAMETERS!!!').write(self.folder)   # Remember to write optimization results.
         return options
 
-    def _read_options(self) -> Dict[str, Any]:
+    def read_meta(self) -> Dict[str, Any]:
         # noinspection PyTypeChecker
         with open(self._options_json, mode='r') as file:
             return json.load(file)
 
-    def _write_options(self, options: Dict[str, Any]):
+    def write_meta(self, options: Dict[str, Any]):
         # noinspection PyTypeChecker
         with open(self._options_json, mode='w') as file:
             json.dump(options, file, indent=8)
@@ -319,21 +283,21 @@ class Model(ABC):
         return self._folder.name
 
     @abstractmethod
-    def __init__(self, folder: Path | str, read_parameters: bool = False, **kwargs: NP.Matrix):
+    def __init__(self, folder: Path | str, read_data: bool = False, **kwargs: NP.Matrix):
         """ Model constructor, to be called by all subclasses as a matter of priority.
 
         Args:
             folder: The model file location.
-            read_parameters: If True, the ``model.parameters`` are read from ``folder``, otherwise defaults are used.
-            **kwargs: The model.parameters fields=values to replace after reading from file/defaults.
+            read_data: If True, the ``model.data`` are read from ``folder``, otherwise defaults are used.
+            **kwargs: The model.data fields=values to replace after reading from file/defaults.
         """
         self._folder = Path(folder)
         self._options_json = self._folder / "options.json"
 
-        if read_parameters:
-            self._parameters = self.Parameters(self._folder).read().replace(**kwargs)
+        if read_data:
+            self._data = self.Data(self._folder).read().replace(**kwargs)
         else:
             self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
-            self._parameters = self.Parameters(self._folder).replace(**kwargs)
-        self._parameters.write()
+            self._data = self.Data(self._folder).replace(**kwargs)
+        self._data.write()
         self._implementation = None

@@ -1,4 +1,4 @@
-romcomma.gpf.likelihoods.MOGaussian
+﻿romcomma.gpf.likelihoods.MOGaussian
 ===================================
 
 .. currentmodule:: romcomma.gpf.likelihoods

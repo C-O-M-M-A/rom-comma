@@ -1,9 +1,9 @@
-romcomma.base.classes.Parameters
+romcomma.base.classes.Data
 ================================
 
 .. currentmodule:: romcomma.base.classes
 
-.. autoclass:: Parameters
+.. autoclass:: Data
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,14 +16,14 @@ romcomma.base.classes.Parameters
 
    .. autosummary::
    
-      ~Parameters.__init__
-      ~Parameters.as_dict
-      ~Parameters.broadcast_value
-      ~Parameters.csv
-      ~Parameters.make
-      ~Parameters.read
-      ~Parameters.replace
-      ~Parameters.write
+      ~Data.__init__
+      ~Data.as_dict
+      ~Data.broadcast_value
+      ~Data.csv
+      ~Data.make
+      ~Data.read
+      ~Data.replace
+      ~Data.write
    
    
 
@@ -33,10 +33,10 @@ romcomma.base.classes.Parameters
 
    .. autosummary::
    
-      ~Parameters.Values
-      ~Parameters.field_defaults
-      ~Parameters.fields
-      ~Parameters.folder
-      ~Parameters.values
+      ~Data.NamedTuple
+      ~Data.field_defaults
+      ~Data.fields
+      ~Data.folder
+      ~Data.values
    
    

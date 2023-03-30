@@ -44,7 +44,7 @@ IS_COVARIANT: bool | None = None    #: Whether the GPR likelihood is covariant.
 IS_ISOTROPIC: bool | None = None    #: Whether the GPR kernel is isotropic.
 
 if __name__ == '__main__':
-    with context.Setup('Test', device='GPU'):
+    with context.Environment('Test', device='GPU'):
         for M in Ms:
             for N in Ns:
                 for noise_magnitude in NOISE_MAGNITUDES:

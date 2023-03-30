@@ -141,7 +141,7 @@ Furthermore, errors will only be calculated if the kernel of the GP has diagonal
 <li><p><strong>m</strong> (<em>int</em>) – The dimensionality of the reduced model. For a single calculation it is required that <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;</span> <span class="pre">m</span> <span class="pre">&lt;</span> <span class="pre">gp.M</span></code>.
 Any m outside this range results the Sobol index of each kind being calculated for all <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">in</span> <span class="pre">range(1,</span> <span class="pre">M+1)</span></code>.</p></li>
 <li><p><strong>ignore_exceptions</strong> (<em>bool</em>) – Whether to ignore exceptions (e.g. file not found) when they are encountered, or halt.</p></li>
-<li><p><strong>kwargs</strong> – A Dict of gsa calculation options, which updates the default gsa.undertake.calculation.OPTIONS.</p></li>
+<li><p><strong>kwargs</strong> – A Dict of gsa calculation options, which updates the default gsa.undertake.calculation.META.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
@@ -171,6 +171,7 @@ Any m outside this range results the Sobol index of each kind being calculated f
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../start.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../start.html#conceptual-hierarchy">Conceptual Hierarchy</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../start.html#module-hierarchy">Module Hierarchy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../start.html#glossary">Glossary</a></li>
 </ul>

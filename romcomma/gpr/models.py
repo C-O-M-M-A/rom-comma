@@ -25,22 +25,22 @@ from __future__ import annotations
 
 from romcomma.base.definitions import *
 from romcomma.data.storage import Fold, Frame
-from romcomma.base.classes import Parameters, Model
+from romcomma.base.classes import Data, Model
 from romcomma.gpr.kernels import Kernel
 
 
 class Likelihood(Model):
 
-    class Parameters(Parameters):
-        """ The Parameters set of a MOGP."""
+    class Data(Data):
+        """ The Data set of a MOGP."""
 
         @classmethod
         @property
-        def Values(cls) -> Type[NamedTuple]:
-            """ The NamedTuple underpinning this Parameters set."""
+        def NamedTuple(cls) -> Type[NamedTuple]:
+            """ The NamedTuple underpinning this Data set."""
 
             class Values(NamedTuple):
-                """ The parameters set of a MOGP.
+                """ The data set of a MOGP.
 
                 Attributes:
                     variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
@@ -53,7 +53,7 @@ class Likelihood(Model):
 
     @classmethod
     @property
-    def OPTIONS(cls) -> Dict[str, Any]:
+    def META(cls) -> Dict[str, Any]:
         return {'variance': True, 'covariance': True}
 
     @classmethod
@@ -66,8 +66,8 @@ class Likelihood(Model):
         return self.params.variance.shape[0] > 1
 
     def optimize(self, **kwargs) -> Dict[str, Any]:
-        """ Merely sets the trainable parameters."""
-        options = self.OPTIONS | kwargs
+        """ Merely sets the trainable data."""
+        options = self.META | kwargs
         if self.is_covariant:
             gf.set_trainable(self._parent._implementation[0].likelihood.variance._cholesky_diagonal, options['variance'])
             gf.set_trainable(self._parent._implementation[0].likelihood.variance._cholesky_lower_triangle, options['covariance'])
@@ -76,8 +76,8 @@ class Likelihood(Model):
                 gf.set_trainable(implementation.likelihood.variance, options['variance'])
         return options
 
-    def __init__(self, parent: GPR, read_parameters: bool = False, **kwargs: NP.Matrix):
-        super().__init__(parent.folder / 'likelihood', read_parameters, **kwargs)
+    def __init__(self, parent: GPR, read_data: bool = False, **kwargs: NP.Matrix):
+        super().__init__(parent.folder / 'likelihood', read_data, **kwargs)
         self._parent = parent
 
 
@@ -85,20 +85,20 @@ class Likelihood(Model):
 class GPR(Model):
     """ Interface to a Gaussian Process."""
 
-    class Parameters(Parameters):
-        """ The Parameters set of a MOGP."""
+    class Data(Data):
+        """ The Data set of a MOGP."""
 
         @classmethod
         @property
-        def Values(cls) -> Type[NamedTuple]:
-            """ The NamedTuple underpinning this Parameters set."""
+        def NamedTuple(cls) -> Type[NamedTuple]:
+            """ The NamedTuple underpinning this Data set."""
             class Values(NamedTuple):
-                """ The parameters set of a MOGP.
+                """ The data set of a MOGP.
 
                 Attributes:
                     kernel (NP.Matrix): A numpy [[str]] identifying the type of Kernel, as returned by gp.kernel.TypeIdentifier(). This is never set externally.
-                        The kernel parameter, when provided, must be a ``[[Kernel.Parameters]]`` set storing the desired kernel parameters.
-                        The kernel is constructed by inferring its type from the type of Kernel.Parameters.
+                        The kernel parameter, when provided, must be a ``[[Kernel.Data]]`` set storing the desired kernel data.
+                        The kernel is constructed by inferring its type from the type of Kernel.Data.
                 """
                 kernel: NP.Matrix = np.atleast_2d(None)
             return Values
@@ -106,13 +106,13 @@ class GPR(Model):
     @classmethod
     @property
     @abstractmethod
-    def OPTIONS(cls) -> Dict[str, Any]:
+    def META(cls) -> Dict[str, Any]:
         """ Hyper-parameter optimizer options"""
 
     @classmethod
     @property
     def KERNEL_FOLDER_NAME(cls) -> str:
-        """ The name of the folder where kernel parameters are stored."""
+        """ The name of the folder where kernel data are stored."""
         return "kernel"
 
     @property
@@ -234,7 +234,7 @@ class GPR(Model):
         return result
 
     def broadcast_parameters(self, is_covariant: bool, is_isotropic: bool, folder: Optional[Path | str] = None) -> GPR:
-        """ Broadcast the parameters of the MOGP (including kernels) to higher dimensions.
+        """ Broadcast the data of the MOGP (including kernels) to higher dimensions.
         Shrinkage raises errors, unchanged dimensions silently do nothing.
 
         Args:
@@ -252,17 +252,17 @@ class GPR(Model):
         return self
 
     def __init__(self, name: str, fold: Fold, is_read: bool | None, is_covariant: bool, is_isotropic: bool,
-                 kernel_parameters: Kernel.Parameters | None = None, likelihood_variance: NP.Matrix | None = None):
-        """ Set up parameters, and checks dimensions.
+                 kernel_parameters: Kernel.Data | None = None, likelihood_variance: NP.Matrix | None = None):
+        """ Set up data, and checks dimensions.
 
         Args:
             name: The name of this MOGP.
             fold: The Fold housing this MOGP.
-            is_read: If True, the MOGP.kernel.parameters and MOGP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
+            is_read: If True, the MOGP.kernel.data and MOGP.data and are read from ``fold.folder/name``, otherwise defaults are used.
             is_covariant: Whether the outputs will be treated as independent.
             is_isotropic: Whether to restrict the kernel to be isotropic.
-            kernel_parameters: A Kernel.Parameters to use for MOGP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
-                If None, the kernel is read from file, or set to the default Kernel.Parameters(), according to read_from_file.
+            kernel_parameters: A Kernel.Data to use for MOGP.kernel.data. If not None, this replaces the kernel specified by file/defaults.
+                If None, the kernel is read from file, or set to the default Kernel.Data(), according to read_from_file.
             likelihood_variance: The likelihood variance to use instead of file or default.
         Raises:
             IndexError: If a parameter is mis-shaped.
@@ -277,10 +277,10 @@ class GPR(Model):
             self._kernel = KernelType(self._folder / self.KERNEL_FOLDER_NAME, is_read)
         else:
             if kernel_parameters is None:
-                kernel_parameters = Kernel.Parameters()
+                kernel_parameters = Kernel.Data()
             KernelType = Kernel.TypeFromParameters(kernel_parameters)
             self._kernel = KernelType(self._folder / self.KERNEL_FOLDER_NAME, is_read, **kernel_parameters.as_dict())
-            self._parameters.replace(kernel=np.atleast_2d(KernelType.TYPE_IDENTIFIER)).write()
+            self._data.replace(kernel=np.atleast_2d(KernelType.TYPE_IDENTIFIER)).write()
         self.broadcast_parameters(is_covariant, is_isotropic)
 
 
@@ -290,7 +290,7 @@ class MOGP(GPR):
 
     @classmethod
     @property
-    def OPTIONS(cls) -> Dict[str, Any]:
+    def META(cls) -> Dict[str, Any]:
         return {'maxiter': 5000, 'gtol': 1E-16}
 
     @property
@@ -307,15 +307,15 @@ class MOGP(GPR):
         return self._implementation
 
     def optimize(self, method: str = 'L-BFGS-B', **kwargs) -> Dict[str, Any]:
-        """ Optimize the MOGP hyper-parameters.
+        """ Optimize the MOGP hyper-data.
 
         Args:
             method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
-            kwargs: A Dict of implementation-dependent optimizer options, following the format of GPR.OPTIONS.
-                Options for the kernel should be passed as kernel={see kernel.OPTIONS for format}.
-                Options for the likelihood should be passed as likelihood={see likelihood.OPTIONS for format}.
+            kwargs: A Dict of implementation-dependent optimizer options, following the format of GPR.META.
+                Options for the kernel should be passed as kernel={see kernel.META for format}.
+                Options for the likelihood should be passed as likelihood={see likelihood.META for format}.
         """
-        options = (self._read_options() if self._options_json.exists() else self.OPTIONS)
+        options = (self.read_meta() if self._options_json.exists() else self.META)
         kernel_options = self._kernel.optimize(**(options.pop('kernel', {}) | kwargs.pop('kernel', {})))
         likelihood_options = self._likelihood.optimize(**(options.pop('likelihood', {}) | kwargs.pop('likelihood', {})))
         options.update(kwargs)
@@ -323,7 +323,7 @@ class MOGP(GPR):
         opt = gf.optimizers.Scipy()
         options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
                                                   for gp in self._implementation)), 'kernel': kernel_options, 'likelihood': likelihood_options})
-        self._write_options(options)
+        self.write_meta(options)
         if self._likelihood.is_covariant:
             self._likelihood.parameters = self._likelihood.parameters.replace(variance=self._implementation[0].likelihood.variance.value.numpy(),
                                                                               log_marginal=self._implementation[0].log_marginal_likelihood().numpy()
@@ -400,17 +400,17 @@ class MOGP(GPR):
         return tf.sqrt(tf.reduce_sum(result * result, axis=0)/o)
 
     # def __init__(self, name: str, fold: Fold, is_read: bool, is_covariant: bool, is_isotropic: bool,
-    #              kernel_parameters: Optional[Kernel.Parameters] = None, likelihood_variance: NP.Matrix | None = None):
-    #     """ MOGP Constructor. Calls __init__ to setup parameters, then checks dimensions.
+    #              kernel_parameters: Optional[Kernel.Data] = None, likelihood_variance: NP.Matrix | None = None):
+    #     """ MOGP Constructor. Calls __init__ to setup data, then checks dimensions.
     # 
     #     Args:
     #         name: The name of this MOGP.
     #         fold: The Fold housing this MOGP.
-    #         is_read: If True, the MOGP.kernel.parameters and MOGP.parameters and are read from ``fold.folder/name``, otherwise defaults are used.
+    #         is_read: If True, the MOGP.kernel.data and MOGP.data and are read from ``fold.folder/name``, otherwise defaults are used.
     #         is_covariant: Whether the outputs will be treated as independent.
     #         is_isotropic: Whether to restrict the kernel to be isotropic.
-    #         kernel_parameters: A Kernel.Parameters to use for MOGP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
-    #             If None, the kernel is read from file, or set to the default Kernel.Parameters(), according to read_from_file.
+    #         kernel_parameters: A Kernel.Data to use for MOGP.kernel.data. If not None, this replaces the kernel specified by file/defaults.
+    #             If None, the kernel is read from file, or set to the default Kernel.Data(), according to read_from_file.
     #         likelihood_variance: The likelihood variance to use instead of file or default.
     #     Raises:
     #         IndexError: If a parameter is mis-shaped.

@@ -112,49 +112,119 @@
 <span class="c1">#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
 <span class="c1">#  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
 
-<span class="sd">&quot;&quot;&quot; Contains base classes for romcomma Models and Parameters.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; Base classes for romcomma Models.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span> <span class="nn">romcomma.base.definitions</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="kn">from</span> <span class="nn">romcomma.data.storage</span> <span class="kn">import</span> <span class="n">Frame</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span>
 
 
-<span class="c1"># noinspection PyProtectedMember</span>
-<div class="viewcode-block" id="Parameters"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters">[docs]</a><span class="k">class</span> <span class="nc">Parameters</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Abstraction of the parameters of a Model. Essentially a NamedTuple backed by files in a folder.</span>
-<span class="sd">    Note that file writing is lazy, it must be called explicitly, but the Parameters are designed for chained calls.</span>
+<div class="viewcode-block" id="Frame"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Frame.html#romcomma.base.classes.Frame">[docs]</a><span class="k">class</span> <span class="nc">Frame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Encapsulates a pandas DataFrame backed by a source file.&quot;&quot;&quot;</span>
 
-<span class="sd">    Most Parameters methods are simple wrappers for annoyingly underscored methods of `NamedTuple</span>
+    <span class="n">csv</span><span class="p">:</span> <span class="n">Path</span>   <span class="c1">#: The csv file path, without ``.csv``.</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">df</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">np</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="nd">@np</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">np</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TF</span><span class="o">.</span><span class="n">Matrix</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span> <span class="n">convert_to_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">np</span><span class="p">)</span>
+
+    <span class="nd">@tf</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">TF</span><span class="o">.</span><span class="n">Matrix</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Frame.write"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Frame.html#romcomma.base.classes.Frame.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Frame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Write to csv. This is called whenever the data in the Frame changes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            **kwargs: Options passed straight to ``self.to_csv()``.</span>
+<span class="sd">        Returns: ``self``, for call chaining.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">write_meta</span> <span class="o">|</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s1">.csv&#39;</span><span class="p">),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">write_meta</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns ``self.np``, as this is automatically cast by tf, np and pd.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">np</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="c1"># noinspection PyDefaultArgument</span>
+<div class="viewcode-block" id="Frame.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Frame.html#romcomma.base.classes.Frame.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csv</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">NP</span><span class="o">.</span><span class="n">Array</span> <span class="o">|</span> <span class="n">Iterable</span> <span class="o">|</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span> <span class="o">|</span> <span class="n">NP</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                 <span class="n">columns</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span> <span class="o">|</span> <span class="n">NP</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">copy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Construct a Frame, from csv or pd.DataFrame. If ``data is None``, the Frame is read from csv. Otherwise the Frame is written to csv.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            csv: The csv file path, without ``.csv``.</span>
+<span class="sd">            data: The data to store. If None, a pd.DataFrame is read from csv. </span>
+<span class="sd">                See `pd.DataFrame &lt;https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html&gt;`_.</span>
+<span class="sd">            index: See `pd.DataFrame &lt;https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html&gt;`_.</span>
+<span class="sd">            columns: See `pd.DataFrame &lt;https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html&gt;`_.</span>
+<span class="sd">            dtype: See `pd.DataFrame &lt;https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html&gt;`_.</span>
+<span class="sd">            copy: See `pd.DataFrame &lt;https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html&gt;`_.</span>
+<span class="sd">            **kwargs: Passed straight to `pd.read_csv &lt;https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html&gt;`_</span>
+<span class="sd">                or `DataFrame.to_csv &lt;https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html&gt;`_.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">csv</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">csv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_meta</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_df</span> <span class="o">=</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">csv</span><span class="o">.</span><span class="n">suffix</span><span class="si">}</span><span class="s1">.csv&#39;</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">copy</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># noinspection PyProtectedMember</span>
+<div class="viewcode-block" id="Data"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Data">[docs]</a><span class="k">class</span> <span class="nc">Data</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Abstraction of Model Data. Essentially a NamedTuple of Frames in a folder.</span>
+<span class="sd">    Most Data methods are simple wrappers for annoyingly underscored methods of `NamedTuple</span>
 <span class="sd">    &lt;https://docs.python.org/3/library/collections.html#collections.namedtuple&gt;`_.&quot;&quot;&quot;</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="nd">@property</span>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">Values</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">NamedTuple</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; The NamedTuple underpinning this Parameters set.&quot;&quot;&quot;</span>
+    <span class="n">Matrix</span><span class="p">:</span> <span class="n">Type</span> <span class="o">=</span> <span class="n">Frame</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">|</span> <span class="n">TF</span><span class="o">.</span><span class="n">Matrix</span>
+
+<div class="viewcode-block" id="Data.NamedTuple"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Data.NamedTuple">[docs]</a>    <span class="k">class</span> <span class="nc">NamedTuple</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; A NamedTuple of data. Must be overridden.&quot;&quot;&quot;</span>
+        <span class="bp">NotImplemented</span><span class="p">:</span> <span class="n">Data</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="s1">&#39;NotImplemented&#39;</span><span class="p">)</span>   <span class="c1">#: NamedTuple can have any number of members.</span></div>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">iterable</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Values</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">make</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">iterable</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NamedTuple</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">NamedTuple</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Values</span><span class="o">.</span><span class="n">_fields</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">NamedTuple</span><span class="o">.</span><span class="n">_fields</span>
 
     <span class="nd">@classmethod</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">field_defaults</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Values</span><span class="o">.</span><span class="n">_field_defaults</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">NamedTuple</span><span class="o">.</span><span class="n">_field_defaults</span>
 
-    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="o">.</span><span class="n">_replace</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -164,73 +234,22 @@
     <span class="k">def</span> <span class="nf">folder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span>
 
-    <span class="nd">@folder</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path | str</span><span class="p">]):</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_csvs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">/</span> <span class="n">field</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.csv&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_csvs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Cannot perform file operations before self._folder and self._csvs are set.&#39;</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csvs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Values</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NamedTuple</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span>
 
-    <span class="nd">@values</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Values</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Values</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">value</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns ``self.values``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span>
 
-<div class="viewcode-block" id="Parameters.broadcast_value"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters.broadcast_value">[docs]</a>    <span class="k">def</span> <span class="nf">broadcast_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">is_diagonal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-                        <span class="n">folder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path | str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Broadcast a parameter ordinate.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            model_name: Used only in error reporting.</span>
-<span class="sd">            field: The name of the field whose ordinate we are broadcasting.</span>
-<span class="sd">            target_shape: The shape to broadcast to.</span>
-<span class="sd">            is_diagonal: Whether to zero the off-diagonal elements of a square matrix.</span>
-<span class="sd">            folder:</span>
-
-<span class="sd">        Returns: Self, for chaining calls.</span>
-<span class="sd">        Raises:</span>
-<span class="sd">            IndexError: If broadcasting is impossible.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">replacement</span> <span class="o">=</span> <span class="p">{</span><span class="n">field</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">field</span><span class="p">)}</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">replacement</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">replacement</span><span class="p">[</span><span class="n">field</span><span class="p">],</span> <span class="n">target_shape</span><span class="p">))</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s1"> has shape </span><span class="si">{</span><span class="n">replacement</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1"> &#39;</span>
-                             <span class="sa">f</span><span class="s1">&#39; which cannot be broadcast to </span><span class="si">{</span><span class="n">target_shape</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">is_diagonal</span> <span class="ow">and</span> <span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">replacement</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">replacement</span><span class="p">[</span><span class="n">field</span><span class="p">]))</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">**</span><span class="n">replacement</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Parameters.read"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Read Parameters from their csv files.</span>
-
-<span class="sd">        Returns: ``self``, for chaining calls.</span>
-<span class="sd">        Raises:</span>
-<span class="sd">            AssertionError: If self.csv is not set.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_csvs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Cannot perform file operations before self._folder and self._csvs are set.&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Values</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csvs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">header</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">)})</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
-
-<div class="viewcode-block" id="Parameters.write"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path | str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;  Write Parameters to their csv files.</span>
+<div class="viewcode-block" id="Data.move"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Data.move">[docs]</a>    <span class="k">def</span> <span class="nf">move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dst_folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;  Move ``self`` to ``dst_folder``.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            folder: The file location is changed to ``folder`` unless ``folder`` is ``None`` (the default).</span>
-<span class="sd">        Returns: ``self``, for chaining calls.</span>
-<span class="sd">        Raises:</span>
-<span class="sd">            AssertionError: If self.csv is not set.</span>
+<span class="sd">            dst_folder: The folder to move to. If this exists, it will be emptied.</span>
+<span class="sd">        Returns: ``self`` for chaining calls.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">folder</span> <span class="o">=</span> <span class="n">folder</span>
-        <span class="k">assert</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_csvs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;Cannot perform file operations before self._folder and self._csvs are set.&#39;</span>
-        <span class="nb">tuple</span><span class="p">(</span><span class="n">Frame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_csvs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">Data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">dst_folder</span><span class="p">),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">asdict</span><span class="p">())</span><span class="o">.</span><span class="n">folder</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -239,53 +258,75 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">.</span><span class="n">name</span>
 
-<div class="viewcode-block" id="Parameters.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path | str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; Parameters Constructor. Shouldn&#39;t need to be overridden. Does not write to file.</span>
+<div class="viewcode-block" id="Data.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Data.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Data</span><span class="o">.</span><span class="n">Matrix</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Data Constructor.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            folder: The folder to record the parameters.</span>
-<span class="sd">            **kwargs: key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs). It is the caller&#39;s responsibility to ensure</span>
-<span class="sd">                that every ordinate is of type NP.Matrix. Missing fields receive their defaults, so Parameters(folder) is the default parameter set.</span>
+<span class="sd">            folder: The folder to record the data. Must exist.</span>
+<span class="sd">            **kwargs: Initial pairs of NamedTuple fields, precisely as in ``NamedTuple(**kwargs)``.</span>
+<span class="sd">                Missing fields receive their defaults, so ``Data(folder)`` is the default parameter set.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">folder</span> <span class="o">=</span> <span class="n">folder</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Values</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">value</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Frame</span><span class="p">)</span> <span class="k">else</span> <span class="n">Frame</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="n">key</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Data.read"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Data.read">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Read ``Data`` from ``folder``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            folder: The folder to record the data. Must exist</span>
+<span class="sd">            **kwargs: key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(**kwargs).</span>
+<span class="sd">                Missing fields receive their defaults, so ``Data(folder)`` is the default ``Data``.</span>
+<span class="sd">        Returns: The ``Data`` stored in ``folder``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+        <span class="n">asdict</span> <span class="o">=</span> <span class="p">{</span><span class="n">field</span><span class="p">:</span> <span class="n">Frame</span><span class="p">(</span><span class="n">folder</span> <span class="o">/</span> <span class="n">field</span><span class="p">)</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">fields</span><span class="p">}</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="o">**</span><span class="n">asdict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Data.delete"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Data.delete">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="n">folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a non-existent ``folder``.&quot;&quot;&quot;</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">folder</span></div>
+
+<div class="viewcode-block" id="Data.empty"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Data.empty">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">empty</span><span class="p">(</span><span class="n">folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns an empty ``folder``.&quot;&quot;&quot;</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">Data</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+        <span class="n">folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mo">0o777</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">folder</span></div>
+
+<div class="viewcode-block" id="Data.copy"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Parameters.html#romcomma.base.classes.Data.copy">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="n">src_folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dst_folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Returns a copy of ``src_folder`` at dst_folder, deleting anything existing at the destination.&quot;&quot;&quot;</span>
+        <span class="n">dst_folder</span> <span class="o">=</span> <span class="n">Data</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">dst_folder</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">src_folder</span><span class="p">,</span> <span class="n">dst</span><span class="o">=</span><span class="n">dst_folder</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dst_folder</span></div></div>
 
 
 <div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Model.html#romcomma.base.classes.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Abstract base class for any model. This base class implements generic file storage and parameter handling.</span>
-<span class="sd">    The latter is dealt with by each subclass overriding ``Parameters.Values`` with its own ``Type[NamedTuple]``</span>
-<span class="sd">    defining the parameter set it takes. ``model.parameters.values`` is a ``Model.Parameters.Values`` of NP.Matrices.</span>
+<span class="sd">    The latter is dealt with by each subclass overriding ``Data.NamedTuple`` with its own ``NamedTuple[NamedTuple]``</span>
+<span class="sd">    defining the parameter set it takes. ``model.data.values`` is a ``Model.Data.NamedTuple`` of NP.Matrices.</span>
 
-<span class="sd">    A Model also may include an optimize method taking options stored in an options.json file, which default to cls.OPTIONS.</span>
+<span class="sd">    A Model also may include an optimize method taking options stored in an options.json file, which default to cls.META.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Model.Parameters"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters">[docs]</a>    <span class="k">class</span> <span class="nc">Parameters</span><span class="p">(</span><span class="n">Parameters</span><span class="p">):</span>
+<div class="viewcode-block" id="Model.Data"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Data">[docs]</a>    <span class="k">class</span> <span class="nc">Data</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; This is a placeholder which must be overridden in any implementation.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Model.Parameters.Values"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Parameters.Values">[docs]</a>        <span class="nd">@classmethod</span>
-        <span class="nd">@property</span>
-        <span class="k">def</span> <span class="nf">Values</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">NamedTuple</span><span class="p">]:</span>
-
-            <span class="k">class</span> <span class="nc">Values</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
-<span class="w">                </span><span class="sd">&quot;&quot;&quot; The parameters set of a Model.&quot;&quot;&quot;</span>
-                <span class="bp">NotImplemented</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="s1">&#39;Not Implemented&#39;</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">Values</span></div></div>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="n">folder</span><span class="p">:</span> <span class="n">Path | str</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="n">ignore_errors</span><span class="p">)</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="n">src_folder</span><span class="p">:</span> <span class="n">Path | str</span><span class="p">,</span> <span class="n">dst_folder</span><span class="p">:</span> <span class="n">Path | str</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">dst_folder</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="n">ignore_errors</span><span class="p">)</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">src</span><span class="o">=</span><span class="n">src_folder</span><span class="p">,</span> <span class="n">dst</span><span class="o">=</span><span class="n">dst_folder</span><span class="p">)</span>
+<div class="viewcode-block" id="Model.Data.NamedTuple"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Model.html#romcomma.base.classes.Model.Data.NamedTuple">[docs]</a>        <span class="k">class</span> <span class="nc">NamedTuple</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot; A NamedTuple of data. Must be overridden.&quot;&quot;&quot;</span>
+            <span class="bp">NotImplemented</span><span class="p">:</span> <span class="n">Data</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="s1">&#39;NotImplemented&#39;</span><span class="p">)</span>  <span class="c1">#: NamedTuple can have any number of members.</span></div></div>
 
     <span class="nd">@classmethod</span>
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">OPTIONS</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">META</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns: Default options.&quot;&quot;&quot;</span>
         <span class="k">pass</span>
         <span class="c1"># raise NotImplementedError</span>
@@ -295,40 +336,33 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
 
-    <span class="nd">@parameters</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Parameters</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="nd">@data</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Parameters</span><span class="o">.</span><span class="n">Values</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; A shorthand to save typing.</span>
-
-<span class="sd">        Returns: ``self._parameters.values``</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="o">.</span><span class="n">values</span>
-
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks.&#39;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;base.optimize() must never be called.&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span> <span class="o">|</span> <span class="n">kwargs</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">META</span> <span class="o">|</span> <span class="n">kwargs</span>
             <span class="n">options</span> <span class="o">=</span> <span class="p">(</span><span class="n">options</span> <span class="k">if</span> <span class="n">options</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                       <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_options</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options_json</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">)</span>
+                       <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_meta</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options_json</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">META</span><span class="p">)</span>
             <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;result&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
             <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">options</span><span class="p">,</span> <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="s1">&#39;OPTIMIZE HERE !!!&#39;</span><span class="p">}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_write_options</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;WITH OPTIMAL PARAMETERS!!!&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder</span><span class="p">)</span>   <span class="c1"># Remember to write optimization results.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">write_meta</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;WITH OPTIMAL PARAMETERS!!!&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folder</span><span class="p">)</span>   <span class="c1"># Remember to write optimization results.</span>
         <span class="k">return</span> <span class="n">options</span>
 
-    <span class="k">def</span> <span class="nf">_read_options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">read_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="c1"># noinspection PyTypeChecker</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options_json</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_write_options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="nf">write_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
         <span class="c1"># noinspection PyTypeChecker</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options_json</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
@@ -342,23 +376,23 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">.</span><span class="n">name</span>
 
 <div class="viewcode-block" id="Model.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.base.classes.Model.html#romcomma.base.classes.Model.__init__">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Path | str</span><span class="p">,</span> <span class="n">read_parameters</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">read_parameters</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Model constructor, to be called by all subclasses as a matter of priority.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            folder: The model file location.</span>
-<span class="sd">            read_parameters: If True, the ``model.parameters`` are read from ``folder``, otherwise defaults are used.</span>
-<span class="sd">            **kwargs: The model.parameters fields=values to replace after reading from file/defaults.</span>
+<span class="sd">            read_parameters: If True, the ``model.data`` are read from ``folder``, otherwise defaults are used.</span>
+<span class="sd">            **kwargs: The model.data fields=values to replace after reading from file/defaults.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_options_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">/</span> <span class="s2">&quot;options.json&quot;</span>
 
         <span class="k">if</span> <span class="n">read_parameters</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mo">0o777</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_parameters</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">write</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span> <span class="o">=</span> <span class="kc">None</span></div></div>
 </pre></div>
             <div class="clearer"></div>

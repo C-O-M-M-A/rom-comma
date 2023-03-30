@@ -19,7 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Contains universal imports, constants and type hints. Every source file under ``romcomma`` will ``import * from romcomma.base.definitions``. """
+""" Type and constant definitions. """
 
 from __future__ import annotations
 
@@ -33,14 +33,16 @@ import pandas as pd
 from abc import abstractmethod
 
 
-EFFECTIVELY_ZERO = 1.0E-64
+EFFECTIVELY_ZERO = 1.0E-64  #: Tolerance when testing floats for equality.
 
 
 def INT() -> Type:
+    """ The ``dtype`` of ``int`` in :ref:`romcomma.run.context.Environment`. """
     return gf.config.default_int()
 
 
 def FLOAT() -> Type:
+    """ The ``dtype`` of ``float`` in :ref:`romcomma.run.context.Environment`. """
     return gf.config.default_float()
 
 
@@ -86,7 +88,7 @@ class TF:
     MatrixLike = Union[VectorLike, Sequence[VectorLike]]
     CovectorLike = MatrixLike
     ArrayLike = TensorLike = MatrixLike | Sequence[MatrixLike] | Sequence[Sequence[MatrixLike]]
-    Slice = PairOfInts = tf.Tensor
+    Slice = PairOfInts = tf.Tensor      #: A slice, for indexing and marginalization.
 
-    NaN: TF.Tensor = tf.constant(np.NaN, dtype=FLOAT())
+    NaN: TF.Tensor = tf.constant(np.NaN, dtype=FLOAT())     #: A constant Tensor representing NaN.
 

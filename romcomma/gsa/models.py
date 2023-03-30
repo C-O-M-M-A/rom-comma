@@ -24,7 +24,7 @@
 from __future__ import annotations
 
 from romcomma.base.definitions import *
-from romcomma.base.classes import Model, Parameters
+from romcomma.base.classes import Model, Data
 from romcomma.gpr.models import GPR
 from romcomma.gsa.base import Calculator
 from romcomma.gsa.calculators import ClosedSobol, ClosedSobolWithError
@@ -152,13 +152,13 @@ class GSA(Model):
                 Any m outside this range results the Sobol index of kind being calculated for all ``m in range(1, M+1)``.
             is_error_calculated: Whether to calculate the standard error on the Sobol index.
                 This is a memory intensive calculation, so leave this flag False unless you are sure you need errors
-            **kwargs: The calculation options to override OPTIONS.
+            **kwargs: The calculation options to override META.
         """
         m, name = (m, f'{kind.name.lower()}.{m}') if 0 <= m < gp.M else (-1, kind.name.lower())
-        options = {'m': m} | self.OPTIONS | kwargs
+        options = {'m': m} | self.META | kwargs
         folder = gp.folder / 'gsa' / name
-        super().__init__(folder, read_parameters=False)
-        self._write_options(options)
+        super().__init__(folder, read_data=False)
+        self.write_meta(options)
         results = self._calculate(kind=kind, m_dataset=self._m_dataset(kind, m, gp.M), calculator=self.calculator(gp, is_error_calculated, **options))
         for key, value in results.items():
             self._compose_and_save(self.parameters.csv(key), value, m, gp.M)
@@ -166,16 +166,16 @@ class GSA(Model):
 class Sobol(GSA):
     """ Class encapsulating a generic Sobol calculation."""
 
-    class Parameters(Parameters):
-        """ The Parameters set of a GSA."""
+    class Data(Data):
+        """ The Data set of a GSA."""
 
         @classmethod
         @property
-        def Values(cls) -> Type[NamedTuple]:
-            """ The NamedTuple underpinning this Parameters set."""
+        def NamedTuple(cls) -> Type[NamedTuple]:
+            """ The NamedTuple underpinning this Data set."""
 
             class Values(NamedTuple):
-                """ The parameters set of a GSA.
+                """ The data set of a GSA.
 
                     Attributes:
                         S (NP.Matrix): The Sobol index.
@@ -192,7 +192,7 @@ class Sobol(GSA):
 
     @classmethod
     @property
-    def OPTIONS(cls) -> Dict[str, Any]:
+    def META(cls) -> Dict[str, Any]:
         """ Default calculation options. ``is_T_partial`` forces ``WmM = 0``."""
         return ClosedSobolWithError.OPTIONS
 

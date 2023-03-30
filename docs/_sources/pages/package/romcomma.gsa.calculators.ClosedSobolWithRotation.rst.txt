@@ -1,4 +1,4 @@
-romcomma.gsa.calculators.ClosedSobolWithRotation
+﻿romcomma.gsa.calculators.ClosedSobolWithRotation
 ================================================
 
 .. currentmodule:: romcomma.gsa.calculators

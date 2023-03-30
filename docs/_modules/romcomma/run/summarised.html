@@ -126,14 +126,14 @@
 
 
 <div class="viewcode-block" id="gpr"><a class="viewcode-back" href="../../../pages/package/romcomma.run.summarised.gpr.html#romcomma.run.summarised.gpr">[docs]</a><span class="k">def</span> <span class="nf">gpr</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="n">Repository</span><span class="p">,</span> <span class="n">is_read</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_covariant</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">is_isotropic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ignore_exceptions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">kernel_parameters</span><span class="p">:</span> <span class="n">Kernel</span><span class="o">.</span><span class="n">Parameters</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">likelihood_variance</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">kernel_parameters</span><span class="p">:</span> <span class="n">Kernel</span><span class="o">.</span><span class="n">Data</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">likelihood_variance</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">optimize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">test</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Undertake GPR on a Fold, or recursively across the Folds in a Repository.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name: The MOGP name.</span>
 <span class="sd">        repo: A Fold to house the MOGP, or a Repository containing Folds to house the GPs.</span>
-<span class="sd">        is_read: If True, MOGP kernel parameters and likelihood_variance are read from ``fold.folder/name``, otherwise defaults are used.</span>
+<span class="sd">        is_read: If True, MOGP kernel data and likelihood_variance are read from ``fold.folder/name``, otherwise defaults are used.</span>
 <span class="sd">            If None, the nearest ancestor MOGP in the independence/isotropy hierarchy is recursively constructed from its nearest ancestor MOGP if necessary,</span>
 <span class="sd">            then read and broadcast available.</span>
 <span class="sd">        is_covariant: Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.</span>
@@ -145,7 +145,7 @@
 <span class="sd">        test: Whether to test_data each MOGP.</span>
 <span class="sd">        kwargs: A Dict of implementation-dependent passes straight to MOGP.Optimize().</span>
 <span class="sd">    Returns:</span>
-<span class="sd">        A list of the names of the GPs which have been constructed. The MOGP.Parameters are ``user.results.Aggregated`` over folds</span>
+<span class="sd">        A list of the names of the GPs which have been constructed. The MOGP.Data are ``user.results.Aggregated`` over folds</span>
 <span class="sd">    Raises:</span>
 <span class="sd">        FileNotFoundError: If repo is not a Fold, and contains no Folds.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -211,7 +211,7 @@
 <span class="sd">        m: The dimensionality of the reduced model. For a single calculation it is required that ``0 &lt; m &lt; gp.M``.</span>
 <span class="sd">            Any m outside this range results the Sobol index of each kind being calculated for all ``m in range(1, M+1)``.</span>
 <span class="sd">        ignore_exceptions: Whether to ignore exceptions (e.g. file not found) when they are encountered, or halt.</span>
-<span class="sd">        kwargs: A Dict of gsa calculation options, which updates the default gsa.undertake.calculation.OPTIONS.</span>
+<span class="sd">        kwargs: A Dict of gsa calculation options, which updates the default gsa.undertake.calculation.META.</span>
 <span class="sd">    Raises:</span>
 <span class="sd">        FileNotFoundError: If repo is not a Fold, and contains no Folds.</span>
 <span class="sd">    Returns:</span>

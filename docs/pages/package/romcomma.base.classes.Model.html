@@ -18,8 +18,8 @@
     <script defer src="../../_static/insipid-sidebar.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="romcomma.base.classes.Parameters" href="romcomma.base.classes.Parameters.html" />
-    <link rel="prev" title="romcomma.base.classes" href="romcomma.base.classes.html" />
+    <link rel="next" title="romcomma.base.definitions" href="romcomma.base.definitions.html" />
+    <link rel="prev" title="romcomma.base.classes.Frame" href="romcomma.base.classes.Frame.html" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
   </head><body>
@@ -83,31 +83,31 @@
       </div>
     </header>
     <nav>
-      <a href="romcomma.base.classes.html" class="nav-icon previous" title="previous:&#13;romcomma.base.classes" aria-label="Previous topic" accesskey="P" tabindex="-1">
+      <a href="romcomma.base.classes.Frame.html" class="nav-icon previous" title="previous:&#13;romcomma.base.classes.Frame" aria-label="Previous topic" accesskey="P" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
       </a>
-      <a href="romcomma.base.classes.Parameters.html" class="nav-icon next" title="next:&#13;romcomma.base.classes.Parameters" aria-label="Next topic" accesskey="N" tabindex="-1">
+      <a href="romcomma.base.definitions.html" class="nav-icon next" title="next:&#13;romcomma.base.definitions" aria-label="Next topic" accesskey="N" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg>
       </a>
     </nav>
 
     <nav class="relbar">
-      <a class="previous" href="romcomma.base.classes.html" aria-label="Previous topic" >
+      <a class="previous" href="romcomma.base.classes.Frame.html" aria-label="Previous topic" >
         <div class="icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
         </div>
         <div class="title">
           <span class="text">
             <span class="direction">previous</span>
-            romcomma.base.classes
+            romcomma.base.classes.Frame
           </span>
         </div>
       </a>
-      <a class="next" href="romcomma.base.classes.Parameters.html" aria-label="Next topic" >
+      <a class="next" href="romcomma.base.definitions.html" aria-label="Next topic" >
         <div class="title">
           <span class="text">
             <span class="direction">next</span>
-            romcomma.base.classes.Parameters
+            romcomma.base.definitions
           </span>
         </div>
         <div class="icon">
@@ -128,13 +128,13 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Abstract base class for any model. This base class implements generic file storage and parameter handling.
-The latter is dealt with by each subclass overriding <code class="docutils literal notranslate"><span class="pre">Parameters.Values</span></code> with its own <code class="docutils literal notranslate"><span class="pre">Type[NamedTuple]</span></code>
-defining the parameter set it takes. <code class="docutils literal notranslate"><span class="pre">model.parameters.values</span></code> is a <code class="docutils literal notranslate"><span class="pre">Model.Parameters.Values</span></code> of NP.Matrices.</p>
-<p>A Model also may include an optimize method taking options stored in an options.json file, which default to cls.OPTIONS.</p>
+The latter is dealt with by each subclass overriding <code class="docutils literal notranslate"><span class="pre">Data.NamedTuple</span></code> with its own <code class="docutils literal notranslate"><span class="pre">NamedTuple[NamedTuple]</span></code>
+defining the parameter set it takes. <code class="docutils literal notranslate"><span class="pre">model.data.values</span></code> is a <code class="docutils literal notranslate"><span class="pre">Model.Data.NamedTuple</span></code> of NP.Matrices.</p>
+<p>A Model also may include an optimize method taking options stored in an options.json file, which default to cls.META.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>folder</strong> (<em>Path | str</em>) – </p></li>
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
 <li><p><strong>read_parameters</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>kwargs</strong> (<em>NP.Matrix</em>) – </p></li>
 </ul>
@@ -147,9 +147,9 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em>) – The model file location.</p></li>
-<li><p><strong>read_parameters</strong> (<em>bool</em>) – If True, the <code class="docutils literal notranslate"><span class="pre">model.parameters</span></code> are read from <code class="docutils literal notranslate"><span class="pre">folder</span></code>, otherwise defaults are used.</p></li>
-<li><p><strong>**kwargs</strong> (<em>ndarray</em>) – The model.parameters fields=values to replace after reading from file/defaults.</p></li>
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The model file location.</p></li>
+<li><p><strong>read_parameters</strong> (<em>bool</em>) – If True, the <code class="docutils literal notranslate"><span class="pre">model.data</span></code> are read from <code class="docutils literal notranslate"><span class="pre">folder</span></code>, otherwise defaults are used.</p></li>
+<li><p><strong>**kwargs</strong> (<em>ndarray</em>) – The model.data fields=values to replace after reading from file/defaults.</p></li>
 </ul>
 </dd>
 </dl>
@@ -161,12 +161,6 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.base.classes.Model.__init__" title="romcomma.base.classes.Model.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(folder[, read_parameters])</p></td>
 <td><p>Model constructor, to be called by all subclasses as a matter of priority.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code>(src_folder, dst_folder[, ignore_errors])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete</span></code>(folder[, ignore_errors])</p></td>
-<td><p></p></td>
-</tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code>(method, **kwargs)</p></td>
 <td><p></p></td>
 </tr>
@@ -175,58 +169,55 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <p class="rubric">Attributes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.base.classes.Model.OPTIONS" title="romcomma.base.classes.Model.OPTIONS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OPTIONS</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.base.classes.Model.META" title="romcomma.base.classes.Model.META"><code class="xref py py-obj docutils literal notranslate"><span class="pre">META</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">folder</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">folder</span></code></p></td>
 <td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.base.classes.Model.params" title="romcomma.base.classes.Model.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></p></td>
-<td><p>A shorthand to save typing.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py class">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.Parameters">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model.Parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model.Parameters" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameters</span></code></a></p>
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model.Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model.Data" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
 <p>This is a placeholder which must be overridden in any implementation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>folder</strong> (<em>Optional</em><em>[</em><em>Path | str</em><em>]</em>) – </p></li>
-<li><p><strong>kwargs</strong> (<em>NP.Matrix</em>) – </p></li>
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
+<li><p><strong>kwargs</strong> (<em>Data.Matrix</em>) – </p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py class">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.Parameters.Values">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NotImplemented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([['Not</span> <span class="pre">Implemented']],</span> <span class="pre">dtype='&lt;U15')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model.Parameters.Values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model.Parameters.Values" title="Permalink to this definition">§</a></dt>
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.NamedTuple">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NamedTuple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NotImplemented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([['NotImplemented']],</span> <span class="pre">dtype='&lt;U14')</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model.Data.NamedTuple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model.Data.NamedTuple" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
-<p>The parameters set of a Model.</p>
+<p>A NamedTuple of data. Must be overridden.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>NotImplemented</strong> (<em>ndarray</em>) – </p>
+<dd class="field-odd"><p><strong>NotImplemented</strong> (<a class="reference internal" href="romcomma.base.classes.Frame.html#romcomma.base.classes.Frame" title="romcomma.base.classes.Frame"><em>Frame</em></a><em> | </em><em>DataFrame</em><em> | </em><em>ndarray</em><em> | </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – </p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.Parameters.Values.NotImplemented">
-<span class="sig-name descname"><span class="pre">NotImplemented</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#romcomma.base.classes.Model.Parameters.Values.NotImplemented" title="Permalink to this definition">§</a></dt>
-<dd><p>Alias for field number 0</p>
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.NamedTuple.NotImplemented">
+<span class="sig-name descname"><span class="pre">NotImplemented</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="romcomma.base.classes.Frame.html#romcomma.base.classes.Frame" title="romcomma.base.classes.Frame"><span class="pre">Frame</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><span class="pre">Tensor</span></a></em><a class="headerlink" href="#romcomma.base.classes.Model.Data.NamedTuple.NotImplemented" title="Permalink to this definition">§</a></dt>
+<dd><p>NamedTuple can have any number of members.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.Parameters.Values.count">
-<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Parameters.Values.count" title="Permalink to this definition">§</a></dt>
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.NamedTuple.count">
+<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Data.NamedTuple.count" title="Permalink to this definition">§</a></dt>
 <dd><p>Return number of occurrences of value.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.Parameters.Values.index">
-<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9223372036854775807</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Parameters.Values.index" title="Permalink to this definition">§</a></dt>
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.NamedTuple.index">
+<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9223372036854775807</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Data.NamedTuple.index" title="Permalink to this definition">§</a></dt>
 <dd><p>Return first index of value.</p>
 <p>Raises ValueError if the value is not present.</p>
 </dd></dl>
@@ -234,74 +225,95 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.Parameters.broadcast_value">
-<span class="sig-name descname"><span class="pre">broadcast_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Parameters.broadcast_value" title="Permalink to this definition">§</a></dt>
-<dd><p>Broadcast a parameter ordinate.</p>
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.copy">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Data.copy" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a copy of <code class="docutils literal notranslate"><span class="pre">src_folder</span></code> at dst_folder, deleting anything existing at the destination.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model_name</strong> (<em>str</em>) – Used only in error reporting.</p></li>
-<li><p><strong>field</strong> (<em>str</em>) – The name of the field whose ordinate we are broadcasting.</p></li>
-<li><p><strong>target_shape</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – The shape to broadcast to.</p></li>
-<li><p><strong>is_diagonal</strong> (<em>bool</em>) – Whether to zero the off-diagonal elements of a square matrix.</p></li>
-<li><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>src_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
+<li><p><strong>dst_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><em>Parameters</em></a></p>
-</dd>
-</dl>
-<p>Returns: Self, for chaining calls.
-:raises IndexError: If broadcasting is impossible.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.Parameters.read">
-<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Parameters.read" title="Permalink to this definition">§</a></dt>
-<dd><p>Read Parameters from their csv files.</p>
-<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code>, for chaining calls.
-:raises AssertionError: If self.csv is not set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><em>Parameters</em></a></p>
+<dd class="field-even"><p><em>Path</em></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.Parameters.write">
-<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Parameters.write" title="Permalink to this definition">§</a></dt>
-<dd><p>Write Parameters to their csv files.</p>
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.delete">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Data.delete" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a non-existent <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – The file location is changed to <code class="docutils literal notranslate"><span class="pre">folder</span></code> unless <code class="docutils literal notranslate"><span class="pre">folder</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default).</p>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><em>Parameters</em></a></p>
+<dd class="field-even"><p><em>Path</em></p>
 </dd>
 </dl>
-<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code>, for chaining calls.
-:raises AssertionError: If self.csv is not set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.empty">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Data.empty" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns an empty <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Path</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.move">
+<span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Data.move" title="Permalink to this definition">§</a></dt>
+<dd><p>Move <code class="docutils literal notranslate"><span class="pre">self</span></code> to <code class="docutils literal notranslate"><span class="pre">dst_folder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dst_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to move to. If this exists, it will be emptied.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+</dd>
+</dl>
+<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code> for chaining calls.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Data.read" title="Permalink to this definition">§</a></dt>
+<dd><p>Read <code class="docutils literal notranslate"><span class="pre">Data</span></code> from <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to record the data. Must exist</p></li>
+<li><p><strong>**kwargs</strong> – key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs).
+Missing fields receive their defaults, so <code class="docutils literal notranslate"><span class="pre">Data(folder)</span></code> is the default <code class="docutils literal notranslate"><span class="pre">Data</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+</dd>
+</dl>
+<p>Returns: The <code class="docutils literal notranslate"><span class="pre">Data</span></code> stored in <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.OPTIONS">
-<em class="property"><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OPTIONS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.base.classes.Model.OPTIONS" title="Permalink to this definition">§</a></dt>
+<dt class="sig sig-object py" id="romcomma.base.classes.Model.META">
+<em class="property"><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">META</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.base.classes.Model.META" title="Permalink to this definition">§</a></dt>
 <dd><p>Default options.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Returns</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="romcomma.base.classes.Model.params">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#romcomma.base.classes.Model.params" title="Permalink to this definition">§</a></dt>
-<dd><p>A shorthand to save typing.</p>
-<p>Returns: <code class="docutils literal notranslate"><span class="pre">self._parameters.values</span></code></p>
 </dd></dl>
 
 </dd></dl>
@@ -321,6 +333,7 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../start.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../start.html#conceptual-hierarchy">Conceptual Hierarchy</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../start.html#module-hierarchy">Module Hierarchy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../start.html#glossary">Glossary</a></li>
 </ul>
@@ -332,6 +345,7 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <li class="toctree-l2"><a class="reference internal" href="romcomma.gpr.html">romcomma.gpr</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.gsa.html">romcomma.gsa</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.rom.html">romcomma.rom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.run.html">romcomma.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.user.html">romcomma.user</a></li>
 </ul>
 </li>
@@ -350,22 +364,22 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
     </div>
 
     <nav class="relbar">
-      <a class="previous" href="romcomma.base.classes.html" aria-label="Previous topic" >
+      <a class="previous" href="romcomma.base.classes.Frame.html" aria-label="Previous topic" >
         <div class="icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
         </div>
         <div class="title">
           <span class="text">
             <span class="direction">previous</span>
-            romcomma.base.classes
+            romcomma.base.classes.Frame
           </span>
         </div>
       </a>
-      <a class="next" href="romcomma.base.classes.Parameters.html" aria-label="Next topic" >
+      <a class="next" href="romcomma.base.definitions.html" aria-label="Next topic" >
         <div class="title">
           <span class="text">
             <span class="direction">next</span>
-            romcomma.base.classes.Parameters
+            romcomma.base.definitions
           </span>
         </div>
         <div class="icon">

@@ -131,7 +131,7 @@
 <p>These files specify the global dataset to be analyzed. This dataset must be further split into Folds contained within the Repository.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>folder</strong> (<em>Path | str</em>) – </p>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p>
 </dd>
 </dl>
 <dl class="py method">
@@ -139,7 +139,7 @@
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/data/storage.html#Repository.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.data.storage.Repository.__init__" title="Permalink to this definition">§</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em>) – </p>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -153,20 +153,20 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Repository.__init__" title="romcomma.data.storage.Repository.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(folder, **kwargs)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fold_folder</span></code>(k)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Repository.clean_copy" title="romcomma.data.storage.Repository.clean_copy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_copy</span></code></a>(dst)</p></td>
+<td><p>Make a clean copy of this repo.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fold_folder</span></code>(k)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Repository.from_csv" title="romcomma.data.storage.Repository.from_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_csv</span></code></a>(folder, csv[, meta])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Repository.from_csv" title="romcomma.data.storage.Repository.from_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_csv</span></code></a>(folder, csv[, meta])</p></td>
 <td><p>Create a Repository from a csv file.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Repository.from_df" title="romcomma.data.storage.Repository.from_df"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_df</span></code></a>(folder, df[, meta])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Repository.from_df" title="romcomma.data.storage.Repository.from_df"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_df</span></code></a>(folder, df[, meta])</p></td>
 <td><p>Create a Repository from a pd.DataFrame.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.data.storage.Repository.into_K_folds" title="romcomma.data.storage.Repository.into_K_folds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">into_K_folds</span></code></a>(K[, shuffle_before_folding, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.data.storage.Repository.into_K_folds" title="romcomma.data.storage.Repository.into_K_folds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">into_K_folds</span></code></a>(K[, shuffle_before_folding, ...])</p></td>
 <td><p>Fold this repo into K Folds, indexed by range(K).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">_update_meta</span></code>()</p></td>
-<td><p></p></td>
 </tr>
 </tbody>
 </table>
@@ -250,6 +250,17 @@
 <dd><p>The number of folds contained in this Repository.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.data.storage.Repository.clean_copy">
+<span class="sig-name descname"><span class="pre">clean_copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/data/storage.html#Repository.clean_copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.data.storage.Repository.clean_copy" title="Permalink to this definition">§</a></dt>
+<dd><p>Make a clean copy of this repo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dst</strong> (<em>Path</em><em> | </em><em>str</em>) – The location of the copy.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.data.storage.Repository.folds">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">folds</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">range</span></em><a class="headerlink" href="#romcomma.data.storage.Repository.folds" title="Permalink to this definition">§</a></dt>
@@ -267,7 +278,7 @@
 An improper Fold, indexed by K and including all data for both training and testing is included by default.
 To suppress this give K as a negative integer.</p></li>
 <li><p><strong>shuffle_before_folding</strong> (<em>bool</em>) – Whether to shuffle the data before sampling.</p></li>
-<li><p><strong>normalization</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – An optional normalization.csv file to use.</p></li>
+<li><p><strong>normalization</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – An optional normalization.csv file to use.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -302,7 +313,7 @@ To suppress this give K as a negative integer.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em>) – The location (folder) of the Repository.</p></li>
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The location (folder) of the Repository.</p></li>
 <li><p><strong>df</strong> (<em>DataFrame</em>) – The data to record in [Return].csv.</p></li>
 <li><p><strong>meta</strong> (<em>Dict</em><em> | </em><em>None</em>) – The metadata to record in [Return].meta.json.</p></li>
 </ul>
@@ -321,8 +332,8 @@ To suppress this give K as a negative integer.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em>) – The location (folder) of the target Repository.</p></li>
-<li><p><strong>csv</strong> (<em>str</em><em> | </em><em>Path</em>) – The file containing the data to record in [Return].csv.</p></li>
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The location (folder) of the target Repository.</p></li>
+<li><p><strong>csv</strong> (<em>Path</em><em> | </em><em>str</em>) – The file containing the data to record in [Return].csv.</p></li>
 <li><p><strong>meta</strong> (<em>Dict</em><em> | </em><em>None</em>) – The metadata to record in [Return].meta.json.</p></li>
 <li><p><strong>kwargs</strong> – Updates Repository.CSV_OPTIONS for reading the csv file, as detailed in
 <a class="reference external" href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html">https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html</a>.</p></li>
@@ -352,6 +363,7 @@ To suppress this give K as a negative integer.</p></li>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../start.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../start.html#conceptual-hierarchy">Conceptual Hierarchy</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../start.html#module-hierarchy">Module Hierarchy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../start.html#glossary">Glossary</a></li>
 </ul>
@@ -363,6 +375,7 @@ To suppress this give K as a negative integer.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.gpr.html">romcomma.gpr</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.gsa.html">romcomma.gsa</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.rom.html">romcomma.rom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.run.html">romcomma.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.user.html">romcomma.user</a></li>
 </ul>
 </li>

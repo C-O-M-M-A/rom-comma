@@ -1,4 +1,4 @@
-romcomma.gpr.kernels.Kernel
+﻿romcomma.gpr.kernels.Kernel
 ===========================
 
 .. currentmodule:: romcomma.gpr.kernels
@@ -20,8 +20,6 @@ romcomma.gpr.kernels.Kernel
       ~Kernel.TypeFromParameters
       ~Kernel.__init__
       ~Kernel.broadcast_parameters
-      ~Kernel.copy
-      ~Kernel.delete
       ~Kernel.optimize
    
    
@@ -34,12 +32,11 @@ romcomma.gpr.kernels.Kernel
    
       ~Kernel.L
       ~Kernel.M
-      ~Kernel.OPTIONS
+      ~Kernel.META
       ~Kernel.TYPE_IDENTIFIER
+      ~Kernel.data
       ~Kernel.folder
       ~Kernel.implementation
       ~Kernel.is_covariant
-      ~Kernel.parameters
-      ~Kernel.params
    
    

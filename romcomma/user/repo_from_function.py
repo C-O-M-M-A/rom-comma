@@ -40,7 +40,7 @@ IS_NOISE_VARIANCE_RANDOM: Tuple[bool] = (False,)    #: Whether the noise varianc
 ROTATIONS = (np.atleast_2d(0),) * 2     #: Rotation applied to the input basis after the function vector has been sampled.
 
 if __name__ == '__main__':
-    with context.Setup('Test', device='CPU'):
+    with context.Environment('Test', device='CPU'):
         for M in Ms:
             for N in Ns:
                 for noise_magnitude in NOISE_MAGNITUDES:

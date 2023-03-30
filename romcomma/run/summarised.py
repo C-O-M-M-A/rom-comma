@@ -33,14 +33,14 @@ import shutil
 
 
 def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | None, is_isotropic: bool | None, ignore_exceptions: bool = False,
-        kernel_parameters: Kernel.Parameters | None = None, likelihood_variance: NP.Matrix | None = None,
+        kernel_parameters: Kernel.Data | None = None, likelihood_variance: NP.Matrix | None = None,
         optimize: bool = True, test: bool = True, **kwargs) -> List[str]:
     """ Undertake GPR on a Fold, or recursively across the Folds in a Repository.
 
     Args:
         name: The MOGP name.
         repo: A Fold to house the MOGP, or a Repository containing Folds to house the GPs.
-        is_read: If True, MOGP kernel parameters and likelihood_variance are read from ``fold.folder/name``, otherwise defaults are used.
+        is_read: If True, MOGP kernel data and likelihood_variance are read from ``fold.folder/name``, otherwise defaults are used.
             If None, the nearest ancestor MOGP in the independence/isotropy hierarchy is recursively constructed from its nearest ancestor MOGP if necessary,
             then read and broadcast available.
         is_covariant: Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.
@@ -52,7 +52,7 @@ def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | 
         test: Whether to test_data each MOGP.
         kwargs: A Dict of implementation-dependent passes straight to MOGP.Optimize().
     Returns:
-        A list of the names of the GPs which have been constructed. The MOGP.Parameters are ``user.results.Aggregated`` over folds
+        A list of the names of the GPs which have been constructed. The MOGP.Data are ``user.results.Aggregated`` over folds
     Raises:
         FileNotFoundError: If repo is not a Fold, and contains no Folds.
     """
@@ -118,7 +118,7 @@ def gsa(name: str, repo: Repository, is_covariant: Optional[bool], is_isotropic:
         m: The dimensionality of the reduced model. For a single calculation it is required that ``0 < m < gp.M``.
             Any m outside this range results the Sobol index of each kind being calculated for all ``m in range(1, M+1)``.
         ignore_exceptions: Whether to ignore exceptions (e.g. file not found) when they are encountered, or halt.
-        kwargs: A Dict of gsa calculation options, which updates the default gsa.undertake.calculation.OPTIONS.
+        kwargs: A Dict of gsa calculation options, which updates the default gsa.undertake.calculation.META.
     Raises:
         FileNotFoundError: If repo is not a Fold, and contains no Folds.
     Returns:

@@ -39,7 +39,7 @@
 #
 #     MEMORY_LAYOUT = "OVERRIDE_THIS with 'C','F' or 'A' (for C, Fortran or C-unless-All-input-is-Fortran-layout)."
 #
-#     Parameters = NamedTuple("Parameters", [('Mu', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix),
+#     Data = NamedTuple("Data", [('Mu', NP.Matrix), ('D', NP.Matrix), ('S1', NP.Matrix), ('S', NP.Matrix),
 #                                            ('lengthscales', NP.Matrix), ('log_marginal_likelihood', NP.Matrix)])
 #     """
 #         **Mu** -- A numpy [[int]] specifying the number of input dimensions in the rotated basis u.
@@ -54,11 +54,11 @@
 #
 #         **log_marginal_likelihood** -- A numpy [[float]] used to record the log marginal likelihood.
 #     """
-#     PARAMETERS = Parameters(*(atleast_2d(None),) * 6)
+#     PARAMETERS = Data(*(atleast_2d(None),) * 6)
 #
 #     OPTIMIZER_OPTIONS = {'iterations': 1, 'guess_identity_after_iteration': 1, 'sobol_options': Sobol.OPTIMIZER_OPTIONS,
 #                                  'gp_initializer': GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE,
-#                                  'gp_options': MOGP.OPTIONS}
+#                                  'gp_options': MOGP.META}
 #     """
 #         **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(options['sobol_options'])
 #             followed by MOGP.optimize(options['gp_options'])).
@@ -75,7 +75,7 @@
 #
 #     @classmethod
 #     @abstractmethod
-#     def from_ROM(cls, fold: Fold, name: str, suffix: str = ".0", Mu: int = -1, rbf_parameters: Optional[MOGP.Parameters] = None) -> ROM:
+#     def from_ROM(cls, fold: Fold, name: str, suffix: str = ".0", Mu: int = -1, rbf_parameters: Optional[MOGP.Data] = None) -> ROM:
 #         """ Create a ROM object from a saved ROM folder.
 #
 #         Args:
@@ -90,13 +90,13 @@
 #         source_gp_name = name + cls.OPTIMIZED_GB_EXT * max(optimization_count)
 #         destination_gp_name = source_gp_name + suffix
 #         return cls(name=name,
-#                    sobol=Sobol.from_GP(fold, source_gp_name, destination_gp_name, Mu=Mu, read_parameters=True),
+#                    sobol=Sobol.from_GP(fold, source_gp_name, destination_gp_name, Mu=Mu, read_data=True),
 #                    options=None, rbf_parameters=rbf_parameters)
 #
 #     @classmethod
 #     @abstractmethod
 #     def from_GP(cls, fold: Fold, name: str, source_gp_name: str, options: Dict, Mu: int = -1,
-#                 rbf_parameters: Optional[MOGP.Parameters] = None) -> ROM:
+#                 rbf_parameters: Optional[MOGP.Data] = None) -> ROM:
 #         """ Create a ROM object from a saved MOGP folder.
 #
 #         Args:
@@ -147,31 +147,31 @@
 #     def _initialize_gp(self, iteration: int) -> MOGP:
 #         if self._rbf_parameters is not None:
 #             gp_initializer = self.GP_Initializer.RBF
-#             parameters = self._rbf_parameters
-#             gp_rbf = self.GPType(self._fold, self.gp_name(iteration) + ".rbf", parameters)
+#             data = self._rbf_parameters
+#             gp_rbf = self.GPType(self._fold, self.gp_name(iteration) + ".rbf", data)
 #             gp_rbf.optimize(**self._options[-1]['gp_options'])
 #             gp_dir = gp_rbf.folder.parent / self.gp_name(iteration)
 #             Model.copy(gp_rbf.folder, gp_dir)
 #             kernel = type(self._gp.kernel)(None, None, gp_dir / MOGP.KERNEL_DIR_NAME)
 #             kernel.make_ard(self._gp.M)
-#             return self.GPType(self._fold, self.gp_name(iteration), parameters=None)
+#             return self.GPType(self._fold, self.gp_name(iteration), data=None)
 #         gp_initializer = self._options[-1]['gp_initializer']
-#         parameters = self._original_parameters if gp_initializer < self.GP_Initializer.CURRENT else self._gp.parameters
+#         data = self._original_parameters if gp_initializer < self.GP_Initializer.CURRENT else self._gp.data
 #         if not self._gp.kernel.is_rbf:
 #             if gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_GUESSED_LENGTHSCALE, self.GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE):
-#                 lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales, optimize=True, dtype=float,
+#                 lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.data.lengthscales, optimize=True, dtype=float,
 #                                       order=self.MEMORY_LAYOUT) * 0.5 * self._gp.M * (self._gp.M - arange(self._gp.M, dtype=float)) ** (-1)
 #             elif gp_initializer in (self.GP_Initializer.CURRENT_WITH_ORIGINAL_KERNEL, self.GP_Initializer.ORIGINAL):
-#                 lengthscales = einsum('MK, JK -> M', self._Theta, self._original_parameters.kernel.parameters.lengthscales,
+#                 lengthscales = einsum('MK, JK -> M', self._Theta, self._original_parameters.kernel.data.lengthscales,
 #                                       optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
 #             elif gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_CURRENT_KERNEL, self.GP_Initializer.CURRENT):
-#                 lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.parameters.lengthscales, optimize=True, dtype=float,
+#                 lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.data.lengthscales, optimize=True, dtype=float,
 #                                       order=self.MEMORY_LAYOUT)
-#             parameters = parameters._replace(kernel=self._gp.kernel.Parameters(lengthscales=lengthscales))
-#         return self.GPType(self._fold, self.gp_name(iteration), parameters)
+#             data = data._replace(kernel=self._gp.kernel.Data(lengthscales=lengthscales))
+#         return self.GPType(self._fold, self.gp_name(iteration), data)
 #
 #     def optimize(self, options: Dict):
-#         """ Optimize the model parameters. Do not call super().optimize, this interface only contains suggestions for implementation.
+#         """ Optimize the model data. Do not call super().optimize, this interface only contains suggestions for implementation.
 #
 #         Args:
 #             options: A Dict of implementation-dependent optimizer options, following the format of ROM.OPTIMIZER_OPTIONS.
@@ -182,7 +182,7 @@
 #             self._sobol_reordering_options['semi_norm'] = self._semi_norm
 #
 #         self._options[-1]['sobol_options']['semi_norm'] = self._semi_norm.meta
-#         self._write_options(self._options)
+#         self.write_meta(self._options)
 #
 #         iterations = self._options[-1]['iterations']
 #         if iterations < 1 or self._options[-1]['sobol_options']['N_exploit'] < 1:
@@ -200,13 +200,13 @@
 #         for iteration in range(iterations):
 #             self._gp = self._initialize_gp(iteration + 1)
 #             self.calculate()
-#             self.write_parameters(self.Parameters(
-#                 concatenate((self.parameters.Mu, atleast_2d(self._sobol.Mu)), axis=0),
-#                 concatenate((self.parameters.D, atleast_2d(self._semi_norm.ordinate(self._sobol.D))), axis=0),
-#                 concatenate((self.parameters.S1, atleast_2d(self._semi_norm.ordinate(self._sobol.S1))), axis=0),
-#                 concatenate((self.parameters.S, atleast_2d(self._semi_norm.ordinate(self._sobol.S))), axis=0),
-#                 concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
-#                 concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
+#             self.write_parameters(self.Data(
+#                 concatenate((self.data.Mu, atleast_2d(self._sobol.Mu)), axis=0),
+#                 concatenate((self.data.D, atleast_2d(self._semi_norm.ordinate(self._sobol.D))), axis=0),
+#                 concatenate((self.data.S1, atleast_2d(self._semi_norm.ordinate(self._sobol.S1))), axis=0),
+#                 concatenate((self.data.S, atleast_2d(self._semi_norm.ordinate(self._sobol.S))), axis=0),
+#                 concatenate((self.data.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
+#                 concatenate((self.data.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
 #             if iteration < guess_identity_after_iteration:
 #                 self._sobol.optimize(**self._options[-1]['sobol_options'])
 #             else:
@@ -216,13 +216,13 @@
 #         self._gp = self._initialize_gp(-1)
 #         self.calculate()
 #         self._gp.test_data()
-#         self.write_parameters(self.Parameters(
-#             concatenate((self.parameters.Mu, atleast_2d(self._sobol.Mu)), axis=0),
-#             concatenate((self.parameters.D, atleast_2d(self._semi_norm.ordinate(self._sobol.D))), axis=0),
-#             concatenate((self.parameters.S1, atleast_2d(self._semi_norm.ordinate(self._sobol.S1))), axis=0),
-#             concatenate((self.parameters.S, atleast_2d(self._semi_norm.ordinate(self._sobol.S))), axis=0),
-#             concatenate((self.parameters.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
-#             concatenate((self.parameters.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
+#         self.write_parameters(self.Data(
+#             concatenate((self.data.Mu, atleast_2d(self._sobol.Mu)), axis=0),
+#             concatenate((self.data.D, atleast_2d(self._semi_norm.ordinate(self._sobol.D))), axis=0),
+#             concatenate((self.data.S1, atleast_2d(self._semi_norm.ordinate(self._sobol.S1))), axis=0),
+#             concatenate((self.data.S, atleast_2d(self._semi_norm.ordinate(self._sobol.S))), axis=0),
+#             concatenate((self.data.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
+#             concatenate((self.data.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
 #         column_headings = ("x{:d}".format(i) for i in range(self._sobol.Mu))
 #         frame = Frame(self._sobol.parameters_csv.Theta, DataFrame(self._Theta, columns=column_headings))
 #         frame.write()
@@ -242,7 +242,7 @@
 #         self._sobol = self.SobolType(self._gp)
 #
 #     def __init__(self, name: str, sobol: Sobol, options: Dict = OPTIMIZER_OPTIONS,
-#                  rbf_parameters: Optional[MOGP.Parameters] = None):
+#                  rbf_parameters: Optional[MOGP.Data] = None):
 #         """ Initialize ROM object.
 #
 #         Args:
@@ -252,25 +252,25 @@
 #         self._rbf_parameters = rbf_parameters
 #         self._sobol = sobol
 #         self._gp = sobol.gp
-#         self._original_parameters = self._gp.parameters._replace(kernel=self._gp.kernel.parameters)
+#         self._original_parameters = self._gp.data._replace(kernel=self._gp.kernel.data)
 #         self._sobol_reordering_options = deepcopy(Sobol.OPTIMIZER_OPTIONS)
 #         self._fold = Fold(self._gp.fold.folder.parent, self._gp.fold.meta['k'], self._sobol.Mu)
 #         self.SobolType = deepcopy(type(self._sobol))
 #         self.GPType = deepcopy(type(self._gp))
 #         if options is None:
 #             super().__init__(self._fold.folder / name, None)
-#             self._options = self._read_options()
+#             self._options = self.read_meta()
 #         else:
 #             self._options = [options]
 #             self._semi_norm = Sobol.SemiNorm.from_meta(self._options[-1]['sobol_options']['semi_norm'])
 #             self._sobol_reordering_options['semi_norm'] = self._semi_norm
-#             parameters = self.Parameters(Mu=self._sobol.Mu,
+#             data = self.Data(Mu=self._sobol.Mu,
 #                                          D=self._semi_norm.ordinate(self._sobol.D),
 #                                          S1=self._semi_norm.ordinate(self._sobol.S1),
 #                                          S=self._semi_norm.ordinate(self._sobol.S),
 #                                          lengthscales=self._sobol.lengthscales,
 #                                          log_marginal_likelihood=self._gp.log_marginal_likelihood)
-#             super().__init__(self._fold.folder / name, parameters)
+#             super().__init__(self._fold.folder / name, data)
 #             shutil.copy2(self._fold.csv, self.folder)
 #             shutil.copy2(self._fold._test_csv, self.folder)
 #             self.optimize(self._options[-1])

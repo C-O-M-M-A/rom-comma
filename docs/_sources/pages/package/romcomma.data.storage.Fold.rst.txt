@@ -1,4 +1,4 @@
-romcomma.data.storage.Fold
+﻿romcomma.data.storage.Fold
 ==========================
 
 .. currentmodule:: romcomma.data.storage
@@ -18,12 +18,12 @@ romcomma.data.storage.Fold
    
       ~Fold.Y_split
       ~Fold.__init__
+      ~Fold.clean_copy
       ~Fold.fold_folder
       ~Fold.from_csv
       ~Fold.from_df
       ~Fold.from_dfs
       ~Fold.into_K_folds
-      ~Fold._update_meta
    
    
 

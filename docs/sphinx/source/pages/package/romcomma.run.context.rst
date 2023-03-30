@@ -14,7 +14,7 @@ romcomma.run.context
    .. autosummary::
       :toctree:
    
-      Setup
+      Environment
       Timer
    
    

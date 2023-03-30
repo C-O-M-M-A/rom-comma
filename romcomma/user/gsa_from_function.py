@@ -47,7 +47,7 @@ IS_ERROR_CALCULATED: bool = True
 IS_T_PARTIAL: bool = True
 
 if __name__ == '__main__':
-    with context.Setup('Test', device='CPU'):
+    with context.Environment('Test', device='CPU'):
         for M in Ms:
             for N in Ns:
                 for noise_magnitude in NOISE_MAGNITUDES:

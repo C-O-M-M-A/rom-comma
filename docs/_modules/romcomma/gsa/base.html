@@ -131,7 +131,7 @@
 <div class="viewcode-block" id="GaussianWithout2Pi"><a class="viewcode-back" href="../../../pages/package/romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.GaussianWithout2Pi">[docs]</a><span class="k">class</span> <span class="nc">Gaussian</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Encapsulates the calculation of a Gaussian pdf. For numerical stability the 2 Pi factor is not included.&quot;&quot;&quot;</span>
 
-    <span class="n">LogPDF</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>  <span class="c1">#: Type mnemonic for a (mean, variance_cho_diagonal) tuple.</span>
+    <span class="n">LogPDF</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>  <span class="c1">#: NamedTuple mnemonic for a (mean, variance_cho_diagonal) tuple.</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">det</span><span class="p">(</span><span class="n">variance_cho_diagonal</span><span class="p">):</span>

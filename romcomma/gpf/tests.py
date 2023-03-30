@@ -60,7 +60,7 @@ def increment(x: tf.Tensor) -> tf.Tensor:
     return {'x': x}
 
 if __name__ == '__main__':
-    with context.Setup('Test', float='float64'):
+    with context.Environment('Test', float='float64'):
         lh = likelihood()
         X, Y = regression_data()
         print(X)

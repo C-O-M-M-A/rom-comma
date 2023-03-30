@@ -1,4 +1,4 @@
-romcomma.gpr.models.MOGP
+﻿romcomma.gpr.models.MOGP
 ========================
 
 .. currentmodule:: romcomma.gpr.models
@@ -19,8 +19,6 @@ romcomma.gpr.models.MOGP
       ~MOGP.__init__
       ~MOGP.broadcast_parameters
       ~MOGP.check_K_inv_Y
-      ~MOGP.copy
-      ~MOGP.delete
       ~MOGP.optimize
       ~MOGP.predict
       ~MOGP.test
@@ -38,17 +36,16 @@ romcomma.gpr.models.MOGP
       ~MOGP.K_inv_Y
       ~MOGP.L
       ~MOGP.M
+      ~MOGP.META
       ~MOGP.N
-      ~MOGP.OPTIONS
       ~MOGP.X
       ~MOGP.Y
+      ~MOGP.data
       ~MOGP.fold
       ~MOGP.folder
       ~MOGP.implementation
       ~MOGP.kernel
       ~MOGP.likelihood
-      ~MOGP.parameters
-      ~MOGP.params
       ~MOGP.test_csv
       ~MOGP.test_summary_csv
    

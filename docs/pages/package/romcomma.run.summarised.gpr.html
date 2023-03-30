@@ -132,13 +132,13 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>) – The MOGP name.</p></li>
 <li><p><strong>repo</strong> (<a class="reference internal" href="romcomma.data.storage.Repository.html#romcomma.data.storage.Repository" title="romcomma.data.storage.Repository"><em>Repository</em></a>) – A Fold to house the MOGP, or a Repository containing Folds to house the GPs.</p></li>
-<li><p><strong>is_read</strong> (<em>bool</em><em> | </em><em>None</em>) – If True, MOGP kernel parameters and likelihood_variance are read from <code class="docutils literal notranslate"><span class="pre">fold.folder/name</span></code>, otherwise defaults are used.
+<li><p><strong>is_read</strong> (<em>bool</em><em> | </em><em>None</em>) – If True, MOGP kernel data and likelihood_variance are read from <code class="docutils literal notranslate"><span class="pre">fold.folder/name</span></code>, otherwise defaults are used.
 If None, the nearest ancestor MOGP in the independence/isotropy hierarchy is recursively constructed from its nearest ancestor MOGP if necessary,
 then read and broadcast available.</p></li>
 <li><p><strong>is_covariant</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether the outputs are independent of each other or not. If None, independent is run then broadcast to run dependent.</p></li>
 <li><p><strong>is_isotropic</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether the kernel is isotropic. If None, isotropic is run, then broadcast to run anisotropic.</p></li>
 <li><p><strong>ignore_exceptions</strong> (<em>bool</em>) – Whether to continue when the MOGP provider throws an exception.</p></li>
-<li><p><strong>kernel_parameters</strong> (<a class="reference internal" href="romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters" title="romcomma.gpr.kernels.Kernel.Parameters"><em>Parameters</em></a><em> | </em><em>None</em>) – If not None, this replaces the Kernel specified by the MOGP default.</p></li>
+<li><p><strong>kernel_parameters</strong> (<a class="reference internal" href="romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Data" title="romcomma.gpr.kernels.Kernel.Data"><em>Data</em></a><em> | </em><em>None</em>) – If not None, this replaces the Kernel specified by the MOGP default.</p></li>
 <li><p><strong>likelihood_variance</strong> (<em>ndarray</em><em> | </em><em>None</em>) – If not None this replaces the likelihood_variance specified by the MOGP default.</p></li>
 <li><p><strong>optimize</strong> (<em>bool</em>) – Whether to optimize each MOGP.</p></li>
 <li><p><strong>test</strong> (<em>bool</em>) – Whether to test_data each MOGP.</p></li>
@@ -146,7 +146,7 @@ then read and broadcast available.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A list of the names of the GPs which have been constructed. The MOGP.Parameters are <code class="docutils literal notranslate"><span class="pre">user.results.Aggregated</span></code> over folds</p>
+<dd class="field-even"><p>A list of the names of the GPs which have been constructed. The MOGP.Data are <code class="docutils literal notranslate"><span class="pre">user.results.Aggregated</span></code> over folds</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>FileNotFoundError</strong> – If repo is not a Fold, and contains no Folds.</p>
@@ -172,6 +172,7 @@ then read and broadcast available.</p></li>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../start.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../start.html#conceptual-hierarchy">Conceptual Hierarchy</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../start.html#module-hierarchy">Module Hierarchy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../start.html#glossary">Glossary</a></li>
 </ul>

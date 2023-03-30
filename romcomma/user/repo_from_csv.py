@@ -37,7 +37,7 @@ IS_NOISE_COVARIANT: Tuple[bool] = (False,)   #: Whether the Gaussian noise appli
 IS_NOISE_VARIANCE_RANDOM: Tuple[bool] = (False,)    #: Whether the noise variance is stochastic or fixed.
 
 if __name__ == '__main__':
-    with context.Setup('Test', device='CPU'):
+    with context.Environment('Test', device='CPU'):
         repo = romcomma.data.storage.Repository.from_csv(ROOT / 'repository', CSV).into_K_folds(K, shuffle_before_folding=False)
         if ADD_NOISE:
             ext = 0

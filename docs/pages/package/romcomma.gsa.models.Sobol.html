@@ -153,7 +153,7 @@ constructed object is basically useless once constructed.</p>
 Any m outside this range results the Sobol index of kind being calculated for all <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">in</span> <span class="pre">range(1,</span> <span class="pre">M+1)</span></code>.</p></li>
 <li><p><strong>is_error_calculated</strong> (<em>bool</em>) – Whether to calculate the standard error on the Sobol index.
 This is a memory intensive calculation, so leave this flag False unless you are sure you need errors</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – The calculation options to override OPTIONS.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – The calculation options to override META.</p></li>
 </ul>
 </dd>
 </dl>
@@ -168,12 +168,6 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 <tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gsa.models.Sobol.calculator" title="romcomma.gsa.models.Sobol.calculator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculator</span></code></a>(gp, is_error_calculated, **kwargs)</p></td>
 <td><p>The object to do the calculations, whose marginalise(m) method returns a dict of results.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code>(src_folder, dst_folder[, ignore_errors])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete</span></code>(folder[, ignore_errors])</p></td>
-<td><p></p></td>
-</tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code>(method, **kwargs)</p></td>
 <td><p></p></td>
 </tr>
@@ -185,187 +179,120 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ALL_KINDS</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gsa.models.Sobol.OPTIONS" title="romcomma.gsa.models.Sobol.OPTIONS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OPTIONS</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gsa.models.Sobol.META" title="romcomma.gsa.models.Sobol.META"><code class="xref py py-obj docutils literal notranslate"><span class="pre">META</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">folder</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">folder</span></code></p></td>
 <td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gsa.models.Sobol.params" title="romcomma.gsa.models.Sobol.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></p></td>
-<td><p>A shorthand to save typing.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py class">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/models.html#Sobol.Parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameters</span></code></a></p>
-<p>The Parameters set of a GSA.</p>
+<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/models.html#Sobol.Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.models.Sobol.Data" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
+<p>The Data set of a GSA.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>folder</strong> (<em>Optional</em><em>[</em><em>Path | str</em><em>]</em>) – </p></li>
-<li><p><strong>kwargs</strong> (<em>NP.Matrix</em>) – </p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.Values">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">S</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[None]],</span> <span class="pre">dtype=object)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[None]],</span> <span class="pre">dtype=object)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[None]],</span> <span class="pre">dtype=object)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[None]],</span> <span class="pre">dtype=object)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/models.html#Sobol.Parameters.Values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.Values" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
-<p>The parameters set of a GSA.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>S</strong> (<em>ndarray</em>) – </p></li>
-<li><p><strong>T</strong> (<em>ndarray</em>) – </p></li>
-<li><p><strong>V</strong> (<em>ndarray</em>) – </p></li>
-<li><p><strong>W</strong> (<em>ndarray</em>) – </p></li>
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
+<li><p><strong>kwargs</strong> (<em>Data.Matrix</em>) – </p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.Values.S">
-<span class="sig-name descname"><span class="pre">S</span></span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.Values.S" title="Permalink to this definition">§</a></dt>
-<dd><p>The Sobol index.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NP.Matrix</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.Values.T">
-<span class="sig-name descname"><span class="pre">T</span></span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.Values.T" title="Permalink to this definition">§</a></dt>
-<dd><p>The Sobol index StdDev.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NP.Matrix</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.Values.V">
-<span class="sig-name descname"><span class="pre">V</span></span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.Values.V" title="Permalink to this definition">§</a></dt>
-<dd><p>The conditional variances underpinning the Sobol index.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NP.Matrix</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.Values.W">
-<span class="sig-name descname"><span class="pre">W</span></span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.Values.W" title="Permalink to this definition">§</a></dt>
-<dd><p>The covariances underpinning the Sobol index variance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NP.Matrix</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">S</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#id0" title="Permalink to this definition">§</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">T</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#id1" title="Permalink to this definition">§</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">V</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#id2" title="Permalink to this definition">§</a></dt>
-<dd><p>Alias for field number 2</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">W</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#id3" title="Permalink to this definition">§</a></dt>
-<dd><p>Alias for field number 3</p>
+<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Data.NamedTuple">
+<span class="sig-name descname"><span class="pre">NamedTuple</span></span><a class="reference internal" href="../../_modules/romcomma/gsa/models.html#Sobol.Data.NamedTuple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.models.Sobol.Data.NamedTuple" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Values</span></code></p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.Values.count">
-<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.Values.count" title="Permalink to this definition">§</a></dt>
-<dd><p>Return number of occurrences of value.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.Values.index">
-<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9223372036854775807</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.Values.index" title="Permalink to this definition">§</a></dt>
-<dd><p>Return first index of value.</p>
-<p>Raises ValueError if the value is not present.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.broadcast_value">
-<span class="sig-name descname"><span class="pre">broadcast_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.broadcast_value" title="Permalink to this definition">§</a></dt>
-<dd><p>Broadcast a parameter ordinate.</p>
+<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Data.copy">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Data.copy" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a copy of <code class="docutils literal notranslate"><span class="pre">src_folder</span></code> at dst_folder, deleting anything existing at the destination.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model_name</strong> (<em>str</em>) – Used only in error reporting.</p></li>
-<li><p><strong>field</strong> (<em>str</em>) – The name of the field whose ordinate we are broadcasting.</p></li>
-<li><p><strong>target_shape</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – The shape to broadcast to.</p></li>
-<li><p><strong>is_diagonal</strong> (<em>bool</em>) – Whether to zero the off-diagonal elements of a square matrix.</p></li>
-<li><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>src_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
+<li><p><strong>dst_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><em>Parameters</em></a></p>
-</dd>
-</dl>
-<p>Returns: Self, for chaining calls.
-:raises IndexError: If broadcasting is impossible.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.read">
-<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.read" title="Permalink to this definition">§</a></dt>
-<dd><p>Read Parameters from their csv files.</p>
-<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code>, for chaining calls.
-:raises AssertionError: If self.csv is not set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><em>Parameters</em></a></p>
+<dd class="field-even"><p><em>Path</em></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Parameters.write">
-<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Parameters.write" title="Permalink to this definition">§</a></dt>
-<dd><p>Write Parameters to their csv files.</p>
+<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Data.delete">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Data.delete" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a non-existent <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – The file location is changed to <code class="docutils literal notranslate"><span class="pre">folder</span></code> unless <code class="docutils literal notranslate"><span class="pre">folder</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default).</p>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><em>Parameters</em></a></p>
+<dd class="field-even"><p><em>Path</em></p>
 </dd>
 </dl>
-<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code>, for chaining calls.
-:raises AssertionError: If self.csv is not set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Data.empty">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Data.empty" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns an empty <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Path</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Data.move">
+<span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Data.move" title="Permalink to this definition">§</a></dt>
+<dd><p>Move <code class="docutils literal notranslate"><span class="pre">self</span></code> to <code class="docutils literal notranslate"><span class="pre">dst_folder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dst_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to move to. If this exists, it will be emptied.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+</dd>
+</dl>
+<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code> for chaining calls.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.Data.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Data.read" title="Permalink to this definition">§</a></dt>
+<dd><p>Read <code class="docutils literal notranslate"><span class="pre">Data</span></code> from <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to record the data. Must exist</p></li>
+<li><p><strong>**kwargs</strong> – key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs).
+Missing fields receive their defaults, so <code class="docutils literal notranslate"><span class="pre">Data(folder)</span></code> is the default <code class="docutils literal notranslate"><span class="pre">Data</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+</dd>
+</dl>
+<p>Returns: The <code class="docutils literal notranslate"><span class="pre">Data</span></code> stored in <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.OPTIONS">
-<em class="property"><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OPTIONS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.gsa.models.Sobol.OPTIONS" title="Permalink to this definition">§</a></dt>
+<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.META">
+<em class="property"><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">META</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.gsa.models.Sobol.META" title="Permalink to this definition">§</a></dt>
 <dd><p>Default calculation options. <code class="docutils literal notranslate"><span class="pre">is_T_partial</span></code> forces <code class="docutils literal notranslate"><span class="pre">WmM</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
 </dd></dl>
 
@@ -396,13 +323,6 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Kind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.Sobol.Kind" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Enum to specify the kind of Sobol index to calculate.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="romcomma.gsa.models.Sobol.params">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#romcomma.gsa.models.Sobol.params" title="Permalink to this definition">§</a></dt>
-<dd><p>A shorthand to save typing.</p>
-<p>Returns: <code class="docutils literal notranslate"><span class="pre">self._parameters.values</span></code></p>
 </dd></dl>
 
 </dd></dl>

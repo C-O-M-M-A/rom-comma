@@ -1,4 +1,4 @@
-romcomma.gsa.calculators.ClosedSobol
+﻿romcomma.gsa.calculators.ClosedSobol
 ====================================
 
 .. currentmodule:: romcomma.gsa.calculators

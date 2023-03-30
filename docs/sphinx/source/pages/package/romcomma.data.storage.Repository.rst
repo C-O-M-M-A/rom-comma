@@ -1,4 +1,4 @@
-romcomma.data.storage.Repository
+﻿romcomma.data.storage.Repository
 ================================
 
 .. currentmodule:: romcomma.data.storage
@@ -18,11 +18,11 @@ romcomma.data.storage.Repository
    
       ~Repository.Y_split
       ~Repository.__init__
+      ~Repository.clean_copy
       ~Repository.fold_folder
       ~Repository.from_csv
       ~Repository.from_df
       ~Repository.into_K_folds
-      ~Repository._update_meta
    
    
 

@@ -146,15 +146,15 @@
 
 
 <div class="viewcode-block" id="Setup"><a class="viewcode-back" href="../../../pages/package/romcomma.run.context.Setup.html#romcomma.run.context.Setup">[docs]</a><span class="nd">@contextmanager</span>
-<span class="k">def</span> <span class="nf">Setup</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Context Manager setting up the environment to undertake operations.</span>
+<span class="k">def</span> <span class="nf">Environment</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Context Manager setting up the environment to run operations.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        name: The name of this context, ``print``ed as what is being undertaken. The (default) empty string will not be timed.</span>
+<span class="sd">        name: The name of this context, ``print``ed as what is being run. The (default) empty string will not be timed.</span>
 <span class="sd">        device: The device to run on. If this ends in the regex ``[C,G]PU*`` then the logical device ``/[C,G]PU*`` is used,</span>
 <span class="sd">            otherwise device allocation is automatic.</span>
 <span class="sd">        **kwargs: Is passed straight to the implementation GPFlow manager. Note, however, that ``float=float32`` is inoperative due to SciPy.</span>
-<span class="sd">            ``eager=bool`` is passed to ` ``tf.config.run_functions_eagerly`` &lt;https://www.tensorflow.org/api_docs/python/tf/config/run_functions_eagerly&gt;`_.</span>
+<span class="sd">            ``eager=bool`` is passed to `tf.config.run_functions_eagerly &lt;https://www.tensorflow.org/api_docs/python/tf/config/run_functions_eagerly&gt;`_.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="n">Timer</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span> <span class="o">|</span> <span class="p">{</span><span class="s1">&#39;float&#39;</span><span class="p">:</span> <span class="s1">&#39;float64&#39;</span><span class="p">}</span>

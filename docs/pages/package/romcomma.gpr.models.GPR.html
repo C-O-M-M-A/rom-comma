@@ -136,7 +136,7 @@
 <li><p><strong>is_read</strong> (<em>bool</em><em> | </em><em>None</em>) – </p></li>
 <li><p><strong>is_covariant</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>is_isotropic</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>kernel_parameters</strong> (<a class="reference internal" href="romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters" title="romcomma.gpr.kernels.Kernel.Parameters"><em>Kernel.Parameters</em></a><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>kernel_parameters</strong> (<a class="reference internal" href="romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Data" title="romcomma.gpr.kernels.Kernel.Data"><em>Kernel.Data</em></a><em> | </em><em>None</em>) – </p></li>
 <li><p><strong>likelihood_variance</strong> (<em>NP.Matrix</em><em> | </em><em>None</em>) – </p></li>
 </ul>
 </dd>
@@ -144,17 +144,17 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpr.models.GPR.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_read</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_covariant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_isotropic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">likelihood_variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpr/models.html#GPR.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpr.models.GPR.__init__" title="Permalink to this definition">§</a></dt>
-<dd><p>Set up parameters, and checks dimensions.</p>
+<dd><p>Set up data, and checks dimensions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>) – The name of this MOGP.</p></li>
 <li><p><strong>fold</strong> (<a class="reference internal" href="romcomma.data.storage.Fold.html#romcomma.data.storage.Fold" title="romcomma.data.storage.Fold"><em>Fold</em></a>) – The Fold housing this MOGP.</p></li>
-<li><p><strong>is_read</strong> (<em>bool</em><em> | </em><em>None</em>) – If True, the MOGP.kernel.parameters and MOGP.parameters and are read from <code class="docutils literal notranslate"><span class="pre">fold.folder/name</span></code>, otherwise defaults are used.</p></li>
+<li><p><strong>is_read</strong> (<em>bool</em><em> | </em><em>None</em>) – If True, the MOGP.kernel.data and MOGP.data and are read from <code class="docutils literal notranslate"><span class="pre">fold.folder/name</span></code>, otherwise defaults are used.</p></li>
 <li><p><strong>is_covariant</strong> (<em>bool</em>) – Whether the outputs will be treated as independent.</p></li>
 <li><p><strong>is_isotropic</strong> (<em>bool</em>) – Whether to restrict the kernel to be isotropic.</p></li>
-<li><p><strong>kernel_parameters</strong> (<a class="reference internal" href="romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Parameters" title="romcomma.gpr.kernels.Kernel.Parameters"><em>Parameters</em></a><em> | </em><em>None</em>) – A Kernel.Parameters to use for MOGP.kernel.parameters. If not None, this replaces the kernel specified by file/defaults.
-If None, the kernel is read from file, or set to the default Kernel.Parameters(), according to read_from_file.</p></li>
+<li><p><strong>kernel_parameters</strong> (<a class="reference internal" href="romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Data" title="romcomma.gpr.kernels.Kernel.Data"><em>Data</em></a><em> | </em><em>None</em>) – A Kernel.Data to use for MOGP.kernel.data. If not None, this replaces the kernel specified by file/defaults.
+If None, the kernel is read from file, or set to the default Kernel.Data(), according to read_from_file.</p></li>
 <li><p><strong>likelihood_variance</strong> (<em>ndarray</em><em> | </em><em>None</em>) – The likelihood variance to use instead of file or default.</p></li>
 </ul>
 </dd>
@@ -168,16 +168,10 @@ If None, the kernel is read from file, or set to the default Kernel.Parameters()
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.__init__" title="romcomma.gpr.models.GPR.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name, fold, is_read, is_covariant, ...)</p></td>
-<td><p>Set up parameters, and checks dimensions.</p></td>
+<td><p>Set up data, and checks dimensions.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.broadcast_parameters" title="romcomma.gpr.models.GPR.broadcast_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">broadcast_parameters</span></code></a>(is_covariant, is_isotropic)</p></td>
-<td><p>Broadcast the parameters of the MOGP (including kernels) to higher dimensions.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code>(src_folder, dst_folder[, ignore_errors])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">delete</span></code>(folder[, ignore_errors])</p></td>
-<td><p></p></td>
+<td><p>Broadcast the data of the MOGP (including kernels) to higher dimensions.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code>(**kwargs)</p></td>
 <td><p></p></td>
@@ -208,11 +202,11 @@ If None, the kernel is read from file, or set to the default Kernel.Parameters()
 <tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.M" title="romcomma.gpr.models.GPR.M"><code class="xref py py-obj docutils literal notranslate"><span class="pre">M</span></code></a></p></td>
 <td><p>The input (X) dimensionality.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.N" title="romcomma.gpr.models.GPR.N"><code class="xref py py-obj docutils literal notranslate"><span class="pre">N</span></code></a></p></td>
-<td><p>The the number of training samples.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.OPTIONS" title="romcomma.gpr.models.GPR.OPTIONS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OPTIONS</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.META" title="romcomma.gpr.models.GPR.META"><code class="xref py py-obj docutils literal notranslate"><span class="pre">META</span></code></a></p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.N" title="romcomma.gpr.models.GPR.N"><code class="xref py py-obj docutils literal notranslate"><span class="pre">N</span></code></a></p></td>
+<td><p>The the number of training samples.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.X" title="romcomma.gpr.models.GPR.X"><code class="xref py py-obj docutils literal notranslate"><span class="pre">X</span></code></a></p></td>
 <td><p>The implementation training inputs.</p></td>
@@ -220,155 +214,142 @@ If None, the kernel is read from file, or set to the default Kernel.Parameters()
 <tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.Y" title="romcomma.gpr.models.GPR.Y"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Y</span></code></a></p></td>
 <td><p>The implementation training outputs.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.fold" title="romcomma.gpr.models.GPR.fold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fold</span></code></a></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.fold" title="romcomma.gpr.models.GPR.fold"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fold</span></code></a></p></td>
 <td><p>The parent fold.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">folder</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">folder</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.implementation" title="romcomma.gpr.models.GPR.implementation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">implementation</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.implementation" title="romcomma.gpr.models.GPR.implementation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">implementation</span></code></a></p></td>
 <td><p>The implementation of this MOGP in GPFlow.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kernel</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kernel</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">likelihood</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">likelihood</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">parameters</span></code></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_csv</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.GPR.params" title="romcomma.gpr.models.GPR.params"><code class="xref py py-obj docutils literal notranslate"><span class="pre">params</span></code></a></p></td>
-<td><p>A shorthand to save typing.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_csv</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_summary_csv</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test_summary_csv</span></code></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py class">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Parameters">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpr/models.html#GPR.Parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpr.models.GPR.Parameters" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">Parameters</span></code></a></p>
-<p>The Parameters set of a MOGP.</p>
+<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpr/models.html#GPR.Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpr.models.GPR.Data" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
+<p>The Data set of a MOGP.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>folder</strong> (<em>Optional</em><em>[</em><em>Path | str</em><em>]</em>) – </p></li>
-<li><p><strong>kwargs</strong> (<em>NP.Matrix</em>) – </p></li>
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
+<li><p><strong>kwargs</strong> (<em>Data.Matrix</em>) – </p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Parameters.Values">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([[None]],</span> <span class="pre">dtype=object)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpr/models.html#GPR.Parameters.Values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpr.models.GPR.Parameters.Values" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
-<p>The parameters set of a MOGP.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kernel</strong> (<em>ndarray</em>) – </p>
-</dd>
-</dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Parameters.Values.kernel">
-<span class="sig-name descname"><span class="pre">kernel</span></span><a class="headerlink" href="#romcomma.gpr.models.GPR.Parameters.Values.kernel" title="Permalink to this definition">§</a></dt>
-<dd><p>A numpy [[str]] identifying the type of Kernel, as returned by gp.kernel.TypeIdentifier(). This is never set externally.
-The kernel parameter, when provided, must be a <code class="docutils literal notranslate"><span class="pre">[[Kernel.Parameters]]</span></code> set storing the desired kernel parameters.
-The kernel is constructed by inferring its type from the type of Kernel.Parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>NP.Matrix</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Data.NamedTuple">
+<span class="sig-name descname"><span class="pre">NamedTuple</span></span><a class="reference internal" href="../../_modules/romcomma/gpr/models.html#GPR.Data.NamedTuple"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpr.models.GPR.Data.NamedTuple" title="Permalink to this definition">§</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">Values</span></code></p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Parameters.Values.count">
-<span class="sig-name descname"><span class="pre">count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Parameters.Values.count" title="Permalink to this definition">§</a></dt>
-<dd><p>Return number of occurrences of value.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Parameters.Values.index">
-<span class="sig-name descname"><span class="pre">index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9223372036854775807</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Parameters.Values.index" title="Permalink to this definition">§</a></dt>
-<dd><p>Return first index of value.</p>
-<p>Raises ValueError if the value is not present.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">kernel</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#id0" title="Permalink to this definition">§</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Parameters.broadcast_value">
-<span class="sig-name descname"><span class="pre">broadcast_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Parameters.broadcast_value" title="Permalink to this definition">§</a></dt>
-<dd><p>Broadcast a parameter ordinate.</p>
+<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Data.copy">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst_folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Data.copy" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a copy of <code class="docutils literal notranslate"><span class="pre">src_folder</span></code> at dst_folder, deleting anything existing at the destination.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model_name</strong> (<em>str</em>) – Used only in error reporting.</p></li>
-<li><p><strong>field</strong> (<em>str</em>) – The name of the field whose ordinate we are broadcasting.</p></li>
-<li><p><strong>target_shape</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – The shape to broadcast to.</p></li>
-<li><p><strong>is_diagonal</strong> (<em>bool</em>) – Whether to zero the off-diagonal elements of a square matrix.</p></li>
-<li><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>src_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
+<li><p><strong>dst_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><em>Parameters</em></a></p>
-</dd>
-</dl>
-<p>Returns: Self, for chaining calls.
-:raises IndexError: If broadcasting is impossible.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Parameters.read">
-<span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Parameters.read" title="Permalink to this definition">§</a></dt>
-<dd><p>Read Parameters from their csv files.</p>
-<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code>, for chaining calls.
-:raises AssertionError: If self.csv is not set.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><em>Parameters</em></a></p>
+<dd class="field-even"><p><em>Path</em></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Parameters.write">
-<span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Parameters.write" title="Permalink to this definition">§</a></dt>
-<dd><p>Write Parameters to their csv files.</p>
+<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Data.delete">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Data.delete" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns a non-existent <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – The file location is changed to <code class="docutils literal notranslate"><span class="pre">folder</span></code> unless <code class="docutils literal notranslate"><span class="pre">folder</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default).</p>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Parameters" title="romcomma.base.classes.Parameters"><em>Parameters</em></a></p>
+<dd class="field-even"><p><em>Path</em></p>
 </dd>
 </dl>
-<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code>, for chaining calls.
-:raises AssertionError: If self.csv is not set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Data.empty">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Data.empty" title="Permalink to this definition">§</a></dt>
+<dd><p>Returns an empty <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Path</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Data.move">
+<span class="sig-name descname"><span class="pre">move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Data.move" title="Permalink to this definition">§</a></dt>
+<dd><p>Move <code class="docutils literal notranslate"><span class="pre">self</span></code> to <code class="docutils literal notranslate"><span class="pre">dst_folder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dst_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to move to. If this exists, it will be emptied.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+</dd>
+</dl>
+<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code> for chaining calls.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.Data.read">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.GPR.Data.read" title="Permalink to this definition">§</a></dt>
+<dd><p>Read <code class="docutils literal notranslate"><span class="pre">Data</span></code> from <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to record the data. Must exist</p></li>
+<li><p><strong>**kwargs</strong> – key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs).
+Missing fields receive their defaults, so <code class="docutils literal notranslate"><span class="pre">Data(folder)</span></code> is the default <code class="docutils literal notranslate"><span class="pre">Data</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+</dd>
+</dl>
+<p>Returns: The <code class="docutils literal notranslate"><span class="pre">Data</span></code> stored in <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.OPTIONS">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OPTIONS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.gpr.models.GPR.OPTIONS" title="Permalink to this definition">§</a></dt>
+<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.META">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">META</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.gpr.models.GPR.META" title="Permalink to this definition">§</a></dt>
 <dd><p>Hyper-parameter optimizer options</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpr.models.GPR.KERNEL_FOLDER_NAME">
 <em class="property"><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">KERNEL_FOLDER_NAME</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#romcomma.gpr.models.GPR.KERNEL_FOLDER_NAME" title="Permalink to this definition">§</a></dt>
-<dd><p>The name of the folder where kernel parameters are stored.</p>
+<dd><p>The name of the folder where kernel data are stored.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -463,14 +444,14 @@ The mean prediction, the std error of prediction and the Z score of prediction (
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpr.models.GPR.broadcast_parameters">
 <span class="sig-name descname"><span class="pre">broadcast_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_covariant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_isotropic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpr/models.html#GPR.broadcast_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpr.models.GPR.broadcast_parameters" title="Permalink to this definition">§</a></dt>
-<dd><p>Broadcast the parameters of the MOGP (including kernels) to higher dimensions.
+<dd><p>Broadcast the data of the MOGP (including kernels) to higher dimensions.
 Shrinkage raises errors, unchanged dimensions silently do nothing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>is_covariant</strong> (<em>bool</em>) – Whether the outputs will be treated as dependent.</p></li>
 <li><p><strong>is_isotropic</strong> (<em>bool</em>) – Whether to restrict the kernel to be isotropic.</p></li>
-<li><p><strong>folder</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – The file location, which is <code class="docutils literal notranslate"><span class="pre">self.folder</span></code> if <code class="docutils literal notranslate"><span class="pre">folder</span> <span class="pre">is</span> <span class="pre">None</span></code> (the default).</p></li>
+<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – The file location, which is <code class="docutils literal notranslate"><span class="pre">self.folder</span></code> if <code class="docutils literal notranslate"><span class="pre">folder</span> <span class="pre">is</span> <span class="pre">None</span></code> (the default).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -478,13 +459,6 @@ Shrinkage raises errors, unchanged dimensions silently do nothing.</p>
 </dd>
 </dl>
 <p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code>, for chaining calls.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="romcomma.gpr.models.GPR.params">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">params</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#romcomma.gpr.models.GPR.params" title="Permalink to this definition">§</a></dt>
-<dd><p>A shorthand to save typing.</p>
-<p>Returns: <code class="docutils literal notranslate"><span class="pre">self._parameters.values</span></code></p>
 </dd></dl>
 
 </dd></dl>
@@ -504,6 +478,7 @@ Shrinkage raises errors, unchanged dimensions silently do nothing.</p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../start.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../start.html#conceptual-hierarchy">Conceptual Hierarchy</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../start.html#module-hierarchy">Module Hierarchy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../start.html#glossary">Glossary</a></li>
 </ul>
@@ -515,6 +490,7 @@ Shrinkage raises errors, unchanged dimensions silently do nothing.</p>
 <li class="toctree-l2 current"><a class="reference internal" href="romcomma.gpr.html">romcomma.gpr</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.gsa.html">romcomma.gsa</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.rom.html">romcomma.rom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="romcomma.run.html">romcomma.run</a></li>
 <li class="toctree-l2"><a class="reference internal" href="romcomma.user.html">romcomma.user</a></li>
 </ul>
 </li>

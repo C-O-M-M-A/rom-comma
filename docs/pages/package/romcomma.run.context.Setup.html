@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>romcomma.run.context.Setup &#8212; rom-comma 1.0 documentation</title>
+    <title>romcomma.run.context.Environment &#8212; rom-comma 1.0 documentation</title>
     <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/insipid.css" />
@@ -61,7 +61,7 @@
           </div>
           <div class="title">
             <a class="parent" href="romcomma.run.context.html" accesskey="U">romcomma.run.context</a>
-            <a class="top" href="#">romcomma.run.context.Setup</a>
+            <a class="top" href="#">romcomma.run.context.Environment</a>
           </div>
           <div class="buttons">
             <button id="fullscreen-button" type="button" aria-hidden="true">
@@ -122,19 +122,19 @@
           <div class="body" role="main">
             
 <section id="romcomma-run-context-setup">
-<h1>romcomma.run.context.Setup<a class="headerlink" href="#romcomma-run-context-setup" title="Permalink to this heading">§</a></h1>
+<h1>romcomma.run.context.Environment<a class="headerlink" href="#romcomma-run-context-setup" title="Permalink to this heading">§</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="romcomma.run.context.Setup">
-<span class="sig-name descname"><span class="pre">Setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/run/context.html#Setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.context.Setup" title="Permalink to this definition">§</a></dt>
-<dd><p>Context Manager setting up the environment to undertake operations.</p>
+<span class="sig-name descname"><span class="pre">Environment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/run/context.html#Setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.run.context.Setup" title="Permalink to this definition">§</a></dt>
+<dd><p>Context Manager setting up the environment to run operations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – The name of this context, <a href="#id1"><span class="problematic" id="id2">``</span></a>print``ed as what is being undertaken. The (default) empty string will not be timed.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – The name of this context, <a href="#id1"><span class="problematic" id="id2">``</span></a>print``ed as what is being run. The (default) empty string will not be timed.</p></li>
 <li><p><strong>device</strong> (<em>str</em>) – The device to run on. If this ends in the regex <code class="docutils literal notranslate"><span class="pre">[C,G]PU*</span></code> then the logical device <code class="docutils literal notranslate"><span class="pre">/[C,G]PU*</span></code> is used,
 otherwise device allocation is automatic.</p></li>
 <li><p><strong>**kwargs</strong> – Is passed straight to the implementation GPFlow manager. Note, however, that <code class="docutils literal notranslate"><span class="pre">float=float32</span></code> is inoperative due to SciPy.
-<code class="docutils literal notranslate"><span class="pre">eager=bool</span></code> is passed to ` <code class="docutils literal notranslate"><span class="pre">tf.config.run_functions_eagerly</span></code> &lt;<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/config/run_functions_eagerly">https://www.tensorflow.org/api_docs/python/tf/config/run_functions_eagerly</a>&gt;`_.</p></li>
+<code class="docutils literal notranslate"><span class="pre">eager=bool</span></code> is passed to <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/config/run_functions_eagerly">tf.config.run_functions_eagerly</a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -155,6 +155,7 @@ otherwise device allocation is automatic.</p></li>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="../start.html">Getting Started</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../start.html#conceptual-hierarchy">Conceptual Hierarchy</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../start.html#module-hierarchy">Module Hierarchy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../start.html#glossary">Glossary</a></li>
 </ul>

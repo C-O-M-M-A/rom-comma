@@ -33,4 +33,5 @@
    romcomma.user.gsa_from_function
    romcomma.user.repo_from_csv
    romcomma.user.repo_from_function
+   romcomma.user.toy
 

@@ -1,4 +1,4 @@
-romcomma.gsa.calculators.ClosedSobolWithError
+﻿romcomma.gsa.calculators.ClosedSobolWithError
 =============================================
 
 .. currentmodule:: romcomma.gsa.calculators

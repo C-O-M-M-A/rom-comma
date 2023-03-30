@@ -153,7 +153,7 @@
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">}</span></div>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="k">with</span> <span class="n">context</span><span class="o">.</span><span class="n">Setup</span><span class="p">(</span><span class="s1">&#39;Test&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">context</span><span class="o">.</span><span class="n">Environment</span><span class="p">(</span><span class="s1">&#39;Test&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">):</span>
         <span class="n">lh</span> <span class="o">=</span> <span class="n">likelihood</span><span class="p">()</span>
         <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">regression_data</span><span class="p">()</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>

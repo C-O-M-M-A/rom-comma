@@ -119,12 +119,12 @@ class ClosedSobol(gf.Module, Calculator):
 
         Args:
             gp: The gp to analyze.
-            **kwargs: The calculation options to override OPTIONS.
+            **kwargs: The calculation options to override META.
         """
         super().__init__()
         self.gp = gp
         self.options = self.OPTIONS | kwargs
-        # Unwrap parameters
+        # Unwrap data
         self.L, self.M, self.N = self.gp.L, self.gp.M, self.gp.N
         self.Ms = tf.constant([0, self.M], dtype=INT())
         self.F = tf.constant(self.gp.kernel.params.variance, dtype=FLOAT())
@@ -134,7 +134,7 @@ class ClosedSobol(gf.Module, Calculator):
         # Determine if F is diagonal
         self.is_F_diagonal = self.options.pop('is_F_diagonal', None)
         if self.is_F_diagonal is None:
-            gp_options = self.gp._read_options() if self.gp._options_json.exists() else self.gp.OPTIONS
+            gp_options = self.gp.read_meta() if self.gp._options_json.exists() else self.gp.META
             self.is_F_diagonal = not gp_options.pop('kernel', {}).pop("covariance", False)
         # Reshape according to is_F_diagonal
         if self.is_F_diagonal:

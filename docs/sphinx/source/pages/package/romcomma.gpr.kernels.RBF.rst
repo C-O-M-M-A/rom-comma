@@ -1,4 +1,4 @@
-romcomma.gpr.kernels.RBF
+﻿romcomma.gpr.kernels.RBF
 ========================
 
 .. currentmodule:: romcomma.gpr.kernels
@@ -20,8 +20,6 @@ romcomma.gpr.kernels.RBF
       ~RBF.TypeFromParameters
       ~RBF.__init__
       ~RBF.broadcast_parameters
-      ~RBF.copy
-      ~RBF.delete
       ~RBF.optimize
    
    
@@ -34,12 +32,11 @@ romcomma.gpr.kernels.RBF
    
       ~RBF.L
       ~RBF.M
-      ~RBF.OPTIONS
+      ~RBF.META
       ~RBF.TYPE_IDENTIFIER
+      ~RBF.data
       ~RBF.folder
       ~RBF.implementation
       ~RBF.is_covariant
-      ~RBF.parameters
-      ~RBF.params
    
    

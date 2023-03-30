@@ -1,4 +1,4 @@
-romcomma.gsa.models.Sobol
+﻿romcomma.gsa.models.Sobol
 =========================
 
 .. currentmodule:: romcomma.gsa.models
@@ -18,8 +18,6 @@ romcomma.gsa.models.Sobol
    
       ~Sobol.__init__
       ~Sobol.calculator
-      ~Sobol.copy
-      ~Sobol.delete
       ~Sobol.optimize
    
    
@@ -31,9 +29,8 @@ romcomma.gsa.models.Sobol
    .. autosummary::
    
       ~Sobol.ALL_KINDS
-      ~Sobol.OPTIONS
+      ~Sobol.META
+      ~Sobol.data
       ~Sobol.folder
-      ~Sobol.parameters
-      ~Sobol.params
    
    

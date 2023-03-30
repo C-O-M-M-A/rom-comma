@@ -1,4 +1,4 @@
-romcomma.gsa.models.GSA
+﻿romcomma.gsa.models.GSA
 =======================
 
 .. currentmodule:: romcomma.gsa.models
@@ -18,8 +18,6 @@ romcomma.gsa.models.GSA
    
       ~GSA.__init__
       ~GSA.calculator
-      ~GSA.copy
-      ~GSA.delete
       ~GSA.optimize
    
    
@@ -31,9 +29,8 @@ romcomma.gsa.models.GSA
    .. autosummary::
    
       ~GSA.ALL_KINDS
-      ~GSA.OPTIONS
+      ~GSA.META
+      ~GSA.data
       ~GSA.folder
-      ~GSA.parameters
-      ~GSA.params
    
    

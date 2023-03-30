@@ -61,7 +61,7 @@ class Scalar:
             loc: Input offset.
             scale: Input scale.
             m: The number of input dimensions.
-            **kwargs: Function parameters applied to call.
+            **kwargs: Function data applied to call.
         """
         self._call = call
         self._loc = loc
@@ -123,9 +123,9 @@ class Vector(dict):
         self._name = name
 
 
-_ISHIGAMI = {'call': SALib.test_functions.Ishigami.evaluate, 'loc': -np.pi, 'scale': 2 * np.pi}     #: The Ishigami function without parameters.
-_SOBOL_G = {'call': SALib.test_functions.Sobol_G.evaluate, 'loc': 0, 'scale': 1}    #: Modified Sobol G-function without parameters.
-_OAKLEY2004 = {'call': SALib.test_functions.oakley2004.evaluate, 'loc': -1, 'scale': 2}     #: Modified Oakley & O'Hagan (2004) function without parameters.
+_ISHIGAMI = {'call': SALib.test_functions.Ishigami.evaluate, 'loc': -np.pi, 'scale': 2 * np.pi}     #: The Ishigami function without data.
+_SOBOL_G = {'call': SALib.test_functions.Sobol_G.evaluate, 'loc': 0, 'scale': 1}    #: Modified Sobol G-function without data.
+_OAKLEY2004 = {'call': SALib.test_functions.oakley2004.evaluate, 'loc': -1, 'scale': 2}     #: Modified Oakley & O'Hagan (2004) function without data.
 
 
 def linspace(start: float, stop: float, shape: Sequence[int]) -> NP.Matrix:

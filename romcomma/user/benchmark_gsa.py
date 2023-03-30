@@ -37,7 +37,7 @@ if __name__ == '__main__':
     kinds = gsa.run.calculation.ALL_KINDS
     is_error_calculated = True
     is_T_partial = False
-    with context.Setup('Test', device='GPU'):
+    with context.Environment('Test', device='GPU'):
         kind_names = [kind.name.lower() for kind in kinds]
         for M in (10, 7, 13, 18):
             for N in (3E4, 1E4, 7E3, 2E3, 1680, 1280, 960, 720, 520, 240, 200, 160, 128, 60, 40, 20):

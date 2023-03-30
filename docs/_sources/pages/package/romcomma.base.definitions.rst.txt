@@ -1,9 +1,16 @@
-romcomma.base.definitions
+﻿romcomma.base.definitions
 =========================
 
 .. automodule:: romcomma.base.definitions
 
    
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+      :toctree:
+   
+      EFFECTIVELY_ZERO
    
    
 

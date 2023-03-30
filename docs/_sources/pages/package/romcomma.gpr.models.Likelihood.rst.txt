@@ -1,4 +1,4 @@
-romcomma.gpr.models.Likelihood
+﻿romcomma.gpr.models.Likelihood
 ==============================
 
 .. currentmodule:: romcomma.gpr.models
@@ -17,8 +17,6 @@ romcomma.gpr.models.Likelihood
    .. autosummary::
    
       ~Likelihood.__init__
-      ~Likelihood.copy
-      ~Likelihood.delete
       ~Likelihood.optimize
    
    
@@ -29,11 +27,10 @@ romcomma.gpr.models.Likelihood
 
    .. autosummary::
    
-      ~Likelihood.OPTIONS
+      ~Likelihood.META
       ~Likelihood.VARIANCE_FLOOR
+      ~Likelihood.data
       ~Likelihood.folder
       ~Likelihood.is_covariant
-      ~Likelihood.parameters
-      ~Likelihood.params
    
    

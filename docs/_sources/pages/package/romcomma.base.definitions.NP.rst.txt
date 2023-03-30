@@ -31,6 +31,5 @@ romcomma.base.definitions.NP
       ~NP.MatrixLike
       ~NP.TensorLike
       ~NP.VectorLike
-      ~NP.VectorOrMatrix
    
    

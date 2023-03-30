@@ -1,4 +1,4 @@
-romcomma.base.classes.Model
+﻿romcomma.base.classes.Model
 ===========================
 
 .. currentmodule:: romcomma.base.classes
@@ -17,8 +17,6 @@ romcomma.base.classes.Model
    .. autosummary::
    
       ~Model.__init__
-      ~Model.copy
-      ~Model.delete
       ~Model.optimize
    
    
@@ -29,9 +27,8 @@ romcomma.base.classes.Model
 
    .. autosummary::
    
-      ~Model.OPTIONS
+      ~Model.META
+      ~Model.data
       ~Model.folder
-      ~Model.parameters
-      ~Model.params
    
    

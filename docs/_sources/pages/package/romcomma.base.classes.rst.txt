@@ -1,4 +1,4 @@
-romcomma.base.classes
+﻿romcomma.base.classes
 =====================
 
 .. automodule:: romcomma.base.classes
@@ -19,8 +19,9 @@ romcomma.base.classes
       :toctree:
       :template: custom-class-template.rst
    
+      Data
+      Frame
       Model
-      Parameters
    
    
 

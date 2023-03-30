@@ -1,4 +1,4 @@
-romcomma.gpr.models.GPR
+﻿romcomma.gpr.models.GPR
 =======================
 
 .. currentmodule:: romcomma.gpr.models
@@ -18,8 +18,6 @@ romcomma.gpr.models.GPR
    
       ~GPR.__init__
       ~GPR.broadcast_parameters
-      ~GPR.copy
-      ~GPR.delete
       ~GPR.optimize
       ~GPR.predict
       ~GPR.test
@@ -37,17 +35,16 @@ romcomma.gpr.models.GPR
       ~GPR.K_inv_Y
       ~GPR.L
       ~GPR.M
+      ~GPR.META
       ~GPR.N
-      ~GPR.OPTIONS
       ~GPR.X
       ~GPR.Y
+      ~GPR.data
       ~GPR.fold
       ~GPR.folder
       ~GPR.implementation
       ~GPR.kernel
       ~GPR.likelihood
-      ~GPR.parameters
-      ~GPR.params
       ~GPR.test_csv
       ~GPR.test_summary_csv
    

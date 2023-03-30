@@ -1,6 +1,6 @@
-romcomma.run.context.Setup
+romcomma.run.context.Environment
 ==========================
 
 .. currentmodule:: romcomma.run.context
 
-.. autofunction:: Setup
+.. autofunction:: Environment

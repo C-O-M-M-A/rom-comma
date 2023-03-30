@@ -112,7 +112,7 @@
 <span class="c1">#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,</span>
 <span class="c1">#  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
 
-<span class="sd">&quot;&quot;&quot; Contains universal imports, constants and type hints. Every source file under ``romcomma`` will ``import * from romcomma.base.definitions``. &quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot; Type and constant definitions. &quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
@@ -126,19 +126,17 @@
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
 
 
-<span class="n">EFFECTIVELY_ZERO</span> <span class="o">=</span> <span class="mf">1.0E-64</span>
+<span class="n">EFFECTIVELY_ZERO</span> <span class="o">=</span> <span class="mf">1.0E-64</span>  <span class="c1">#: Tolerance when testing floats for equality.</span>
 
 
 <div class="viewcode-block" id="INT"><a class="viewcode-back" href="../../../pages/package/romcomma.base.definitions.INT.html#romcomma.base.definitions.INT">[docs]</a><span class="k">def</span> <span class="nf">INT</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; The ``dtype`` of ``int`` in :ref:`romcomma.run.context.Environment`. &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">gf</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_int</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="FLOAT"><a class="viewcode-back" href="../../../pages/package/romcomma.base.definitions.FLOAT.html#romcomma.base.definitions.FLOAT">[docs]</a><span class="k">def</span> <span class="nf">FLOAT</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; The ``dtype`` of ``float`` in :ref:`romcomma.run.context.Environment`. &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">gf</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_float</span><span class="p">()</span></div>
-
-
-<span class="n">int | float</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
-<span class="n">Path | str</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
 
 
 <span class="c1"># noinspection PyPep8Naming</span>
@@ -157,11 +155,10 @@
     <span class="n">Tensor6</span> <span class="o">=</span> <span class="n">Tensor</span>
     <span class="n">Tensor7</span> <span class="o">=</span> <span class="n">Tensor</span>
     <span class="n">Tensor8</span> <span class="o">=</span> <span class="n">Tensor</span>
-    <span class="n">VectorLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">int | float</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">int | float</span><span class="p">],</span> <span class="n">Array</span><span class="p">]</span>
-    <span class="n">MatrixLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">VectorLike</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">VectorLike</span><span class="p">]]</span>
+    <span class="n">VectorLike</span> <span class="o">=</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array</span>
+    <span class="n">MatrixLike</span> <span class="o">=</span> <span class="n">VectorLike</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">VectorLike</span><span class="p">]</span>
     <span class="n">CovectorLike</span> <span class="o">=</span> <span class="n">MatrixLike</span>
-    <span class="n">ArrayLike</span> <span class="o">=</span> <span class="n">TensorLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]]]</span>
-    <span class="n">VectorOrMatrix</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;VectorOrMatrix&#39;</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">)</span></div>
+    <span class="n">ArrayLike</span> <span class="o">=</span> <span class="n">TensorLike</span> <span class="o">=</span> <span class="n">MatrixLike</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]]</span></div>
 
 
 <span class="c1"># noinspection PyPep8Naming</span>
@@ -180,14 +177,13 @@
     <span class="n">Tensor6</span> <span class="o">=</span> <span class="n">Tensor</span>
     <span class="n">Tensor7</span> <span class="o">=</span> <span class="n">Tensor</span>
     <span class="n">Tensor8</span> <span class="o">=</span> <span class="n">Tensor</span>
-    <span class="n">VectorLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">int | float</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">int | float</span><span class="p">],</span> <span class="n">Array</span><span class="p">]</span>
+    <span class="n">VectorLike</span> <span class="o">=</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="n">Array</span>
     <span class="n">MatrixLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">VectorLike</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">VectorLike</span><span class="p">]]</span>
     <span class="n">CovectorLike</span> <span class="o">=</span> <span class="n">MatrixLike</span>
-    <span class="n">ArrayLike</span> <span class="o">=</span> <span class="n">TensorLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">],</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]]]</span>
-    <span class="n">VectorOrMatrix</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;VectorOrMatrix&#39;</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">)</span>
-    <span class="n">Slice</span> <span class="o">=</span> <span class="n">PairOfInts</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">ArrayLike</span> <span class="o">=</span> <span class="n">TensorLike</span> <span class="o">=</span> <span class="n">MatrixLike</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">]]</span>
+    <span class="n">Slice</span> <span class="o">=</span> <span class="n">PairOfInts</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span>      <span class="c1">#: A slice, for indexing and marginalization.</span>
 
-    <span class="n">NaN</span><span class="p">:</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">FLOAT</span><span class="p">())</span></div>
+    <span class="n">NaN</span><span class="p">:</span> <span class="n">TF</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">NaN</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">FLOAT</span><span class="p">())</span>     <span class="c1">#: A constant Tensor representing NaN.</span></div>
 
 </pre></div>
             <div class="clearer"></div>
