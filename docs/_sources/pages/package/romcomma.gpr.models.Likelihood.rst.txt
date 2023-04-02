@@ -18,6 +18,8 @@
    
       ~Likelihood.__init__
       ~Likelihood.optimize
+      ~Likelihood.read_meta
+      ~Likelihood.write_meta
    
    
 

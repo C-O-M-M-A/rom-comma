@@ -28,8 +28,8 @@ from romcomma.run import context, sample
 import romcomma.data
 
 
-ROOT: Path = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/root')     #: The root folder to house all data repositories.
-CSV: Path = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/2.0/all.M.7.c.v.25.00.N.400.0/data.csv')      #: The csv file to read.
+ROOT: Path = Path('C:/Users/fc1ram/Documents/Research/rom-comma/dat/SoftwareTest/root')     #: The root folder to house all data repositories.
+CSV: Path = Path('C:/Users/fc1ram/Documents/Research/rom-comma/dat/SoftwareTest/2.0/all.M.7.c.v.25.00.N.400.0/data.csv')      #: The csv file to read.
 K: int = 5   #: The number of Folds in the new repository.
 ADD_NOISE: bool = False     #: Whether to add Gaussian Noise to the outputs being read.
 NOISE_MAGNITUDES: Tuple[float] = (0.25,)   #: The noise-to-signal ratio, which is equal to the StdDev of the noise added to the normalised function output.

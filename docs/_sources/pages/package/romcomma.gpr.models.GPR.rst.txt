@@ -20,7 +20,9 @@
       ~GPR.broadcast_parameters
       ~GPR.optimize
       ~GPR.predict
+      ~GPR.read_meta
       ~GPR.test
+      ~GPR.write_meta
    
    
 

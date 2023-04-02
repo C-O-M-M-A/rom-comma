@@ -182,7 +182,7 @@
 :param variance_cho_diagonal: The diagonal of the variance Cholesky decomposition.</p>
 <p>Returns: The Gaussian pdf.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Data<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>exponent</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – </p></li>
 <li><p><strong>variance_cho_diagonal</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – </p></li>
@@ -199,7 +199,7 @@ Taking the product <code class="docutils literal notranslate"><span class="pre">
 Batch dimensions of ordinate, mean and variance are internally broadcast to match each other.
 This function is used to minimize exponentiation, for efficiency and accuracy purposes, in calculating ratios of gaussian pdfs.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Data<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mean</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="romcomma.base.definitions.TF.Tensor"><em>TF.Tensor</em></a>) – Gaussian population mean. Should be of adequate rank to broadcast Ls.</p></li>
 <li><p><strong>variance_cho</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="romcomma.base.definitions.TF.Tensor"><em>TF.Tensor</em></a>) – The lower triangular Cholesky decomposition of the Gaussian population variance. Is automatically broadcast to embrace Ns</p></li>

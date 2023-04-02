@@ -125,7 +125,7 @@
 <h1>romcomma.base.classes.Model<a class="headerlink" href="#romcomma-base-classes-model" title="Permalink to this heading">§</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="romcomma.base.classes.Model">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model" title="Permalink to this definition">§</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Abstract base class for any model. This base class implements generic file storage and parameter handling.
 The latter is dealt with by each subclass overriding <code class="docutils literal notranslate"><span class="pre">Data.NamedTuple</span></code> with its own <code class="docutils literal notranslate"><span class="pre">NamedTuple[NamedTuple]</span></code>
@@ -135,20 +135,20 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – </p></li>
-<li><p><strong>read_parameters</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>read_data</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>kwargs</strong> (<em>NP.Matrix</em>) – </p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.base.classes.Model.__init__">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model.__init__" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model.__init__" title="Permalink to this definition">§</a></dt>
 <dd><p>Model constructor, to be called by all subclasses as a matter of priority.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The model file location.</p></li>
-<li><p><strong>read_parameters</strong> (<em>bool</em>) – If True, the <code class="docutils literal notranslate"><span class="pre">model.data</span></code> are read from <code class="docutils literal notranslate"><span class="pre">folder</span></code>, otherwise defaults are used.</p></li>
+<li><p><strong>read_data</strong> (<em>bool</em>) – If True, the <code class="docutils literal notranslate"><span class="pre">model.data</span></code> are read from <code class="docutils literal notranslate"><span class="pre">folder</span></code>, otherwise defaults are used.</p></li>
 <li><p><strong>**kwargs</strong> (<em>ndarray</em>) – The model.data fields=values to replace after reading from file/defaults.</p></li>
 </ul>
 </dd>
@@ -158,10 +158,16 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.base.classes.Model.__init__" title="romcomma.base.classes.Model.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(folder[, read_parameters])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.base.classes.Model.__init__" title="romcomma.base.classes.Model.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(folder[, read_data])</p></td>
 <td><p>Model constructor, to be called by all subclasses as a matter of priority.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code>(method, **kwargs)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_meta</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_meta</span></code>(options)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>

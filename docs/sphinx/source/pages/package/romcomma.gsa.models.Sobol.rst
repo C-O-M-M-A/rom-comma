@@ -19,6 +19,8 @@
       ~Sobol.__init__
       ~Sobol.calculator
       ~Sobol.optimize
+      ~Sobol.read_meta
+      ~Sobol.write_meta
    
    
 

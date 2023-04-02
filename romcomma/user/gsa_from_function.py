@@ -27,7 +27,7 @@ from romcomma.base.definitions import *
 from romcomma.run import context, function, sample, summarised, results
 
 
-ROOT: Path = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/2.3')     #: The root folder to house all data repositories.
+ROOT: Path = Path('C:/Users/fc1ram/Documents/Research/rom-comma/dat/SoftwareTest/2.3')     #: The root folder to house all data repositories.
 READ: bool = True    #: Whether to read an existing Repository, or create a new one overwriting it.
 IGNORE_EXCEPTIONS: bool = False    #: Whether to ignore exceptions, normally due to failed GPR optimisation.
 K: int = 2   #: The number of Folds in a new repository.

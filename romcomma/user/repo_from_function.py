@@ -27,7 +27,7 @@ from romcomma.base.definitions import *
 from romcomma.run import context, function, sample
 
 
-ROOT: Path = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/2.0.1')     #: The root folder to house all data repositories.
+ROOT: Path = Path('C:/Users/fc1ram/Documents/Research/rom-comma/dat/SoftwareTest/2.0.1')     #: The root folder to house all data repositories.
 READ: bool = False    #: Whether to read an existing Repository, or create a new one overwriting it.
 K: int = 2   #: The number of Folds in a new repository.
 Ms: Tuple[int] = (7, )   #: The number of inputs.

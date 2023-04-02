@@ -21,6 +21,8 @@
       ~RBF.__init__
       ~RBF.broadcast_parameters
       ~RBF.optimize
+      ~RBF.read_meta
+      ~RBF.write_meta
    
    
 

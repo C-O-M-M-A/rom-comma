@@ -21,6 +21,8 @@
       ~Kernel.__init__
       ~Kernel.broadcast_parameters
       ~Kernel.optimize
+      ~Kernel.read_meta
+      ~Kernel.write_meta
    
    
 

@@ -27,7 +27,7 @@ from romcomma.base.definitions import *
 from romcomma import gsa
 from romcomma.run import context, function, results, sample, summarised
 
-BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/dat/SoftwareTest/1.1.3')     #: The base folder to house all data repositories.
+BASE_FOLDER = Path('C:/Users/fc1ram/Documents/Research/rom-comma/dat/SoftwareTest/1.1.3')     #: The base folder to house all data repositories.
 
 if __name__ == '__main__':
     function_vector = function.ALL

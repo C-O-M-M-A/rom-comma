@@ -18,6 +18,8 @@
    
       ~Model.__init__
       ~Model.optimize
+      ~Model.read_meta
+      ~Model.write_meta
    
    
 

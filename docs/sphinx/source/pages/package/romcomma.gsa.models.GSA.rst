@@ -19,6 +19,8 @@
       ~GSA.__init__
       ~GSA.calculator
       ~GSA.optimize
+      ~GSA.read_meta
+      ~GSA.write_meta
    
    
 
