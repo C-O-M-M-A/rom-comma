@@ -27,8 +27,8 @@ from romcomma.base.definitions import *
 from abc import ABC
 
 
-class Calculator(ABC):
-    """ Interface to GSA calculator"""
+class Calibrator(ABC):
+    """ Interface to GSA calibrator"""
 
     @abstractmethod
     def marginalize(self, m: TF.Slice) -> Dict[str, TF.Tensor]:
@@ -90,7 +90,7 @@ class Gaussian(ABC):
         else:
             exponent = tf.squeeze(tf.linalg.triangular_solve(variance_cho, ordinate[..., tf.newaxis], lower=True), axis=-1)
         exponent = - 0.5 * tf.einsum('...o, ...o -> ...', exponent, exponent)
-        return exponent, tf.linalg.diag_part(variance_cho)
+        return exponent, variance_cho if is_variance_diagonal else tf.linalg.diag_part(variance_cho)
 
 
 def sym_check(tensor: TF.Tensor, transposition: List[int]) -> TF.Tensor:

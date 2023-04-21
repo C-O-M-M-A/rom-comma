@@ -31,7 +31,7 @@ romcomma.gsa.base
       :toctree:
       :template: custom-class-template.rst
    
-      Calculator
+      Calibrator
       Gaussian
    
    

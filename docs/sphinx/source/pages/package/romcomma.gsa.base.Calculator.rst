@@ -1,9 +1,9 @@
-romcomma.gsa.base.Calculator
+romcomma.gsa.base.Calibrator
 ============================
 
 .. currentmodule:: romcomma.gsa.base
 
-.. autoclass:: Calculator
+.. autoclass:: Calibrator
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,8 +16,8 @@ romcomma.gsa.base.Calculator
 
    .. autosummary::
    
-      ~Calculator.__init__
-      ~Calculator.marginalize
+      ~Calibrator.__init__
+      ~Calibrator.marginalize
    
    
 

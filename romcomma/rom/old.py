@@ -23,7 +23,7 @@
 
 # # noinspection PyPep8Naming
 # class ROM(Model):
-#     """ Reduced Order Model (ROM) Calculator and optimizer.
+#     """ Reduced Order Model (ROM) Calibrator and optimizer.
 #     This class is documented through its public properties."""
 #
 #     """ Required overrides."""
@@ -60,17 +60,17 @@
 #                                  'gp_initializer': GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE,
 #                                  'gp_options': MOGP.META}
 #     """
-#         **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(options['sobol_options'])
-#             followed by MOGP.optimize(options['gp_options'])).
+#         **iterations** -- The number of ROM iterations. Each ROM iteration essentially calls Sobol.optimimize(meta['sobol_options'])
+#             followed by MOGP.calibrate(meta['gp_options'])).
 #
-#         **sobol_options*** -- A Dict of Sobol optimizer options, similar to (and documented in) Sobol.OPTIMIZER_OPTIONS.
+#         **sobol_options*** -- A Dict of Sobol optimizer meta, similar to (and documented in) Sobol.OPTIMIZER_OPTIONS.
 #
-#         **guess_identity_after_iteration** -- After this many ROM iterations, Sobol.optimize does no exploration,
+#         **guess_identity_after_iteration** -- After this many ROM iterations, Sobol.calibrate does no exploration,
 #             just gradient descending from Theta = Identity Matrix.
 #
-#         **reuse_original_gp** -- True if MOGP.optimize is initialized each time from the MOGP originally provided.
+#         **reuse_original_gp** -- True if MOGP.calibrate is initialized each time from the MOGP originally provided.
 #
-#         **gp_options** -- A Dict of MOGP optimizer options, similar to (and documented in) MOGP.OPTIMIZER_OPTIONS.
+#         **gp_options** -- A Dict of MOGP optimizer meta, similar to (and documented in) MOGP.OPTIMIZER_OPTIONS.
 #     """
 #
 #     @classmethod
@@ -91,11 +91,11 @@
 #         destination_gp_name = source_gp_name + suffix
 #         return cls(name=name,
 #                    sobol=Sobol.from_GP(fold, source_gp_name, destination_gp_name, Mu=Mu, read_data=True),
-#                    options=None, rbf_parameters=rbf_parameters)
+#                    meta=None, rbf_parameters=rbf_parameters)
 #
 #     @classmethod
 #     @abstractmethod
-#     def from_GP(cls, fold: Fold, name: str, source_gp_name: str, options: Dict, Mu: int = -1,
+#     def from_GP(cls, fold: Fold, name: str, source_gp_name: str, meta: Dict, Mu: int = -1,
 #                 rbf_parameters: Optional[MOGP.Data] = None) -> ROM:
 #         """ Create a ROM object from a saved MOGP folder.
 #
@@ -104,7 +104,7 @@
 #             name: The name of the saved ROM to create from.
 #             source_gp_name: The source MOGP folder.
 #             Mu: The dimensionality of the rotated input basis u. If this is not in range(1, fold.M+1), Mu=fold.M is used.
-#             options: A Dict of ROM optimizer options.
+#             meta: A Dict of ROM optimizer options.
 #
 #         Returns: The constructed ROM object
 #         """
@@ -149,7 +149,7 @@
 #             gp_initializer = self.GP_Initializer.RBF
 #             data = self._rbf_parameters
 #             gp_rbf = self.GPType(self._fold, self.gp_name(iteration) + ".rbf", data)
-#             gp_rbf.optimize(**self._options[-1]['gp_options'])
+#             gp_rbf.calibrate(**self._options[-1]['gp_options'])
 #             gp_dir = gp_rbf.folder.parent / self.gp_name(iteration)
 #             Model.copy(gp_rbf.folder, gp_dir)
 #             kernel = type(self._gp.kernel)(None, None, gp_dir / MOGP.KERNEL_DIR_NAME)
@@ -159,19 +159,19 @@
 #         data = self._original_parameters if gp_initializer < self.GP_Initializer.CURRENT else self._gp.data
 #         if not self._gp.kernel.is_rbf:
 #             if gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_GUESSED_LENGTHSCALE, self.GP_Initializer.CURRENT_WITH_GUESSED_LENGTHSCALE):
-#                 lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.data.lengthscales, optimize=True, dtype=float,
+#                 lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.data.lengthscales, calibrate=True, dtype=float,
 #                                       order=self.MEMORY_LAYOUT) * 0.5 * self._gp.M * (self._gp.M - arange(self._gp.M, dtype=float)) ** (-1)
 #             elif gp_initializer in (self.GP_Initializer.CURRENT_WITH_ORIGINAL_KERNEL, self.GP_Initializer.ORIGINAL):
 #                 lengthscales = einsum('MK, JK -> M', self._Theta, self._original_parameters.kernel.data.lengthscales,
-#                                       optimize=True, dtype=float, order=self.MEMORY_LAYOUT)
+#                                       calibrate=True, dtype=float, order=self.MEMORY_LAYOUT)
 #             elif gp_initializer in (self.GP_Initializer.ORIGINAL_WITH_CURRENT_KERNEL, self.GP_Initializer.CURRENT):
-#                 lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.data.lengthscales, optimize=True, dtype=float,
+#                 lengthscales = einsum('MK, JK -> M', self._sobol.Theta_old, self._gp.kernel.data.lengthscales, calibrate=True, dtype=float,
 #                                       order=self.MEMORY_LAYOUT)
 #             data = data._replace(kernel=self._gp.kernel.Data(lengthscales=lengthscales))
 #         return self.GPType(self._fold, self.gp_name(iteration), data)
 #
-#     def optimize(self, options: Dict):
-#         """ Optimize the model data. Do not call super().optimize, this interface only contains suggestions for implementation.
+#     def calibrate(self, options: Dict):
+#         """ Optimize the model data. Do not call super().calibrate, this interface only contains suggestions for implementation.
 #
 #         Args:
 #             options: A Dict of implementation-dependent optimizer options, following the format of ROM.OPTIMIZER_OPTIONS.
@@ -208,9 +208,9 @@
 #                 concatenate((self.data.lengthscales, atleast_2d(self._sobol.lengthscales)), axis=0),
 #                 concatenate((self.data.log_marginal_likelihood, atleast_2d(self._gp.log_marginal_likelihood)), axis=0)))
 #             if iteration < guess_identity_after_iteration:
-#                 self._sobol.optimize(**self._options[-1]['sobol_options'])
+#                 self._sobol.calibrate(**self._options[-1]['sobol_options'])
 #             else:
-#                 self._sobol.optimize(**sobol_guess_identity)
+#                 self._sobol.calibrate(**sobol_guess_identity)
 #             self._Theta = einsum('MK, KL -> ML', self._sobol.Theta_old, self._Theta)
 #
 #         self._gp = self._initialize_gp(-1)
@@ -238,7 +238,7 @@
 #
 #     def calculate(self):
 #         """ Calculate the Model. """
-#         self._gp.optimize(**self._options[-1]['gp_options'])
+#         self._gp.calibrate(**self._options[-1]['gp_options'])
 #         self._sobol = self.SobolType(self._gp)
 #
 #     def __init__(self, name: str, sobol: Sobol, options: Dict = OPTIMIZER_OPTIONS,
@@ -273,4 +273,4 @@
 #             super().__init__(self._fold.folder / name, data)
 #             shutil.copy2(self._fold.csv, self.folder)
 #             shutil.copy2(self._fold._test_csv, self.folder)
-#             self.optimize(self._options[-1])
+#             self.calibrate(self._options[-1])

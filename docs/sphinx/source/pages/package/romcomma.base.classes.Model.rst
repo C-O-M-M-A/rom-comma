@@ -17,7 +17,7 @@
    .. autosummary::
    
       ~Model.__init__
-      ~Model.optimize
+      ~Model.calibrate
       ~Model.read_meta
       ~Model.write_meta
    

@@ -17,7 +17,7 @@
    .. autosummary::
    
       ~Likelihood.__init__
-      ~Likelihood.optimize
+      ~Likelihood.calibrate
       ~Likelihood.read_meta
       ~Likelihood.write_meta
    

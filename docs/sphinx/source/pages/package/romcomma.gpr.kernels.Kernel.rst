@@ -20,7 +20,7 @@
       ~Kernel.TypeFromParameters
       ~Kernel.__init__
       ~Kernel.broadcast_parameters
-      ~Kernel.optimize
+      ~Kernel.calibrate
       ~Kernel.read_meta
       ~Kernel.write_meta
    

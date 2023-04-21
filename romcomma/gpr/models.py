@@ -46,7 +46,7 @@ class Likelihood(Model):
                     variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
                     log_marginal (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
                 """
-                variance: NP.Matrix = np.atleast_2d(0.0001)
+                variance: NP.Matrix = np.atleast_2d(0.001)
                 log_marginal: NP.Matrix = np.atleast_2d(1.0)
 
             return Values
@@ -58,23 +58,23 @@ class Likelihood(Model):
 
     @classmethod
     @property
-    def VARIANCE_FLOOR(cls) -> Dict[str, Any]:
+    def VARIANCE_FLOOR(cls) -> float:
         return 1.0001E-6
 
     @property
     def is_covariant(self) -> bool:
-        return self.params.variance.shape[0] > 1
+        return self._data.frames.variance.df.shape[0] > 1
 
-    def optimize(self, **kwargs) -> Dict[str, Any]:
+    def calibrate(self, **kwargs) -> Dict[str, Any]:
         """ Merely sets the trainable data."""
-        options = self.META | kwargs
+        meta = self.META | kwargs
         if self.is_covariant:
-            gf.set_trainable(self._parent._implementation[0].likelihood.variance._cholesky_diagonal, options['variance'])
-            gf.set_trainable(self._parent._implementation[0].likelihood.variance._cholesky_lower_triangle, options['covariance'])
+            gf.set_trainable(self._parent._implementation[0].likelihood.variance._cholesky_diagonal, meta['variance'])
+            gf.set_trainable(self._parent._implementation[0].likelihood.variance._cholesky_lower_triangle, meta['covariance'])
         else:
             for implementation in self._parent.implementation:
-                gf.set_trainable(implementation.likelihood.variance, options['variance'])
-        return options
+                gf.set_trainable(implementation.likelihood.variance, meta['variance'])
+        return meta
 
     def __init__(self, parent: GPR, read_data: bool = False, **kwargs: NP.Matrix):
         super().__init__(parent.folder / 'likelihood', read_data, **kwargs)
@@ -107,7 +107,7 @@ class GPR(Model):
     @property
     @abstractmethod
     def META(cls) -> Dict[str, Any]:
-        """ Hyper-parameter optimizer options"""
+        """ Hyper-parameter optimizer meta"""
 
     @classmethod
     @property
@@ -183,7 +183,7 @@ class GPR(Model):
         Returns: ChoSolve(self.K_cho, self.Y) """
 
     @abstractmethod
-    def optimize(self, **kwargs) -> Dict[str, Any]:
+    def calibrate(self, **kwargs) -> Dict[str, Any]:
         raise NotImplementedError
 
     @abstractmethod
@@ -233,20 +233,18 @@ class GPR(Model):
         summary = Frame(self.test_summary_csv, summary)
         return result
 
-    def broadcast_parameters(self, is_covariant: bool, is_isotropic: bool, folder: Optional[Path | str] = None) -> GPR:
+    def broadcast_parameters(self, is_covariant: bool, is_isotropic: bool) -> GPR:
         """ Broadcast the data of the MOGP (including kernels) to higher dimensions.
         Shrinkage raises errors, unchanged dimensions silently do nothing.
 
         Args:
             is_covariant: Whether the outputs will be treated as dependent.
             is_isotropic: Whether to restrict the kernel to be isotropic.
-            folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
         Returns: ``self``, for chaining calls.
         """
         target_shape = (self._L, self._L) if is_covariant else (1, self._L)
-        self._likelihood.parameters.broadcast_value(model_name=self.folder, field="variance", target_shape=target_shape, is_diagonal=True,
-                                                    folder=folder)
-        self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M, folder=folder)
+        self._likelihood.data.frames.variance.broadcast_value(target_shape=target_shape, is_diagonal=True)
+        self._kernel.broadcast_parameters(variance_shape=target_shape, M=1 if is_isotropic else self._M)
         self._implementation = None
         self._implementation = self.implementation
         return self
@@ -273,14 +271,14 @@ class GPR(Model):
         super().__init__(self._fold.folder / name, is_read)
         self._likelihood = Likelihood(self, is_read) if likelihood_variance is None else Likelihood(self, is_read, variance=likelihood_variance)
         if is_read and kernel_parameters is None:
-            KernelType = Kernel.TypeFromIdentifier(self.params.kernel[0, 0])
+            KernelType = Kernel.TypeFromIdentifier(self.data.frames.kernel.np[0, 0])
             self._kernel = KernelType(self._folder / self.KERNEL_FOLDER_NAME, is_read)
         else:
             if kernel_parameters is None:
-                kernel_parameters = Kernel.Data()
+                kernel_parameters = Kernel.Data(self._folder / self.KERNEL_FOLDER_NAME)
             KernelType = Kernel.TypeFromParameters(kernel_parameters)
-            self._kernel = KernelType(self._folder / self.KERNEL_FOLDER_NAME, is_read, **kernel_parameters.as_dict())
-            self._data.replace(kernel=np.atleast_2d(KernelType.TYPE_IDENTIFIER)).write()
+            self._kernel = KernelType(self._folder / self.KERNEL_FOLDER_NAME, is_read, **kernel_parameters.asdict())
+            self._data.replace(kernel=np.atleast_2d(KernelType.TYPE_IDENTIFIER))
         self.broadcast_parameters(is_covariant, is_isotropic)
 
 
@@ -298,47 +296,43 @@ class MOGP(GPR):
         if self._implementation is None:
             if self._likelihood.is_covariant:
                 self._implementation = tuple(mf.models.MOGPR(data=(self._X, self._Y), kernel=kernel, mean_function=None,
-                                                             noise_variance=self._likelihood.params.variance)
+                                                             noise_variance=self._likelihood._data.frames.variance.np)
                                              for kernel in self._kernel.implementation)
             else:
                 self._implementation = tuple(gf.models.GPR(data=(self._X, self._Y[:, [l]]), kernel=kernel, mean_function=None,
-                                                           noise_variance=max(self._likelihood.params.variance[0, l], self._likelihood.VARIANCE_FLOOR))
+                                                           noise_variance=max(self._likelihood._data.frames.variance.np[0, l], self._likelihood.VARIANCE_FLOOR))
                                              for l, kernel in enumerate(self._kernel.implementation))
         return self._implementation
 
-    def optimize(self, method: str = 'L-BFGS-B', **kwargs) -> Dict[str, Any]:
+    def calibrate(self, method: str = 'L-BFGS-B', **kwargs) -> Dict[str, Any]:
         """ Optimize the MOGP hyper-data.
 
         Args:
             method: The optimization algorithm (see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html).
-            kwargs: A Dict of implementation-dependent optimizer options, following the format of GPR.META.
+            kwargs: A Dict of implementation-dependent optimizer meta, following the format of GPR.META.
                 Options for the kernel should be passed as kernel={see kernel.META for format}.
                 Options for the likelihood should be passed as likelihood={see likelihood.META for format}.
         """
-        options = (self.read_meta() if self._options_json.exists() else self.META)
-        kernel_options = self._kernel.optimize(**(options.pop('kernel', {}) | kwargs.pop('kernel', {})))
-        likelihood_options = self._likelihood.optimize(**(options.pop('likelihood', {}) | kwargs.pop('likelihood', {})))
-        options.update(kwargs)
-        options.pop('result', None)
+        meta = (self.read_meta() if self._meta_json.exists() else self.META)
+        kernel_options = self._kernel.calibrate(**(meta.pop('kernel', {}) | kwargs.pop('kernel', {})))
+        likelihood_options = self._likelihood.calibrate(**(meta.pop('likelihood', {}) | kwargs.pop('likelihood', {})))
+        meta.update(kwargs)
+        meta.pop('result', None)
         opt = gf.optimizers.Scipy()
-        options.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=options)
+        meta.update({'result': str(tuple(opt.minimize(closure=gp.training_loss, variables=gp.trainable_variables, method=method, options=meta)
                                                   for gp in self._implementation)), 'kernel': kernel_options, 'likelihood': likelihood_options})
-        self.write_meta(options)
+        self.write_meta(meta)
         if self._likelihood.is_covariant:
-            self._likelihood.parameters = self._likelihood.parameters.replace(variance=self._implementation[0].likelihood.variance.value.numpy(),
-                                                                              log_marginal=self._implementation[0].log_marginal_likelihood().numpy()
-                                                                              ).write()
-            self._kernel.parameters = self._kernel.parameters.replace(variance=self._implementation[0].kernel.variance.value.numpy(),
-                                                                      lengthscales=tf.squeeze(self._implementation[0].kernel.lengthscales),
-                                                                      ).write()
+            self._likelihood.parameters = self.likelihood.data.replace(variance=self._implementation[0].likelihood.variance.value.numpy(),
+                                                                              log_marginal=self._implementation[0].log_marginal_likelihood().numpy())
+            self._kernel.parameters = self.kernel.data.replace(variance=self._implementation[0].kernel.variance.value.numpy(),
+                                                                      lengthscales=tf.squeeze(self._implementation[0].kernel.lengthscales))
         else:
-            self._likelihood.parameters = self._likelihood.parameters.replace(variance=tuple(gp.likelihood.variance.numpy() for gp in self._implementation),
-                                                                              log_marginal=tuple(gp.log_marginal_likelihood() for gp in self._implementation)
-                                                                              ).write()
-            self._kernel.parameters = self._kernel.parameters.replace(variance=tuple(gp.kernel.variance.numpy() for gp in self._implementation),
-                                                                      lengthscales=tuple(gp.kernel.lengthscales.numpy() for gp in self._implementation)
-                                                                      ).write()
-        return options
+            self._likelihood.parameters = self._likelihood.data.replace(variance=tuple(gp.likelihood.variance.numpy() for gp in self._implementation),
+                                                                              log_marginal=tuple(gp.log_marginal_likelihood() for gp in self._implementation))
+            self._kernel.parameters = self._kernel.data.replace(variance=tuple(gp.kernel.variance.numpy() for gp in self._implementation),
+                                                                      lengthscales=tuple(gp.kernel.lengthscales.numpy() for gp in self._implementation))
+        return meta
 
     def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
         X = X.astype(dtype=FLOAT())

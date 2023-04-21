@@ -20,7 +20,7 @@
       ~RBF.TypeFromParameters
       ~RBF.__init__
       ~RBF.broadcast_parameters
-      ~RBF.optimize
+      ~RBF.calibrate
       ~RBF.read_meta
       ~RBF.write_meta
    

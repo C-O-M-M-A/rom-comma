@@ -56,18 +56,18 @@ class Kernel(Model):
     def META(cls) -> Dict[str, Any]:
         return {'variance': True, 'covariance': False, 'lengthscales': {'variant': True, 'covariant': False}}
 
-    def optimize(self, **kwargs: Any) -> Dict[str, Any]:
+    def calibrate(self, **kwargs: Any) -> Dict[str, Any]:
         """ Merely sets which data are trainable. """
-        options = self.META | kwargs
+        meta = self.META | kwargs
         if self.is_covariant:
-            gf.set_trainable(self._implementation[0].variance._cholesky_diagonal, options['variance'])
-            gf.set_trainable(self._implementation[0].variance._cholesky_lower_triangle, options['covariance'])
-            gf.set_trainable(self._implementation[0].lengthscales, options['lengthscales']['covariant'])
+            gf.set_trainable(self._implementation[0].variance._cholesky_diagonal, meta['variance'])
+            gf.set_trainable(self._implementation[0].variance._cholesky_lower_triangle, meta['covariance'])
+            gf.set_trainable(self._implementation[0].lengthscales, meta['lengthscales']['covariant'])
         else:
             for implementation in self._implementation:
-                gf.set_trainable(implementation.variance, options['variance'])
-                gf.set_trainable(implementation.lengthscales, options['lengthscales']['variant'])
-        return options
+                gf.set_trainable(implementation.variance, meta['variance'])
+                gf.set_trainable(implementation.lengthscales, meta['lengthscales']['variant'])
+        return meta
 
     @classmethod
     @property
@@ -116,24 +116,23 @@ class Kernel(Model):
     @property
     def is_covariant(self) -> bool:
         """ Whether the kernel is covariant between outputs. """
-        return self.params.variance.shape[0] > 1
+        return self._data.frames.variance.df.shape[0] > 1
 
-    def broadcast_parameters(self, variance_shape: Tuple[int, int], M, folder: Optional[Path | str] = None) -> Kernel:
+    def broadcast_parameters(self, variance_shape: Tuple[int, int], M) -> Kernel:
         """ Broadcast this kernel to higher dimensions. Shrinkage raises errors, unchanged dimensions silently nop.
         A diagonal variance matrix broadcast to a square matrix is initially diagonal. All other expansions are straightforward broadcasts.
         Args:
             variance_shape: The new shape for the variance, must be (1, L) or (L, L).
             M: The number of input Lengthscales per output.
-            folder: The file location, which is ``self.folder`` if ``folder is None`` (the default).
         Returns: ``self``, for chaining calls.
         Raises:
             IndexError: If an attempt is made to shrink a parameter.
         """
-        if variance_shape != self.params.variance.shape:
-            self.parameters.broadcast_value(model_name=str(self.folder), field="variance", target_shape=variance_shape, is_diagonal=True, folder=folder)
+        if variance_shape != self._data.frames.variance.df.shape:
+            self._data.frames.variance.broadcast_value(target_shape=variance_shape, is_diagonal=True)
             self._L = variance_shape[1]
-        if (self._L, M) != self.params.lengthscales.shape:
-            self.parameters.broadcast_value(model_name=str(self.folder), field="lengthscales", target_shape=(self._L, M), is_diagonal=False, folder=folder)
+        if (self._L, M) != self._data.frames.lengthscales.df.shape:
+            self._data.frames.lengthscales.broadcast_value(target_shape=(self._L, M), is_diagonal=False)
             self._M = M
         self._implementation = None
         self._implementation = self.implementation
@@ -142,7 +141,7 @@ class Kernel(Model):
     @property
     @abstractmethod
     def implementation(self) -> Tuple[Any, ...]:
-        """ The implementation of this Kernel, for use in MOGP.implementation.
+        """ The implementation of this Kernel in GPFlow.
             If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
@@ -156,23 +155,26 @@ class Kernel(Model):
             **kwargs: The model.data fields=values to replace after reading from file/defaults.
         """
         super().__init__(folder, read_data, **kwargs)
-        self._L, self._M = self.params.variance.shape[1], self.params.lengthscales.shape[1]
-        self.broadcast_parameters(self.params.variance.shape, self._M)
+        variance_shape = self._data.frames.variance.df.shape
+        self._L, self._M = variance_shape[1], self._data.frames.lengthscales.df.shape[1]
+        self.broadcast_parameters(variance_shape, self._M)
 
 
 class RBF(Kernel):
 
     @property
     def implementation(self) -> Tuple[Any, ...]:
-        """ The implemented_in_??? version of this Kernel, for use in the implemented_in_??? MOGP.
+        """ The implement of this Kernel in GPFlow.
             If ``self.variance.shape == (1,1)`` a 1-tuple of kernels is returned.
             If ``self.variance.shape == (1,L)`` an L-tuple of kernels is returned.
             If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.
         """
+        variance = self._data.frames.variance.np
+        lengthscales = self._data.frames.lengthscales.np
         if self._implementation is None:
-            if self.params.variance.shape[0] == 1:
-                self._implementation = tuple(gf.kernels.RBF(variance=max(self.params.variance[0, l], 1.0005E-6), lengthscales=self.params.lengthscales[l])
-                                for l in range(self.params.variance.shape[1]))
+            if variance.shape[0] == 1:
+                self._implementation = tuple(gf.kernels.RBF(variance=max(variance[0, l], 1.0005E-6), lengthscales=lengthscales[l])
+                                             for l in range(variance.shape[1]))
             else:
-                self._implementation = (mf.kernels.RBF(variance=self.params.variance, lengthscales=self.params.lengthscales), )
+                self._implementation = (mf.kernels.RBF(variance=variance, lengthscales=lengthscales), )
         return self._implementation

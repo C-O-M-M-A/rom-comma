@@ -17,8 +17,8 @@
    .. autosummary::
    
       ~GSA.__init__
-      ~GSA.calculator
-      ~GSA.optimize
+      ~GSA.calibrator
+      ~GSA.calibrate
       ~GSA.read_meta
       ~GSA.write_meta
    

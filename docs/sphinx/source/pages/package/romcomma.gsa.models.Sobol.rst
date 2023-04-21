@@ -17,8 +17,8 @@
    .. autosummary::
    
       ~Sobol.__init__
-      ~Sobol.calculator
-      ~Sobol.optimize
+      ~Sobol.calibrator
+      ~Sobol.calibrate
       ~Sobol.read_meta
       ~Sobol.write_meta
    

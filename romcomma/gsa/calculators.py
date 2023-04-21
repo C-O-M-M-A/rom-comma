@@ -25,12 +25,12 @@ from __future__ import annotations
 
 from romcomma.base.definitions import *
 from romcomma.gpr.models import GPR
-from romcomma.gsa.base import Calculator, Gaussian
+from romcomma.gsa.base import Calibrator, Gaussian
 from abc import ABC
 from enum import IntEnum
 
 
-class ClosedSobol(gf.Module, Calculator):
+class ClosedSobol(gf.Module, Calibrator):
     """ Calculates closed Sobol Indices."""
 
     def _serialize_to_tensors(self):
@@ -41,8 +41,8 @@ class ClosedSobol(gf.Module, Calculator):
 
     @classmethod
     @property
-    def OPTIONS(cls) -> Dict[str, Any]:
-        """ Default calculation options.
+    def META(cls) -> Dict[str, Any]:
+        """ Default calculation meta.
 
         Returns: An empty dictionary.
         """
@@ -119,22 +119,22 @@ class ClosedSobol(gf.Module, Calculator):
 
         Args:
             gp: The gp to analyze.
-            **kwargs: The calculation options to override META.
+            **kwargs: The calculation meta to override META.
         """
         super().__init__()
         self.gp = gp
-        self.options = self.OPTIONS | kwargs
+        self.meta = self.META | kwargs
         # Unwrap data
         self.L, self.M, self.N = self.gp.L, self.gp.M, self.gp.N
         self.Ms = tf.constant([0, self.M], dtype=INT())
-        self.F = tf.constant(self.gp.kernel.params.variance, dtype=FLOAT())
+        self.F = tf.constant(self.gp.kernel.data.frames.variance.tf, dtype=FLOAT())
         # Cache the training data kernel
         self.K_cho = tf.constant(self.gp.K_cho, dtype=FLOAT())
         self.K_inv_Y = tf.constant(self.gp.K_inv_Y, dtype=FLOAT())
         # Determine if F is diagonal
-        self.is_F_diagonal = self.options.pop('is_F_diagonal', None)
+        self.is_F_diagonal = self.meta.pop('is_F_diagonal', None)
         if self.is_F_diagonal is None:
-            gp_options = self.gp.read_meta() if self.gp._options_json.exists() else self.gp.META
+            gp_options = self.gp.read_meta() if self.gp._meta_json.exists() else self.gp.META
             self.is_F_diagonal = not gp_options.pop('kernel', {}).pop("covariance", False)
         # Reshape according to is_F_diagonal
         if self.is_F_diagonal:
@@ -143,7 +143,7 @@ class ClosedSobol(gf.Module, Calculator):
         else:
             self.K_inv_Y = tf.transpose(self.K_inv_Y, [1, 0, 2])
         # Set Lambdas
-        self.Lambda = tf.broadcast_to(tf.constant(self.gp.kernel.params.lengthscales, dtype=FLOAT()), [self.L, self.M])
+        self.Lambda = tf.broadcast_to(tf.constant(self.gp.kernel.data.frames.lengthscales.np, dtype=FLOAT()), [self.L, self.M])
         self.Lambda2 = self._Lambda2()
         # Calculate and store values for m=0 and m=M
         self._calculate()
@@ -154,8 +154,8 @@ class ClosedSobolWithError(ClosedSobol):
 
     @classmethod
     @property
-    def OPTIONS(cls) -> Dict[str, Any]:
-        """ Default calculation options. ``is_T_partial`` forces W[Mm] = W[MM] = 0.
+    def META(cls) -> Dict[str, Any]:
+        """ Default calculation meta. ``is_T_partial`` forces W[Mm] = W[MM] = 0.
 
         Returns:
             is_T_partial: If True this effectively asserts the full ['M'] model is variance free, so WmM is not calculated or returned.
@@ -348,7 +348,7 @@ class ClosedSobolWithError(ClosedSobol):
             Vm: li
         Returns: The closed index uncertainty T.
         """
-        if self.options['is_T_partial']:
+        if self.meta['is_T_partial']:
             Q = Wmm
         else:
             Q = Wmm - 2 * Vm * WMm / self.V[1] + Vm * Vm * self.Q
@@ -364,7 +364,7 @@ class ClosedSobolWithError(ClosedSobol):
         G, Phi, Upsilon = tuple(tensor[..., m[0]:m[1]] for tensor in (self.G, self.Phi, self.Upsilon))
         G_log_pdf = Gaussian.log_pdf(G, tf.sqrt(Phi), is_variance_diagonal=True, LBunch=2)
         psi_factor = self._psi_factor(G, Phi, G_log_pdf)
-        if self.options['is_T_partial']:
+        if self.meta['is_T_partial']:
             Upsilon_log_pdf = self._Upsilon_log_pdf(G, Phi, Upsilon, self.RANK_EQUATIONS.DIAGONAL)
             Omega_log_pdf = self._Omega_log_pdf(m, self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
             Wmm = self._W(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf, self.RANK_EQUATIONS.DIAGONAL),
@@ -394,7 +394,7 @@ class ClosedSobolWithError(ClosedSobol):
         self.mu_phi_mu['pre-factor'] = tf.reshape(self.mu_phi_mu['pre-factor'], [-1])
         self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
         self.psi_factor = self._psi_factor(self.G, self.Phi, self.G_log_pdf)
-        if self.options['is_T_partial']:
+        if self.meta['is_T_partial']:
             self.Upsilon_log_pdf = self._Upsilon_log_pdf(self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
             self.Omega_log_pdf = self._Omega_log_pdf(self.Ms, self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
             self.W = self._W(self._mu_phi_mu(self.G_log_pdf, self.Upsilon_log_pdf, self.Omega_log_pdf, self.RANK_EQUATIONS.DIAGONAL),

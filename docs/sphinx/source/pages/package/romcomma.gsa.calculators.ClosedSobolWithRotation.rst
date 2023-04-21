@@ -28,7 +28,7 @@
 
    .. autosummary::
    
-      ~ClosedSobolWithRotation.OPTIONS
+      ~ClosedSobolWithRotation.META
       ~ClosedSobolWithRotation.name
       ~ClosedSobolWithRotation.name_scope
       ~ClosedSobolWithRotation.non_trainable_variables

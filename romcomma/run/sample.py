@@ -111,7 +111,7 @@ class GaussianNoise:
             else:
                 self._matrix = np.array([[(-1)**(i-j)/(1.0 + abs(i-j)) for i in range(L)] for j in range(L)])
             if not self.is_covariant:
-                self._matrix = self.magnitude * self.magnitude * np.diag(np.diag(self._matrix))
+                self._matrix = np.diag(np.diag(self._matrix))
             self._matrix *= self.magnitude ** 2
 
     @property

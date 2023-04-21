@@ -19,7 +19,7 @@
       ~MOGP.__init__
       ~MOGP.broadcast_parameters
       ~MOGP.check_K_inv_Y
-      ~MOGP.optimize
+      ~MOGP.calibrate
       ~MOGP.predict
       ~MOGP.read_meta
       ~MOGP.test

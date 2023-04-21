@@ -23,6 +23,8 @@
 
 from __future__ import annotations
 
+import pandas as pd
+
 from romcomma.base.definitions import *
 import shutil
 import json
@@ -49,7 +51,7 @@ class Frame:
 
     @property
     def tf(self) -> TF.Matrix:
-        return tf. convert_to_tensor(self.np)
+        return tf.convert_to_tensor(self.np)
 
     @tf.setter
     def tf(self, value: TF.Matrix):
@@ -66,6 +68,25 @@ class Frame:
         self._write_options = self._write_options | kwargs
         self._df.to_csv(self.csv.with_suffix(f'{self.csv.suffix}.csv'), **self._write_options)
         return self
+
+    def broadcast_value(self, target_shape: Tuple[int, int], is_diagonal: bool = True) -> Frame:
+        """ Broadcast a frame
+
+        Args:
+            target_shape: The shape to broadcast to.
+            is_diagonal: Whether to zero the off-diagonal elements of a square matrix.
+        Returns: Self, for chaining calls.
+        Raises:
+            IndexError: If broadcasting is impossible.
+        """
+        try:
+            values = np.array(np.broadcast_to(self.np, target_shape))
+        except ValueError:
+            raise IndexError(f'{repr(self)} has shape {self.df.shape} 'f' which cannot be broadcast to {target_shape}.')
+        if is_diagonal and target_shape[0] > 1:
+            values = np.diag(np.diagonal(values))
+        self._df = pd.DataFrame(values)
+        return self.write()
 
     def __call__(self, *args, **kwargs):
         """ Returns ``self.np``, as this is automatically cast by tf, np and pd."""
@@ -96,7 +117,7 @@ class Frame:
         self.csv = Path(csv)
         self._write_options = {}
         if data is None:
-            self._df = (pd.read_csv(self.csv.with_suffix(f'{self.csv.suffix}.csv'), **kwargs))
+            self._df = (pd.read_csv(self.csv.with_suffix(f'{self.csv.suffix}.csv'), **({'index_col': 0} | kwargs)))
         else:
             self._df = pd.DataFrame(data, index, columns, dtype, copy)
             self.write(**kwargs)
@@ -129,12 +150,13 @@ class Data(ABC):
         return cls.NamedTuple._field_defaults
 
     def asdict(self) -> Dict[str, Any]:
-        return self._values._asdict()
+        return self._frames._asdict()
 
-    def replace(self, **kwargs: NP.Matrix) -> Data:
+    def replace(self, **kwargs: Data.Matrix) -> Data:
         for key, value in kwargs.items():
-            kwargs[key] = np.atleast_2d(value)
-        self._values = self._values._replace(**kwargs)
+            value = value.numpy() if isinstance(value, TF.Tensor) else value
+            kwargs[key] = value if isinstance(value, Frame) else Frame(self._folder / key, np.atleast_2d(value))
+        self._frames = self.NamedTuple(**kwargs) if self._frames is None else self._frames._replace(**kwargs)
         return self
 
     @property
@@ -142,12 +164,8 @@ class Data(ABC):
         return self._folder
 
     @property
-    def values(self) -> NamedTuple:
-        return self._values
-
-    def __call__(self, *args, **kwargs):
-        """ Returns ``self.values``."""
-        return self._values
+    def frames(self) -> NamedTuple:
+        return self._frames
 
     def move(self, dst_folder: Path | str) -> Data:
         """  Move ``self`` to ``dst_folder``.
@@ -158,6 +176,10 @@ class Data(ABC):
         """
         self._folder = Data(self.empty(dst_folder), **self.asdict()).folder
         return self
+
+    def __call__(self, *args, **kwargs):
+        """ Returns ``self.values``."""
+        return self._frames
 
     def __repr__(self) -> str:
         return str(self._folder)
@@ -173,15 +195,13 @@ class Data(ABC):
             **kwargs: Initial pairs of NamedTuple fields, precisely as in ``NamedTuple(**kwargs)``.
                 Missing fields receive their defaults, so ``Data(folder)`` is the default parameter set.
         """
-        self._folder = Path(folder)
+        self._folder = folder if folder.exists() else self.empty(folder)
         kwargs = self.NamedTuple(**kwargs)._asdict()
-        for key, value in kwargs.items():
-            value = value.numpy() if isinstance(value, TF.Tensor) else value
-            kwargs[key] = value if isinstance(value, Frame) else Frame(folder / key, np.atleast_2d(value))
-        self._values = self.NamedTuple(**kwargs)
+        self._frames = None
+        self.replace(**kwargs)
 
     @classmethod
-    def read(cls, folder: Path | str) -> Data:
+    def read(cls, folder: Path | str, **kwargs: Data.Matrix) -> Data:
         """ Read ``Data`` from ``folder``.
 
         Args:
@@ -191,7 +211,7 @@ class Data(ABC):
         Returns: The ``Data`` stored in ``folder``.
         """
         folder = Path(folder)
-        asdict = {field: Frame(folder / field) for field in cls.fields}
+        asdict = {field: Frame(folder / field, kwargs.get(field, None)) for field in cls.fields}
         return cls(folder, **asdict)
 
     @staticmethod
@@ -221,7 +241,7 @@ class Model(ABC):
     The latter is dealt with by each subclass overriding ``Data.NamedTuple`` with its own ``NamedTuple[NamedTuple]``
     defining the parameter set it takes. ``model.data.values`` is a ``Model.Data.NamedTuple`` of NP.Matrices.
 
-    A Model also may include an optimize method taking options stored in an options.json file, which default to cls.META.
+    A Model also may include a calibrate method taking meta stored in an meta.json file, which default to cls.META.
     """
 
     class Data(Data):
@@ -234,7 +254,7 @@ class Model(ABC):
     @classmethod
     @property
     def META(cls) -> Dict[str, Any]:
-        """Returns: Default options."""
+        """Returns: Default meta data."""
         pass
         # raise NotImplementedError
 
@@ -251,28 +271,28 @@ class Model(ABC):
         self._data = value
 
     @abstractmethod
-    def optimize(self, method: str, **kwargs) -> Dict[str, Any]:
+    def calibrate(self, method: str, **kwargs) -> Dict[str, Any]:
         if method != 'I know I told you never to call me, but I have relented because I just cannot live without you sweet-cheeks.':
-            raise NotImplementedError('base.optimize() must never be called.')
+            raise NotImplementedError('base.calibrate() must never be called.')
         else:
-            options = self.META | kwargs
-            options = (options if options is not None
-                       else self.read_meta() if self._options_json.exists() else self.META)
-            options.pop('result', default=None)
-            options = {**options, 'result': 'OPTIMIZE HERE !!!'}
-            self.write_meta(options)
+            meta = self.META | kwargs
+            meta = (meta if meta is not None
+                       else self.read_meta() if self._meta_json.exists() else self.META)
+            meta.pop('result', default=None)
+            meta = {**meta, 'result': 'OPTIMIZE HERE !!!'}
+            self.write_meta(meta)
             self.data = self._data.replace('WITH OPTIMAL PARAMETERS!!!').write(self.folder)   # Remember to write optimization results.
-        return options
+        return meta
 
     def read_meta(self) -> Dict[str, Any]:
         # noinspection PyTypeChecker
-        with open(self._options_json, mode='r') as file:
+        with open(self._meta_json, mode='r') as file:
             return json.load(file)
 
-    def write_meta(self, options: Dict[str, Any]):
+    def write_meta(self, meta: Dict[str, Any]):
         # noinspection PyTypeChecker
-        with open(self._options_json, mode='w') as file:
-            json.dump(options, file, indent=8)
+        with open(self._meta_json, mode='w') as file:
+            json.dump(meta, file, indent=8)
 
     def __repr__(self) -> str:
         """ Returns the folder path."""
@@ -292,12 +312,10 @@ class Model(ABC):
             **kwargs: The model.data fields=values to replace after reading from file/defaults.
         """
         self._folder = Path(folder)
-        self._options_json = self._folder / "options.json"
-
+        self._meta_json = self._folder / "meta.json"
         if read_data:
-            self._data = self.Data(self._folder).read().replace(**kwargs)
+            self._data = self.Data.read(self._folder).replace(**kwargs)
         else:
             self._folder.mkdir(mode=0o777, parents=True, exist_ok=True)
-            self._data = self.Data(self._folder).replace(**kwargs)
-        self._data.write()
+            self._data = self.Data(self._folder, **kwargs)
         self._implementation = None

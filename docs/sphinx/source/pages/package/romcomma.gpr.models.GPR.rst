@@ -18,7 +18,7 @@
    
       ~GPR.__init__
       ~GPR.broadcast_parameters
-      ~GPR.optimize
+      ~GPR.calibrate
       ~GPR.predict
       ~GPR.read_meta
       ~GPR.test

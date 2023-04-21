@@ -28,7 +28,7 @@
 
    .. autosummary::
    
-      ~ClosedSobolWithError.OPTIONS
+      ~ClosedSobolWithError.META
       ~ClosedSobolWithError.RANK_EQUATIONS
       ~ClosedSobolWithError.name
       ~ClosedSobolWithError.name_scope

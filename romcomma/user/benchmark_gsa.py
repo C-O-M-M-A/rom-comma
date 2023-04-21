@@ -49,7 +49,7 @@ if __name__ == '__main__':
                                 repo = sample.Function(BASE_FOLDER, sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, True)
                                 repo = repo.into_K_folds(K=2).rotate_folds(None).repo
                                 summarised.gpr(name='diag', repo=repo, is_read=None, is_covariant=None, is_isotropic=False,
-                                              ignore_exceptions=ignore_exceptions, optimize=True, test=True)
+                                               ignore_exceptions=ignore_exceptions, calibrate=True, test=True)
                             else:
                                 repo = sample.Function(BASE_FOLDER, sample.DOE.latin_hypercube, function_vector, N, M, noise_variance, False).repo
                             run.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},

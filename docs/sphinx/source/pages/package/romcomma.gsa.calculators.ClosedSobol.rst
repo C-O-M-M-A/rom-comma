@@ -28,7 +28,7 @@
 
    .. autosummary::
    
-      ~ClosedSobol.OPTIONS
+      ~ClosedSobol.META
       ~ClosedSobol.name
       ~ClosedSobol.name_scope
       ~ClosedSobol.non_trainable_variables
