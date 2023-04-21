@@ -35,7 +35,7 @@ class Calibrator(ABC):
         raise NotImplementedError('This is an abstract class.')
 
 
-class Gaussian(ABC):
+class Gaussian:
     """ Encapsulates a Gaussian pdf. For numerical stability the 2 Pi factor is not included."""
 
     exponent: TF.Tensor  #: The exponent of a Gaussian pdf, :math:`- z^{\intercal} \Sigma^{-1} z / 2`.
