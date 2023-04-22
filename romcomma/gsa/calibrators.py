@@ -74,12 +74,12 @@ class ClosedSobol(gf.Module, Calibrator):
         PsiPhi = tf.einsum('lLjJM, lLM -> lLjJM', Psi, Phi)    # Symmetric in L^4
         PhiG = tf.expand_dims(tf.einsum('lLM, jJnM -> lLjJnM', Phi, G), axis=2)    # Symmetric in L^4 N^2
         # print(sym_check(PhiG, [3, 4, 5, 0, 1, 2, 6])) note the symmetry.
-        Phi_pdf, Phi_diag = Gaussian.log_pdf(mean=G, variance_cho=tf.sqrt(Phi), is_variance_diagonal=True, LBunch=2)
-        Psi_pdf, Psi_diag = Gaussian.log_pdf(mean=PhiG, variance_cho=tf.sqrt(PsiPhi), ordinate=G[..., tf.newaxis, tf.newaxis, tf.newaxis, :],
-                                             is_variance_diagonal=True, LBunch=2)
-        H = tf.exp(Psi_pdf - Phi_pdf[..., tf.newaxis, tf.newaxis, tf.newaxis])   # Symmetric in L^4 N^2
+        PhiGauss = Gaussian(mean=G, variance=Phi, is_variance_diagonal=True, LBunch=2)
+        H = Gaussian(mean=PhiG, variance=PsiPhi, ordinate=G[..., tf.newaxis, tf.newaxis, tf.newaxis, :], is_variance_diagonal=True, LBunch=2)
+        H /= PhiGauss.expand_dims([-1, -2, -3])   # Symmetric in L^4 N^2
         # print(sym_check(H, [0, 1, 2, 4, 3, 5])) note the symmetry.
-        V = tf.einsum('lLN, lLNjJn, jJn -> lLjJ', self.g0KY, H, self.g0KY) / tf.sqrt(Gaussian.det(Psi))         # Only one symmetry in L^4
+        V = tf.einsum('lLN, lLNjJn, jJn -> lLjJ', self.g0KY, tf.exp(H.exponent), self.g0KY)/tf.sqrt(tf.reduce_prod(Psi, axis=-1))         # Only one symmetry
+        # in L^4
         # print(sym_check(V, [2, 3, 0, 1])) note the symmetry.
         V = tf.einsum('lLjJ -> lj', V)        # Symmetric in L^2
         return V
@@ -88,10 +88,10 @@ class ClosedSobol(gf.Module, Calibrator):
         """ Called by constructor to calculate all available quantities prior to marginalization.
         These quantities suffice to calculate V[0], V[M].
         """
-        pre_factor = tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][1])) * self.F
-        self.g0, _ = Gaussian.log_pdf(mean=self.gp.X[tf.newaxis, tf.newaxis, ...],
-                                      variance_cho=tf.sqrt(self.Lambda2[1][1]), is_variance_diagonal=True, LBunch=2)
-        self.g0 = pre_factor[..., tf.newaxis] * tf.exp(self.g0)     # Symmetric in L^2
+        pre_factor = tf.sqrt(tf.reduce_prod(self.Lambda2[1][0] * self.Lambda2[-1][1], axis=-1)) * self.F
+        self.g0 = Gaussian(mean=self.gp.X[tf.newaxis, tf.newaxis, ...], variance=self.Lambda2[1][1], is_variance_diagonal=True, LBunch=2).exponent
+        self.g0 = tf.exp(self.g0)
+        self.g0 *= pre_factor[..., tf.newaxis]     # Symmetric in L^2
         self.g0KY = self.g0 * self.K_inv_Y     # NOT symmetric in L^2
         self.g0KY -= tf.einsum('lLN -> l', self.g0KY)[..., tf.newaxis, tf.newaxis]/tf.cast(tf.reduce_prod(self.g0KY.shape[1:]), dtype=FLOAT())
         self.G = tf.einsum('lLM, NM -> lLNM', self.Lambda2[-1][1], self.gp.X)     # Symmetric in L^2

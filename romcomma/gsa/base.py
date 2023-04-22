@@ -39,26 +39,41 @@ class Gaussian(ABC):
     """ Encapsulates a Gaussian pdf. For numerical stability the 2 Pi factor is not included."""
 
     exponent: TF.Tensor  #: The exponent of a Gaussian pdf, :math:`- z^{\intercal} \Sigma^{-1} z / 2`.
-    determinant_vector: TF.Tensor    #: The diagonal of the Cholesky decomposition of the Gaussian covariance matrix.
+    cho_diag: TF.Tensor    #: The diagonal of the Cholesky decomposition of the Gaussian covariance.
 
-    @staticmethod
-    def det(variance_cho_diagonal):
-        return tf.reduce_prod(variance_cho_diagonal, axis=-1)
+    @property
+    def det(self) -> TF.Tensor:
+        """ The sqrt of the determinant of the Gaussian covariance. """
+        return tf.reduce_prod(self.cho_diag, axis=-1)
 
-    @staticmethod
-    def pdf(exponent: TF.Tensor, variance_cho_diagonal: TF.Tensor):
-        """ Calculate the Gaussian pdf from the output of Gaussian.log_pdf.
+    @property
+    def pdf(self) -> TF.Tensor:
+        """ Calculate the Gaussian pdf from the output of Gaussian.log_pdf."""
+        return tf.exp(self.exponent) / self.det
+
+    def expand_dims(self, axes: Sequence[int]) -> Gaussian:
+        """ Insert dimensions at the specified axes.
+
         Args:
-            exponent: The exponent in the Gaussian pdf.
-            variance_cho_diagonal: The diagonal of the variance Cholesky decomposition.
-
-        Returns: The Gaussian pdf.
+            axes: A sequence of dims to insert.
+        Returns: ``self`` for chaining calls.
         """
-        return tf.exp(exponent) / Gaussian.det(variance_cho_diagonal)
+        for axis in sorted(axes, reverse=True):
+            self.exponent = tf.expand_dims(self.exponent, axis)
+            self.cho_diag = tf.expand_dims(self.cho_diag, (axis - 1) if axis < 0 else axis)
+        return self
 
-    @staticmethod
-    def log_pdf(mean: TF.Tensor, variance_cho: TF.Tensor, is_variance_diagonal: bool,
-                ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT()), LBunch: int = 2) -> LogPDF:
+    def __itruediv__(self, other: Gaussian):
+        """ Divide this Gaussian pdf by denominator.
+
+        Args:
+            other: The Gaussian to divide by.
+        """
+        self.exponent -= other.exponent
+        self.cho_diag /= other.cho_diag
+        return self
+
+    def __init__(self, mean: TF.Tensor, variance: TF.Tensor, is_variance_diagonal: bool, ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT()), LBunch: int = 2):
         """ Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.
         Taking the product ``2 * Pi * Gaussian.det(variance_cho_diagonal)`` gives the normalization factor for the gaussian pdf.
         Batch dimensions of ordinate, mean and variance are internally broadcast to match each other.
@@ -66,13 +81,14 @@ class Gaussian(ABC):
 
         Args:
             mean: Gaussian population mean. Should be of adequate rank to broadcast Ls.
-            variance_cho: The lower triangular Cholesky decomposition of the Gaussian population variance. Is automatically broadcast to embrace Ns
-            is_variance_diagonal: True if variance is an M-vector
+            variance: The Gaussian population variance. Is automatically broadcast to embrace Ns.
+            is_variance_diagonal: True if variance is an M-vector.
             ordinate: The ordinate (z-value) to calculate the Gaussian density for. Should be of adequate rank to broadcast Ls. If not supplied, 0 is assumed.
             LBunch: The number of consecutive output (L) dimensions to count before inserting an N for broadcasting. Usually 2, sometimes 3.
         Returns: The tensor Gaussian pdf, and the diagonal of variance_cho.
         """
         # Broadcast ordinate - mean.
+        variance_cho = tf.sqrt(variance) if is_variance_diagonal else tf.linalg.cholesky(variance)
         if ordinate.shape == mean.shape:
             shape = ordinate.shape.as_list()
             fill = [1, ] * (len(shape) - 1)
@@ -90,7 +106,8 @@ class Gaussian(ABC):
         else:
             exponent = tf.squeeze(tf.linalg.triangular_solve(variance_cho, ordinate[..., tf.newaxis], lower=True), axis=-1)
         exponent = - 0.5 * tf.einsum('...o, ...o -> ...', exponent, exponent)
-        return exponent, variance_cho if is_variance_diagonal else tf.linalg.diag_part(variance_cho)
+        self.exponent = exponent
+        self.cho_diag = variance_cho if is_variance_diagonal else tf.linalg.diag_part(variance_cho)
 
 
 def sym_check(tensor: TF.Tensor, transposition: List[int]) -> TF.Tensor:

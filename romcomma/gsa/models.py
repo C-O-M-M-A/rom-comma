@@ -27,7 +27,7 @@ from romcomma.base.definitions import *
 from romcomma.base.classes import Model, Data, Frame
 from romcomma.gpr.models import GPR
 from romcomma.gsa.base import Calibrator
-from romcomma.gsa.calculators import ClosedSobol, ClosedSobolWithError
+from romcomma.gsa.calibrators import ClosedSobol, ClosedSobolWithError
 from enum import IntEnum, auto
 from abc import abstractmethod
 

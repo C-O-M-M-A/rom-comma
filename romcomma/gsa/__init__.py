@@ -21,5 +21,5 @@
 
 """ Global Sensitivity Analysis (GSA) functionality """
 
-from . import calculators
+from . import calibrators
 from . import models
