@@ -114,7 +114,7 @@ class Gaussian(ABC):
             self.cho_diag = tf.expand_dims(self.cho_diag, (axis - 1) if axis < 0 else axis)
         return self
 
-    def divide_by(self, other: Gaussian):
+    def __itruediv__(self, other) -> Gaussian:
         """ Divide this Gaussian pdf by denominator.
 
         Args:
