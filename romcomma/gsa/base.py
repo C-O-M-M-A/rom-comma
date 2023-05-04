@@ -23,8 +23,11 @@
 
 from __future__ import annotations
 
+import copy
+
 from romcomma.base.definitions import *
 from abc import ABC
+from copy import deepcopy
 
 
 def det(variance_cho_diagonal):
@@ -109,20 +112,22 @@ class Gaussian:
             axes: A sequence of dims to insert.
         Returns: ``self`` for chaining calls.
         """
+        result = copy.deepcopy(self)
         for axis in sorted(axes, reverse=True):
-            self.exponent = tf.expand_dims(self.exponent, axis)
-            self.cho_diag = tf.expand_dims(self.cho_diag, (axis - 1) if axis < 0 else axis)
-        return self
+            result.exponent = tf.expand_dims(result.exponent, axis)
+            result.cho_diag = tf.expand_dims(result.cho_diag, (axis - 1) if axis < 0 else axis)
+        return result
 
-    def __itruediv__(self, other) -> Gaussian:
+    def __truediv__(self, other) -> Gaussian:
         """ Divide this Gaussian pdf by denominator.
 
         Args:
             other: The Gaussian to divide by.
         """
-        self.exponent -= other.exponent
-        self.cho_diag /= other.cho_diag
-        return self
+        result = copy.deepcopy(self)
+        result.exponent -= other.exponent
+        result.cho_diag /= other.cho_diag
+        return result
 
     def __init__(self, mean: TF.Tensor, variance: TF.Tensor, is_variance_diagonal: bool, ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT()), LBunch: int = 2):
         """ Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.
