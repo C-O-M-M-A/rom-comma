@@ -275,35 +275,35 @@ class ClosedSobolWithError(ClosedSobol):
         variance = 1 - tf.einsum('ikM, lLM, ikM -> liLkM', Upsilon_cho, Phi, Upsilon_cho)[..., tf.newaxis, :, tf.newaxis, :]
         return self._equatedRanksGaussian(mean, variance, tf.constant(0, dtype=FLOAT()), rank_eqs)
 
-    def _mu_phi_mu(self, GGaussian: Gaussian, Upsilon_log_pdf: List[Gaussian], Omega_log_pdf: List[Gaussian], rank_eqs: Tuple[RankEquation]) -> TF.Tensor:
+    def _mu_phi_mu(self, GGaussian: Gaussian, UpsilonGaussians: List[Gaussian], OmegaGaussians: List[Gaussian], rank_eqs: Tuple[RankEquation]) -> TF.Tensor:
         """ Calculate E_m E_mp (mu[m] phi[m][mp] mu[mp]).
 
         Args:
             GGaussian: jJn.
-            Upsilon_log_pdf: liLNjk.
-            Omega_log_pdf: liLNjkJn.
+            UpsilonGaussians: liLNjk.
+            OmegaGaussians: liLNjkJn.
             rank_eqs: A tuple of RankEquators to apply.
         Returns: li.
         """
-        GGaussian = [g[:, tf.newaxis, ...] for g in GGaussian]
+        GGaussian = GGaussian.expand_dims([2])
         mu_phi_mu = 0.0
         for i, rank_eq in enumerate(rank_eqs):
-            Omega_log_pdf[i] = list(Omega_log_pdf[i])
-            Omega_log_pdf[i][0] += Upsilon_log_pdf[i][0] - GGaussian[0]
-            if Upsilon_log_pdf[i][1].shape[-1] == GGaussian[1].shape[-1]:
-                Omega_log_pdf[i][1] *= Upsilon_log_pdf[i][1] / GGaussian[1]
+            OmegaGaussians[i] /= GGaussian
+            OmegaGaussians[i].exponent += UpsilonGaussians[i].exponent
+            if UpsilonGaussians[i].cho_diag.shape[-1] == GGaussian.cho_diag.shape[-1]:
+                OmegaGaussians[i].cho_diag *= UpsilonGaussians[i].cho_diag
             else:
-                Omega_log_pdf[i][1] /= GGaussian[1]
-                Omega_log_pdf[i][1] = (tf.reduce_prod(Omega_log_pdf[i][1], axis=-1) * tf.reduce_prod(Upsilon_log_pdf[i][1], axis=-1))[..., tf.newaxis]
+                OmegaGaussians[i].cho_diag = (tf.reduce_prod(OmegaGaussians[i].cho_diag, axis=-1) *
+                                              tf.reduce_prod(UpsilonGaussians[i].cho_diag, axis=-1))[..., tf.newaxis]
             if rank_eq in self.RANK_EQUATIONS.MIXED:
-                result = tf.einsum('kLN, LNjkJn, jJn -> jk', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
+                result = tf.einsum('kLN, LNjkJn, jJn -> jk', self.g0KY, OmegaGaussians[i].pdf, self.g0KY)
                 mu_phi_mu += tf.einsum('k, jk -> jk', self.mu_phi_mu['pre-factor'], result)
                 mu_phi_mu = tf.linalg.set_diag(mu_phi_mu, 2 * tf.linalg.diag_part(mu_phi_mu))
             elif rank_eq.l == 'k' and rank_eq.i == 'j':
-                result = tf.einsum('jLN, LNjkJn, jJn -> j', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
+                result = tf.einsum('jLN, LNjkJn, jJn -> j', self.g0KY, OmegaGaussians[i].pdf, self.g0KY)
                 mu_phi_mu += tf.linalg.diag(tf.einsum('j, j -> j', self.mu_phi_mu['pre-factor'], result))
             else:
-                result = tf.einsum(f'jLN, LNjkJn, jJn -> jk', self.g0KY, Gaussian.pdf(*tuple(Omega_log_pdf[i])), self.g0KY)
+                result = tf.einsum(f'jLN, LNjkJn, jJn -> jk', self.g0KY, OmegaGaussians[i].pdf, self.g0KY)
                 mu_phi_mu += tf.einsum(f'k, jk -> jk', self.mu_phi_mu['pre-factor'], result)
         return mu_phi_mu
 
@@ -321,7 +321,7 @@ class ClosedSobolWithError(ClosedSobol):
         mean = mean[:, :, tf.newaxis, ...] - G[..., tf.newaxis, tf.newaxis, tf.newaxis, :]
         gaussian = Gaussian(mean=mean, variance=D, is_variance_diagonal=True, LBunch=2)
         gaussian /= GGaussian.expand_dims([-1, -2, -3])
-        factor = tf.einsum('lLN, iIn, lLNiIn -> liIn', self.g0KY, self.g0, Gaussian.pdf)
+        factor = tf.einsum('lLN, iIn, lLNiIn -> liIn', self.g0KY, self.g0, gaussian.pdf)
         if tf.rank(self.K_cho) == 2 and factor.shape[-2] == 1:
             factor = tf.einsum('lNiI -> liIN', tf.linalg.diag(tf.einsum('liIN -> lNi', factor)))
         factor = tf.reshape(factor, factor.shape[:-2].as_list() + [-1, 1])
@@ -373,22 +373,22 @@ class ClosedSobolWithError(ClosedSobol):
         """
         result = super().marginalize(m)
         G, Phi, Upsilon = tuple(tensor[..., m[0]:m[1]] for tensor in (self.G, self.Phi, self.Upsilon))
-        G_log_pdf = Gaussian.log_pdf(G, tf.sqrt(Phi), is_variance_diagonal=True, LBunch=2)
-        psi_factor = self._psi_factor(G, Phi, G_log_pdf)
+        GGaussian = Gaussian(G, Phi, is_variance_diagonal=True, LBunch=2)
+        psi_factor = self._psi_factor(G, Phi, GGaussian)
         if self.meta['is_T_partial']:
-            Upsilon_log_pdf = self._UpsilonGaussian(G, Phi, Upsilon, self.RANK_EQUATIONS.DIAGONAL)
-            Omega_log_pdf = self._OmegaGaussian(m, self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
-            Wmm = self._W(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf, Omega_log_pdf, self.RANK_EQUATIONS.DIAGONAL),
-                                      self._mu_psi_mu(psi_factor, self.RANK_EQUATIONS.DIAGONAL))
+            UpsilonGaussians = self._UpsilonGaussian(G, Phi, Upsilon, self.RANK_EQUATIONS.DIAGONAL)
+            OmegaGaussians = self._OmegaGaussian(m, self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
+            Wmm = self._W(self._mu_phi_mu(GGaussian, UpsilonGaussians, OmegaGaussians, self.RANK_EQUATIONS.DIAGONAL),
+                          self._mu_psi_mu(psi_factor, self.RANK_EQUATIONS.DIAGONAL))
             result |= {'W': Wmm, 'T': self._T(Wmm)}
         else:
-            Upsilon_log_pdf = self.RankEquations(*(self._UpsilonGaussian(G, Phi, Upsilon, rank_eqs) for i, rank_eqs in enumerate(self.RANK_EQUATIONS)))
-            Omega_log_pdf = self.RankEquations(*(self._OmegaGaussian(m, self.G, self.Phi, self.Upsilon, rank_eqs)
+            UpsilonGaussians = self.RankEquations(*(self._UpsilonGaussian(G, Phi, Upsilon, rank_eqs) for i, rank_eqs in enumerate(self.RANK_EQUATIONS)))
+            OmegaGaussians = self.RankEquations(*(self._OmegaGaussian(m, self.G, self.Phi, self.Upsilon, rank_eqs)
                                                  for i, rank_eqs in enumerate(self.RANK_EQUATIONS)))
-            Wmm = (self._W(self._mu_phi_mu(G_log_pdf, Upsilon_log_pdf.DIAGONAL, Omega_log_pdf.DIAGONAL, self.RANK_EQUATIONS.DIAGONAL),
+            Wmm = (self._W(self._mu_phi_mu(GGaussian, UpsilonGaussians.DIAGONAL, OmegaGaussians.DIAGONAL, self.RANK_EQUATIONS.DIAGONAL),
                            self._mu_psi_mu(psi_factor, self.RANK_EQUATIONS.DIAGONAL)))
-            WMm = self._W(self._mu_phi_mu(G_log_pdf, self.Upsilon_log_pdf.MIXED, Omega_log_pdf.MIXED, self.RANK_EQUATIONS.MIXED),
-                                               self._mu_psi_mu(psi_factor, self.RANK_EQUATIONS.MIXED))
+            WMm = self._W(self._mu_phi_mu(GGaussian, self.UpsilonGaussians.MIXED, OmegaGaussians.MIXED, self.RANK_EQUATIONS.MIXED),
+                          self._mu_psi_mu(psi_factor, self.RANK_EQUATIONS.MIXED))
             result |= {'W': Wmm, 'T': self._T(Wmm, WMm, result['V'])}
         return result
 
@@ -401,21 +401,21 @@ class ClosedSobolWithError(ClosedSobol):
             raise NotImplementedError('If the MOGP kernel covariance is not diagonal, the Sobol error calculation is unstable.')
         self.Upsilon = self.Lambda2[-1][2]
         self.V |= {4: tf.einsum('li, li -> li', self.V[2], self.V[2])}
-        self.mu_phi_mu = {'pre-factor': tf.reshape(tf.sqrt(Gaussian.det(self.Lambda2[1][0] * self.Lambda2[-1][2])) * self.F, [-1])}
+        self.mu_phi_mu = {'pre-factor': tf.reshape(tf.sqrt(tf.reduce_prod(self.Lambda2[1][0] * self.Lambda2[-1][2], axis=-1)) * self.F, [-1])}
         self.mu_phi_mu['pre-factor'] = tf.reshape(self.mu_phi_mu['pre-factor'], [-1])
-        self.G_log_pdf = Gaussian.log_pdf(mean=self.G, variance_cho=tf.sqrt(self.Phi), is_variance_diagonal=True, LBunch=2)
-        self.psi_factor = self._psi_factor(self.G, self.Phi, self.G_log_pdf)
+        self.GGaussian = Gaussian(mean=self.G, variance=self.Phi, is_variance_diagonal=True, LBunch=2)
+        self.psi_factor = self._psi_factor(self.G, self.Phi, self.GGaussian)
         if self.meta['is_T_partial']:
-            self.Upsilon_log_pdf = self._UpsilonGaussian(self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
-            self.Omega_log_pdf = self._OmegaGaussian(self.Ms, self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
-            self.W = self._W(self._mu_phi_mu(self.G_log_pdf, self.Upsilon_log_pdf, self.Omega_log_pdf, self.RANK_EQUATIONS.DIAGONAL),
+            self.UpsilonGaussians = self._UpsilonGaussian(self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
+            self.OmegaGaussians = self._OmegaGaussian(self.Ms, self.G, self.Phi, self.Upsilon, self.RANK_EQUATIONS.DIAGONAL)
+            self.W = self._W(self._mu_phi_mu(self.GGaussian, self.UpsilonGaussians, self.OmegaGaussians, self.RANK_EQUATIONS.DIAGONAL),
                              self._mu_psi_mu(self.psi_factor, self.RANK_EQUATIONS.DIAGONAL))
         else:
-            self.Upsilon_log_pdf = self.RankEquations(*(self._UpsilonGaussian(self.G, self.Phi, self.Upsilon, rank_eq)
-                                                        for i, rank_eq in enumerate(self.RANK_EQUATIONS)))
-            self.Omega_log_pdf = self.RankEquations(*(self._OmegaGaussian(self.Ms, self.G, self.Phi, self.Upsilon, rank_eq)
-                                                      for i, rank_eq in enumerate(self.RANK_EQUATIONS)))
-            self.W = self.RankEquations(*(self._W(self._mu_phi_mu(self.G_log_pdf, self.Upsilon_log_pdf[i], self.Omega_log_pdf[i], rank_eq),
+            self.UpsilonGaussians = self.RankEquations(*(self._UpsilonGaussian(self.G, self.Phi, self.Upsilon, rank_eq)
+                                                         for i, rank_eq in enumerate(self.RANK_EQUATIONS)))
+            self.OmegaGaussians = self.RankEquations(*(self._OmegaGaussian(self.Ms, self.G, self.Phi, self.Upsilon, rank_eq)
+                                                       for i, rank_eq in enumerate(self.RANK_EQUATIONS)))
+            self.W = self.RankEquations(*(self._W(self._mu_phi_mu(self.GGaussian, self.UpsilonGaussians[i], self.OmegaGaussians[i], rank_eq),
                                                   self._mu_psi_mu(self.psi_factor, rank_eq)) for i, rank_eq in enumerate(self.RANK_EQUATIONS)))
             self.Q = tf.linalg.diag_part(self.W.MIXED) / (4.0 * self.V[1] * self.V[1])
             self.Q = self.Q[tf.newaxis, ...] + self.Q[..., tf.newaxis] + 2.0 * tf.linalg.diag(self.Q)
