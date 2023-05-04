@@ -210,7 +210,7 @@ class ClosedSobolWithError(ClosedSobol):
         return tf.einsum(f'LNjjJM -> LNjJM', result)[..., tf.newaxis, :, :] if rank_eq.j == 'i' else result
 
     def _equatedRanksGaussian(self, mean: TF.Tensor, variance: TF.Tensor, ordinate: TF.Tensor, rank_eqs: Tuple[RankEquation]) -> List[Gaussian]:
-        """ Equate ranks and calculate GaussianWithout2PiWithout2Pi log PDF.
+        """ Equate ranks and calculate Gaussian.
 
         Args:
             mean: liLNjkJn.
