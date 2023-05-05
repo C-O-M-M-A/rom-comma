@@ -1,4 +1,4 @@
-﻿romcomma.gpr.models.GPR
+romcomma.gpr.models.GPR
 =======================
 
 .. currentmodule:: romcomma.gpr.models

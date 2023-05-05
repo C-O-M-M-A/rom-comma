@@ -130,11 +130,17 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="romcomma.gsa.base.det.html#romcomma.gsa.base.det" title="romcomma.gsa.base.det"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det</span></code></a>(tensor)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="romcomma.gsa.base.mean.html#romcomma.gsa.base.mean" title="romcomma.gsa.base.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a>(tensor)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="romcomma.gsa.base.log_pdf.html#romcomma.gsa.base.log_pdf" title="romcomma.gsa.base.log_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_pdf</span></code></a>(mean, variance_cho, is_variance_diagonal)</p></td>
+<td><p>Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="romcomma.gsa.base.mean.html#romcomma.gsa.base.mean" title="romcomma.gsa.base.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a>(tensor)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="romcomma.gsa.base.ms.html#romcomma.gsa.base.ms" title="romcomma.gsa.base.ms"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ms</span></code></a>(tensor[, ein])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="romcomma.gsa.base.ms.html#romcomma.gsa.base.ms" title="romcomma.gsa.base.ms"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ms</span></code></a>(tensor[, ein])</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="romcomma.gsa.base.pdf.html#romcomma.gsa.base.pdf" title="romcomma.gsa.base.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a>(exponent, variance_cho_diagonal)</p></td>
+<td><p>Calculate the Gaussian pdf from the output of Gaussian.log_pdf.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="romcomma.gsa.base.rms.html#romcomma.gsa.base.rms" title="romcomma.gsa.base.rms"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rms</span></code></a>(tensor[, ein])</p></td>
 <td><p></p></td>
@@ -150,10 +156,10 @@
 <p class="rubric">Classes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="romcomma.gsa.base.Calculator.html#romcomma.gsa.base.Calculator" title="romcomma.gsa.base.Calculator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Calculator</span></code></a>()</p></td>
-<td><p>Interface to GSA calculator</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="romcomma.gsa.base.Calibrator.html#romcomma.gsa.base.Calibrator" title="romcomma.gsa.base.Calibrator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Calibrator</span></code></a>()</p></td>
+<td><p>Interface to GSA calibrator</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.Gaussian" title="romcomma.gsa.base.Gaussian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Gaussian</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="romcomma.gsa.base.Gaussian.html#romcomma.gsa.base.Gaussian" title="romcomma.gsa.base.Gaussian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Gaussian</span></code></a>(mean, variance, is_variance_diagonal)</p></td>
 <td><p>Encapsulates a Gaussian pdf.</p></td>
 </tr>
 </tbody>

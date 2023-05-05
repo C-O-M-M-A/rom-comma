@@ -171,7 +171,10 @@ or <a class="reference external" href="https://pandas.pydata.org/docs/reference/
 <tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.base.classes.Frame.__init__" title="romcomma.base.classes.Frame.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(csv[, data, index, columns, dtype, ...])</p></td>
 <td><p>Construct a Frame, from csv or pd.DataFrame.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.base.classes.Frame.write" title="romcomma.base.classes.Frame.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write</span></code></a>(**kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.base.classes.Frame.broadcast_value" title="romcomma.base.classes.Frame.broadcast_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">broadcast_value</span></code></a>(target_shape[, is_diagonal])</p></td>
+<td><p>Broadcast a frame</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.base.classes.Frame.write" title="romcomma.base.classes.Frame.write"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write</span></code></a>(**kwargs)</p></td>
 <td><p>Write to csv.</p></td>
 </tr>
 </tbody>
@@ -206,6 +209,25 @@ or <a class="reference external" href="https://pandas.pydata.org/docs/reference/
 </dd>
 </dl>
 <p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code>, for call chaining.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.base.classes.Frame.broadcast_value">
+<span class="sig-name descname"><span class="pre">broadcast_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_diagonal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Frame.broadcast_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Frame.broadcast_value" title="Permalink to this definition">§</a></dt>
+<dd><p>Broadcast a frame</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_shape</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – The shape to broadcast to.</p></li>
+<li><p><strong>is_diagonal</strong> (<em>bool</em>) – Whether to zero the off-diagonal elements of a square matrix.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#romcomma.base.classes.Frame" title="romcomma.base.classes.Frame"><em>Frame</em></a></p>
+</dd>
+</dl>
+<p>Returns: Self, for chaining calls.
+:raises IndexError: If broadcasting is impossible.</p>
 </dd></dl>
 
 <dl class="py attribute">

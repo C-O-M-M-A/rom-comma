@@ -130,7 +130,7 @@
 <p>Abstract base class for any model. This base class implements generic file storage and parameter handling.
 The latter is dealt with by each subclass overriding <code class="docutils literal notranslate"><span class="pre">Data.NamedTuple</span></code> with its own <code class="docutils literal notranslate"><span class="pre">NamedTuple[NamedTuple]</span></code>
 defining the parameter set it takes. <code class="docutils literal notranslate"><span class="pre">model.data.values</span></code> is a <code class="docutils literal notranslate"><span class="pre">Model.Data.NamedTuple</span></code> of NP.Matrices.</p>
-<p>A Model also may include an optimize method taking options stored in an options.json file, which default to cls.META.</p>
+<p>A Model also may include a calibrate method taking meta stored in an meta.json file, which default to cls.META.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -161,13 +161,13 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.base.classes.Model.__init__" title="romcomma.base.classes.Model.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(folder[, read_data])</p></td>
 <td><p>Model constructor, to be called by all subclasses as a matter of priority.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code>(method, **kwargs)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibrate</span></code>(method, **kwargs)</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_meta</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_meta</span></code>(options)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_meta</span></code>(meta)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -189,7 +189,7 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <dl class="py class">
 <dt class="sig sig-object py" id="romcomma.base.classes.Model.Data">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/base/classes.html#Model.Data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.base.classes.Model.Data" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Data.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
 <p>This is a placeholder which must be overridden in any implementation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -284,7 +284,7 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 <dd class="field-odd"><p><strong>dst_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to move to. If this exists, it will be emptied.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Data.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
 </dd>
 </dl>
 <p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code> for chaining calls.</p>
@@ -292,18 +292,18 @@ defining the parameter set it takes. <code class="docutils literal notranslate">
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.base.classes.Model.Data.read">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Data.read" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.base.classes.Model.Data.read" title="Permalink to this definition">§</a></dt>
 <dd><p>Read <code class="docutils literal notranslate"><span class="pre">Data</span></code> from <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to record the data. Must exist</p></li>
-<li><p><strong>**kwargs</strong> – key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs).
+<li><p><strong>**kwargs</strong> (<a class="reference internal" href="romcomma.base.classes.Frame.html#romcomma.base.classes.Frame" title="romcomma.base.classes.Frame"><em>Frame</em></a><em> | </em><em>DataFrame</em><em> | </em><em>ndarray</em><em> | </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs).
 Missing fields receive their defaults, so <code class="docutils literal notranslate"><span class="pre">Data(folder)</span></code> is the default <code class="docutils literal notranslate"><span class="pre">Data</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Data.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
 </dd>
 </dl>
 <p>Returns: The <code class="docutils literal notranslate"><span class="pre">Data</span></code> stored in <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
@@ -314,7 +314,7 @@ Missing fields receive their defaults, so <code class="docutils literal notransl
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.base.classes.Model.META">
 <em class="property"><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">META</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.base.classes.Model.META" title="Permalink to this definition">§</a></dt>
-<dd><p>Default options.</p>
+<dd><p>Default meta data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Returns</p>

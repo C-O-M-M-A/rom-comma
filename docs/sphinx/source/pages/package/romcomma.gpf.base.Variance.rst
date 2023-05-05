@@ -1,4 +1,4 @@
-﻿romcomma.gpf.base.Variance
+romcomma.gpf.base.Variance
 ==========================
 
 .. currentmodule:: romcomma.gpf.base

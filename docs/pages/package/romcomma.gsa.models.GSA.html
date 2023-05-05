@@ -153,7 +153,7 @@ constructed object is basically useless once constructed.</p>
 Any m outside this range results the Sobol index of kind being calculated for all <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">in</span> <span class="pre">range(1,</span> <span class="pre">M+1)</span></code>.</p></li>
 <li><p><strong>is_error_calculated</strong> (<em>bool</em>) – Whether to calculate the standard error on the Sobol index.
 This is a memory intensive calculation, so leave this flag False unless you are sure you need errors</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – The calculation options to override META.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – The calculation meta to override META.</p></li>
 </ul>
 </dd>
 </dl>
@@ -165,16 +165,13 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 <tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gsa.models.GSA.__init__" title="romcomma.gsa.models.GSA.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(gp, kind[, m, is_error_calculated])</p></td>
 <td><p>Perform a general GSA.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gsa.models.GSA.calculator" title="romcomma.gsa.models.GSA.calculator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculator</span></code></a>(gp, is_error_calculated, **kwargs)</p></td>
-<td><p>The object to do the calculations, whose marginalise(m) method returns a dict of results.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gsa.models.GSA.calibrate" title="romcomma.gsa.models.GSA.calibrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibrate</span></code></a>([method])</p></td>
+<td><p>Perform a generic GSA calculation.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code>(method, **kwargs)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_meta</span></code>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_meta</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_meta</span></code>(options)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_meta</span></code>(meta)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -188,10 +185,13 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 <tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gsa.models.GSA.META" title="romcomma.gsa.models.GSA.META"><code class="xref py py-obj docutils literal notranslate"><span class="pre">META</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gsa.models.GSA.calibrator" title="romcomma.gsa.models.GSA.calibrator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibrator</span></code></a></p></td>
+<td><p>The object to do the calculations, whose marginalise(m) method returns a dict of results.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">data</span></code></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">folder</span></code></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">folder</span></code></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -199,36 +199,35 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 <dl class="py class">
 <dt class="sig sig-object py" id="romcomma.gsa.models.GSA.Kind">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Kind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/models.html#GSA.Kind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.models.GSA.Kind" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></p>
 <p>Enum to specify the kind of Sobol index to calculate.</p>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gsa.models.GSA.calibrator">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calibrator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="romcomma.gsa.base.Calibrator.html#romcomma.gsa.base.Calibrator" title="romcomma.gsa.base.Calibrator"><span class="pre">Calibrator</span></a></em><a class="headerlink" href="#romcomma.gsa.models.GSA.calibrator" title="Permalink to this definition">§</a></dt>
+<dd><p>The object to do the calculations, whose marginalise(m) method returns a dict of results.</p>
+</dd></dl>
+
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gsa.models.GSA.calculator">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_error_calculated</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/models.html#GSA.calculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.models.GSA.calculator" title="Permalink to this definition">§</a></dt>
-<dd><p>The object to do the calculations, whose marginalise(m) method returns a dict of results.
-:param gp: The GPR underpinning the GSA.
-:param is_error_calculated: Whether to calculate the standard error of the GSA
-:param **kwargs: Options passed straight to the Calculator.</p>
-<p>Returns: The Calculator.</p>
+<dt class="sig sig-object py" id="romcomma.gsa.models.GSA.calibrate">
+<span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/models.html#GSA.calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.models.GSA.calibrate" title="Permalink to this definition">§</a></dt>
+<dd><p>Perform a generic GSA calculation. This method should be overriden by specific subclasses, and called via <code class="docutils literal notranslate"><span class="pre">super()</span></code> as a matter of priority.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>gp</strong> (<a class="reference internal" href="romcomma.gpr.models.GPR.html#romcomma.gpr.models.GPR" title="romcomma.gpr.models.GPR"><em>GPR</em></a>) – </p></li>
-<li><p><strong>is_error_calculated</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>kwargs</strong> (<em>Any</em>) – </p></li>
-</ul>
+<dd class="field-odd"><p><strong>method</strong> (<em>str</em><em> | </em><em>None</em>) – Not used.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.gsa.base.Calculator.html#romcomma.gsa.base.Calculator" title="romcomma.gsa.base.Calculator"><em>Calculator</em></a></p>
+<dd class="field-even"><p><em>Dict</em>[str, <em>Any</em>]</p>
 </dd>
 </dl>
+<p>Returns: The results of the calculation, as a labelled dictionary of tf.Tensors.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="romcomma.gsa.models.GSA.Data">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.GSA.Data" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Data.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
 <p>This is a placeholder which must be overridden in any implementation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -323,7 +322,7 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 <dd class="field-odd"><p><strong>dst_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to move to. If this exists, it will be emptied.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Data.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
 </dd>
 </dl>
 <p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code> for chaining calls.</p>
@@ -331,18 +330,18 @@ This is a memory intensive calculation, so leave this flag False unless you are 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gsa.models.GSA.Data.read">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.GSA.Data.read" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.models.GSA.Data.read" title="Permalink to this definition">§</a></dt>
 <dd><p>Read <code class="docutils literal notranslate"><span class="pre">Data</span></code> from <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to record the data. Must exist</p></li>
-<li><p><strong>**kwargs</strong> – key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs).
+<li><p><strong>**kwargs</strong> (<a class="reference internal" href="romcomma.base.classes.Frame.html#romcomma.base.classes.Frame" title="romcomma.base.classes.Frame"><em>Frame</em></a><em> | </em><em>DataFrame</em><em> | </em><em>ndarray</em><em> | </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs).
 Missing fields receive their defaults, so <code class="docutils literal notranslate"><span class="pre">Data(folder)</span></code> is the default <code class="docutils literal notranslate"><span class="pre">Data</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Data.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
 </dd>
 </dl>
 <p>Returns: The <code class="docutils literal notranslate"><span class="pre">Data</span></code> stored in <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>

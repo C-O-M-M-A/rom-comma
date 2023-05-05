@@ -1,4 +1,4 @@
-﻿romcomma.data.storage.Fold
+romcomma.data.storage.Fold
 ==========================
 
 .. currentmodule:: romcomma.data.storage

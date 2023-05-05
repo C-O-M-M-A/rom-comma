@@ -1,7 +1,7 @@
-﻿romcomma.gsa.calculators.ClosedSobolWithRotation
+romcomma.gsa.calibrators.ClosedSobolWithRotation
 ================================================
 
-.. currentmodule:: romcomma.gsa.calculators
+.. currentmodule:: romcomma.gsa.calibrators
 
 .. autoclass:: ClosedSobolWithRotation
    :members:

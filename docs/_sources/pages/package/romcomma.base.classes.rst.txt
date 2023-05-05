@@ -1,4 +1,4 @@
-﻿romcomma.base.classes
+romcomma.base.classes
 =====================
 
 .. automodule:: romcomma.base.classes

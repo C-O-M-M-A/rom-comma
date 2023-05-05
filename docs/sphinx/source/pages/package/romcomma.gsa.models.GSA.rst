@@ -1,4 +1,4 @@
-﻿romcomma.gsa.models.GSA
+romcomma.gsa.models.GSA
 =======================
 
 .. currentmodule:: romcomma.gsa.models
@@ -17,7 +17,6 @@
    .. autosummary::
    
       ~GSA.__init__
-      ~GSA.calibrator
       ~GSA.calibrate
       ~GSA.read_meta
       ~GSA.write_meta
@@ -32,6 +31,7 @@
    
       ~GSA.ALL_KINDS
       ~GSA.META
+      ~GSA.calibrator
       ~GSA.data
       ~GSA.folder
    

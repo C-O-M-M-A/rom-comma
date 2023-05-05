@@ -17,6 +17,7 @@ romcomma.base.classes.Frame
    .. autosummary::
    
       ~Frame.__init__
+      ~Frame.broadcast_value
       ~Frame.write
    
    

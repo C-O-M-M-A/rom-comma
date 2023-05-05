@@ -1,4 +1,4 @@
-﻿romcomma.gpr.kernels.Kernel
+romcomma.gpr.kernels.Kernel
 ===========================
 
 .. currentmodule:: romcomma.gpr.kernels

@@ -1,4 +1,4 @@
-﻿romcomma.data.storage.Repository
+romcomma.data.storage.Repository
 ================================
 
 .. currentmodule:: romcomma.data.storage

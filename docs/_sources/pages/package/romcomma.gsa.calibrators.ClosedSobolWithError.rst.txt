@@ -1,7 +1,7 @@
-﻿romcomma.gsa.calculators.ClosedSobolWithError
+romcomma.gsa.calibrators.ClosedSobolWithError
 =============================================
 
-.. currentmodule:: romcomma.gsa.calculators
+.. currentmodule:: romcomma.gsa.calibrators
 
 .. autoclass:: ClosedSobolWithError
    :members:

@@ -19,8 +19,8 @@
     <script defer src="../../_static/insipid-sidebar.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="romcomma.gsa.calculators" href="romcomma.gsa.calculators.html" />
-    <link rel="prev" title="romcomma.gsa.base.Calculator" href="romcomma.gsa.base.Calculator.html" />
+    <link rel="next" title="romcomma.gsa.calibrators" href="romcomma.gsa.calibrators.html" />
+    <link rel="prev" title="romcomma.gsa.base.Calibrator" href="romcomma.gsa.base.Calibrator.html" />
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
   </head><body>
@@ -84,31 +84,31 @@
       </div>
     </header>
     <nav>
-      <a href="romcomma.gsa.base.Calculator.html" class="nav-icon previous" title="previous:&#13;romcomma.gsa.base.Calculator" aria-label="Previous topic" accesskey="P" tabindex="-1">
+      <a href="romcomma.gsa.base.Calibrator.html" class="nav-icon previous" title="previous:&#13;romcomma.gsa.base.Calibrator" aria-label="Previous topic" accesskey="P" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
       </a>
-      <a href="romcomma.gsa.calculators.html" class="nav-icon next" title="next:&#13;romcomma.gsa.calculators" aria-label="Next topic" accesskey="N" tabindex="-1">
+      <a href="romcomma.gsa.calibrators.html" class="nav-icon next" title="next:&#13;romcomma.gsa.calibrators" aria-label="Next topic" accesskey="N" tabindex="-1">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg>
       </a>
     </nav>
 
     <nav class="relbar">
-      <a class="previous" href="romcomma.gsa.base.Calculator.html" aria-label="Previous topic" >
+      <a class="previous" href="romcomma.gsa.base.Calibrator.html" aria-label="Previous topic" >
         <div class="icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
         </div>
         <div class="title">
           <span class="text">
             <span class="direction">previous</span>
-            romcomma.gsa.base.Calculator
+            romcomma.gsa.base.Calibrator
           </span>
         </div>
       </a>
-      <a class="next" href="romcomma.gsa.calculators.html" aria-label="Next topic" >
+      <a class="next" href="romcomma.gsa.calibrators.html" aria-label="Next topic" >
         <div class="title">
           <span class="text">
             <span class="direction">next</span>
-            romcomma.gsa.calculators
+            romcomma.gsa.calibrators
           </span>
         </div>
         <div class="icon">
@@ -126,74 +126,23 @@
 <h1>romcomma.gsa.base.Gaussian<a class="headerlink" href="#romcomma-gsa-base-gaussian" title="Permalink to this heading">§</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Gaussian</span></span><a class="reference internal" href="../../_modules/romcomma/gsa/base.html#Gaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.base.Gaussian" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Gaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_variance_diagonal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinate=&lt;tf.Tensor:</span> <span class="pre">shape=()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=float64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numpy=0.0&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LBunch=2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/base.html#Gaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.base.Gaussian" title="Permalink to this definition">§</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Encapsulates a Gaussian pdf. For numerical stability the 2 Pi factor is not included.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gsa.base.Gaussian.__init__" title="Permalink to this definition">§</a></dt>
-<dd></dd></dl>
-
-<p class="rubric">Methods</p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.Gaussian.__init__" title="romcomma.gsa.base.Gaussian.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">det</span></code>(variance_cho_diagonal)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.Gaussian.log_pdf" title="romcomma.gsa.base.Gaussian.log_pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_pdf</span></code></a>(mean, variance_cho, is_variance_diagonal)</p></td>
-<td><p>Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.Gaussian.pdf" title="romcomma.gsa.base.Gaussian.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a>(exponent, variance_cho_diagonal)</p></td>
-<td><p>Calculate the Gaussian pdf from the output of Gaussian.log_pdf.</p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Attributes</p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.Gaussian.exponent" title="romcomma.gsa.base.Gaussian.exponent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exponent</span></code></a></p></td>
-<td><p>The exponent of a Gaussian pdf, <span class="math notranslate nohighlight">\(- z^{\intercal} \Sigma^{-1} z / 2\)</span>.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="romcomma.gsa.base.GaussianWithout2Pi.html#romcomma.gsa.base.Gaussian.determinant_vector" title="romcomma.gsa.base.Gaussian.determinant_vector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">determinant_vector</span></code></a></p></td>
-<td><p>The diagonal of the Cholesky decomposition of the Gaussian covariance matrix.</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.exponent">
-<span class="sig-name descname"><span class="pre">exponent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><span class="pre">Tensor</span></a></em><a class="headerlink" href="#romcomma.gsa.base.Gaussian.exponent" title="Permalink to this definition">§</a></dt>
-<dd><p>The exponent of a Gaussian pdf, <span class="math notranslate nohighlight">\(- z^{\intercal} \Sigma^{-1} z / 2\)</span>.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.determinant_vector">
-<span class="sig-name descname"><span class="pre">determinant_vector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><span class="pre">Tensor</span></a></em><a class="headerlink" href="#romcomma.gsa.base.Gaussian.determinant_vector" title="Permalink to this definition">§</a></dt>
-<dd><p>The diagonal of the Cholesky decomposition of the Gaussian covariance matrix.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.pdf">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exponent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance_cho_diagonal</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/base.html#Gaussian.pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.base.Gaussian.pdf" title="Permalink to this definition">§</a></dt>
-<dd><p>Calculate the Gaussian pdf from the output of Gaussian.log_pdf.
-:param exponent: The exponent in the Gaussian pdf.
-:param variance_cho_diagonal: The diagonal of the variance Cholesky decomposition.</p>
-<p>Returns: The Gaussian pdf.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>exponent</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – </p></li>
-<li><p><strong>variance_cho_diagonal</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – </p></li>
+<li><p><strong>mean</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="romcomma.base.definitions.TF.Tensor"><em>TF.Tensor</em></a>) – </p></li>
+<li><p><strong>variance</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="romcomma.base.definitions.TF.Tensor"><em>TF.Tensor</em></a>) – </p></li>
+<li><p><strong>is_variance_diagonal</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>ordinate</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="romcomma.base.definitions.TF.Tensor"><em>TF.Tensor</em></a>) – </p></li>
+<li><p><strong>LBunch</strong> (<em>int</em>) – </p></li>
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.log_pdf">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">log_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance_cho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_variance_diagonal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinate=&lt;tf.Tensor:</span> <span class="pre">shape=()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=float64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numpy=0.0&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LBunch=2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/base.html#Gaussian.log_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.base.Gaussian.log_pdf" title="Permalink to this definition">§</a></dt>
+<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_variance_diagonal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinate=&lt;tf.Tensor:</span> <span class="pre">shape=()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=float64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">numpy=0.0&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LBunch=2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/base.html#Gaussian.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.base.Gaussian.__init__" title="Permalink to this definition">§</a></dt>
 <dd><p>Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.
 Taking the product <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">Pi</span> <span class="pre">*</span> <span class="pre">Gaussian.det(variance_cho_diagonal)</span></code> gives the normalization factor for the gaussian pdf.
 Batch dimensions of ordinate, mean and variance are internally broadcast to match each other.
@@ -201,18 +150,82 @@ This function is used to minimize exponentiation, for efficiency and accuracy pu
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mean</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="romcomma.base.definitions.TF.Tensor"><em>TF.Tensor</em></a>) – Gaussian population mean. Should be of adequate rank to broadcast Ls.</p></li>
-<li><p><strong>variance_cho</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="romcomma.base.definitions.TF.Tensor"><em>TF.Tensor</em></a>) – The lower triangular Cholesky decomposition of the Gaussian population variance. Is automatically broadcast to embrace Ns</p></li>
-<li><p><strong>is_variance_diagonal</strong> (<em>bool</em>) – True if variance is an M-vector</p></li>
-<li><p><strong>ordinate</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="romcomma.base.definitions.TF.Tensor"><em>TF.Tensor</em></a>) – The ordinate (z-value) to calculate the Gaussian density for. Should be of adequate rank to broadcast Ls. If not supplied, 0 is assumed.</p></li>
+<li><p><strong>mean</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – Gaussian population mean. Should be of adequate rank to broadcast Ls.</p></li>
+<li><p><strong>variance</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – The Gaussian population variance. Is automatically broadcast to embrace Ns.</p></li>
+<li><p><strong>is_variance_diagonal</strong> (<em>bool</em>) – True if variance is an M-vector.</p></li>
+<li><p><strong>ordinate</strong> (<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – The ordinate (z-value) to calculate the Gaussian density for. Should be of adequate rank to broadcast Ls. If not supplied, 0 is assumed.</p></li>
 <li><p><strong>LBunch</strong> (<em>int</em>) – The number of consecutive output (L) dimensions to count before inserting an N for broadcasting. Usually 2, sometimes 3.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>LogPDF</p>
-</dd>
 </dl>
 <p>Returns: The tensor Gaussian pdf, and the diagonal of variance_cho.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gsa.base.Gaussian.__init__" title="romcomma.gsa.base.Gaussian.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(mean, variance, is_variance_diagonal)</p></td>
+<td><p>Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gsa.base.Gaussian.expand_dims" title="romcomma.gsa.base.Gaussian.expand_dims"><code class="xref py py-obj docutils literal notranslate"><span class="pre">expand_dims</span></code></a>(axes)</p></td>
+<td><p>Insert dimensions at the specified axes.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gsa.base.Gaussian.det" title="romcomma.gsa.base.Gaussian.det"><code class="xref py py-obj docutils literal notranslate"><span class="pre">det</span></code></a></p></td>
+<td><p>The sqrt of the determinant of the Gaussian covariance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gsa.base.Gaussian.pdf" title="romcomma.gsa.base.Gaussian.pdf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pdf</span></code></a></p></td>
+<td><p>Calculate the Gaussian pdf from the output of Gaussian.log_pdf.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gsa.base.Gaussian.exponent" title="romcomma.gsa.base.Gaussian.exponent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exponent</span></code></a></p></td>
+<td><p>The exponent of a Gaussian pdf, <span class="math notranslate nohighlight">\(- z^{\intercal} \Sigma^{-1} z / 2\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gsa.base.Gaussian.cho_diag" title="romcomma.gsa.base.Gaussian.cho_diag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cho_diag</span></code></a></p></td>
+<td><p>The diagonal of the Cholesky decomposition of the Gaussian covariance.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.det">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">det</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><span class="pre">Tensor</span></a></em><a class="headerlink" href="#romcomma.gsa.base.Gaussian.det" title="Permalink to this definition">§</a></dt>
+<dd><p>The sqrt of the determinant of the Gaussian covariance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.pdf">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pdf</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><span class="pre">Tensor</span></a></em><a class="headerlink" href="#romcomma.gsa.base.Gaussian.pdf" title="Permalink to this definition">§</a></dt>
+<dd><p>Calculate the Gaussian pdf from the output of Gaussian.log_pdf.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.expand_dims">
+<span class="sig-name descname"><span class="pre">expand_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gsa/base.html#Gaussian.expand_dims"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gsa.base.Gaussian.expand_dims" title="Permalink to this definition">§</a></dt>
+<dd><p>Insert dimensions at the specified axes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>axes</strong> (<em>Sequence</em><em>[</em><em>int</em><em>]</em>) – A sequence of dims to insert.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#romcomma.gsa.base.Gaussian" title="romcomma.gsa.base.Gaussian"><em>Gaussian</em></a></p>
+</dd>
+</dl>
+<p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code> for chaining calls.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.exponent">
+<span class="sig-name descname"><span class="pre">exponent</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><span class="pre">Tensor</span></a></em><a class="headerlink" href="#romcomma.gsa.base.Gaussian.exponent" title="Permalink to this definition">§</a></dt>
+<dd><p>The exponent of a Gaussian pdf, <span class="math notranslate nohighlight">\(- z^{\intercal} \Sigma^{-1} z / 2\)</span>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="romcomma.gsa.base.Gaussian.cho_diag">
+<span class="sig-name descname"><span class="pre">cho_diag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><span class="pre">Tensor</span></a></em><a class="headerlink" href="#romcomma.gsa.base.Gaussian.cho_diag" title="Permalink to this definition">§</a></dt>
+<dd><p>The diagonal of the Cholesky decomposition of the Gaussian covariance.</p>
 </dd></dl>
 
 </dd></dl>
@@ -263,22 +276,22 @@ This function is used to minimize exponentiation, for efficiency and accuracy pu
     </div>
 
     <nav class="relbar">
-      <a class="previous" href="romcomma.gsa.base.Calculator.html" aria-label="Previous topic" >
+      <a class="previous" href="romcomma.gsa.base.Calibrator.html" aria-label="Previous topic" >
         <div class="icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
         </div>
         <div class="title">
           <span class="text">
             <span class="direction">previous</span>
-            romcomma.gsa.base.Calculator
+            romcomma.gsa.base.Calibrator
           </span>
         </div>
       </a>
-      <a class="next" href="romcomma.gsa.calculators.html" aria-label="Next topic" >
+      <a class="next" href="romcomma.gsa.calibrators.html" aria-label="Next topic" >
         <div class="title">
           <span class="text">
             <span class="direction">next</span>
-            romcomma.gsa.calculators
+            romcomma.gsa.calibrators
           </span>
         </div>
         <div class="icon">

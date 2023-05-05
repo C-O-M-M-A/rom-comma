@@ -1,4 +1,4 @@
-﻿romcomma.run.context.Environment
+romcomma.run.context.Environment
 ================================
 
 .. currentmodule:: romcomma.run.context

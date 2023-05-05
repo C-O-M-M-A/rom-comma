@@ -1,4 +1,4 @@
-﻿romcomma.gsa.models.Sobol
+romcomma.gsa.models.Sobol
 =========================
 
 .. currentmodule:: romcomma.gsa.models
@@ -17,7 +17,6 @@
    .. autosummary::
    
       ~Sobol.__init__
-      ~Sobol.calibrator
       ~Sobol.calibrate
       ~Sobol.read_meta
       ~Sobol.write_meta
@@ -32,6 +31,7 @@
    
       ~Sobol.ALL_KINDS
       ~Sobol.META
+      ~Sobol.calibrator
       ~Sobol.data
       ~Sobol.folder
    

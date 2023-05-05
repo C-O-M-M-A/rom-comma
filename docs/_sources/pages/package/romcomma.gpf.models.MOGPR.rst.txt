@@ -1,4 +1,4 @@
-﻿romcomma.gpf.models.MOGPR
+romcomma.gpf.models.MOGPR
 =========================
 
 .. currentmodule:: romcomma.gpf.models

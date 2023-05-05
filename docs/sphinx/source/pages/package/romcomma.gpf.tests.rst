@@ -1,4 +1,4 @@
-﻿romcomma.gpf.tests
+romcomma.gpf.tests
 ==================
 
 .. automodule:: romcomma.gpf.tests

@@ -29,6 +29,6 @@
    :recursive:
 
    romcomma.gsa.base
-   romcomma.gsa.calculators
+   romcomma.gsa.calibrators
    romcomma.gsa.models
 

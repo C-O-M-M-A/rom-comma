@@ -15,8 +15,10 @@ romcomma.gsa.base
       :toctree:
    
       det
+      log_pdf
       mean
       ms
+      pdf
       rms
       sos
       sym_check

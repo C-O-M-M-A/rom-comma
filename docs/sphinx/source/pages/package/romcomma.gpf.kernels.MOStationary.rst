@@ -1,4 +1,4 @@
-﻿romcomma.gpf.kernels.MOStationary
+romcomma.gpf.kernels.MOStationary
 =================================
 
 .. currentmodule:: romcomma.gpf.kernels

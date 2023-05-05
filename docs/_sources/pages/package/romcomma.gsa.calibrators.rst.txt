@@ -1,7 +1,7 @@
-romcomma.gsa.calculators
+romcomma.gsa.calibrators
 ========================
 
-.. automodule:: romcomma.gsa.calculators
+.. automodule:: romcomma.gsa.calibrators
 
    
    

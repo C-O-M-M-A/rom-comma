@@ -1,4 +1,4 @@
-﻿romcomma.gsa.base.Gaussian
+romcomma.gsa.base.Gaussian
 ==========================
 
 .. currentmodule:: romcomma.gsa.base
@@ -17,9 +17,7 @@
    .. autosummary::
    
       ~Gaussian.__init__
-      ~Gaussian.det
-      ~Gaussian.log_pdf
-      ~Gaussian.pdf
+      ~Gaussian.expand_dims
    
    
 
@@ -29,7 +27,9 @@
 
    .. autosummary::
    
+      ~Gaussian.det
+      ~Gaussian.pdf
       ~Gaussian.exponent
-      ~Gaussian.determinant_vector
+      ~Gaussian.cho_diag
    
    

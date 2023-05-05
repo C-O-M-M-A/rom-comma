@@ -1,4 +1,4 @@
-﻿romcomma.base.classes.Model
+romcomma.base.classes.Model
 ===========================
 
 .. currentmodule:: romcomma.base.classes

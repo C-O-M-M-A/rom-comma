@@ -173,11 +173,11 @@ If None, the kernel is read from file, or set to the default Kernel.Data(), acco
 <tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.MOGP.broadcast_parameters" title="romcomma.gpr.models.MOGP.broadcast_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">broadcast_parameters</span></code></a>(is_covariant, is_isotropic)</p></td>
 <td><p>Broadcast the data of the MOGP (including kernels) to higher dimensions.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.MOGP.check_K_inv_Y" title="romcomma.gpr.models.MOGP.check_K_inv_Y"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_K_inv_Y</span></code></a>(x)</p></td>
-<td><p>FOR TESTING PURPOSES ONLY.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.MOGP.optimize" title="romcomma.gpr.models.MOGP.optimize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">optimize</span></code></a>([method])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.MOGP.calibrate" title="romcomma.gpr.models.MOGP.calibrate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibrate</span></code></a>([method])</p></td>
 <td><p>Optimize the MOGP hyper-data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#romcomma.gpr.models.MOGP.check_K_inv_Y" title="romcomma.gpr.models.MOGP.check_K_inv_Y"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_K_inv_Y</span></code></a>(x)</p></td>
+<td><p>FOR TESTING PURPOSES ONLY.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.MOGP.predict" title="romcomma.gpr.models.MOGP.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(X[, y_instead_of_f])</p></td>
 <td><p>Predicts the response to input X.</p></td>
@@ -188,7 +188,7 @@ If None, the kernel is read from file, or set to the default Kernel.Data(), acco
 <tr class="row-odd"><td><p><a class="reference internal" href="#romcomma.gpr.models.MOGP.test" title="romcomma.gpr.models.MOGP.test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></a>()</p></td>
 <td><p>Tests the MOGP on the test data in self._fold.test_data.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_meta</span></code>(options)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_meta</span></code>(meta)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
@@ -252,7 +252,7 @@ If None, the kernel is read from file, or set to the default Kernel.Data(), acco
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpr.models.MOGP.META">
 <em class="property"><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">META</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.gpr.models.MOGP.META" title="Permalink to this definition">§</a></dt>
-<dd><p>Hyper-parameter optimizer options</p>
+<dd><p>Hyper-parameter optimizer meta</p>
 </dd></dl>
 
 <dl class="py property">
@@ -264,14 +264,14 @@ If <code class="docutils literal notranslate"><span class="pre">noise_variance.s
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="romcomma.gpr.models.MOGP.optimize">
-<span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'L-BFGS-B'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpr/models.html#MOGP.optimize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpr.models.MOGP.optimize" title="Permalink to this definition">§</a></dt>
+<dt class="sig sig-object py" id="romcomma.gpr.models.MOGP.calibrate">
+<span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'L-BFGS-B'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpr/models.html#MOGP.calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpr.models.MOGP.calibrate" title="Permalink to this definition">§</a></dt>
 <dd><p>Optimize the MOGP hyper-data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>method</strong> (<em>str</em>) – The optimization algorithm (see <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html</a>).</p></li>
-<li><p><strong>kwargs</strong> – A Dict of implementation-dependent optimizer options, following the format of GPR.META.
+<li><p><strong>kwargs</strong> – A Dict of implementation-dependent optimizer meta, following the format of GPR.META.
 Options for the kernel should be passed as kernel={see kernel.META for format}.
 Options for the likelihood should be passed as likelihood={see likelihood.META for format}.</p></li>
 </ul>
@@ -329,7 +329,7 @@ Returns: ChoSolve(self.K_cho, self.Y)</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="romcomma.gpr.models.MOGP.Data">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.MOGP.Data" title="Permalink to this definition">§</a></dt>
-<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="romcomma.base.classes.Data.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><code class="xref py py-class docutils literal notranslate"><span class="pre">Data</span></code></a></p>
 <p>The Data set of a MOGP.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -399,7 +399,7 @@ Returns: ChoSolve(self.K_cho, self.Y)</p>
 <dd class="field-odd"><p><strong>dst_folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to move to. If this exists, it will be emptied.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Data.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
 </dd>
 </dl>
 <p>Returns: <code class="docutils literal notranslate"><span class="pre">self</span></code> for chaining calls.</p>
@@ -407,18 +407,18 @@ Returns: ChoSolve(self.K_cho, self.Y)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpr.models.MOGP.Data.read">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.MOGP.Data.read" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.MOGP.Data.read" title="Permalink to this definition">§</a></dt>
 <dd><p>Read <code class="docutils literal notranslate"><span class="pre">Data</span></code> from <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to record the data. Must exist</p></li>
-<li><p><strong>**kwargs</strong> – key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs).
+<li><p><strong>**kwargs</strong> (<a class="reference internal" href="romcomma.base.classes.Frame.html#romcomma.base.classes.Frame" title="romcomma.base.classes.Frame"><em>Frame</em></a><em> | </em><em>DataFrame</em><em> | </em><em>ndarray</em><em> | </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>) – key=ordinate initial pairs of NamedTuple fields, precisely as in NamedTuple(<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs).
 Missing fields receive their defaults, so <code class="docutils literal notranslate"><span class="pre">Data(folder)</span></code> is the default <code class="docutils literal notranslate"><span class="pre">Data</span></code>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Parameters.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.classes.Data.html#romcomma.base.classes.Data" title="romcomma.base.classes.Data"><em>Data</em></a></p>
 </dd>
 </dl>
 <p>Returns: The <code class="docutils literal notranslate"><span class="pre">Data</span></code> stored in <code class="docutils literal notranslate"><span class="pre">folder</span></code>.</p>
@@ -451,7 +451,7 @@ Missing fields receive their defaults, so <code class="docutils literal notransl
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpr.models.MOGP.broadcast_parameters">
-<span class="sig-name descname"><span class="pre">broadcast_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_covariant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_isotropic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.MOGP.broadcast_parameters" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">broadcast_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_covariant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_isotropic</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpr.models.MOGP.broadcast_parameters" title="Permalink to this definition">§</a></dt>
 <dd><p>Broadcast the data of the MOGP (including kernels) to higher dimensions.
 Shrinkage raises errors, unchanged dimensions silently do nothing.</p>
 <dl class="field-list simple">
@@ -459,7 +459,6 @@ Shrinkage raises errors, unchanged dimensions silently do nothing.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>is_covariant</strong> (<em>bool</em>) – Whether the outputs will be treated as dependent.</p></li>
 <li><p><strong>is_isotropic</strong> (<em>bool</em>) – Whether to restrict the kernel to be isotropic.</p></li>
-<li><p><strong>folder</strong> (<em>Path</em><em> | </em><em>str</em><em> | </em><em>None</em>) – The file location, which is <code class="docutils literal notranslate"><span class="pre">self.folder</span></code> if <code class="docutils literal notranslate"><span class="pre">folder</span> <span class="pre">is</span> <span class="pre">None</span></code> (the default).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>

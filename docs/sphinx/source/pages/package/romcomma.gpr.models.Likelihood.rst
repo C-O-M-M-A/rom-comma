@@ -1,4 +1,4 @@
-﻿romcomma.gpr.models.Likelihood
+romcomma.gpr.models.Likelihood
 ==============================
 
 .. currentmodule:: romcomma.gpr.models

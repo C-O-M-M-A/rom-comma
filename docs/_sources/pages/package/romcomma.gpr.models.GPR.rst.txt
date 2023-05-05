@@ -1,4 +1,4 @@
-﻿romcomma.gpr.models.GPR
+romcomma.gpr.models.GPR
 =======================
 
 .. currentmodule:: romcomma.gpr.models
@@ -18,7 +18,7 @@
    
       ~GPR.__init__
       ~GPR.broadcast_parameters
-      ~GPR.optimize
+      ~GPR.calibrate
       ~GPR.predict
       ~GPR.read_meta
       ~GPR.test

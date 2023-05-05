@@ -1,4 +1,4 @@
-﻿romcomma.base.definitions
+romcomma.base.definitions
 =========================
 
 .. automodule:: romcomma.base.definitions
