@@ -43,8 +43,8 @@ IS_READ: bool | None = None    #: Whether to read the GPR model from file.
 IS_COVARIANT: bool | None = False   #: Whether the GPR likelihood is covariant.
 IS_ISOTROPIC: bool | None = False    #: Whether the GPR kernel is isotropic.
 KINDS: List[summarised.GSA.Kind] = summarised.GSA.ALL_KINDS    #: A list of the kinds of GSA to do.
-IS_ERROR_CALCULATED: bool = False
-IS_T_PARTIAL: bool = False
+IS_ERROR_CALCULATED: bool = True
+IS_T_PARTIAL: bool = True
 
 if __name__ == '__main__':
     with context.Environment('Test', device='CPU'):
@@ -61,11 +61,12 @@ if __name__ == '__main__':
                                                    f'is_noise_variance_random={is_noise_variance_random}, ext={ext}', is_inline=False):
                                     if READ:
                                         repo = sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), False).repo
+                                        models = [path.name for path in repo.folder.glob('gpr.*')]
                                     else:
                                         repo = (sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), True)
                                                 .into_K_folds(K).rotate_folds(rotation).repo)
-                                    models = summarised.gpr(name='gpr', repo=repo, is_read=IS_READ, is_covariant=IS_COVARIANT, is_isotropic=IS_ISOTROPIC,
-                                                            ignore_exceptions=IGNORE_EXCEPTIONS)
+                                        models = summarised.gpr(name='gpr', repo=repo, is_read=IS_READ, is_covariant=IS_COVARIANT, is_isotropic=IS_ISOTROPIC,
+                                                                ignore_exceptions=IGNORE_EXCEPTIONS)
                                     results.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
                                                     {repo.folder / model: {'model': model} for model in models},
                                                     IGNORE_EXCEPTIONS).from_folders(repo.folder / 'gpr', True)

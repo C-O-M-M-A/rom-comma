@@ -60,8 +60,8 @@ if __name__ == '__main__':
                                     else:
                                         repo = (sample.Function(ROOT, DOE, FUNCTION_VECTOR, N, M, noise_variance, str(ext), True)
                                                 .into_K_folds(K).rotate_folds(rotation).repo)
-                                    models = summarised.gpr(name='gpr', repo=repo, is_read=IS_READ, is_covariant=IS_COVARIANT, is_isotropic=IS_ISOTROPIC,
-                                                            ignore_exceptions=IGNORE_EXCEPTIONS)
+                                models = summarised.gpr(name='gpr', repo=repo, is_read=IS_READ, is_covariant=IS_COVARIANT, is_isotropic=IS_ISOTROPIC,
+                                                        ignore_exceptions=IGNORE_EXCEPTIONS)
                                 results.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
                                             {repo.folder / model: {'model': model} for model in models}, IGNORE_EXCEPTIONS).from_folders(repo.folder / 'gpr',
                                                                                                                                          True)

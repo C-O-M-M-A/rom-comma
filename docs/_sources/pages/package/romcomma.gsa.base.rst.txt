@@ -14,11 +14,9 @@ romcomma.gsa.base
    .. autosummary::
       :toctree:
    
-      det
-      log_pdf
+      diag_det
       mean
       ms
-      pdf
       rms
       sos
       sym_check

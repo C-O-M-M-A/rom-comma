@@ -25,9 +25,7 @@ from __future__ import annotations
 
 from romcomma.base.definitions import *
 from romcomma.gpr.models import GPR
-from romcomma.gsa.base import Calibrator, Gaussian, log_pdf, det, pdf
-from abc import ABC
-from enum import IntEnum
+from romcomma.gsa.base import Calibrator, Gaussian, diag_det
 
 
 class ClosedSobol(gf.Module, Calibrator):
@@ -78,31 +76,14 @@ class ClosedSobol(gf.Module, Calibrator):
         H = Gaussian(mean=PhiG, variance=PsiPhi, ordinate=G[..., tf.newaxis, tf.newaxis, tf.newaxis, :], is_variance_diagonal=True, LBunch=2)
         H /= PhiGauss.expand_dims([-1, -2, -3])   # Symmetric in L^4 N^2
         # print(sym_check(H, [0, 1, 2, 4, 3, 5])) note the symmetry.
-        V = tf.einsum('lLN, lLNjJn, jJn -> lj', self.g0KY, H.pdf, self.g0KY)         # Only one symmetry
-        # in L^4
-        # print(sym_check(V, [2, 3, 0, 1])) note the symmetry.
-        # V = tf.einsum('lLjJ -> lj', V)        # Symmetric in L^2
-
-        # Phi_pdf, Phi_diag = log_pdf(mean=G, variance_cho=tf.sqrt(Phi), is_variance_diagonal=True, LBunch=2)
-        # Psi_pdf, Psi_diag = log_pdf(mean=PhiG, variance_cho=tf.sqrt(PsiPhi), ordinate=G[..., tf.newaxis, tf.newaxis, tf.newaxis, :],
-        #                                      is_variance_diagonal=True, LBunch=2)
-        # H = tf.exp(Psi_pdf - Phi_pdf[..., tf.newaxis, tf.newaxis, tf.newaxis])   # Symmetric in L^4 N^2
-
-        # print(sym_check(H, [0, 1, 2, 4, 3, 5])) note the symmetry.
-        # V = tf.einsum('lLN, lLNjJn, jJn -> lLjJ', self.g0KY, H, self.g0KY) / tf.sqrt(det(Psi))         # Only one symmetry in L^4
-        # # print(sym_check(V, [2, 3, 0, 1])) note the symmetry.
-        # V = tf.einsum('lLjJ -> lj', V)        # Symmetric in L^2
+        V = tf.einsum('lLN, lLNjJn, jJn -> lj', self.g0KY, H.pdf, self.g0KY)    # Symmetric in L^2
         return V
 
-    def _calculate(self):
+    def _calibrate(self):
         """ Called by constructor to calculate all available quantities prior to marginalization.
         These quantities suffice to calculate V[0], V[M].
         """
-        # pre_factor = tf.sqrt(det(self.Lambda2[1][0] * self.Lambda2[-1][1])) * self.F
-        # self.g0, _ = log_pdf(mean=self.gp.X[tf.newaxis, tf.newaxis, ...],
-        #                               variance_cho=tf.sqrt(self.Lambda2[1][1]), is_variance_diagonal=True, LBunch=2)
-        # self.g0 = pre_factor[..., tf.newaxis] * tf.exp(self.g0)     # Symmetric in L^2
-        pre_factor = tf.sqrt(tf.reduce_prod(self.Lambda2[1][0] * self.Lambda2[-1][1], axis=-1)) * self.F
+        pre_factor = tf.sqrt(diag_det(self.Lambda2[1][0] * self.Lambda2[-1][1])) * self.F
         self.g0 = tf.exp(Gaussian(mean=self.gp.X[tf.newaxis, tf.newaxis, ...], variance=self.Lambda2[1][1], is_variance_diagonal=True, LBunch=2).exponent)
         self.g0 *= pre_factor[..., tf.newaxis]     # Symmetric in L^2
         self.g0KY = self.g0 * self.K_inv_Y     # NOT symmetric in L^2
@@ -128,7 +109,7 @@ class ClosedSobol(gf.Module, Calibrator):
         return {1: result, -1: tuple(value**(-1) for value in result)}
 
     def __init__(self, gp: GPR, **kwargs: Any):
-        """ Construct a ClosedSobol object. A wide range of values are collected or calculated and cached, especially via the final call to self._calculate.
+        """ Construct a ClosedSobol object. A wide range of values are collected or calculated and cached, especially via the final call to self._calibrate.
 
         Args:
             gp: The gp to analyze.
@@ -159,7 +140,7 @@ class ClosedSobol(gf.Module, Calibrator):
         self.Lambda = tf.broadcast_to(tf.constant(self.gp.kernel.data.frames.lengthscales.np, dtype=FLOAT()), [self.L, self.M])
         self.Lambda2 = self._Lambda2()
         # Calculate and store values for m=0 and m=M
-        self._calculate()
+        self._calibrate()
 
 
 class ClosedSobolWithError(ClosedSobol):
@@ -293,8 +274,7 @@ class ClosedSobolWithError(ClosedSobol):
             if UpsilonGaussians[i].cho_diag.shape[-1] == GGaussian.cho_diag.shape[-1]:
                 OmegaGaussians[i].cho_diag *= UpsilonGaussians[i].cho_diag
             else:
-                OmegaGaussians[i].cho_diag = (tf.reduce_prod(OmegaGaussians[i].cho_diag, axis=-1) *
-                                              tf.reduce_prod(UpsilonGaussians[i].cho_diag, axis=-1))[..., tf.newaxis]
+                OmegaGaussians[i].cho_diag = (diag_det(OmegaGaussians[i].cho_diag) * diag_det(UpsilonGaussians[i].cho_diag))[..., tf.newaxis]
             if rank_eq in self.RANK_EQUATIONS.MIXED:
                 result = tf.einsum('kLN, LNjkJn, jJn -> jk', self.g0KY, OmegaGaussians[i].pdf, self.g0KY)
                 mu_phi_mu += tf.einsum('k, jk -> jk', self.mu_phi_mu['pre-factor'], result)
@@ -355,7 +335,7 @@ class ClosedSobolWithError(ClosedSobol):
 
         Args:
             Wmm: li
-            Mm: li
+            WMm: li
             Vm: li
         Returns: The closed index uncertainty T.
         """
@@ -363,7 +343,7 @@ class ClosedSobolWithError(ClosedSobol):
             Q = Wmm
         else:
             Q = Wmm - 2 * Vm * WMm / self.V[1] + Vm * Vm * self.Q
-        return tf.sqrt(Q / self.V[4])
+        return tf.sqrt(tf.abs(Q) / self.V[4])
 
     def marginalize(self, m: TF.Slice) -> Dict[str: TF.Tensor]:
         """ Calculate everything.
@@ -392,11 +372,11 @@ class ClosedSobolWithError(ClosedSobol):
             result |= {'W': Wmm, 'T': self._T(Wmm, WMm, result['V'])}
         return result
 
-    def _calculate(self):
+    def _calibrate(self):
         """ Called by constructor to calculate all available quantities prior to marginalization.
         These quantities suffice to calculate V[0], V[M], A[00], self.A[m0]=A[M0] and self.A[mm]=A[MM]
         """
-        super()._calculate()
+        super()._calibrate()
         if not self.is_F_diagonal:
             raise NotImplementedError('If the MOGP kernel covariance is not diagonal, the Sobol error calculation is unstable.')
         self.Upsilon = self.Lambda2[-1][2]

@@ -30,55 +30,15 @@ from abc import ABC
 from copy import deepcopy
 
 
-def det(variance_cho_diagonal):
-    return tf.reduce_prod(variance_cho_diagonal, axis=-1)
-
-
-def pdf(exponent: TF.Tensor, variance_cho_diagonal: TF.Tensor):
-    """ Calculate the Gaussian pdf from the output of Gaussian.log_pdf.
-    Args:
-        exponent: The exponent in the Gaussian pdf.
-        variance_cho_diagonal: The diagonal of the variance Cholesky decomposition.
-
-    Returns: The Gaussian pdf.
-    """
-    return tf.exp(exponent) / det(variance_cho_diagonal)
-
-
-def log_pdf(mean: TF.Tensor, variance_cho: TF.Tensor, is_variance_diagonal: bool,
-            ordinate: TF.Tensor = tf.constant(0, dtype=FLOAT()), LBunch: int = 2) -> Any:
-    """ Computes the logarithm of the un-normalized gaussian probability density, and the broadcast diagonal of variance_cho.
-    Taking the product ``2 * Pi * Gaussian.det(variance_cho_diagonal)`` gives the normalization factor for the gaussian pdf.
-    Batch dimensions of ordinate, mean and variance are internally broadcast to match each other.
-    This function is used to minimize exponentiation, for efficiency and accuracy purposes, in calculating ratios of gaussian pdfs.
+def diag_det(tensor: TF.Tensor):
+    """ Determinant of a diagonal tensor.
 
     Args:
-        mean: Gaussian population mean. Should be of adequate rank to broadcast Ls.
-        variance_cho: The lower triangular Cholesky decomposition of the Gaussian population variance. Is automatically broadcast to embrace Ns
-        is_variance_diagonal: True if variance is an M-vector
-        ordinate: The ordinate (z-value) to calculate the Gaussian density for. Should be of adequate rank to broadcast Ls. If not supplied, 0 is assumed.
-        LBunch: The number of consecutive output (L) dimensions to count before inserting an N for broadcasting. Usually 2, sometimes 3.
-    Returns: The tensor Gaussian pdf, and the diagonal of variance_cho.
+        tensor: Of shape ``[...,m]``. The last axis must contain the diagonal
+    Returns: Tensor shaped ``[...]``.
+
     """
-    # Broadcast ordinate - mean.
-    if ordinate.shape == mean.shape:
-        shape = ordinate.shape.as_list()
-        fill = [1, ] * (len(shape) - 1)
-        ordinate = tf.reshape(ordinate, shape[:-1] + fill + [shape[-1]])
-        mean = tf.reshape(mean, fill + shape)
-    ordinate = ordinate - mean
-    # Broadcast variance_cho
-    insertions = (tf.rank(variance_cho) - (1 if is_variance_diagonal else 2))
-    insertions -= insertions % LBunch
-    for axis in range(insertions, 0, -LBunch):
-        variance_cho = tf.expand_dims(variance_cho, axis=axis)
-    # Calculate the Gaussian pdf.
-    if is_variance_diagonal:
-        exponent = ordinate / tf.broadcast_to(variance_cho, tf.concat([variance_cho.shape[:-2], ordinate.shape[-2:]], axis=0))
-    else:
-        exponent = tf.squeeze(tf.linalg.triangular_solve(variance_cho, ordinate[..., tf.newaxis], lower=True), axis=-1)
-    exponent = - 0.5 * tf.einsum('...o, ...o -> ...', exponent, exponent)
-    return exponent, variance_cho if is_variance_diagonal else tf.linalg.diag_part(variance_cho)
+    return tf.reduce_prod(tensor, axis=-1)
 
 
 class Calibrator(ABC):
@@ -102,7 +62,7 @@ class Gaussian:
 
     @property
     def pdf(self) -> TF.Tensor:
-        """ Calculate the Gaussian pdf from the output of Gaussian.log_pdf."""
+        """ Calculate the Gaussian pdf from the output of Gaussian."""
         return tf.exp(self.exponent) / self.det
 
     def expand_dims(self, axes: Sequence[int]) -> Gaussian:
@@ -187,8 +147,5 @@ def ms(tensor: TF.Tensor, ein: str = 'lijk'):
 def rms(tensor: TF.Tensor, ein: str = 'lijk, lijk'):
     return tf.sqrt(ms(tensor, ein))
 
-
-def det(tensor: TF.Tensor):
-    return tf.reduce_prod(tensor, axis=-1)
 
 I = [0, 0, 0, 0]
