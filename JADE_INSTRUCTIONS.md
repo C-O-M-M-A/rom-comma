@@ -19,9 +19,6 @@ git clone https://github.com/C-O-M-M-A/rom-comma.git
 # Go inside the downloaded repository
 cd rom-comma
 
-#  
-checkout
-
 # Load conda which we'll be using to install python packages
 module load python/anaconda3
 
