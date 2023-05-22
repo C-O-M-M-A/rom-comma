@@ -52,7 +52,7 @@ dev = [
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = ["setuptools>=40.8.0", "wheel"]
-python = ">= 3.9 < 3.11"
+python = ">= 3.10 < 3.11"
 
 [project.urls]
 homepage = "https://github.com/C-O-M-M-A/rom-comma"
