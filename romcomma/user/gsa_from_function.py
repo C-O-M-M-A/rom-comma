@@ -28,8 +28,8 @@ import os
 from romcomma.base.definitions import *
 from romcomma.run import context, function, sample, summarised, results
 
-DEVICE = "CPU"
-ROOT: Path = Path("outputs")  #: The root folder to house all data repositories.
+DEVICE = 'CPU'
+ROOT: Path = Path('output')  #: The root folder to house all data repositories.
 READ: bool = False    #: Whether to read an existing Repository, or create a new one overwriting it.
 IGNORE_EXCEPTIONS: bool = False    #: Whether to ignore exceptions, normally due to failed GPR optimisation.
 K: int = -1   #: The number of Folds in a new repository.

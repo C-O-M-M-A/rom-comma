@@ -49,7 +49,7 @@ class DOE:
                 Default is False, which locates the sample randomly within its cell.
         Returns: An (N,M) matrix of N samples of dimension M.
         """
-        return scipy.stats.qmc.LatinHypercube(M, centered=is_centered).random(N)
+        return scipy.stats.qmc.LatinHypercube(M, scramble=not is_centered).random(N)
 
     @staticmethod
     def full_factorial(N: int, M: int):

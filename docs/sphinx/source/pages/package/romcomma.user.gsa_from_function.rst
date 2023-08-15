@@ -31,6 +31,13 @@ romcomma.user.gsa\_from\_function
 
    
    
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      run_gsa_from_function
+   
    
 
    

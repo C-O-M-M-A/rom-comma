@@ -43,7 +43,7 @@ To test our installation we will be running the script interactively. Connect to
 
 ```bash
 # Gets an interactive session on the devel partition
-run --partition=devel  --gres=gpu:1 --pty /bin/bash 
+srun --partition=devel  --gres=gpu:1 --pty /bin/bash 
 ```
 
 You will now be placed on a compute node which should have a GPU, running the following command:
@@ -120,7 +120,7 @@ We can then try to run the `gsa_from_function.py`:
 # Runs the gsa_from_function.py script with the GPU device. 
 # Output files will be saved to the outputs folder
 # A tar file outputs.tar.gz will be created
-python romcomma/user/gsa_from_function.py -d GPU -t outputs.tar.gz outputs
+python romcomma/user/benchmark.py -drs -g -t outputs.tar.gz outputs
 ```
 
 **Note: The device (-d) and tar (-t) flags are optional. Device defaults to CPU and a tar file is not 

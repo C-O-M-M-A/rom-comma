@@ -1,7 +1,7 @@
-romcomma.user.toy
-=================
+romcomma.user.benchmark\_gsa2
+=============================
 
-.. automodule:: romcomma.user.toy
+.. automodule:: romcomma.user.benchmark_gsa2
 
    
    
@@ -10,7 +10,7 @@ romcomma.user.toy
    .. autosummary::
       :toctree:
    
-      ROOT
+      BASE_FOLDER
    
    
 

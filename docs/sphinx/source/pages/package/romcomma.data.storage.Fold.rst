@@ -24,6 +24,8 @@ romcomma.data.storage.Fold
       ~Fold.from_df
       ~Fold.from_dfs
       ~Fold.into_K_folds
+      ~Fold.read_meta
+      ~Fold.write_meta
    
    
 

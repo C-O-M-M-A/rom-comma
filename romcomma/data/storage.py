@@ -109,11 +109,11 @@ class Repository:
         """ The output Y as an (N,L) Matrix with column headings."""
         return self._data.df[self._meta['data']['Y_heading']]
 
-    def _read_meta_json(self) -> Dict[str, Any]:
+    def read_meta(self) -> Dict[str, Any]:
         with open(self._meta_json, mode='r') as file:
             return json.load(file)
 
-    def _write_meta_json(self):
+    def write_meta(self):
         with open(self._meta_json, mode='w') as file:
             json.dump(self._meta, file, indent=8)
 
@@ -126,7 +126,7 @@ class Repository:
                                     'Y_heading': self._data.df.columns.values[-1][0]}})
         self._meta['data'].update({'N': self.data.df.shape[0], 'M': self.X.shape[1],
                                    'L': self.Y.shape[1]})
-        self._write_meta_json()
+        self.write_meta()
 
     @property
     def N(self) -> int:
@@ -185,7 +185,7 @@ class Repository:
         if shuffle_before_folding:
             random.shuffle(index)
         self._meta.update({'K': abs(K), 'shuffle before folding': shuffle_before_folding, 'has_improper_fold': K > 0})
-        self._write_meta_json()
+        self.write_meta()
         if K > 0:
             Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         K = abs(K)
@@ -248,7 +248,7 @@ class Repository:
         self._data = None
         init_mode = kwargs.get('init_mode', Repository._InitMode.READ)
         if init_mode <= Repository._InitMode.READ:
-            self._meta = self._read_meta_json()
+            self._meta = self.read_meta()
             if init_mode is Repository._InitMode.READ:
                 self._data = Frame(self._csv)
         else:

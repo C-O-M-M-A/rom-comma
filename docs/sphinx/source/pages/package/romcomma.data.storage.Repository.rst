@@ -23,6 +23,8 @@ romcomma.data.storage.Repository
       ~Repository.from_csv
       ~Repository.from_df
       ~Repository.into_K_folds
+      ~Repository.read_meta
+      ~Repository.write_meta
    
    
 
