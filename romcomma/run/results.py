@@ -94,7 +94,8 @@ class Collect:
                         is_initial = False
                     else:
                         results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
-            results.to_csv(dst / f'{csv}.csv', **(self.write_options | kwargs))
+            if not (results is None and self.ignore_missing):
+                results.to_csv(dst / f'{csv}.csv', **(self.write_options | kwargs))
 
     def from_folds(self, dst: Repository, is_existing_deleted=False, **kwargs: Any):
         """ Collect ``dst/[self.folders]`` from ``Fold(dst, [k])/[self.folders]`` for ``k in self.Folds``.
