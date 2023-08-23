@@ -144,9 +144,9 @@ def gsa(name: str, repo: Repository, is_covariant: Optional[bool], is_isotropic:
             return names + gsa(name, repo, is_covariant, False, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
         full_name = full_name + ('.i' if is_isotropic else '.a')
         with context.Timer(f'fold.{repo.meta["k"]} {full_name} GSA'):
+            names = []
             try:
                 gp = MOGP(full_name, repo, is_read=True, is_covariant=is_covariant, is_isotropic=is_isotropic)
-                names = []
                 for kind in kinds:
                     folder = Sobol(gp, kind, m, is_error_calculated, **kwargs).calibrate().get('folder')
                     names += [Path(folder).relative_to(repo.folder)]
