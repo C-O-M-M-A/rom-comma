@@ -19,7 +19,10 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" **Example scripts for users to cannibalize** """
+""" **The primary user interface to romcomma** """
 
-from __future__ import annotations
-
+from . import contexts
+from . import functions
+from . import results
+from . import run
+from . import sample

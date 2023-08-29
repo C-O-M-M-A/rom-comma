@@ -17,7 +17,6 @@ Module Reference
     romcomma.gpr
     romcomma.gsa
     romcomma.rom
-    romcomma.run
     romcomma.user
 
 .. rubric:: Glossary

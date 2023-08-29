@@ -26,7 +26,7 @@ from romcomma.gpf import base, kernels, likelihoods, models
 import numpy as np
 import gpflow as gf
 import tensorflow as tf
-from romcomma.run import context
+from romcomma.user import contexts
 
 def covariance():
     a = np.array([[0.9, -0.5], [-0.5, 0.75]])
@@ -60,7 +60,7 @@ def increment(x: tf.Tensor) -> tf.Tensor:
     return {'x': x}
 
 if __name__ == '__main__':
-    with context.Environment('Test', float='float64'):
+    with contexts.Environment('Test', float='float64'):
         lh = likelihood()
         X, Y = regression_data()
         print(X)

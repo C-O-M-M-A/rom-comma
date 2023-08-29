@@ -124,8 +124,8 @@
             
 <section id="getting-started">
 <h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">§</a></h1>
-<p>Welcome to the rom-comma Python package, which implements Reduction of Order by Marginalization (<a class="reference internal" href="#term-ROM"><span class="xref std std-term">ROM</span></a>) via Global Sensitivity Analysis (<a class="reference internal" href="#term-GSA"><span class="xref std std-term">GSA</span></a>)
-using Gaussian Process Regression (<a class="reference internal" href="#term-GPR"><span class="xref std std-term">GPR</span></a>). Those unfamiliar with these topics are advised to follow the hyperlinks to the page glossary.
+<p>Welcome to the rom-comma Python package, which implements Reduction of Order by Marginalization (<a class="reference internal" href="../glossary.html#term-ROM"><span class="xref std std-term">ROM</span></a>) via Global Sensitivity Analysis (<a class="reference internal" href="../glossary.html#term-GSA"><span class="xref std std-term">GSA</span></a>)
+using Gaussian Process Regression (<a class="reference internal" href="../glossary.html#term-GPR"><span class="xref std std-term">GPR</span></a>). Those unfamiliar with these topics are advised to follow the hyperlinks to the page glossary.
 This advice applies to much of this user guide – we make extensive use of glossaries.</p>
 <p>The mathematics behind this software is covered in some detail in a
 <a class="reference external" href="https://github.com/C-O-M-M-A/rom-papers/blob/main/Theory/Coefficient%20of%20Determination.pdf">paper currently under peer review for publication</a>.</p>
@@ -179,21 +179,12 @@ Runtime dependencies are documented in <a class="reference external" href="https
 <li class="toctree-l3"><a class="reference internal" href="package/romcomma.rom.old.html">romcomma.rom.old</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="package/romcomma.run.html">romcomma.run</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.run.context.html">romcomma.run.context</a></li>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.run.function.html">romcomma.run.function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.run.results.html">romcomma.run.results</a></li>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.run.sample.html">romcomma.run.sample</a></li>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.run.summarised.html">romcomma.run.summarised</a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="package/romcomma.user.html">romcomma.user</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.benchmark_gsa.html">romcomma.user.benchmark_gsa</a></li>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.gpr_from_function.html">romcomma.user.gpr_from_function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.gsa_from_function.html">romcomma.user.gsa_from_function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.repo_from_csv.html">romcomma.user.repo_from_csv</a></li>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.repo_from_function.html">romcomma.user.repo_from_function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.toy.html">romcomma.user.toy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.contexts.html">romcomma.user.contexts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.functions.html">romcomma.user.functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.results.html">romcomma.user.results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.run.html">romcomma.user.run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.sample.html">romcomma.user.sample</a></li>
 </ul>
 </li>
 </ul>
@@ -203,7 +194,7 @@ Runtime dependencies are documented in <a class="reference external" href="https
 <p>No module depends on any module below it in this table.
 We refer to items in this list as modules, even if they are technically packages.</p>
 <p>The <a class="reference internal" href="package/romcomma.user.html#module-romcomma.user"><span class="std std-ref">romcomma.user</span></a> module comprises a gallery of archetypal user scripts to cannibalize.</p>
-<p>User functionality is for the most part exposed in the penultimate module, <a class="reference internal" href="package/romcomma.run.html#module-romcomma.run"><span class="std std-ref">romcomma.run</span></a>. Any direct call to functionality outside <code class="docutils literal notranslate"><span class="pre">romcomma.run</span></code>
+<p>User functionality is for the most part exposed in the penultimate module, <span class="xref std std-ref">romcomma.run</span>. Any direct call to functionality outside <code class="docutils literal notranslate"><span class="pre">romcomma.run</span></code>
 may be regarded as bespoke, not to say advanced.</p>
 </section>
 <section id="glossary">
