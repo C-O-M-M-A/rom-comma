@@ -40,7 +40,7 @@ FUNCTION_VECTOR: user.functions.Vector = user.functions.ALL  #: The function vec
 NOISE_MAGNITUDES: Tuple[float] = (0.2, 0.1, 0.075, 0.05, 0.025, 0.01, 0.005, 0.0025, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2.0, 5.0,
                                   10.0)   #: The noise-to-signal ratio, which is equal to the StdDev of the noise added to the normalised function output.
 IS_NOISE_COVARIANT: bool = False  #: Whether the Gaussian noise applied to the outputs is statistically independent between outputs.
-IS_NOISE_VARIANCE_RANDOM: bool = False  #: Whether the noise variance is stochastic or fixed.
+IS_NOISE_VARIANCE_DETERMINED: bool = True  #: Whether the noise variance is fixed or random.
 ROTATIONS = {'': None}  #: Dict of rotations applied to the input basis after the function vector has been sampled.
 #: Parameters to run Gaussian Process Regression.
 IS_GPR_READ: bool | None = None  #: Whether to read the GPR model from file.
@@ -65,7 +65,7 @@ def run(args: argparse.Namespace, root: str | Path) -> Path:
         for noise_magnitude in NOISE_MAGNITUDES:
             for M in Ms:
                 for N in Ns:
-                    noise_variance = user.sample.GaussianNoise.Variance(len(FUNCTION_VECTOR), noise_magnitude, IS_NOISE_COVARIANT, IS_NOISE_VARIANCE_RANDOM)
+                    noise_variance = user.sample.GaussianNoise.Variance(len(FUNCTION_VECTOR), noise_magnitude, IS_NOISE_COVARIANT, IS_NOISE_VARIANCE_DETERMINED)
                     for rotation_name, rotation in ROTATIONS.items():
                         ext = rotation_name + f'.{args.ext}' if args.ext else ''
                         ext = ext if ext else None

@@ -94,16 +94,16 @@ class GaussianNoise:
             followed by ``v.`` (diagonal variance) or ``c.`` (non-diagonal covariance), followed by ``100 * self.magnitude:.2f``."""
             return f'{"d." if self.is_determined else "u."}{"c." if self.is_covariant else "v."}{100 * self.magnitude:.2f}'
 
-        def __init__(self, L: int, magnitude: float, is_covariant: bool = False, is_random: bool = False):
+        def __init__(self, L: int, magnitude: float, is_covariant: bool = False, is_determined: bool = True):
             """ Instantiate an (L,L) GaussianNoise (co)variance matrix.
 
             Args:
                 L: Output dimensionality.
                 magnitude: The StdDev of noise.
                 is_covariant: True to create a diagonal variance matrix.
-                is_random: True to create a random symmetric matrix.
+                is_determined: False to create a random symmetric matrix.
             """
-            self.magnitude, self.is_covariant, self.is_determined = magnitude, is_covariant, is_random
+            self.magnitude, self.is_covariant, self.is_determined = magnitude, is_covariant, is_determined
             if self.is_determined:
                 self._matrix = 2 * np.random.random_sample((L, L)) - np.ones((L, L))
                 self._matrix = np.matmul(self._matrix, self._matrix.transpose())
