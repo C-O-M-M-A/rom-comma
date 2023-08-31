@@ -99,7 +99,7 @@ class Vector(dict):
         """ Meta data for providing to ``data.storage``."""
         return {'name': self.name, 'call': {l: function for l, function in enumerate(self.keys())}}
 
-    def subVector(self, name:str, scalars: Sequence[str]) -> Vector:
+    def subVector(self, name: str, scalars: Sequence[str]) -> Vector:
         """ Create a subVector of ``self``.
 
         Args:
@@ -123,9 +123,9 @@ class Vector(dict):
         self._name = name
 
 
-_ISHIGAMI = {'call': SALib.test_functions.Ishigami.evaluate, 'loc': -np.pi, 'scale': 2 * np.pi}     #: The Ishigami function without data.
-_SOBOL_G = {'call': SALib.test_functions.Sobol_G.evaluate, 'loc': 0, 'scale': 1}    #: Modified Sobol G-function without data.
-_OAKLEY2004 = {'call': SALib.test_functions.oakley2004.evaluate, 'loc': -1, 'scale': 2}     #: Modified Oakley & O'Hagan (2004) function without data.
+_ISHIGAMI = {'call': SALib.test_functions.Ishigami.evaluate, 'loc': -np.pi, 'scale': 2 * np.pi}  #: The Ishigami function without data.
+_SOBOL_G = {'call': SALib.test_functions.Sobol_G.evaluate, 'loc': 0, 'scale': 1}  #: Modified Sobol G-function without data.
+_OAKLEY2004 = {'call': SALib.test_functions.oakley2004.evaluate, 'loc': -1, 'scale': 2}  #: Modified Oakley & O'Hagan (2004) function without data.
 
 
 def linspace(start: float, stop: float, shape: Sequence[int]) -> NP.Matrix:
@@ -144,25 +144,30 @@ ISHIGAMI = Vector(name='ishigami',
                   standard=Scalar(**_ISHIGAMI, m=3, A=7.0, B=0.1),
                   balanced=Scalar(**_ISHIGAMI, m=3, A=20.0, B=1.0),
                   sin=Scalar(**_ISHIGAMI, m=3, A=0.0, B=0.0),
-                  ) #: 3 example Ishigami functions, requiring ``M >= 3``.
-
+                  )  #: 3 example Ishigami functions, requiring ``M >= 3``.
 
 SOBOL_G = Vector(name='sobol_g',
                  weak5_2=Scalar(**_SOBOL_G, m=5, a=np.array([3, 6, 9, 18, 27]), alpha=np.ones((5,)) * 2.0),
-                 strong5_2=Scalar(**_SOBOL_G, m=5, a=np.array([1/2, 1, 2, 4, 8]), alpha=np.ones((5,)) * 2.0),
-                 strong5_4=Scalar(**_SOBOL_G, m=5, a=np.array([1/2, 1, 2, 4, 8]), alpha=np.ones((5,)) * 4.0),
-                 ) #: 3 example modified Sobol G-functions, requiring ``M >= 3``.
-
+                 strong5_2=Scalar(**_SOBOL_G, m=5, a=np.array([1 / 2, 1, 2, 4, 8]), alpha=np.ones((5,)) * 2.0),
+                 strong5_4=Scalar(**_SOBOL_G, m=5, a=np.array([1 / 2, 1, 2, 4, 8]), alpha=np.ones((5,)) * 4.0),
+                 )  #: 3 example modified Sobol G-functions, requiring ``M >= 3``.
 
 OAKLEY2004 = Vector(name='oakley2004',
-                    lin7=Scalar(**_OAKLEY2004, m=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
-                                M=np.zeros([7, 7])),
-                    quad7=Scalar(**_OAKLEY2004, m=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
-                                 M=linspace(start=7.0, stop=1.0, shape=[7, 7])),
-                    balanced_quad7=Scalar(**_OAKLEY2004, m=7, A=[-linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
-                                          M=linspace(start=1.0, stop=7.0, shape=[7, 7])),
-                    ) #: 3 example modified Oakley & O'Hagan (2004) functions, requiring ``M >= 7``.
+                    lin7=Scalar(**_OAKLEY2004, m=5, A=[linspace(start=5.0, stop=5.0 / 2, shape=[5, ]), ] + [np.zeros([5])] * 2,
+                                M=np.zeros([5, 5])),
+                    quad7=Scalar(**_OAKLEY2004, m=5, A=[linspace(start=5.0, stop=5.0 / 2, shape=[5, ]), ] + [np.zeros([5])] * 2,
+                                 M=linspace(start=5.0, stop=1.0, shape=[5, 5])),
+                    balanced_quad7=Scalar(**_OAKLEY2004, m=5, A=[-linspace(start=5.0, stop=5.0 / 2, shape=[5, ]), ] + [np.zeros([5])] * 2,
+                                          M=linspace(start=1.0, stop=5.0, shape=[5, 5])),
+                    )  #: 3 example modified Oakley & O'Hagan (2004) functions, requiring ``M >= 5``.
 
+OAKLEY2004_7 = Vector(name='oakley2004',
+                      lin7=Scalar(**_OAKLEY2004, m=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
+                                  M=np.zeros([7, 7])),
+                      quad7=Scalar(**_OAKLEY2004, m=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
+                                   M=linspace(start=7.0, stop=1.0, shape=[7, 7])),
+                      balanced_quad7=Scalar(**_OAKLEY2004, m=7, A=[-linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
+                                            M=linspace(start=1.0, stop=7.0, shape=[7, 7])),
+                      )  #: 3 example modified Oakley & O'Hagan (2004) functions, requiring ``M >= 7``.
 
-ALL = Vector.concat(name='all', vectors=(ISHIGAMI, SOBOL_G, OAKLEY2004))    #: The concatenation of ISHIGAMI, SOBOL_G, OAKLEY2004.
-
+ALL = Vector.concat(name='all', vectors=(ISHIGAMI, SOBOL_G, OAKLEY2004))  #: The concatenation of ISHIGAMI, SOBOL_G, OAKLEY2004.
