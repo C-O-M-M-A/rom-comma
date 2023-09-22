@@ -127,6 +127,7 @@ def gsa(name: str, repo: Repository, is_covariant: Optional[bool], is_isotropic:
     """
     kinds = (kinds,) if isinstance(kinds, GSA.Kind) else kinds
     if not isinstance(repo, Fold):
+        names = []
         for k in repo.folds:
             names = gsa(name, Fold(repo, k), is_covariant, is_isotropic, kinds, m, ignore_exceptions, is_error_calculated, **kwargs)
         results.Collect({'S': {}, 'V': {}} | ({'T': {}, 'W': {}} if is_error_calculated else {}),
