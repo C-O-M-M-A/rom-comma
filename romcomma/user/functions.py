@@ -152,7 +152,7 @@ SOBOL_G = Vector(name='sobol_g',
                  strong5_4=Scalar(**_SOBOL_G, m=5, a=np.array([1 / 2, 1, 2, 4, 8]), alpha=np.ones((5,)) * 4.0),
                  )  #: 3 example modified Sobol G-functions, requiring ``M >= 3``.
 
-OAKLEY2004 = Vector(name='oakley2004',
+OAKLEY2004_5 = Vector(name='oakley2004',
                     lin7=Scalar(**_OAKLEY2004, m=5, A=[linspace(start=5.0, stop=5.0 / 2, shape=[5, ]), ] + [np.zeros([5])] * 2,
                                 M=np.zeros([5, 5])),
                     quad7=Scalar(**_OAKLEY2004, m=5, A=[linspace(start=5.0, stop=5.0 / 2, shape=[5, ]), ] + [np.zeros([5])] * 2,
@@ -161,7 +161,7 @@ OAKLEY2004 = Vector(name='oakley2004',
                                           M=linspace(start=1.0, stop=5.0, shape=[5, 5])),
                     )  #: 3 example modified Oakley & O'Hagan (2004) functions, requiring ``M >= 5``.
 
-OAKLEY2004_7 = Vector(name='oakley2004',
+OAKLEY2004 = Vector(name='oakley2004',
                       lin7=Scalar(**_OAKLEY2004, m=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
                                   M=np.zeros([7, 7])),
                       quad7=Scalar(**_OAKLEY2004, m=7, A=[linspace(start=7.0, stop=7.0 / 2, shape=[7, ]), ] + [np.zeros([7])] * 2,
