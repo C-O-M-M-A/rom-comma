@@ -125,20 +125,20 @@
 <h1>romcomma.user.results.copy<a class="headerlink" href="#romcomma-user-results-copy" title="Permalink to this heading">§</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="romcomma.user.results.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/user/results.html#copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.user.results.copy" title="Permalink to this definition">§</a></dt>
-<dd><p>Copy a folder within a Fold, or recursively across the Folds in a Repository.</p>
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/user/results.html#copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.user.results.copy" title="Permalink to this definition">§</a></dt>
+<dd><p>Copy a folder destructively.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>src</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder to be copied, relative to the <code class="docutils literal notranslate"><span class="pre">Fold.folder</span></code>.</p></li>
 <li><p><strong>dst</strong> (<em>Path</em><em> | </em><em>str</em>) – The folder of the copy, relative to the <code class="docutils literal notranslate"><span class="pre">Fold.folder</span></code>.</p></li>
-<li><p><strong>repo</strong> (<a class="reference internal" href="romcomma.data.storage.Repository.html#romcomma.data.storage.Repository" title="romcomma.data.storage.Repository"><em>Repository</em></a>) – A Fold, or a Repository which contains Folds.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>FileNotFoundError</strong> – If <code class="docutils literal notranslate"><span class="pre">repo</span></code> is not a Fold, and contains no Folds.</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Path</em></p>
 </dd>
 </dl>
+<p>Returns: dst if successful.</p>
 </dd></dl>
 
 </section>

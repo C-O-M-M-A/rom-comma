@@ -1,0 +1,17 @@
+{
+        "maxiter": 5000,
+        "gtol": 1e-16,
+        "result": "(  message: CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH\n  success: True\n   status: 0\n      fun: -112.58679335697258\n        x: [ 3.097e+00  3.327e+00  3.152e+00  3.521e+00  3.930e+00\n             4.056e+00  3.794e+00  1.159e+00 -6.292e+00]\n      nit: 16\n      jac: [-1.471e-04  4.019e-04 -1.863e-04 -2.099e-04  3.778e-05\n            -7.336e-05 -5.740e-04  3.554e-04 -4.387e-05]\n     nfev: 23\n     njev: 23\n hess_inv: <9x9 LbfgsInvHessProduct with dtype=float64>,   message: CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH\n  success: True\n   status: 0\n      fun: 33.79784440441301\n        x: [ 2.006e+00  2.252e+00  2.760e+00  2.625e+00  2.620e+00\n             4.084e+00  3.909e+00  2.391e+00 -6.429e+00]\n      nit: 22\n      jac: [-1.486e-04  6.564e-05  1.522e-06  7.330e-05  8.909e-05\n            -2.412e-04 -1.025e-04 -4.777e-05 -1.780e-05]\n     nfev: 29\n     njev: 29\n hess_inv: <9x9 LbfgsInvHessProduct with dtype=float64>,   message: CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH\n  success: True\n   status: 0\n      fun: 29.31047781737533\n        x: [ 3.492e+00  3.768e+00  4.001e+00  2.874e+00  2.441e+00\n             2.873e+00  2.006e+00  2.334e+00 -5.416e+00]\n      nit: 21\n      jac: [ 9.299e-06  4.724e-05  8.068e-06  1.222e-04 -1.259e-04\n            -2.300e-05 -1.952e-04  1.891e-05 -1.139e-04]\n     nfev: 30\n     njev: 30\n hess_inv: <9x9 LbfgsInvHessProduct with dtype=float64>)",
+        "kernel": {
+                "variance": true,
+                "covariance": false,
+                "lengthscales": {
+                        "variant": true,
+                        "covariant": false
+                }
+        },
+        "likelihood": {
+                "variance": true,
+                "covariance": true
+        }
+}

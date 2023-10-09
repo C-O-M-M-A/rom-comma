@@ -24,27 +24,22 @@
 from __future__ import annotations
 
 from romcomma.base.definitions import *
-from romcomma.base.classes import Model
+from romcomma.base.classes import Data
 from romcomma.data.storage import Repository, Fold
 from shutil import rmtree
 
 
-def copy(src: Path | str, dst: Path | str, repo: Repository):
-    """ Copy a folder within a Fold, or recursively across the Folds in a Repository.
+def copy(src: Path | str, dst: Path | str) -> Path:
+    """ Copy a folder destructively.
 
     Args:
         src: The folder to be copied, relative to the ``Fold.folder``.
         dst: The folder of the copy, relative to the ``Fold.folder``.
-        repo: A Fold, or a Repository which contains Folds.
 
-    Raises:
-        FileNotFoundError: If ``repo`` is not a Fold, and contains no Folds.
+    Returns: dst if successful.
     """
-    if not isinstance(repo, Fold):
-        for k in repo.folds:
-            copy(src, dst, Fold(repo, k))
-    else:
-        Model.copy(repo.folder / src, repo.folder / dst)
+    Data.copy(src, dst)
+    return dst
 
 
 class Collect:
@@ -68,13 +63,15 @@ class Collect:
         else:
             return self.from_folders(dst, is_existing_deleted, **kwargs)
 
-    def from_folders(self, dst: Union[Path, str], is_existing_deleted=False, **kwargs: Any):
+    def from_folders(self, dst: Union[Path, str], is_existing_deleted=False, **kwargs: Any) -> Collect:
         """ Collect ``dst/[self.csvs]`` from ``self.folders``.
 
         Args:
             dst: The destination folder, to house ``[self.csvs]``.
             is_existing_deleted: Whether to delete and recreate an existing ``dst``.
             **kwargs:  Write options passed straight to ``pd.to_csv``.
+
+        Returns: ``self'' for chaining calls.
         """
         dst = Path(dst)
         if is_existing_deleted:
@@ -96,14 +93,17 @@ class Collect:
                         results = pd.concat([results, result.copy(deep=True)], axis=0, ignore_index=True)
             if not (results is None and self.ignore_missing):
                 results.to_csv(dst / f'{csv}.csv', **(self.write_options | kwargs))
+        return self
 
-    def from_folds(self, dst: Repository, is_existing_deleted=False, **kwargs: Any):
+    def from_folds(self, dst: Repository, is_existing_deleted=False, **kwargs: Any) -> Collect:
         """ Collect ``dst/[self.folders]`` from ``Fold(dst, [k])/[self.folders]`` for ``k in self.Folds``.
 
         Args:
             dst: The destination folder, to house ``[self.folders]``.
             is_existing_deleted: Whether to delete and recreate an existing ``dst``.
             **kwargs:  Write options passed straight to ``pd.to_csv``.
+
+        Returns: ``self'' for chaining calls.
         """
         if isinstance(dst, Fold):
             raise NotADirectoryError('dst is a Fold, which cannot contain other Folds, so cannot be Collected from.')
@@ -111,6 +111,7 @@ class Collect:
         for sub_folder, extra_columns in self.folders.items():
             folders = {fold.folder / sub_folder: {'fold': fold.meta['k'], 'N': fold.N} | extra_columns for fold in folds}
             Collect(self.csvs, folders, self.ignore_missing).from_folders(dst.folder / sub_folder, is_existing_deleted, **kwargs)
+        return self
 
     def __init__(self, csvs: Dict[str, Dict[str, Any]] = None, folders: Dict[str, Dict[str, Any]] = None, ignore_missing: bool = False, **kwargs: Any):
         """ Construct a Collect object.

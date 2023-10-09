@@ -1,4 +1,4 @@
-romcomma.user.functions
+﻿romcomma.user.functions
 =======================
 
 .. automodule:: romcomma.user.functions
@@ -12,6 +12,7 @@ romcomma.user.functions
    
       ISHIGAMI
       SOBOL_G
+      OAKLEY2004_5
       OAKLEY2004
       ALL
    

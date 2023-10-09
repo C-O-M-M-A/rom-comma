@@ -117,6 +117,10 @@ def run(args: argparse.Namespace, root: str | Path) -> Path:
     user.results.Collect({'variance': {}, 'log_marginal': {}}, gprs, True).from_folders((root / 'gpr') / 'likelihood', True)
     user.results.Collect({'variance': {}, 'lengthscales': {}}, gprs, True).from_folders((root / 'gpr') / 'kernel', True)
     user.results.Collect({'S': {}, 'V': {}, 'T': {}, 'W': {}}, gsas, True).from_folders((root / 'gsa'), True)
+    if args.copy:
+        dst = Path(args.copy)
+        user.results.copy(root / 'gpr', dst / 'gpr')
+        user.results.copy(root / 'gsa', dst / 'gsa')
     return root
 
 
@@ -125,23 +129,23 @@ if __name__ == '__main__':
     # Get the command line arguments.
     parser = argparse.ArgumentParser(description='A program to benchmark GPR and GSA against a (vector) test function.')
     # Control flow arguments.
-    parser.add_argument("-f", "--function", action='store_true', help="Flag to sample the test function to generate test data.")
-    parser.add_argument("-r", "--gpr", action='store_true', help="Flag to run Gaussian process regression.")
-    parser.add_argument("-s", "--gsa", action='store_true', help="Flag to run global sensitivity analysis.")
-    parser.add_argument("-i", "--ignore", action='store_true', help="Flag to ignore exceptions.")
-    parser.add_argument("-g", "--gpu", action='store_true', help="Flag to run on a GPU instead of CPU.")
+    parser.add_argument('-f', '--function', action='store_true', help='Flag to sample the test function to generate test data.')
+    parser.add_argument('-r', '--gpr', action='store_true', help='Flag to run Gaussian process regression.')
+    parser.add_argument('-s', '--gsa', action='store_true', help='Flag to run global sensitivity analysis.')
+    parser.add_argument('-i', '--ignore', action='store_true', help='Flag to ignore exceptions.')
+    parser.add_argument('-G', '--GPU', action='store_true', help='Flag to run on a GPU instead of CPU.')
     # Optional parameter setters
-    parser.add_argument("-K", "--folds", help="The number of k-folds to use (negative to omit improper fold). Defaults to 2.", type=int)
-    parser.add_argument("-M", "--input_dim", help="The input dimension M. Defaults to [7, 10, 12, 15, 18].", type=int)
-    parser.add_argument("-c", "--is_noise_covariant", action='store_true', help="Whether noise (uncertainty) is covariant across outputs.")
-    parser.add_argument("-C", "--is_gpr_covariant", action='store_true', help="Whether GPR (likelihood) is covariant across outputs.")
-    parser.add_argument("-p", "--is_T_partial", action='store_true', help="Whether GSA error T is partial.")
+    parser.add_argument('-K', '--folds', help='The number of k-folds to use (negative to omit improper fold). Defaults to 2.', type=int)
+    parser.add_argument('-M', '--input_dim', help='The input dimension M. Defaults to [7, 10, 12, 15, 18].', type=int)
+    parser.add_argument('-c', '--is_noise_covariant', action='store_true', help='Whether noise (uncertainty) is covariant across outputs.')
+    parser.add_argument('-C', '--is_gpr_covariant', action='store_true', help='Whether GPR (likelihood) is covariant across outputs.')
+    parser.add_argument('-p', '--is_T_partial', action='store_true', help='Whether GSA error T is partial.')
     # File locations
-    parser.add_argument("-e", "--ext", help="The extension appended to each store name.", type=str)
-    parser.add_argument("-t", "--tar", help="Outputs a .tar.gz file to path.", type=str)
-    parser.add_argument("root", help="The path of the root folder to house all data repositories.", type=str)
+    parser.add_argument('-e', '--ext', help='The extension appended to each Store name.', type=str)
+    parser.add_argument('-t', '--tar', help='Outputs a .tar.gz file to path.', type=str)
+    parser.add_argument('-y', '--copy', help='Copies collectd results to path.', type=str)
+    parser.add_argument('root', help='The path of the root folder to house all data repositories.', type=str)
     args = parser.parse_args()  # Convert arguments to argparse.Namespace.
-
     # Run the code.
     K = args.folds if args.folds else K
     Ms = (args.input_dim,) if args.input_dim else Ms
@@ -151,6 +155,6 @@ if __name__ == '__main__':
     if args.tar:
         tar_path = Path(args.tar)
         tar_path.parents[0].mkdir(parents=True, exist_ok=True)
-        with tarfile.open(tar_path, "w:gz") as tar:
+        with tarfile.open(tar_path, 'w:gz') as tar:
             for item in os.listdir(args.root):
                 tar.add(Path(args.root, item), arcname=item)
