@@ -68,8 +68,8 @@ def run(root: str | Path) -> Path:
                         with user.contexts.Timer(f'M={M}, N={N}, noise={noise_magnitude}', is_inline=False):
 
                             # Get data sample, either from function or file.
-                            repo = (user.sample.Function(root, DOE, FUNCTION_VECTOR, N, M, noise_variance, None, True)
-                                    .into_K_folds(K).rotate_folds(rotation).repo)
+                            repo = user.sample.Function(root, DOE, FUNCTION_VECTOR, N, M, noise_variance, None,
+                                                        True).repo.into_K_folds(K).rotate_folds(rotation)
 
                             # Run GPR, or collect stored GPR models.
                             models = user.run.gpr(name='gpr', repo=repo, is_read=IS_GPR_READ, is_covariant=IS_GPR_COVARIANT,

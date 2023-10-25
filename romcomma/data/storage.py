@@ -186,6 +186,7 @@ class Repository:
             random.shuffle(index)
         self._meta.update({'K': abs(K), 'shuffle before folding': shuffle_before_folding, 'has_improper_fold': K > 0})
         self.write_meta()
+        normalization = Normalization(self, self._data.df).csv if normalization is None else normalization
         if K > 0:
             Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
         K = abs(K)
@@ -200,6 +201,23 @@ class Repository:
             test_index = [index for index, indicator in indicated if k == indicator]
             data_index = test_index if data_index == [] else data_index
             Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization)
+        return self
+
+    def rotate_folds(self, rotation: NP.Matrix | None) -> Repository:
+        """ Uniformly rotate the Folds in a Repository. The rotation (like normalization) applies to each fold, not the repo itself.
+
+        Args:
+            rotation: The (M,M) rotation matrix to apply to the inputs. If None, the identity matrix is used.
+            If the matrix supplied has the wrong dimensions or is not orthogonal, a random rotation is generated and used instead.
+        Returns: ``self``, for chaining calls.
+        """
+        M = self.M
+        if rotation is None:
+            rotation = np.eye(M)
+        elif rotation.shape != (M, M) or not np.allclose(np.dot(rotation, rotation.T), np.eye(M)):
+            rotation = scipy.stats.special_ortho_group.rvs(M)
+        for k in self.folds:
+            Fold(self, k).X_rotation = rotation
         return self
 
     def fold_folder(self, k: int) -> Path:
@@ -337,17 +355,17 @@ class Fold(Repository):
             frame: The frame to rotate. Will be written after rotation.
             rotation: The rotation Matrix.
         """
-        frame.df.iloc[:, :self.M] = np.einsum('Nm,mM->NM', frame.df.iloc[:, :self.M], rotation)
+        frame.df.iloc[:, :self.M] = np.einsum('Nm,Mm->NM', frame.df.iloc[:, :self.M], rotation)
         frame.write()
 
     @property
     def X_rotation(self) -> NP.Matrix:
-        """ The rotation matrix applied to the input variables self.X, stored in __X_rotation.csv. Rotations are applied and stored cumulatively."""
+        """ The rotation matrix applied to the input variables self.X, stored in X_rotation.csv. Rotations are applied and stored cumulatively."""
         return Frame(self._X_rotation, header=[0]).df.values if self._X_rotation.exists() else np.eye(self.M)
 
     @X_rotation.setter
     def X_rotation(self, value: NP.Matrix):
-        """ The rotation matrix applied to the input variables self.X, stored in __X_rotation.csv. Rotations are applied and stored cumulatively."""
+        """ The rotation matrix applied to the input variables self.X, stored in X_rotation.csv. Rotations are applied and stored cumulatively."""
         self._X_rotate(self._data, value)
         self._X_rotate(self._test_data, value)
         old_value = self.X_rotation
@@ -460,7 +478,7 @@ class Normalization:
     def __str__(self) -> str:
         return self.csv.name
 
-    def __init__(self, fold: Fold, data: Optional[pd.DataFrame] = None):
+    def __init__(self, fold: Repository, data: Optional[pd.DataFrame] = None):
         """ Initialize this Normalization. If the fold has already been Normalized, that Normalization is returned.
 
         Args:

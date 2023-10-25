@@ -33,6 +33,17 @@ import shutil
 import sys
 
 
+def permute_axes(new_order: Sequence | None) -> NP.Matrix | None:
+    """ Provide a rotation matrix which reorders axes. Most use cases are to re-order input axes according to GSA.
+
+    Args:
+        new_order: A Tuple or List containing a permutation of ``[0,...,M-1]``, for passing to ``np.transpose``.
+
+    Returns: A rotation matrix which will reorder the axes to new_order. Returns ``None`` if ``new_order is None``.
+    """
+    return None if new_order is None else np.eye(len(new_order))[new_order, :]
+
+
 class DOE:
     """ Sampling methods for inputs."""
 
@@ -164,38 +175,6 @@ class Function:
         Returns: The Dict for ``self.repo``.
         """
         return {'folder': self._repo.folder / sub_folder, 'N': self._N, 'noise': self._noise_variance.magnitude}
-
-    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[Path | str] = None) -> Function:
-        """ Fold ``self.repo`` into ``K`` Folds, indexed by range(K).
-
-        Args:
-            K: The number of Folds, of absolute value between 1 and N inclusive.
-                An improper Fold, indexed by ``K`` and including all data for both training and testing is included by default.
-                To suppress this give ``K`` as a negative integer.
-            shuffle_before_folding: Whether to shuffle the data before sampling.
-            normalization: An optional ``normalization.csv`` file to use.
-
-        Raises:
-            IndexError: Unless ``1 <= K < N``.
-        """
-        self._repo.into_K_folds(K, shuffle_before_folding, normalization)
-        return self
-
-    def rotate_folds(self, rotation: Optional[NP.Matrix]) -> Function:
-        """ Uniformly rotate the Folds in a Repository. The rotation (like normalization) applies to each fold, not the repo itself.
-
-        Args:
-            rotation: The (M,M) rotation matrix to apply to the inputs. If None, the identity matrix is used.
-            If the matrix supplied has the wrong dimensions or is not orthogonal, a random rotation is generated and used instead.
-        """
-        M = self._repo.M
-        if rotation is None:
-            rotation = np.eye(M)
-        elif rotation.shape != (M, M) or not np.allclose(np.dot(rotation, rotation.T), np.eye(M)):
-            rotation = scipy.stats.special_ortho_group.rvs(M)
-        for k in self._repo.folds:
-            Fold(self._repo, k).X_rotation = rotation
-        return self
 
     def un_rotate_folds(self) -> Function:
         """ Create an un-rotated Fold in the Repository, with index ``K+1``."""

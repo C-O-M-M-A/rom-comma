@@ -41,7 +41,7 @@ FUNCTION_VECTOR: user.functions.Vector = user.functions.ALL  #: The function vec
 NOISE_MAGNITUDES: Tuple[float] = (0.0025, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 2.0,
                                   5.0,)   #: The noise-to-signal ratio, which is equal to the StdDev of the noise added to the normalised function output.
 IS_NOISE_VARIANCE_DETERMINED: bool = True  #: Whether the noise variance is fixed or random.
-ROTATIONS = {'': None}  #: Dict of rotations applied to the input basis after the function vector has been sampled.
+ROTATIONS: Dict[str, NP.Matrix] = {'': None}  #: Dict of rotations applied to the input basis after the function vector has been sampled.
 #: Parameters to run Gaussian Process Regression.
 IS_GPR_READ: bool | None = None  #: Whether to read the GPR model from file.
 IS_GPR_ISOTROPIC: bool | None = False  #: Whether the GPR kernel is isotropic.
@@ -58,7 +58,7 @@ def run(args: argparse.Namespace, root: str | Path) -> Path:
         root: The root folder.
     Returns: The root path written to.
     """
-    with user.contexts.Environment('Test', device='GPU' if args.gpu else 'CPU'):
+    with user.contexts.Environment('Test', device='GPU' if args.GPU else 'CPU'):
         KIND_NAMES = [kind.name.lower() for kind in GSA_KINDS]
         gprs, gsas = {}, {}
         for noise_magnitude in NOISE_MAGNITUDES:
@@ -72,8 +72,8 @@ def run(args: argparse.Namespace, root: str | Path) -> Path:
 
                             # Get data sample, either from function or file.
                             if args.function:
-                                repo = (user.sample.Function(root, DOE, FUNCTION_VECTOR, N, M, noise_variance, ext, True)
-                                        .into_K_folds(K).rotate_folds(rotation).repo)
+                                repo = user.sample.Function(root, DOE, FUNCTION_VECTOR, N, M, noise_variance, ext,
+                                                            True).repo.into_K_folds(K).rotate_folds(rotation)
                             else:
                                 repo = user.sample.Function(root, DOE, FUNCTION_VECTOR, N, M, noise_variance, ext, False).repo
 
@@ -95,7 +95,7 @@ def run(args: argparse.Namespace, root: str | Path) -> Path:
                                                  {f'{repo.folder / model}/kernel': {'model': model} for model in models},
                                                  args.ignore).from_folders((repo.folder / 'gpr') / 'kernel', True)
                             gprs |= {f'{repo.folder}/gpr': {'M': M, 'noise magnitude': noise_magnitude, 'IS_NOISE_COVARIANT': args.is_noise_covariant,
-                                                            'IS_NOISE_VARIANCE_DETERMINED': IS_NOISE_VARIANCE_DETERMINED}, 'ext': ext}
+                                                            'IS_NOISE_VARIANCE_DETERMINED': IS_NOISE_VARIANCE_DETERMINED, 'ext': ext}}
 
                             # Run GSA and collect results, or just collect results.
                             if args.gsa:
@@ -112,7 +112,7 @@ def run(args: argparse.Namespace, root: str | Path) -> Path:
                                                       for kind_name in KIND_NAMES for model in models},
                                                      True).from_folders((repo.folder / 'gsa'), True)
                             gsas |= {f'{repo.folder}/gsa': {'M': M, 'noise magnitude': noise_magnitude, 'IS_NOISE_COVARIANT': args.is_noise_covariant,
-                                                            'IS_NOISE_VARIANCE_DETERMINED': IS_NOISE_VARIANCE_DETERMINED}, 'ext': ext}
+                                                            'IS_NOISE_VARIANCE_DETERMINED': IS_NOISE_VARIANCE_DETERMINED, 'ext': ext}}
     user.results.Collect({'test_summary': {'header': [0, 1]}}, gprs, True).from_folders(root / 'gpr', True)
     user.results.Collect({'variance': {}, 'log_marginal': {}}, gprs, True).from_folders((root / 'gpr') / 'likelihood', True)
     user.results.Collect({'variance': {}, 'lengthscales': {}}, gprs, True).from_folders((root / 'gpr') / 'kernel', True)

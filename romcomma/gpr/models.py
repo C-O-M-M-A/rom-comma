@@ -207,7 +207,7 @@ class GPR(Model):
         prediction = self.predict(self._fold.test_x.values)
         predictive_mean = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive Mean'}, level=0)
         predictive_mean.iloc[:] = prediction[0]
-        predictive_std = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive Std'}, level=0)
+        predictive_std = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive SD'}, level=0)
         predictive_std.iloc[:] = prediction[1]
         predictive_score = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive Z Score'}, level=0)
         predictive_score.iloc[:] -= predictive_mean.to_numpy(dtype=float, copy=False)
@@ -224,7 +224,7 @@ class GPR(Model):
         r2 = r2.rename(columns={'RMSE': 'R^2'}, level=0)
         predictive_std = predictive_std.sum(axis=0)/predictive_std.count(axis=0)
         predictive_std = predictive_std if isinstance(predictive_std, pd.DataFrame) else pd.DataFrame(predictive_std).transpose()
-        ci = (predictive_std.iloc[:].copy().rename(columns={'Predictive Std': '95% CI'}, level=0))
+        ci = (predictive_std.iloc[:].copy().rename(columns={'Predictive SD': '95% CI'}, level=0))
         ci = ci * 2
         outliers = predictive_score[predictive_score**2 > 4].count(axis=0)/predictive_score.count(axis=0)
         outliers = outliers if isinstance(outliers, pd.DataFrame) else pd.DataFrame(outliers).transpose()
