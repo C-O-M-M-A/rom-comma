@@ -34,7 +34,7 @@ import shutil
 
 def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | None, is_isotropic: bool | None, ignore_exceptions: bool = False,
         kernel_parameters: Kernel.Data | None = None, likelihood_variance: NP.Matrix | None = None,
-        calibrate: bool = True, test: bool = True, **kwargs) -> List[str]:
+        is_calibrated: bool = True, is_tested: bool = True, **kwargs) -> List[str]:
     """ Undertake GPR on a Fold, or recursively across the Folds in a Repository.
 
     Args:
@@ -48,8 +48,8 @@ def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | 
         ignore_exceptions: Whether to continue when the MOGP provider throws an exception.
         kernel_parameters: If not None, this replaces the Kernel specified by the MOGP default.
         likelihood_variance: If not None this replaces the likelihood_variance specified by the MOGP default.
-        calibrate: Whether to calibrate each MOGP.
-        test: Whether to test_data each MOGP.
+        is_calibrated: Whether to is_calibrated each MOGP.
+        is_tested: Whether to test_data each MOGP.
         kwargs: A Dict of implementation-dependent passes straight to MOGP.Optimize().
     Returns:
         A list of the names of the GPs which have been constructed. The MOGP.Data are ``user.results.Aggregated`` over folds
@@ -58,8 +58,8 @@ def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | 
     """
     if not isinstance(repo, Fold):
         for k in repo.folds:
-            names = gpr(name, Fold(repo, k), is_read, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, calibrate, test, **kwargs)
-        if test:
+            names = gpr(name, Fold(repo, k), is_read, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, is_calibrated, is_tested, **kwargs)
+        if is_tested:
             results.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
                       {name: {} for name in names}, ignore_exceptions).from_folds(repo, True)
         results.Collect({'variance': {}, 'log_marginal': {}}, {f'{name}/likelihood': {} for name in names}, ignore_exceptions).from_folds(repo, True)
@@ -67,14 +67,14 @@ def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | 
         return names
     else:
         if is_covariant is None:
-            names = gpr(name, repo, is_read, False, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, calibrate, test, **kwargs)
+            names = gpr(name, repo, is_read, False, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, is_calibrated, is_tested, **kwargs)
             return (names +
                     gpr(name, repo, None, True, False if is_isotropic is None else is_isotropic, ignore_exceptions,
-                        kernel_parameters, likelihood_variance, calibrate, test, **kwargs))
+                        kernel_parameters, likelihood_variance, is_calibrated, is_tested, **kwargs))
         full_name = name + ('.c' if is_covariant else '.v')
         if is_isotropic is None:
-            names = gpr(name, repo, is_read, is_covariant, True, ignore_exceptions, kernel_parameters, likelihood_variance, calibrate, test, **kwargs)
-            return names + gpr(name, repo, None, is_covariant, False, ignore_exceptions, kernel_parameters, likelihood_variance, calibrate, test, **kwargs)
+            names = gpr(name, repo, is_read, is_covariant, True, ignore_exceptions, kernel_parameters, likelihood_variance, is_calibrated, is_tested, **kwargs)
+            return names + gpr(name, repo, None, is_covariant, False, ignore_exceptions, kernel_parameters, likelihood_variance, is_calibrated, is_tested, **kwargs)
         full_name = full_name + ('.i' if is_isotropic else '.a')
         if is_read is None:
             if not (repo.folder / full_name).exists():
@@ -83,18 +83,18 @@ def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | 
                     nearest_name = full_name[:-2] + '.i'
                     if not (repo.folder / nearest_name).exists():
                         return gpr(name, repo, False, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance,
-                                   calibrate, test, **kwargs)
+                                   is_calibrated, is_tested, **kwargs)
                 GPR.Data.copy(src_folder=repo.folder / nearest_name, dst_folder=repo.folder / full_name)
-            return gpr(name, repo, True, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, calibrate, test, **kwargs)
-        with contexts.Timer(f'fold.{repo.meta["k"]} {full_name} MOGP Regression'):
+            return gpr(name, repo, True, is_covariant, is_isotropic, ignore_exceptions, kernel_parameters, likelihood_variance, is_calibrated, is_tested, **kwargs)
+        with contexts.Timer(f'fold.{repo.meta["k"]} {full_name} GPR'):
             try:
                 if is_read:
                     gp = MOGP(full_name, repo, is_read, is_covariant, is_isotropic)
                 else:
                     gp = MOGP(full_name, repo, is_read, is_covariant, is_isotropic, kernel_parameters, likelihood_variance)
-                if calibrate:
+                if is_calibrated:
                     gp.calibrate(**kwargs)
-                if test:
+                if is_tested:
                     gp.test()
             except BaseException as exception:
                 if not ignore_exceptions:
@@ -103,6 +103,7 @@ def gpr(name: str, repo: Repository, is_read: bool | None, is_covariant: bool | 
 
 
 def gsa(name: str, repo: Repository, is_covariant: Optional[bool], is_isotropic: Optional[bool],
+
         kinds: GSA.Kind | Sequence[GSA.Kind] = GSA.ALL_KINDS, m: int = -1,
         ignore_exceptions: bool = False, is_error_calculated: bool = False, **kwargs) -> List[Path]:
     """ Undertake GSA on a Fold, or recursively across the Folds in a Repository.

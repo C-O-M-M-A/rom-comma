@@ -23,6 +23,8 @@
 
 from __future__ import annotations
 
+import pandas as pd
+
 from romcomma.base.definitions import *
 from romcomma.data.storage import Fold, Frame
 from romcomma.base.classes import Data, Model
@@ -46,7 +48,7 @@ class Likelihood(Model):
                     variance (NP.Matrix): An (L,L), (1,L) or (1,1) noise variance matrix. (1,L) represents an (L,L) diagonal matrix.
                     log_marginal (NP.Matrix): A numpy [[float]] used to record the log marginal likelihood. This is an output parameter, not input.
                 """
-                variance: NP.Matrix = np.atleast_2d(0.001)
+                variance: NP.Matrix = np.atleast_2d(0.02)
                 log_marginal: NP.Matrix = np.atleast_2d(1.0)
 
             return Values
@@ -196,6 +198,28 @@ class GPR(Model):
         Returns: The distribution of Y or f, as a pair (mean (o, L) Matrix, std (o, L) Matrix).
         """
 
+    def predict_df(self, X: NP.Matrix, y_instead_of_f: bool = True, is_normalized: bool = True) -> pd.DataFrame:
+        """ Predicts the response to input X.
+
+        Args:
+            X: An (o, M) design Matrix of inputs.
+            y_instead_of_f: True to include noise in the variance of the result.
+            is_normalized: Whether the results are normalized or not.
+        Returns: The distribution of Y or f, as a dataframe with M+L+L columns of the form (X, Mean, Predictive Std).
+        """
+        X_heading, Y_heading = self._fold.meta['data']['X_heading'], self._fold.meta['data']['Y_heading']
+        prediction = self.predict(X, y_instead_of_f)
+        result = pd.DataFrame(np.concatenate([X, prediction[0]], axis=1), columns=self._fold.test_data.df.columns)
+        predictive_std = result.loc[:, [Y_heading]].copy()
+        predictive_std.iloc[:] = prediction[1]
+        if not is_normalized:
+            result = self._fold.normalization.undo_from(result)
+            predictive_std = self._fold.normalization.unscale_Y(predictive_std)
+        result = result.rename(columns={Y_heading: 'Mean'}, level=0)
+        predictive_std = predictive_std.rename(columns={Y_heading: 'SD'}, level=0)
+        result = result.join([predictive_std])
+        return result
+
     def test(self) -> Frame:
         """ Tests the MOGP on the test data in self._fold.test_data. Test results comprise three values for each output at each sample:
         The mean prediction, the std error of prediction and the Z score of prediction (i.e. error of prediction scaled by std error of prediction).
@@ -205,15 +229,18 @@ class GPR(Model):
         result = Frame(self.test_csv, self._fold.test_data.df)
         Y_heading = self._fold.meta['data']['Y_heading']
         prediction = self.predict(self._fold.test_x.values)
-        predictive_mean = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive Mean'}, level=0)
+        predictive_mean = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Mean'}, level=0)
         predictive_mean.iloc[:] = prediction[0]
-        predictive_std = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive SD'}, level=0)
+        predictive_std = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'SD'}, level=0)
         predictive_std.iloc[:] = prediction[1]
-        predictive_score = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Predictive Z Score'}, level=0)
+        predictive_score = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Z Score'}, level=0)
         predictive_score.iloc[:] -= predictive_mean.to_numpy(dtype=float, copy=False)
-        rmse = predictive_score.iloc[:].copy().rename(columns={'Predictive Z Score': 'RMSE'}, level=0)
+        abs_err = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Abs Error'}, level=0)
+        abs_err.iloc[:] -= predictive_mean.to_numpy(dtype=float, copy=False)
+        abs_err = abs(abs_err)
+        rmse = abs_err.iloc[:].copy().rename(columns={'Abs Error': 'RMSE'}, level=0)
         predictive_score.iloc[:] /= predictive_std.to_numpy(dtype=float, copy=False)
-        result.df = result.df.join([predictive_mean, predictive_std, predictive_score])
+        result.df = result.df.join([predictive_mean, predictive_std, abs_err, predictive_score])
         result.write()
         rmse = rmse**2
         rmse = rmse.sum(axis=0)/rmse.count(axis=0)
@@ -224,7 +251,7 @@ class GPR(Model):
         r2 = r2.rename(columns={'RMSE': 'R^2'}, level=0)
         predictive_std = predictive_std.sum(axis=0)/predictive_std.count(axis=0)
         predictive_std = predictive_std if isinstance(predictive_std, pd.DataFrame) else pd.DataFrame(predictive_std).transpose()
-        ci = (predictive_std.iloc[:].copy().rename(columns={'Predictive SD': '95% CI'}, level=0))
+        ci = (predictive_std.iloc[:].copy().rename(columns={'SD': '95% CI'}, level=0))
         ci = ci * 2
         outliers = predictive_score[predictive_score**2 > 4].count(axis=0)/predictive_score.count(axis=0)
         outliers = outliers if isinstance(outliers, pd.DataFrame) else pd.DataFrame(outliers).transpose()
@@ -393,20 +420,3 @@ class MOGP(GPR):
         result -= predicted
         return tf.sqrt(tf.reduce_sum(result * result, axis=0)/o)
 
-    # def __init__(self, name: str, fold: Fold, is_read: bool, is_covariant: bool, is_isotropic: bool,
-    #              kernel_parameters: Optional[Kernel.Data] = None, likelihood_variance: NP.Matrix | None = None):
-    #     """ MOGP Constructor. Calls __init__ to setup data, then checks dimensions.
-    # 
-    #     Args:
-    #         name: The name of this MOGP.
-    #         fold: The Fold housing this MOGP.
-    #         is_read: If True, the MOGP.kernel.data and MOGP.data and are read from ``fold.folder/name``, otherwise defaults are used.
-    #         is_covariant: Whether the outputs will be treated as independent.
-    #         is_isotropic: Whether to restrict the kernel to be isotropic.
-    #         kernel_parameters: A Kernel.Data to use for MOGP.kernel.data. If not None, this replaces the kernel specified by file/defaults.
-    #             If None, the kernel is read from file, or set to the default Kernel.Data(), according to read_from_file.
-    #         likelihood_variance: The likelihood variance to use instead of file or default.
-    #     Raises:
-    #         IndexError: If a parameter is mis-shaped.
-    #     """
-    #     super().__init__(name, fold, is_read, is_covariant, is_isotropic, kernel_parameters, likelihood_variance)

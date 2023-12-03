@@ -31,7 +31,8 @@ import argparse, tarfile, os
 
 #: Parameters for repository generation.
 K: int = 20  #: The number of Folds in a new repository.
-INPUT_AXIS_PERMUTATIONS: Dict[str, List[int] | None] = {'': None}   #: A Dict of the form {path_suffix, input_axis_permutation}.
+INPUT_AXIS_PERMUTATIONS: Dict[str, List[int] | None] = {'': None, }
+                                                        # '.6': [6, 3, 4, 0, 1, 2, 5]}   #: A Dict of the form {path_suffix, input_axis_permutation}.
 #: Parameters to run Gaussian Process Regression.
 IS_GPR_READ: bool | None = False  #: Whether to read the GPR model from file.
 IS_GPR_COVARIANT: bool | None = False  #: Whether the GPR likelihood is covariant.
@@ -42,7 +43,8 @@ IS_GSA_ERROR_CALCULATED: bool = True  #: Whether to calculate the GSA standard e
 IS_GSA_ERROR_PARTIAL: bool = True  #: Whether the calculated the GSA standard error is partial.
 
 
-def run(root: str | Path, csv: str | Path, gpr: bool = False, gsa: bool = False, ignore_exceptions: bool = True, use_gpu: bool = False) -> Path:
+def run(root: str | Path, csv: str | Path, gpr: bool = False, gsa: bool = False, ignore_exceptions: bool = True,
+        use_gpu: bool = False, normalization: str | None = None) -> Path:
     """ Run benchmark data generation and/or Gaussian Process Regression and/or Global Sensitivity Analysis, and collect the results.
 
     Args:
@@ -52,6 +54,7 @@ def run(root: str | Path, csv: str | Path, gpr: bool = False, gsa: bool = False,
         gsa: Whether to perform gsa.
         ignore_exceptions: Whether to continue in spite of errors in GPR or GSA, missing files, etc.
         use_gpu: Whether to use GPU or CPU.
+        normalization: An optional csv file to use for normalization.
     Returns: The root path written to.
     """
     with user.contexts.Environment('Test', device='/GPU' if use_gpu else '/CPU'):
@@ -63,9 +66,10 @@ def run(root: str | Path, csv: str | Path, gpr: bool = False, gsa: bool = False,
                 if gpr:
                     # Get data from csv then run GPR.
                     repo = data.storage.Repository.from_csv(repo_folder,
-                                                            csv).into_K_folds(K).rotate_folds(user.sample.permute_axes(permutation))
+                                                            csv).into_K_folds(K,
+                                                                              normalization=normalization).rotate_folds(user.sample.permute_axes(permutation))
                     models = user.run.gpr(name='gpr', repo=repo, is_read=IS_GPR_READ, is_covariant=IS_GPR_COVARIANT,
-                                          is_isotropic=IS_GPR_ISOTROPIC, ignore_exceptions=ignore_exceptions)
+                                          is_isotropic=IS_GPR_ISOTROPIC, ignore_exceptions=ignore_exceptions, likelihood_variance=args.likelihood_variance)
                 else:
                     # Collect stored GPR models.
                     repo = data.storage.Repository(repo_folder)
@@ -95,7 +99,7 @@ def run(root: str | Path, csv: str | Path, gpr: bool = False, gsa: bool = False,
     user.results.Collect({'variance': {}, 'log_marginal': {}}, {key + '/likelihood': value for key, value in gprs.items()},
     True).from_folders((root / 'gpr') / 'likelihood', False)
     user.results.Collect({'variance': {}, 'lengthscales': {}}, {key + '/kernel': value for key, value in gprs.items()},
-                         True).from_folders((root / 'gpr') / 'kernel', True)
+                         True).from_folders((root / 'gpr') / 'kernel', False)
     user.results.Collect({'S': {}, 'V': {}, 'T': {}, 'W': {}}, gsas, True).from_folders((root / 'gsa'), False)
     return root
 
@@ -108,15 +112,17 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--gsa', action='store_true', help='Flag to run global sensitivity analysis.')
     parser.add_argument('-i', '--ignore', action='store_true', help='Flag to ignore exceptions.')
     parser.add_argument('-G', '--GPU', action='store_true', help='Flag to run on a GPU instead of CPU.')
+    parser.add_argument("-l", "--likelihood_variance", help="Initial guess for likelihood variance to be calibrated.", type=float)
     # File locations.
     parser.add_argument('-t', '--tar', help='Outputs a .tar.gz file to path.', type=str)
+    parser.add_argument('-n', '--normalization', help='A csv file to use for normalization.', type=str)
     parser.add_argument('csv', help='The path of the csv containing the data to be analysed.', type=str)
     parser.add_argument('root', help='The path of the root folder to house all data repositories.', type=str)
     args = parser.parse_args()  # Convert arguments to argparse.Namespace.
     # Run the code.
     csv = Path(args.csv)
     root = Path(args.root)
-    print(f'Root path is {run(root, csv, args.gpr, args.gsa, args.ignore, args.GPU)}')
+    print(f'Root path is {run(root, csv, args.gpr, args.gsa, args.ignore, args.GPU, args.normalization)}')
     # Tar outputs
     if args.tar:
         tar = Path(args.tar)

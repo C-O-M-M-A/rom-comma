@@ -19,7 +19,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Test functions, taken from `SALib <https://salib.readthedocs.io/en/latest/api/SALib.test_functions.html>_"""
+""" Test functions, taken from `SALib <https://salib.readthedocs.io/en/latest/api/SALib.test_functions.html>`_"""
 
 from __future__ import annotations
 

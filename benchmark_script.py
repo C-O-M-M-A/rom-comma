@@ -80,7 +80,8 @@ def run(args: argparse.Namespace, root: str | Path) -> Path:
                             # Run GPR, or collect stored GPR models.
                             if args.gpr:
                                 models = user.run.gpr(name='gpr', repo=repo, is_read=IS_GPR_READ, is_covariant=args.is_gpr_covariant,
-                                                      is_isotropic=IS_GPR_ISOTROPIC, ignore_exceptions=args.ignore)
+                                                      is_isotropic=IS_GPR_ISOTROPIC, ignore_exceptions=args.ignore,
+                                                      likelihood_variance=args.likelihood_variance)
                             else:
                                 models = [path.name for path in repo.folder.glob('gpr.*')]
 
@@ -139,6 +140,7 @@ if __name__ == '__main__':
     parser.add_argument('-M', '--input_dim', help='The input dimension M. Defaults to [7, 10, 12, 15, 18].', type=int)
     parser.add_argument('-c', '--is_noise_covariant', action='store_true', help='Whether noise (uncertainty) is covariant across outputs.')
     parser.add_argument('-C', '--is_gpr_covariant', action='store_true', help='Whether GPR (likelihood) is covariant across outputs.')
+    parser.add_argument("-l", "--likelihood_variance", help="Initial guess for likelihood variance to be calibrated.", type=float)
     parser.add_argument('-p', '--is_T_partial', action='store_true', help='Whether GSA error T is partial.')
     # File locations
     parser.add_argument('-e', '--ext', help='The extension appended to each Store name.', type=str)

@@ -472,6 +472,17 @@ class Normalization:
         Y = Y.mul(Y_std, axis=1)[Y_std.axes[0]].add(Y_mean, axis=1)[Y_mean.axes[0]]
         return pd.concat((X, Y), axis=1)
 
+    def unscale_Y(self, dfY: pd.DataFrame) -> pd.DataFrame:
+        """ Undo the Y-scaling of this normalization, without adding the Y-Mean. Suitable treatment for unNormalizing SD, for example.
+
+        Args:
+            dfY: The (Normalized) pd.DataFrame to UnNormalize.
+
+        Returns: dfY, UnNormalized.
+        """
+        X_min, X_rng, Y_mean, Y_std = self._relevant_stats
+        return dfY.copy(deep=True).mul(Y_std, axis=1)[Y_std.axes[0]]
+
     def __repr__(self) -> str:
         return str(self.csv)
 

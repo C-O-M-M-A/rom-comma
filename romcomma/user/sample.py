@@ -50,7 +50,7 @@ class DOE:
     Method: Type = Callable[[int, int, Any], NP.Matrix]     #: Function signature of a DOE method.
 
     @staticmethod
-    def latin_hypercube(N: int, M: int, is_centered: bool = True):
+    def latin_hypercube(N: int, M: int, is_centered: bool = True, **kwargs):
         """ Latin Hypercube DOE.
 
         Args:
@@ -58,6 +58,8 @@ class DOE:
             M: The of input dimensions (columns).
             is_centered: Boolean ordinate whether to centre each sample in its Latin Hypercube cell.
                 Default is False, which locates the sample randomly within its cell.
+            kwargs: Passed directly to
+                `scipy.stats.qmc.LatinHypercube <https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.qmc.LatinHypercube.html>`_.
         Returns: An (N,M) matrix of N samples of dimension M.
         """
         return scipy.stats.qmc.LatinHypercube(M, scramble=not is_centered).random(N)
@@ -73,7 +75,8 @@ class DOE:
         """
         NM = N // M
         N1 = N - M * NM
-        return np.concatenate([1/(2 * N1) + np.linspace(0, 1, N1, False),] + (M-1) * [1/(2 * NM) + np.linspace(0, 1, NM, False), ], axis=1)
+        return np.concatenate([1/(2 * N1) + np.linspace(0, 1, N1, False),] +
+                              (M-1) * [1/(2 * NM) + np.linspace(0, 1, NM, False), ], axis=1)
 
 
 class GaussianNoise:
