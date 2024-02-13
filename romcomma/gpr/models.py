@@ -23,6 +23,7 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 from romcomma.base.definitions import *
@@ -175,13 +176,13 @@ class GPR(Model):
     @property
     @abstractmethod
     def K_cho(self) -> Union[NP.Matrix, TF.Tensor]:
-        """ The Cholesky decomposition of the LNxLN noisy kernel(X, X) + likelihood.variance. Shape is (L,N,N) if self.kernel.is_covariant, else (LN, LN)."""
+        """ The Cholesky decomposition of the LNxLN noisy kernel(X, X) + likelihood.variance. Shape is (LN, LN) if self.kernel.is_covariant, else (L,N,N)."""
 
     @property
     @abstractmethod
     def K_inv_Y(self) -> Union[NP.Matrix, TF.Tensor]:
         """ The LN-Vector, which pre-multiplied by the LoxLN kernel k(x, X) gives the Lo-Vector predictive mean f(x).
-        Shape is (L,1,N) self.kernel.is_covariant, else (1, L, N).
+        Shape is (L,1,N).
         Returns: ChoSolve(self.K_cho, self.Y) """
 
     @abstractmethod
@@ -189,27 +190,27 @@ class GPR(Model):
         raise NotImplementedError
 
     @abstractmethod
-    def predict(self, X: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
+    def predict(self, x: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[NP.Matrix, NP.Matrix]:
         """ Predicts the response to input X.
 
         Args:
-            X: An (o, M) design Matrix of inputs.
+            x: An (o, M) design Matrix of inputs.
             y_instead_of_f: True to include noise in the variance of the result.
-        Returns: The distribution of Y or f, as a pair (mean (o, L) Matrix, std (o, L) Matrix).
+        Returns: The distribution of y or f, as a pair (mean (o, L) Matrix, std (o, L) Matrix).
         """
 
-    def predict_df(self, X: NP.Matrix, y_instead_of_f: bool = True, is_normalized: bool = True) -> pd.DataFrame:
+    def predict_df(self, x: NP.Matrix, y_instead_of_f: bool = True, is_normalized: bool = True) -> pd.DataFrame:
         """ Predicts the response to input X.
 
         Args:
-            X: An (o, M) design Matrix of inputs.
+            x: An (o, M) design Matrix of inputs.
             y_instead_of_f: True to include noise in the variance of the result.
             is_normalized: Whether the results are normalized or not.
-        Returns: The distribution of Y or f, as a dataframe with M+L+L columns of the form (X, Mean, Predictive Std).
+        Returns: The distribution of y or f, as a dataframe with M+L+L columns of the form (X, Mean, Predictive Std).
         """
         X_heading, Y_heading = self._fold.meta['data']['X_heading'], self._fold.meta['data']['Y_heading']
-        prediction = self.predict(X, y_instead_of_f)
-        result = pd.DataFrame(np.concatenate([X, prediction[0]], axis=1), columns=self._fold.test_data.df.columns)
+        prediction = self.predict(x, y_instead_of_f)
+        result = pd.DataFrame(np.concatenate([x, prediction[0]], axis=1), columns=self._fold.test_data.df.columns)
         predictive_std = result.loc[:, [Y_heading]].copy()
         predictive_std.iloc[:] = prediction[1]
         if not is_normalized:
@@ -219,6 +220,17 @@ class GPR(Model):
         predictive_std = predictive_std.rename(columns={Y_heading: 'SD'}, level=0)
         result = result.join([predictive_std])
         return result
+
+    @abstractmethod
+    def predict_gradient(self, x: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[TF.Tensor, TF.Tensor]:
+        """ Predicts the gradient GP dy/dx (or df/dx) where ``self`` is the GP for y(x).
+
+        Args:
+            x: An (o, M) design Matrix of inputs.
+            y_instead_of_f: True to include noise in the variance of the result.
+        Returns: The distribution of dy/dx or df/dx, as a pair (mean (o, L, M), cov (o, L, M, O, l, m)) if ``self.likelihood.is_covariant``,
+            else (mean (o, L, M), cov (o, O, L, M)).
+        """
 
     def test(self) -> Frame:
         """ Tests the MOGP on the test data in self._fold.test_data. Test results comprise three values for each output at each sample:
@@ -255,7 +267,7 @@ class GPR(Model):
         ci = ci * 2
         outliers = predictive_score[predictive_score**2 > 4].count(axis=0)/predictive_score.count(axis=0)
         outliers = outliers if isinstance(outliers, pd.DataFrame) else pd.DataFrame(outliers).transpose()
-        outliers = outliers.rename(columns={'Predictive Z Score': 'outliers'})
+        outliers = outliers.rename(columns={'Z Score': 'outliers'})
         summary = rmse.join([r2, predictive_std, ci, outliers])
         summary = Frame(self.test_summary_csv, summary)
         return result
@@ -372,6 +384,37 @@ class MOGP(GPR):
             results = tuple(results[i][0] for i in range(len(results)))
         return np.atleast_2d(results[0]), np.atleast_2d(np.sqrt(results[1]))
 
+    def predict_gradient(self, x: NP.Matrix, y_instead_of_f: bool = True) -> Tuple[TF.Tensor, TF.Tensor]:
+        x = tf.Variable(x.astype(dtype=FLOAT()))
+        Lambda = tf.broadcast_to(1.0 / tf.constant(self.kernel.data.frames.lengthscales.np, dtype=FLOAT()), [x.shape[0], self.L, self.M])
+        with tf.GradientTape() as tape:
+            @tf.function
+            def _KXx(x: tf.Variable) -> TF.Tensor:
+                if self._likelihood.is_covariant:
+                    return tf.reshape(self._implementation[0].kernel(self.X, x), [self._L, self._N, self._L, x.shape[0]])
+                else:
+                    return tf.stack([gp.kernel(self.X, x) for gp in self._implementation], axis=0)
+            KXx = _KXx(x)
+        dxKXx = tape.jacobian(KXx, x)
+        if self._likelihood.is_covariant:
+            dxKXx = tf.einsum('LNlooM -> LNloM', dxKXx)
+            mean = tf.einsum('LNloM, LiN -> olM', dxKXx, self.K_inv_Y)
+            dxKXx = tf.reshape(dxKXx, [self._L * self._N, self._L * x.shape[0] * self._M])
+            var = tf.reshape(tf.linalg.triangular_solve(self.K_cho, dxKXx, lower=True), [self._L, self._N,  self._L, x.shape[0], self._M])
+            var = -tf.einsum('LNlOM, LNlom -> OLolMm', var, var)
+            ddxxkxx = tf.einsum('OLM, olM, LOlo -> OLolM', Lambda, Lambda,
+                                tf.reshape(self._implementation[0].kernel(x), [self._L, x.shape[0], self._L, x.shape[0]]))
+        else:
+            dxKXx = tf.einsum('LNooM -> LNoM', dxKXx)
+            mean = tf.einsum('lNoM, liN -> olM', dxKXx, self.K_inv_Y)
+            dxKXx = tf.reshape(dxKXx, [self._L, self._N, x.shape[0] * self._M])
+            var = tf.reshape(tf.linalg.triangular_solve(self.K_cho, dxKXx, lower=True), [self._L, self._N, x.shape[0], self._M])
+            var = -tf.einsum('LNOM, LNom -> OoLMm', var, var)
+            ddxxkxx = tf.einsum('OLM, oLM, LOo -> OoLM', Lambda, Lambda,
+                                tf.stack([gp.kernel(x) for gp in self._implementation], axis=0))
+        var = tf.linalg.set_diag(var, tf.linalg.diag_part(var) + ddxxkxx)
+        return mean, var
+
     @property
     def X(self) -> TF.Matrix:
         """ The implementation training inputs as an (N,M) design matrix."""
@@ -412,7 +455,7 @@ class MOGP(GPR):
         o = predicted.shape[0]
         if self._likelihood.is_covariant:
             kernel = tf.reshape(self._implementation[0].kernel(x, self.X), [self._L, o, self._L, self._N])
-            ein = 'loLN, iLN -> ol'
+            ein = 'loLN, LiN -> ol'
         else:
             kernel = tf.stack([gp.kernel(x, self.X) for gp in self._implementation], axis=0)
             ein = 'loN, liN -> ol'

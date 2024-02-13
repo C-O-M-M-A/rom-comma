@@ -398,7 +398,6 @@ class Fold(Repository):
             data: Training data.
             test_data: Test data.
             normalization: An optional normalization.csv file to use.
-
         Returns: The Fold created.
         """
 
@@ -445,7 +444,6 @@ class Normalization:
 
         Args:
             df: The pd.DataFrame to Normalize.
-
         Returns: df, Normalized.
         """
         X_min, X_rng, Y_mean, Y_std = self._relevant_stats
@@ -461,7 +459,6 @@ class Normalization:
 
         Args:
             df: The (Normalized) pd.DataFrame to UnNormalize.
-
         Returns: df, UnNormalized.
         """
         X_min, X_rng, Y_mean, Y_std = self._relevant_stats
@@ -477,11 +474,21 @@ class Normalization:
 
         Args:
             dfY: The (Normalized) pd.DataFrame to UnNormalize.
-
         Returns: dfY, UnNormalized.
         """
         X_min, X_rng, Y_mean, Y_std = self._relevant_stats
         return dfY.copy(deep=True).mul(Y_std, axis=1)[Y_std.axes[0]]
+
+    def X_gradient(self, X: NP.Matrix, m: int | List[int]):
+        """ Computes the gradient of the unormalized inputs ``X[m]`` with respect to the normalized inputs ``Z[m]``.
+
+        Args:
+            X: An (N,M) matrix of unormalized inputs ``X[M]``
+            m: A list of input axes to differentiate.
+        Returns: An (N,len(m)) matrix of derivatives
+        """
+        X_rng = self._relevant_stats[1].values[m]
+        return X_rng * scipy.stats.norm.pdf(X[..., m], loc=0, scale=1)
 
     def __repr__(self) -> str:
         return str(self.csv)

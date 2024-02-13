@@ -31,8 +31,8 @@ import argparse, tarfile, os
 
 #: Parameters for repository generation.
 K: int = 20  #: The number of Folds in a new repository.
-INPUT_AXIS_PERMUTATIONS: Dict[str, List[int] | None] = {'': None, }
-                                                        # '.6': [6, 3, 4, 0, 1, 2, 5]}   #: A Dict of the form {path_suffix, input_axis_permutation}.
+INPUT_AXIS_PERMUTATIONS: Dict[str, List[int] | None] = {'': None} #, '.502': [5, 0, 2, 1, 4, 6, 3], '.205': [2, 0, 5, 3, 1, 6, 4],
+                                                        # '.520': [5, 2, 0, 6, 3, 4, 1]}   #: A Dict of the form {path_suffix, input_axis_permutation}.
 #: Parameters to run Gaussian Process Regression.
 IS_GPR_READ: bool | None = False  #: Whether to read the GPR model from file.
 IS_GPR_COVARIANT: bool | None = False  #: Whether the GPR likelihood is covariant.
@@ -76,7 +76,7 @@ def run(root: str | Path, csv: str | Path, gpr: bool = False, gsa: bool = False,
                     models = [path.name for path in repo.folder.glob('gpr.*')]
 
                 # Collect GPR results from GPR models.
-                user.results.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1], 'index_col': 0}},
+                user.results.Collect({'test': {'header': [0, 1]}, 'test_summary': {'header': [0, 1]}},
                                      {repo.folder / model: {'model': model} for model in models},
                                      True).from_folders(repo.folder / 'gpr', True)
                 user.results.Collect({'variance': {}, 'log_marginal': {}},
