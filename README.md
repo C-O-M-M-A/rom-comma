@@ -1,6 +1,6 @@
 # rom-comma
 
-**Reduced Order Modelling via Global Sensitivity Analysis using Gaussian Process Regression by Robert A. Milton of The University of Sheffield.**
+**Reduced Order Modelling via Global Sensitivity Analysis using Gaussian Process Regression by Robert A. Milton of The University of Sheffield**
 
 ## installation
 Simply place the `romcomma` package (or its parent `rom-comma`) in a folder included in your `PYTHONPATH` (e.g. `site-packages`). 
