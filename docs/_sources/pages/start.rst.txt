@@ -7,7 +7,7 @@ using Gaussian Process Regression (:term:`GPR`). Those unfamiliar with these top
 This advice applies to much of this user guide -- we make extensive use of glossaries.
 
 The mathematics behind this software is covered in some detail in a
-`paper currently under peer review for publication <https://github.com/C-O-M-M-A/rom-papers/blob/main/Theory/Coefficient%20of%20Determination.pdf>`_.
+`paper currently under peer review for publication <https://github.com/C-O-M-M-A/rom-papers/blob/main/Sobol%20Matrices/Sobol%20Matrices.pdf>`_.
 
 
 Installation
@@ -66,7 +66,7 @@ Glossary
         [`Razavi et al. 2021 <https://doi.org/10.1016/j.envsoft.2020.104954>`_].
         rom-comma deals exclusively with the variance based method of Ilya M. Sobol.
         This has been somewhat extended, as described in gory technical detail in
-        [`Milton et al. 2023 <https://github.com/C-O-M-M-A/rom-papers/blob/main/Theory/Coefficient%20of%20Determination.pdf>_`].
+        [`Milton et al. 2023 <https://github.com/C-O-M-M-A/rom-papers/blob/main/Sobol%20Matrices/Sobol%20Matrices.pdf>`_].
 
     ROM
         Reduction of Order by Marginalization. A novel approach to locating an Active Subspace (AS) using conditional variances or Sobol' indices.
