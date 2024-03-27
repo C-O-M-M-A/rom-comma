@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>romcomma.gpr.kernels &#8212; rom-comma 1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/insipid.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/insipid.css?v=b2d00be7" />
 
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/documentation_options.js?v=d6b6a36a"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script defer src="../../../_static/insipid.js"></script>
     <script defer src="../../../_static/insipid-sidebar.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -93,7 +92,7 @@
 <h1>Source code for romcomma.gpr.kernels</h1><div class="highlight"><pre>
 <span></span><span class="c1">#  BSD 3-Clause License.</span>
 <span class="c1"># </span>
-<span class="c1">#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.</span>
+<span class="c1">#  Copyright (c) 2019-2024 Robert A. Milton. All rights reserved.</span>
 <span class="c1"># </span>
 <span class="c1">#  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</span>
 <span class="c1"># </span>
@@ -120,13 +119,19 @@
 <span class="kn">from</span> <span class="nn">romcomma.base.classes</span> <span class="kn">import</span> <span class="n">Data</span><span class="p">,</span> <span class="n">Model</span>
 
 
-<div class="viewcode-block" id="Kernel"><a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel">[docs]</a><span class="k">class</span> <span class="nc">Kernel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+<div class="viewcode-block" id="Kernel">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel">[docs]</a>
+<span class="k">class</span> <span class="nc">Kernel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Abstract interface to a Kernel. Essentially this is the code contract with the MOGP interface.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Kernel.Data"><a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Data">[docs]</a>    <span class="k">class</span> <span class="nc">Data</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
+<div class="viewcode-block" id="Kernel.Data">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Data">[docs]</a>
+    <span class="k">class</span> <span class="nc">Data</span><span class="p">(</span><span class="n">Data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The Data set of a Kernel.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Kernel.Data.NamedTuple"><a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Data.NamedTuple">[docs]</a>        <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Kernel.Data.NamedTuple">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.Data.NamedTuple">[docs]</a>
+        <span class="nd">@classmethod</span>
         <span class="nd">@property</span>
         <span class="k">def</span> <span class="nf">NamedTuple</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">NamedTuple</span><span class="p">]:</span>
 
@@ -142,14 +147,18 @@
                 <span class="n">variance</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
                 <span class="n">lengthscales</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
 
-            <span class="k">return</span> <span class="n">Values</span></div></div>
+            <span class="k">return</span> <span class="n">Values</span></div>
+</div>
+
 
     <span class="nd">@classmethod</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">META</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;variance&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;covariance&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;lengthscales&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;variant&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;covariant&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}}</span>
 
-<div class="viewcode-block" id="Kernel.calibrate"><a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.calibrate">[docs]</a>    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="Kernel.calibrate">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.calibrate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calibrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Merely sets which data are trainable. &quot;&quot;&quot;</span>
         <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">META</span> <span class="o">|</span> <span class="n">kwargs</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_covariant</span><span class="p">:</span>
@@ -162,13 +171,16 @@
                 <span class="n">gf</span><span class="o">.</span><span class="n">set_trainable</span><span class="p">(</span><span class="n">implementation</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">,</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;lengthscales&#39;</span><span class="p">][</span><span class="s1">&#39;variant&#39;</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">meta</span></div>
 
+
     <span class="nd">@classmethod</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">TYPE_IDENTIFIER</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The type of this Kernel object or class as &#39;__module__.Kernel.__name__&#39;.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__module__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
 
-<div class="viewcode-block" id="Kernel.TypeFromIdentifier"><a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.TypeFromIdentifier">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Kernel.TypeFromIdentifier">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.TypeFromIdentifier">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">TypeFromIdentifier</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">TypeIdentifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">Kernel</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Convert a TypeIdentifier to a Kernel NamedTuple.</span>
 
@@ -182,7 +194,10 @@
                 <span class="k">return</span> <span class="n">KernelType</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Kernel.TypeIdentifier() of unrecognizable type.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Kernel.TypeFromParameters"><a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.TypeFromParameters">[docs]</a>    <span class="nd">@classmethod</span>
+
+<div class="viewcode-block" id="Kernel.TypeFromParameters">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.TypeFromParameters">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">TypeFromParameters</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="n">Data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">Kernel</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Recognize the NamedTuple of a Kernel from its Data.</span>
 
@@ -195,6 +210,7 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">kernel_type</span><span class="o">.</span><span class="n">Data</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">kernel_type</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Kernel Data array of unrecognizable type.&#39;</span><span class="p">)</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">L</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -211,7 +227,9 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Whether the kernel is covariant between outputs. &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">frames</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span>
 
-<div class="viewcode-block" id="Kernel.broadcast_parameters"><a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.broadcast_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">broadcast_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">M</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Kernel</span><span class="p">:</span>
+<div class="viewcode-block" id="Kernel.broadcast_parameters">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.broadcast_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">broadcast_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">M</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Kernel</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Broadcast this kernel to higher dimensions. Shrinkage raises errors, unchanged dimensions silently nop.</span>
 <span class="sd">        A diagonal variance matrix broadcast to a square matrix is initially diagonal. All other expansions are straightforward broadcasts.</span>
 <span class="sd">        Args:</span>
@@ -231,6 +249,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">implementation</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
+
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">implementation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -239,7 +258,9 @@
 <span class="sd">            If ``self.variance.shape == (L,L)`` a 1-tuple of multi-output kernels is returned.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Kernel.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">read_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">):</span>
+<div class="viewcode-block" id="Kernel.__init__">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.Kernel.html#romcomma.gpr.kernels.Kernel.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">read_data</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">NP</span><span class="o">.</span><span class="n">Matrix</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Construct a Kernel. This must be called as a matter of priority by all implementations.</span>
 
 <span class="sd">        Args:</span>
@@ -250,10 +271,14 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">read_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">variance_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">frames</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="n">variance_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">frames</span><span class="o">.</span><span class="n">lengthscales</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_parameters</span><span class="p">(</span><span class="n">variance_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_parameters</span><span class="p">(</span><span class="n">variance_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">)</span></div>
+</div>
 
 
-<div class="viewcode-block" id="RBF"><a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF">[docs]</a><span class="k">class</span> <span class="nc">RBF</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RBF">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpr.kernels.RBF.html#romcomma.gpr.kernels.RBF">[docs]</a>
+<span class="k">class</span> <span class="nc">RBF</span><span class="p">(</span><span class="n">Kernel</span><span class="p">):</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">implementation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
@@ -271,6 +296,7 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span> <span class="o">=</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">kernels</span><span class="o">.</span><span class="n">RBF</span><span class="p">(</span><span class="n">variance</span><span class="o">=</span><span class="n">variance</span><span class="p">,</span> <span class="n">lengthscales</span><span class="o">=</span><span class="n">lengthscales</span><span class="p">),</span> <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_implementation</span></div>
+
 </pre></div>
             <div class="clearer"></div>
           </div>
@@ -304,7 +330,7 @@
 
     <footer role="contentinfo">
       &#169; Copyright 2023, Robert A. Milton.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
     </footer>
   </body>

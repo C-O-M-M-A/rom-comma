@@ -1,19 +1,18 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>romcomma.user.sample.GaussianNoise &#8212; rom-comma 1.0 documentation</title>
     <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/insipid.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/insipid.css?v=b2d00be7" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=d6b6a36a"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script defer src="../../_static/insipid.js"></script>
     <script defer src="../../_static/insipid-sidebar.js"></script>
@@ -123,10 +122,10 @@
           <div class="body" role="main">
             
 <section id="romcomma-user-sample-gaussiannoise">
-<h1>romcomma.user.sample.GaussianNoise<a class="headerlink" href="#romcomma-user-sample-gaussiannoise" title="Permalink to this heading">§</a></h1>
+<h1>romcomma.user.sample.GaussianNoise<a class="headerlink" href="#romcomma-user-sample-gaussiannoise" title="Link to this heading">§</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="romcomma.user.sample.GaussianNoise">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GaussianNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/user/sample.html#GaussianNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.user.sample.GaussianNoise" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GaussianNoise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/user/sample.html#GaussianNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.user.sample.GaussianNoise" title="Link to this definition">§</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Sample multivariate, zero-mean Gaussian noise.</p>
 <dl class="field-list simple">
@@ -139,7 +138,7 @@
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.user.sample.GaussianNoise.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/user/sample.html#GaussianNoise.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.user.sample.GaussianNoise.__init__" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">N</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/user/sample.html#GaussianNoise.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.user.sample.GaussianNoise.__init__" title="Link to this definition">§</a></dt>
 <dd><p>Generate N samples of L-dimensional Gaussian noise, sampled from <span class="math notranslate nohighlight">\(\mathsf{N}[0,variance]\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -169,7 +168,7 @@
 </table>
 <dl class="py class">
 <dt class="sig sig-object py" id="romcomma.user.sample.GaussianNoise.Variance">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_covariant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_determined</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/user/sample.html#GaussianNoise.Variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.user.sample.GaussianNoise.Variance" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">L</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_covariant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_determined</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/user/sample.html#GaussianNoise.Variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.user.sample.GaussianNoise.Variance" title="Link to this definition">§</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>An artificially generated (co)variance matrix for GaussianNoise, with a useful labelling scheme.</p>
 <dl class="field-list simple">
@@ -184,13 +183,13 @@
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.user.sample.GaussianNoise.Variance.matrix">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#romcomma.user.sample.GaussianNoise.Variance.matrix" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">matrix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#romcomma.user.sample.GaussianNoise.Variance.matrix" title="Link to this definition">§</a></dt>
 <dd><p>Variance as an (L,L) covariance matrix, suitable for constructing GaussianNoise.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.user.sample.GaussianNoise.Variance.meta">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">meta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.user.sample.GaussianNoise.Variance.meta" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">meta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#romcomma.user.sample.GaussianNoise.Variance.meta" title="Link to this definition">§</a></dt>
 <dd><p>Meta data for providing to <code class="docutils literal notranslate"><span class="pre">data.storage</span></code>. This matches the initials in <code class="docutils literal notranslate"><span class="pre">self.__format__()</span></code>.</p>
 </dd></dl>
 
@@ -269,7 +268,7 @@
 
     <footer role="contentinfo">
       &#169; Copyright 2023, Robert A. Milton.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../../_sources/pages/package/romcomma.user.sample.GaussianNoise.rst.txt" rel="nofollow">Show Source</a>.
     </footer>

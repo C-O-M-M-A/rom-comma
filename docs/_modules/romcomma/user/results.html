@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>romcomma.user.results &#8212; rom-comma 1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/insipid.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/insipid.css?v=b2d00be7" />
 
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/documentation_options.js?v=d6b6a36a"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script defer src="../../../_static/insipid.js"></script>
     <script defer src="../../../_static/insipid-sidebar.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -93,7 +92,7 @@
 <h1>Source code for romcomma.user.results</h1><div class="highlight"><pre>
 <span></span><span class="c1">#  BSD 3-Clause License.</span>
 <span class="c1"># </span>
-<span class="c1">#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.</span>
+<span class="c1">#  Copyright (c) 2019-2024 Robert A. Milton. All rights reserved.</span>
 <span class="c1"># </span>
 <span class="c1">#  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</span>
 <span class="c1"># </span>
@@ -122,7 +121,9 @@
 <span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">rmtree</span>
 
 
-<div class="viewcode-block" id="copy"><a class="viewcode-back" href="../../../pages/package/romcomma.user.results.copy.html#romcomma.user.results.copy">[docs]</a><span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<div class="viewcode-block" id="copy">
+<a class="viewcode-back" href="../../../pages/package/romcomma.user.results.copy.html#romcomma.user.results.copy">[docs]</a>
+<span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Copy a folder destructively.</span>
 
 <span class="sd">    Args:</span>
@@ -135,7 +136,10 @@
     <span class="k">return</span> <span class="n">dst</span></div>
 
 
-<div class="viewcode-block" id="Collect"><a class="viewcode-back" href="../../../pages/package/romcomma.user.results.Collect.html#romcomma.user.results.Collect">[docs]</a><span class="k">class</span> <span class="nc">Collect</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Collect">
+<a class="viewcode-back" href="../../../pages/package/romcomma.user.results.Collect.html#romcomma.user.results.Collect">[docs]</a>
+<span class="k">class</span> <span class="nc">Collect</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; A device for collecting -- i.e. concatenating -- csv files across folders or folds.&quot;&quot;&quot;</span>
 
     <span class="n">csvs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>    <span class="c1">#: Key = csv name (minus extension). Value = a Dict of options (kwargs) passed to ``pd.read_csv``.</span>
@@ -156,7 +160,9 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_folders</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span> <span class="n">is_existing_deleted</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Collect.from_folders"><a class="viewcode-back" href="../../../pages/package/romcomma.user.results.Collect.html#romcomma.user.results.Collect.from_folders">[docs]</a>    <span class="k">def</span> <span class="nf">from_folders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">is_existing_deleted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Collect</span><span class="p">:</span>
+<div class="viewcode-block" id="Collect.from_folders">
+<a class="viewcode-back" href="../../../pages/package/romcomma.user.results.Collect.html#romcomma.user.results.Collect.from_folders">[docs]</a>
+    <span class="k">def</span> <span class="nf">from_folders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">is_existing_deleted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Collect</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Collect ``dst/[self.csvs]`` from ``self.folders``.</span>
 
 <span class="sd">        Args:</span>
@@ -188,7 +194,10 @@
                 <span class="n">results</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">dst</span> <span class="o">/</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">csv</span><span class="si">}</span><span class="s1">.csv&#39;</span><span class="p">,</span> <span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">write_options</span> <span class="o">|</span> <span class="n">kwargs</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="Collect.from_folds"><a class="viewcode-back" href="../../../pages/package/romcomma.user.results.Collect.html#romcomma.user.results.Collect.from_folds">[docs]</a>    <span class="k">def</span> <span class="nf">from_folds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">Repository</span><span class="p">,</span> <span class="n">is_existing_deleted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Collect</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Collect.from_folds">
+<a class="viewcode-back" href="../../../pages/package/romcomma.user.results.Collect.html#romcomma.user.results.Collect.from_folds">[docs]</a>
+    <span class="k">def</span> <span class="nf">from_folds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">Repository</span><span class="p">,</span> <span class="n">is_existing_deleted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Collect</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Collect ``dst/[self.folders]`` from ``Fold(dst, [k])/[self.folders]`` for ``k in self.Folds``.</span>
 
 <span class="sd">        Args:</span>
@@ -206,7 +215,10 @@
             <span class="n">Collect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csvs</span><span class="p">,</span> <span class="n">folders</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ignore_missing</span><span class="p">)</span><span class="o">.</span><span class="n">from_folders</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">folder</span> <span class="o">/</span> <span class="n">sub_folder</span><span class="p">,</span> <span class="n">is_existing_deleted</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="Collect.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.user.results.Collect.html#romcomma.user.results.Collect.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csvs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">folders</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Collect.__init__">
+<a class="viewcode-back" href="../../../pages/package/romcomma.user.results.Collect.html#romcomma.user.results.Collect.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csvs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">folders</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Construct a Collect object.</span>
 
 <span class="sd">        Args:</span>
@@ -218,7 +230,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">csvs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">csvs</span> <span class="k">if</span> <span class="n">csvs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">csvs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">folders</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">folders</span> <span class="k">if</span> <span class="n">folders</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">folders</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ignore_missing</span> <span class="o">=</span> <span class="n">ignore_missing</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">write_options</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_options</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
             <div class="clearer"></div>
           </div>
@@ -252,7 +266,7 @@
 
     <footer role="contentinfo">
       &#169; Copyright 2023, Robert A. Milton.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
     </footer>
   </body>

@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>romcomma.gpf.kernels &#8212; rom-comma 1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/insipid.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/insipid.css?v=b2d00be7" />
 
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/documentation_options.js?v=d6b6a36a"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script defer src="../../../_static/insipid.js"></script>
     <script defer src="../../../_static/insipid-sidebar.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -93,7 +92,7 @@
 <h1>Source code for romcomma.gpf.kernels</h1><div class="highlight"><pre>
 <span></span><span class="c1">#  BSD 3-Clause License.</span>
 <span class="c1"># </span>
-<span class="c1">#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.</span>
+<span class="c1">#  Copyright (c) 2019-2024 Robert A. Milton. All rights reserved.</span>
 <span class="c1"># </span>
 <span class="c1">#  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</span>
 <span class="c1"># </span>
@@ -127,7 +126,9 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<div class="viewcode-block" id="MOStationary"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary">[docs]</a><span class="k">class</span> <span class="nc">MOStationary</span><span class="p">(</span><span class="n">AnisotropicStationary</span><span class="p">,</span> <span class="n">Kernel</span><span class="p">):</span>
+<div class="viewcode-block" id="MOStationary">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary">[docs]</a>
+<span class="k">class</span> <span class="nc">MOStationary</span><span class="p">(</span><span class="n">AnisotropicStationary</span><span class="p">,</span> <span class="n">Kernel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for stationary kernels, i.e. kernels that only</span>
 <span class="sd">    depend on</span>
@@ -153,7 +154,9 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel lengthscales as an (L,M) matrix.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">))</span>
 
-<div class="viewcode-block" id="MOStationary.K_diag"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_diag">[docs]</a>    <span class="k">def</span> <span class="nf">K_diag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<div class="viewcode-block" id="MOStationary.K_diag">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_diag">[docs]</a>
+    <span class="k">def</span> <span class="nf">K_diag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel diagonal.</span>
 
 <span class="sd">        Args:</span>
@@ -164,7 +167,10 @@
         <span class="n">tf</span><span class="o">.</span><span class="n">assert_equal</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;mogpflow.kernels.MOStationary currently only accepts inputs X of rank 2, which X.shape=</span><span class="si">{</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">X</span><span class="p">)</span><span class="si">}</span><span class="s1"> does not obey.&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">N</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MOStationary.K_unit_variance"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_unit_variance">[docs]</a>    <span class="k">def</span> <span class="nf">K_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MOStationary.K_unit_variance">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_unit_variance">[docs]</a>
+    <span class="k">def</span> <span class="nf">K_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.</span>
 
 <span class="sd">        Args:</span>
@@ -174,7 +180,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K_d_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scaled_difference_matrix</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X</span> <span class="k">if</span> <span class="n">X2</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">X2</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="MOStationary.K_d_unit_variance"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_unit_variance">[docs]</a>    <span class="nd">@abstractmethod</span>
+
+<div class="viewcode-block" id="MOStationary.K_d_unit_variance">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_unit_variance">[docs]</a>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">K_d_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.</span>
 
@@ -184,7 +193,10 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;You must implement K_d_unit_variance(self, d) in </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MOStationary.K_d_apply_variance"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_apply_variance">[docs]</a>    <span class="k">def</span> <span class="nf">K_d_apply_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K_d_unit_variance</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MOStationary.K_d_apply_variance">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d_apply_variance">[docs]</a>
+    <span class="k">def</span> <span class="nf">K_d_apply_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">K_d_unit_variance</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Multiply the unit variance kernel by the kernel variance, and reshape.</span>
 
 <span class="sd">        Args:</span>
@@ -196,7 +208,10 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="n">K_d_unit_variance</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="o">.</span><span class="n">value_to_broadcast</span> <span class="o">*</span> <span class="n">K_d_unit_variance</span><span class="p">,</span> <span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span></div>
 
-<div class="viewcode-block" id="MOStationary.K_d"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d">[docs]</a>    <span class="k">def</span> <span class="nf">K_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MOStationary.K_d">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.K_d">[docs]</a>
+    <span class="k">def</span> <span class="nf">K_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; The kernel.</span>
 
 <span class="sd">        Args:</span>
@@ -205,10 +220,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K_d_apply_variance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">K_d_unit_variance</span><span class="p">(</span><span class="n">d</span><span class="p">))</span></div>
 
+
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">presliced</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X2</span><span class="p">,</span> <span class="n">full_cov</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">presliced</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MOStationary.__init__"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">lengthscales</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Kernel&#39;</span><span class="p">,</span> <span class="n">active_dims</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MOStationary.__init__">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.MOStationary.html#romcomma.gpf.kernels.MOStationary.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">lengthscales</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Kernel&#39;</span><span class="p">,</span> <span class="n">active_dims</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; Kernel Constructor.</span>
 
 <span class="sd">        Args:</span>
@@ -227,10 +245,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_M</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">lengthscales_shape</span> <span class="ow">in</span> <span class="p">((),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">,))</span> <span class="k">else</span> <span class="n">lengthscales_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">lengthscales</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">lengthscales</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">)),</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_M</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span> <span class="o">=</span> <span class="n">Parameter</span><span class="p">(</span><span class="n">lengthscales</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">positive</span><span class="p">(),</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;Lengthscales&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_ard_active_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_ard_active_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lengthscales</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span></div>
+</div>
 
 
-<div class="viewcode-block" id="RBF"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF">[docs]</a><span class="k">class</span> <span class="nc">RBF</span><span class="p">(</span><span class="n">MOStationary</span><span class="p">):</span>
+
+<div class="viewcode-block" id="RBF">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF">[docs]</a>
+<span class="k">class</span> <span class="nc">RBF</span><span class="p">(</span><span class="n">MOStationary</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The radial basis function (RBF) or squared exponential kernel. The kernel equation is</span>
 
@@ -243,8 +265,12 @@
 <span class="sd">    Functions drawn from a MOGP with this kernel are infinitely differentiable!</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="RBF.K_d_unit_variance"><a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.K_d_unit_variance">[docs]</a>    <span class="k">def</span> <span class="nf">K_d_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...M, ...M -&gt; ...&#39;</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span></div></div>
+<div class="viewcode-block" id="RBF.K_d_unit_variance">
+<a class="viewcode-back" href="../../../pages/package/romcomma.gpf.kernels.RBF.html#romcomma.gpf.kernels.RBF.K_d_unit_variance">[docs]</a>
+    <span class="k">def</span> <span class="nf">K_d_unit_variance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;...M, ...M -&gt; ...&#39;</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span></div>
+</div>
+
 </pre></div>
             <div class="clearer"></div>
           </div>
@@ -278,7 +304,7 @@
 
     <footer role="contentinfo">
       &#169; Copyright 2023, Robert A. Milton.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
     </footer>
   </body>

@@ -1,4 +1,4 @@
-romcomma.data.storage.Fold
+﻿romcomma.data.storage.Fold
 ==========================
 
 .. currentmodule:: romcomma.data.storage
@@ -25,6 +25,7 @@ romcomma.data.storage.Fold
       ~Fold.from_dfs
       ~Fold.into_K_folds
       ~Fold.read_meta
+      ~Fold.rotate_folds
       ~Fold.write_meta
    
    

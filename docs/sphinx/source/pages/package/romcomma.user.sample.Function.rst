@@ -18,8 +18,6 @@ romcomma.user.sample.Function
    
       ~Function.__init__
       ~Function.collection
-      ~Function.into_K_folds
-      ~Function.rotate_folds
       ~Function.un_rotate_folds
    
    

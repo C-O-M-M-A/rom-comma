@@ -9,6 +9,13 @@ romcomma.user.sample
 
    
    
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      permute_axes
+   
    
 
    

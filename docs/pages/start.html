@@ -1,19 +1,18 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Getting Started &#8212; rom-comma 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/insipid.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../_static/insipid.css?v=b2d00be7" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/documentation_options.js?v=d6b6a36a"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script defer src="../_static/insipid.js"></script>
     <script defer src="../_static/insipid-sidebar.js"></script>
@@ -123,25 +122,25 @@
           <div class="body" role="main">
             
 <section id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">§</a></h1>
-<p>Welcome to the rom-comma Python package, which implements Reduction of Order by Marginalization (<a class="reference internal" href="../glossary.html#term-ROM"><span class="xref std std-term">ROM</span></a>) via Global Sensitivity Analysis (<a class="reference internal" href="../glossary.html#term-GSA"><span class="xref std std-term">GSA</span></a>)
-using Gaussian Process Regression (<a class="reference internal" href="../glossary.html#term-GPR"><span class="xref std std-term">GPR</span></a>). Those unfamiliar with these topics are advised to follow the hyperlinks to the page glossary.
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">§</a></h1>
+<p>Welcome to the rom-comma Python package, which implements Reduction of Order by Marginalization (<a class="reference internal" href="#term-ROM"><span class="xref std std-term">ROM</span></a>) via Global Sensitivity Analysis (<a class="reference internal" href="#term-GSA"><span class="xref std std-term">GSA</span></a>)
+using Gaussian Process Regression (<a class="reference internal" href="#term-GPR"><span class="xref std std-term">GPR</span></a>). Those unfamiliar with these topics are advised to follow the hyperlinks to the page glossary.
 This advice applies to much of this user guide – we make extensive use of glossaries.</p>
 <p>The mathematics behind this software is covered in some detail in a
 <a class="reference external" href="https://github.com/C-O-M-M-A/rom-papers/blob/main/Theory/Coefficient%20of%20Determination.pdf">paper currently under peer review for publication</a>.</p>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">§</a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">§</a></h2>
 <p>Simply place the <code class="docutils literal notranslate"><span class="pre">romcomma</span></code> package (or its parent <code class="docutils literal notranslate"><span class="pre">rom-comma</span></code>) in a folder included in your <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">site-packages</span></code>).
 Test the installation by running the rom-comma <code class="docutils literal notranslate"><span class="pre">installation_test</span></code> module, from anywhere.
 Runtime dependencies are documented in <a class="reference external" href="https://github.com/C-O-M-M-A/rom-comma/blob/main/pyproject.toml">pyproject.toml</a>.</p>
 </section>
 <section id="conceptual-hierarchy">
-<h2>Conceptual Hierarchy<a class="headerlink" href="#conceptual-hierarchy" title="Permalink to this heading">§</a></h2>
+<h2>Conceptual Hierarchy<a class="headerlink" href="#conceptual-hierarchy" title="Link to this heading">§</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">romcomma</span></code> package is organized in a modular hierarchy</p>
 <a class="reference internal image-reference" href="../_images/folder_tree.png"><img alt="../_images/folder_tree.png" src="../_images/folder_tree.png" style="width: 200px;" /></a>
 </section>
 <section id="module-hierarchy">
-<h2>Module Hierarchy<a class="headerlink" href="#module-hierarchy" title="Permalink to this heading">§</a></h2>
+<h2>Module Hierarchy<a class="headerlink" href="#module-hierarchy" title="Link to this heading">§</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">romcomma</span></code> package is organized in a modular hierarchy</p>
 <div class="toctree-wrapper compound">
 <ul>
@@ -182,6 +181,7 @@ Runtime dependencies are documented in <a class="reference external" href="https
 <li class="toctree-l2"><a class="reference internal" href="package/romcomma.user.html">romcomma.user</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.contexts.html">romcomma.user.contexts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.functions.html">romcomma.user.functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.regression.html">romcomma.user.regression</a></li>
 <li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.results.html">romcomma.user.results</a></li>
 <li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.run.html">romcomma.user.run</a></li>
 <li class="toctree-l3"><a class="reference internal" href="package/romcomma.user.sample.html">romcomma.user.sample</a></li>
@@ -198,17 +198,17 @@ We refer to items in this list as modules, even if they are technically packages
 may be regarded as bespoke, not to say advanced.</p>
 </section>
 <section id="glossary">
-<h2>Glossary<a class="headerlink" href="#glossary" title="Permalink to this heading">§</a></h2>
+<h2>Glossary<a class="headerlink" href="#glossary" title="Link to this heading">§</a></h2>
 <dl class="simple glossary">
-<dt id="term-package">package<a class="headerlink" href="#term-package" title="Permalink to this term">§</a></dt><dd><p>Python package</p>
+<dt id="term-package">package<a class="headerlink" href="#term-package" title="Link to this term">§</a></dt><dd><p>Python package</p>
 </dd>
-<dt id="term-module">module<a class="headerlink" href="#term-module" title="Permalink to this term">§</a></dt><dd><p>Python module or package.</p>
+<dt id="term-module">module<a class="headerlink" href="#term-module" title="Link to this term">§</a></dt><dd><p>Python module or package.</p>
 </dd>
-<dt id="term-GPR">GPR<a class="headerlink" href="#term-GPR" title="Permalink to this term">§</a></dt><dd><p>Gaussian Process Regression.
+<dt id="term-GPR">GPR<a class="headerlink" href="#term-GPR" title="Link to this term">§</a></dt><dd><p>Gaussian Process Regression.
 A quite general technique for representing a functional dataset as a (Gaussian) stochastic process described thoroughly in
 [<a class="reference external" href="https://direct.mit.edu/books/book/2320/Gaussian-Processes-for-Machine-Learning">Rasmussen and Williams 2005</a>].</p>
 </dd>
-<dt id="term-GSA">GSA<a class="headerlink" href="#term-GSA" title="Permalink to this term">§</a></dt><dd><p>Global Sensitivity Analysis.
+<dt id="term-GSA">GSA<a class="headerlink" href="#term-GSA" title="Link to this term">§</a></dt><dd><p>Global Sensitivity Analysis.
 This Assesses and ranks the relevance of a system’s inputs to its outputs by a variety of methods covered broadly in
 [<a class="reference external" href="https://onlinelibrary.wiley.com/doi/book/10.1002/9780470725184">Saltelli et al. 2007</a>] and
 [<a class="reference external" href="https://doi.org/10.1016/j.envsoft.2020.104954">Razavi et al. 2021</a>].
@@ -216,7 +216,7 @@ rom-comma deals exclusively with the variance based method of Ilya M. Sobol.
 This has been somewhat extended, as described in gory technical detail in
 [<cite>Milton et al. 2023 &lt;https://github.com/C-O-M-M-A/rom-papers/blob/main/Theory/Coefficient%20of%20Determination.pdf&gt;_</cite>].</p>
 </dd>
-<dt id="term-ROM">ROM<a class="headerlink" href="#term-ROM" title="Permalink to this term">§</a></dt><dd><p>Reduction of Order by Marginalization. A novel approach to locating an Active Subspace (AS) using conditional variances or Sobol’ indices.
+<dt id="term-ROM">ROM<a class="headerlink" href="#term-ROM" title="Link to this term">§</a></dt><dd><p>Reduction of Order by Marginalization. A novel approach to locating an Active Subspace (AS) using conditional variances or Sobol’ indices.
 In the Active Subspace technique [<a class="reference external" href="https://epubs.siam.org/doi/book/10.1137/1.9781611973860">Constantine 2014</a>]
 the input basis is rotated to align with the eigenvectors of the squared Jacobian vector.
 In ROM, the input basis is rotated to maximise the Sobol’ index of the first <span class="math notranslate nohighlight">\(m\)</span> inputs.</p>
@@ -285,7 +285,7 @@ In ROM, the input basis is rotated to maximise the Sobol’ index of the first <
 
     <footer role="contentinfo">
       &#169; Copyright 2023, Robert A. Milton.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../_sources/pages/start.rst.txt" rel="nofollow">Show Source</a>.
     </footer>

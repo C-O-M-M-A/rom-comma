@@ -30,6 +30,7 @@
 
    romcomma.user.contexts
    romcomma.user.functions
+   romcomma.user.regression
    romcomma.user.results
    romcomma.user.run
    romcomma.user.sample

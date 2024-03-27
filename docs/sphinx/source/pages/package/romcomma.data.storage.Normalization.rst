@@ -1,4 +1,4 @@
-romcomma.data.storage.Normalization
+﻿romcomma.data.storage.Normalization
 ===================================
 
 .. currentmodule:: romcomma.data.storage
@@ -16,9 +16,11 @@ romcomma.data.storage.Normalization
 
    .. autosummary::
    
+      ~Normalization.X_gradient
       ~Normalization.__init__
       ~Normalization.apply_to
       ~Normalization.undo_from
+      ~Normalization.unscale_Y
    
    
 

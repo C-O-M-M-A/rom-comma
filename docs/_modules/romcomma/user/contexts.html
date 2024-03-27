@@ -1,18 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../../">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>romcomma.user.contexts &#8212; rom-comma 1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/insipid.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/insipid.css?v=b2d00be7" />
 
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-    <script src="../../../_static/doctools.js"></script>
-    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/documentation_options.js?v=d6b6a36a"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script defer src="../../../_static/insipid.js"></script>
     <script defer src="../../../_static/insipid-sidebar.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -93,7 +92,7 @@
 <h1>Source code for romcomma.user.contexts</h1><div class="highlight"><pre>
 <span></span><span class="c1">#  BSD 3-Clause License.</span>
 <span class="c1"># </span>
-<span class="c1">#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.</span>
+<span class="c1">#  Copyright (c) 2019-2024 Robert A. Milton. All rights reserved.</span>
 <span class="c1"># </span>
 <span class="c1">#  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</span>
 <span class="c1"># </span>
@@ -122,7 +121,9 @@
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 
 
-<div class="viewcode-block" id="Timer"><a class="viewcode-back" href="../../../pages/package/romcomma.user.contexts.Timer.html#romcomma.user.contexts.Timer">[docs]</a><span class="nd">@contextmanager</span>
+<div class="viewcode-block" id="Timer">
+<a class="viewcode-back" href="../../../pages/package/romcomma.user.contexts.Timer.html#romcomma.user.contexts.Timer">[docs]</a>
+<span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">Timer</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">is_inline</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Context Manager for timing operations.</span>
 
@@ -145,7 +146,10 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;...took </span><span class="si">{</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">_exit</span><span class="o">-</span><span class="n">_enter</span><span class="p">))</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Environment"><a class="viewcode-back" href="../../../pages/package/romcomma.user.contexts.Environment.html#romcomma.user.contexts.Environment">[docs]</a><span class="nd">@contextmanager</span>
+
+<div class="viewcode-block" id="Environment">
+<a class="viewcode-back" href="../../../pages/package/romcomma.user.contexts.Environment.html#romcomma.user.contexts.Environment">[docs]</a>
+<span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">Environment</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Context Manager setting up the environment to run operations.</span>
 
@@ -173,6 +177,7 @@
             <span class="k">with</span> <span class="n">implementation_manager</span><span class="p">:</span>
                 <span class="k">yield</span>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;...Running &#39;</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></div>
+
 </pre></div>
             <div class="clearer"></div>
           </div>
@@ -206,7 +211,7 @@
 
     <footer role="contentinfo">
       &#169; Copyright 2023, Robert A. Milton.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
     </footer>
   </body>

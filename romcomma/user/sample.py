@@ -1,6 +1,6 @@
 #  BSD 3-Clause License.
 #
-#  Copyright (c) 2019-2023 Robert A. Milton. All rights reserved.
+#  Copyright (c) 2019-2024 Robert A. Milton. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #
@@ -78,6 +78,24 @@ class DOE:
         return np.concatenate([1/(2 * N1) + np.linspace(0, 1, N1, False),] +
                               (M-1) * [1/(2 * NM) + np.linspace(0, 1, NM, False), ], axis=1)
 
+    @staticmethod
+    def space_filling_test(X: NP.Matrix, o: int) -> Dict[str, float]:
+        """ Test whether ``X`` is a space-filling design matrix, by finding the distance to the nearest point in ``X`` for ``o`` test points.
+
+        Args:
+            X: An (N,M) design matrix.
+            o: The number of test points used to assess whether ``X`` is a space-filling design.
+
+        Returns: A dict of six measures: The theoretical hard upper bound, expected upper bound and expected lower bound for a perfectly space-filling
+            design matrix, followed by the max, mean and SD of the distance-to-nearest-in-X over the o test points.
+        """
+        N, M = X.shape
+        test = DOE.latin_hypercube(o, M)
+        distance = test[:, np.newaxis, :] - X[np.newaxis, :, :]
+        distance = np.sqrt(np.amin(np.einsum('iIM, iIM -> iI', distance, distance), axis=1))
+        cell_diag = np.power(N, -1/M) * np.sqrt(M)
+        return {'perfect hard upper bound': cell_diag, 'perfect expected upper bound': cell_diag / np.sqrt(6), 'perfect expected lower bound': cell_diag / 3,
+                'max': np.amax(distance, axis=0), 'mean': np.mean(distance), 'SD': np.std(distance)}
 
 class GaussianNoise:
     """ Sample multivariate, zero-mean Gaussian noise. """

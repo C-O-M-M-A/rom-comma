@@ -1,4 +1,4 @@
-﻿romcomma.user.functions
+romcomma.user.functions
 =======================
 
 .. automodule:: romcomma.user.functions

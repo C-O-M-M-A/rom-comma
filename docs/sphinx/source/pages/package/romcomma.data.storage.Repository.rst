@@ -1,4 +1,4 @@
-romcomma.data.storage.Repository
+﻿romcomma.data.storage.Repository
 ================================
 
 .. currentmodule:: romcomma.data.storage
@@ -24,6 +24,7 @@ romcomma.data.storage.Repository
       ~Repository.from_df
       ~Repository.into_K_folds
       ~Repository.read_meta
+      ~Repository.rotate_folds
       ~Repository.write_meta
    
    

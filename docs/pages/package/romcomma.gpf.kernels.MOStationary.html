@@ -1,19 +1,18 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>romcomma.gpf.kernels.MOStationary &#8212; rom-comma 1.0 documentation</title>
     <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/insipid.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/insipid.css?v=b2d00be7" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/documentation_options.js?v=d6b6a36a"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script defer src="../../_static/insipid.js"></script>
     <script defer src="../../_static/insipid-sidebar.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -122,10 +121,10 @@
           <div class="body" role="main">
             
 <section id="romcomma-gpf-kernels-mostationary">
-<h1>romcomma.gpf.kernels.MOStationary<a class="headerlink" href="#romcomma-gpf-kernels-mostationary" title="Permalink to this heading">§</a></h1>
+<h1>romcomma.gpf.kernels.MOStationary<a class="headerlink" href="#romcomma-gpf-kernels-mostationary" title="Link to this heading">§</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MOStationary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscales</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Kernel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MOStationary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscales</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Kernel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary" title="Link to this definition">§</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">AnisotropicStationary</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Kernel</span></code></p>
 <p>Base class for stationary kernels, i.e. kernels that only
 depend on</p>
@@ -138,7 +137,7 @@ parameter ℓ (i.e. [(X - X2ᵀ) / ℓ]). The last axis corresponds to the
 input dimension.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscales</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Kernel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.__init__" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthscales</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Kernel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_dims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.__init__" title="Link to this definition">§</a></dt>
 <dd><p>Kernel Constructor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -243,13 +242,13 @@ input dimension.</p>
 </table>
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.lengthscales_neat">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lengthscales_neat</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.lengthscales_neat" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">lengthscales_neat</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.lengthscales_neat" title="Link to this definition">§</a></dt>
 <dd><p>The kernel lengthscales as an (L,M) matrix.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_diag">
-<span class="sig-name descname"><span class="pre">K_diag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_diag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_diag" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">K_diag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_diag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_diag" title="Link to this definition">§</a></dt>
 <dd><p>The kernel diagonal.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -261,7 +260,7 @@ input dimension.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_unit_variance">
-<span class="sig-name descname"><span class="pre">K_unit_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_unit_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_unit_variance" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">K_unit_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_unit_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_unit_variance" title="Link to this definition">§</a></dt>
 <dd><p>The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -276,7 +275,7 @@ input dimension.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_d_unit_variance">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">K_d_unit_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_d_unit_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_d_unit_variance" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">K_d_unit_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_d_unit_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_d_unit_variance" title="Link to this definition">§</a></dt>
 <dd><p>The kernel with variance=ones(). This can be cached during optimisations where only the variance is trainable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -288,7 +287,7 @@ input dimension.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_d_apply_variance">
-<span class="sig-name descname"><span class="pre">K_d_apply_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K_d_unit_variance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_d_apply_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_d_apply_variance" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">K_d_apply_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K_d_unit_variance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_d_apply_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_d_apply_variance" title="Link to this definition">§</a></dt>
 <dd><p>Multiply the unit variance kernel by the kernel variance, and reshape.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -300,7 +299,7 @@ input dimension.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.K_d">
-<span class="sig-name descname"><span class="pre">K_d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_d" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">K_d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/romcomma/gpf/kernels.html#MOStationary.K_d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.K_d" title="Link to this definition">§</a></dt>
 <dd><p>The kernel.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -312,13 +311,13 @@ input dimension.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.ard">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ard</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.ard" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ard</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.ard" title="Link to this definition">§</a></dt>
 <dd><p>Whether ARD behaviour is active.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.name" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.name" title="Link to this definition">§</a></dt>
 <dd><p>Returns the name of this module as passed or determined in the ctor.</p>
 <p>NOTE: This is not the same as the <cite>self.name_scope.name</cite> which includes
 parent module names.</p>
@@ -326,13 +325,13 @@ parent module names.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.name_scope">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name_scope</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.name_scope" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name_scope</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.name_scope" title="Link to this definition">§</a></dt>
 <dd><p>Returns a <cite>tf.name_scope</cite> instance for this class.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.non_trainable_variables">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">non_trainable_variables</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.non_trainable_variables" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">non_trainable_variables</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.non_trainable_variables" title="Link to this definition">§</a></dt>
 <dd><p>Sequence of non-trainable variables owned by this module and its submodules.</p>
 <p>Note: this method uses reflection to find variables on the current instance
 and submodules. For performance reasons you may wish to cache the result
@@ -348,7 +347,7 @@ first).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.on_separate_dims">
-<span class="sig-name descname"><span class="pre">on_separate_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.on_separate_dims" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">on_separate_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.on_separate_dims" title="Link to this definition">§</a></dt>
 <dd><p>Checks if the dimensions, over which the kernels are specified, overlap.
 Returns True if they are defined on different/separate dimensions and False otherwise.</p>
 <dl class="field-list simple">
@@ -363,65 +362,65 @@ Returns True if they are defined on different/separate dimensions and False othe
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.scaled_difference_matrix">
-<span class="sig-name descname"><span class="pre">scaled_difference_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.scaled_difference_matrix" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">scaled_difference_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.scaled_difference_matrix" title="Link to this definition">§</a></dt>
 <dd><p>Returns [(X - X2ᵀ) / ℓ]. If X has shape […, N, D] and
 X2 has shape […, M, D], the output will have shape […, N, M, D].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em>) – </p></li>
-<li><p><strong>X2</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em><em> | </em><em>None</em>) – </p></li>
+<li><p><strong>X</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.tensor.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em>) – </p></li>
+<li><p><strong>X2</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.tensor.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em><em> | </em><em>None</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a></p>
+<dd class="field-even"><p><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.tensor.Tensor"><em>Tensor</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.slice">
-<span class="sig-name descname"><span class="pre">slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.slice" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">X2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.slice" title="Link to this definition">§</a></dt>
 <dd><p>Slice the correct dimensions for use in the kernel, as indicated by <cite>self.active_dims</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em>) – Input 1 [N, D].</p></li>
-<li><p><strong>X2</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em><em> | </em><em>None</em>) – Input 2 [M, D], can be None.</p></li>
+<li><p><strong>X</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.tensor.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em>) – Input 1 [N, D].</p></li>
+<li><p><strong>X2</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.tensor.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em><em> | </em><em>None</em>) – Input 2 [M, D], can be None.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Sliced X, X2, [N, I], I - input dimension.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tuple</em>[<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>, <a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a>]</p>
+<dd class="field-odd"><p><em>Tuple</em>[<a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.tensor.Tensor"><em>Tensor</em></a>, <a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.tensor.Tensor"><em>Tensor</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.slice_cov">
-<span class="sig-name descname"><span class="pre">slice_cov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cov</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.slice_cov" title="Permalink to this definition">§</a></dt>
+<span class="sig-name descname"><span class="pre">slice_cov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cov</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.slice_cov" title="Link to this definition">§</a></dt>
 <dd><p>Slice the correct dimensions for use in the kernel, as indicated by
 <cite>self.active_dims</cite> for covariance matrices. This requires slicing the
 rows <em>and</em> columns. This will also turn flattened diagonal
 matrices into a tensor of full diagonal matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>cov</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em>) – Tensor of covariance matrices, [N, D, D] or [N, D].</p>
+<dd class="field-odd"><p><strong>cov</strong> (<em>ndarray</em><em>[</em><em>Any</em><em>, </em><em>Any</em><em>] </em><em>| </em><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.tensor.Tensor"><em>Tensor</em></a><em> | </em><em>Variable</em><em> | </em><em>Parameter</em>) – Tensor of covariance matrices, [N, D, D] or [N, D].</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>[N, I, I].</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.ops.Tensor"><em>Tensor</em></a></p>
+<dd class="field-odd"><p><a class="reference internal" href="romcomma.base.definitions.TF.html#romcomma.base.definitions.TF.Tensor" title="tensorflow.python.framework.tensor.Tensor"><em>Tensor</em></a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.submodules">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">submodules</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.submodules" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">submodules</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.submodules" title="Link to this definition">§</a></dt>
 <dd><p>Sequence of all sub-modules.</p>
 <p>Submodules are modules which are properties of this module, or found as
 properties of modules which are properties of this module (and so on).</p>
@@ -447,7 +446,7 @@ properties of modules which are properties of this module (and so on).</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.trainable_variables">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trainable_variables</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.trainable_variables" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trainable_variables</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.trainable_variables" title="Link to this definition">§</a></dt>
 <dd><p>Sequence of trainable variables owned by this module and its submodules.</p>
 <p>Note: this method uses reflection to find variables on the current instance
 and submodules. For performance reasons you may wish to cache the result
@@ -463,7 +462,7 @@ first).</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.variables">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variables</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.variables" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variables</span></span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.variables" title="Link to this definition">§</a></dt>
 <dd><p>Sequence of variables owned by this module and its submodules.</p>
 <p>Note: this method uses reflection to find variables on the current instance
 and submodules. For performance reasons you may wish to cache the result
@@ -479,7 +478,7 @@ first).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="romcomma.gpf.kernels.MOStationary.with_name_scope">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">with_name_scope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.with_name_scope" title="Permalink to this definition">§</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">with_name_scope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#romcomma.gpf.kernels.MOStationary.with_name_scope" title="Link to this definition">§</a></dt>
 <dd><p>Decorator to automatically enter the module name scope.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyModule</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
 <span class="gp">... </span>  <span class="nd">@tf</span><span class="o">.</span><span class="n">Module</span><span class="o">.</span><span class="n">with_name_scope</span>
@@ -582,7 +581,7 @@ names included the module name:</p>
 
     <footer role="contentinfo">
       &#169; Copyright 2023, Robert A. Milton.
-      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
       <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
 <a class="reference internal" href="../../_sources/pages/package/romcomma.gpf.kernels.MOStationary.rst.txt" rel="nofollow">Show Source</a>.
     </footer>

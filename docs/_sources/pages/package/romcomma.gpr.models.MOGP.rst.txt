@@ -1,4 +1,4 @@
-romcomma.gpr.models.MOGP
+﻿romcomma.gpr.models.MOGP
 ========================
 
 .. currentmodule:: romcomma.gpr.models
@@ -21,6 +21,8 @@ romcomma.gpr.models.MOGP
       ~MOGP.calibrate
       ~MOGP.check_K_inv_Y
       ~MOGP.predict
+      ~MOGP.predict_df
+      ~MOGP.predict_gradient
       ~MOGP.read_meta
       ~MOGP.test
       ~MOGP.write_meta

@@ -19,6 +19,7 @@ romcomma.user.sample.DOE
       ~DOE.__init__
       ~DOE.full_factorial
       ~DOE.latin_hypercube
+      ~DOE.space_filling_test
    
    
 
