@@ -35,7 +35,7 @@ import tarfile
 import os
 
 #: Parameters for repository generation.
-K: int = 20  #: The number of Folds in a new repository.
+K: int = 2  #: The number of Folds in a new repository.
 INPUT_AXIS_PERMUTATIONS: Dict[str, List[int] | None] = {'': None}   # , '.0': [5, 2, 3, 1, 4, 6, 0], '.1': [5, 3, 2, 4, 6, 1, 0], '.2': [5, 2, 1, 3, 4, 0, 6], '.3': [5, 2, 6, 1, 3, 0, 6]}
                                                         # '.520': [5, 2, 0, 6, 3, 4, 1]}   #: A Dict of the form {path_suffix, input_axis_permutation}.
 #: Parameters to run Gaussian Process Regression.
