@@ -252,23 +252,22 @@ class GPR(Model):
         abs_err = abs(abs_err)
         rmse = abs_err.iloc[:].copy().rename(columns={'Abs Error': 'RMSE'}, level=0)
         predictive_score.iloc[:] /= predictive_std.to_numpy(dtype=float, copy=False)
-        result.df = result.df.join([predictive_mean, predictive_std, abs_err, predictive_score])
+        outliers = result.df.loc[:, [Y_heading]].copy().rename(columns={Y_heading: 'Outlier'}, level=0)
+        outliers.iloc[:] = predictive_score.to_numpy(dtype=float, copy=False)**2 > 4.0
+        outliers = outliers.join(pd.DataFrame(np.column_stack((np.logical_or.reduce(outliers.to_numpy(dtype=float, copy=False), axis=1),
+                                                              np.logical_and.reduce(outliers.to_numpy(dtype=float, copy=False), axis=1))),
+                                              index=outliers.index, columns=pd.MultiIndex.from_tuples([('Outlier', 'Any Output'), ('Outlier', 'All Outputs')])))
+        result.df = result.df.join([predictive_mean, predictive_std, abs_err, predictive_score, outliers])
         result.write()
         rmse = rmse**2
         rmse = rmse.sum(axis=0)/rmse.count(axis=0)
-        r2 = 1 - rmse
         rmse = rmse**(1/2)
         rmse = rmse if isinstance(rmse, pd.DataFrame) else pd.DataFrame(rmse).transpose()
-        r2 = r2 if isinstance(r2, pd.DataFrame) else pd.DataFrame(r2).transpose()
-        r2 = r2.rename(columns={'RMSE': 'R^2'}, level=0)
         predictive_std = predictive_std.sum(axis=0)/predictive_std.count(axis=0)
         predictive_std = predictive_std if isinstance(predictive_std, pd.DataFrame) else pd.DataFrame(predictive_std).transpose()
-        ci = (predictive_std.iloc[:].copy().rename(columns={'SD': '95% CI'}, level=0))
-        ci = ci * 2
-        outliers = predictive_score[predictive_score**2 > 4].count(axis=0)/predictive_score.count(axis=0)
+        outliers = outliers[outliers].count(axis=0)/outliers.count(axis=0)
         outliers = outliers if isinstance(outliers, pd.DataFrame) else pd.DataFrame(outliers).transpose()
-        outliers = outliers.rename(columns={'Z Score': 'outliers'})
-        summary = rmse.join([r2, predictive_std, ci, outliers])
+        summary = rmse.join([predictive_std, outliers])
         summary = Frame(self.test_summary_csv, summary)
         return result
 

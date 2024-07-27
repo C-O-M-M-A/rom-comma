@@ -31,6 +31,8 @@ from romcomma.data.storage import Frame, Repository, Fold
 from romcomma.user import functions
 import shutil
 import sys
+import argparse
+import os
 
 
 def permute_axes(new_order: Sequence | None) -> NP.Matrix | None:
@@ -96,6 +98,7 @@ class DOE:
         cell_diag = np.power(N, -1/M) * np.sqrt(M)
         return {'perfect hard upper bound': cell_diag, 'perfect expected upper bound': cell_diag / np.sqrt(6), 'perfect expected lower bound': cell_diag / 3,
                 'max': np.amax(distance, axis=0), 'mean': np.mean(distance), 'SD': np.std(distance)}
+
 
 class GaussianNoise:
     """ Sample multivariate, zero-mean Gaussian noise. """
@@ -250,15 +253,47 @@ class Function:
                                          origin_meta={'DOE': doe.__name__, 'function_vector': function_vector.meta, 'noise': self._noise_variance.meta})
             Frame(folder / 'likelihood.variance.csv', pd.DataFrame(self._noise_variance()))
 
+def PCA(root: str | Path, csv: str | Path) -> Path:
+    """ Perform Principal Component Analysis on a Repository.
+
+    Args:
+        root: The root folder.
+        csv: The csv to read.
+        normalization: An optional csv file to use for normalization.
+    Returns: The folder written to, namely root``/PCA``
+    """
+    root, csv = Path(root), Path(csv)
+    repo = Repository.from_csv(root, csv, PCA=True)
+    return root / 'PCA'
+
 
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
-        print('Please provide at least 3 arguments: The folder to write to, the number of input dimensions (columns) M, and at least one value for the number '
-              'of samples (rows) N.')
-    else:
-        root = Path(sys.argv[1])
-        M = int(sys.argv[2])
-        for N in sys.argv[3:]:
-            N = int(N)
-            pd.DataFrame(DOE.latin_hypercube(N, M)).to_csv(root / f'lhs.{N}.csv')
+    # Get the command line arguments.
+    parser = argparse.ArgumentParser(description='A program to provide rudimentary sampling functionality.')
+    # Positional arguments.
+    parser.add_argument('function', help='The acronym of the function to use. LHS or PCA.', type=str)
+    parser.add_argument('csv', help='The path of the csv containing the data to be analysed.', type=Path)
+    # Optional Arguments.
+    parser.add_argument('arguments', help='The arguments required by the specified function.', nargs='*')
 
+    args = parser.parse_args()
+    match args.function.upper():
+        case 'LHS':
+            if len(args.arguments) < 2:
+                raise ValueError('Latin Hypercube sampling takes at least 2 arguments, '
+                                 'M (the input dimensionality) followed by a succession of values for N (the number of samples).')
+            M = int(args.arguments[0])
+            if M < 1:
+                raise ValueError(f'Number of inputs M={M} must be greater than or equal to 1.')
+            for N in args.arguments[1:]:
+                N = int(N)
+                if N < 1:
+                    raise ValueError('Number of samples must be greater than or equal to 1.')
+                pd.DataFrame(DOE.latin_hypercube(N, M)).to_csv(args.csv.with_stem(args.csv.stem + f'.{N}'))
+            print(f'Root path is {args.csv.parent}.')
+        case 'PCA':
+            if len(args.arguments) != 1:
+                raise ValueError('PCA takes one argument, namely the root folder.')
+            print(f'Root path is {PCA(Path(args.arguments[0]), args.csv)}.')
+        case _:
+            raise NameError(f'Unrecognized function: {args.function}. Please use one of LHS or PCA.')

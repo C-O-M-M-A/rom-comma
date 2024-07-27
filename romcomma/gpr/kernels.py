@@ -46,8 +46,8 @@ class Kernel(Model):
                     lengthscales: A (L,M) Matrix of anisotropic lengthscales, or a (L,1) Vector of isotropic lengthscales,
                         where L=1 or L=variance.shape[1]*(variance.shape[0]+ 1)/2.
                 """
-                variance: NP.Matrix = np.atleast_2d(0.5)
-                lengthscales: NP.Matrix = np.atleast_2d(0.5)
+                variance: NP.Matrix = np.atleast_2d(2.0)
+                lengthscales: NP.Matrix = np.atleast_2d(5.0)
 
             return Values
 

@@ -23,6 +23,8 @@
 
 from __future__ import annotations
 
+import numpy as np
+
 from romcomma.base.definitions import *
 from copy import deepcopy
 import itertools
@@ -31,6 +33,7 @@ import shutil
 from enum import IntEnum, auto
 import scipy.stats
 import json
+
 
 
 class Frame:
@@ -148,12 +151,6 @@ class Repository:
         """ The number of folds contained in this Repository."""
         return self._meta['K']
 
-    def clean_copy(self, dst: Path | str):
-        """ Make a clean copy of this repo.
-
-        Args:
-            dst: The location of the copy.
-        """
     @property
     def folds(self) -> range:
         """ The indices of the folds contained in this Repository."""
@@ -162,7 +159,7 @@ class Repository:
         else:
             return range(self.K + (1 if self.meta['has_improper_fold'] else 0))
 
-    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[Path | str] = None) -> Repository:
+    def into_K_folds(self, K: int, shuffle_before_folding: bool = False, normalization: Optional[Path | str] = None, is_normalization_applicable: bool = True) -> Repository:
         """ Fold this repo into K Folds, indexed by range(K).
 
         Args:
@@ -171,6 +168,7 @@ class Repository:
                 To suppress this give K as a negative integer.
             shuffle_before_folding: Whether to shuffle the data before sampling.
             normalization: An optional normalization.csv file to use.
+            is_normalization_applicable: Whether normalization is applicable. ``False`` means that normalization whatsoever will be applied.
         Returns: ``self``, for chaining calls.
         Raises:
             IndexError: Unless 1 &lt= K &lt= N.
@@ -188,7 +186,8 @@ class Repository:
         self.write_meta()
         normalization = Normalization(self, self._data.df).csv if normalization is None else normalization
         if K > 0:
-            Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization)
+            Fold.from_dfs(parent=self, k=K, data=data.iloc[index], test_data=data.iloc[index], normalization=normalization,
+                          is_normalization_applicable=is_normalization_applicable)
         K = abs(K)
         K_blocks = [list(range(K)) for dummy in range(int(N / K))]
         K_blocks.append(list(range(N % K)))
@@ -200,7 +199,8 @@ class Repository:
             data_index = [index for index, indicator in indicated if k != indicator]
             test_index = [index for index, indicator in indicated if k == indicator]
             data_index = test_index if data_index == [] else data_index
-            Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization)
+            Fold.from_dfs(parent=self, k=k, data=data.iloc[data_index], test_data=data.iloc[test_index], normalization=normalization,
+                          is_normalization_applicable=is_normalization_applicable)
         return self
 
     def rotate_folds(self, rotation: NP.Matrix | None) -> Repository:
@@ -300,12 +300,13 @@ class Repository:
         return {'skiprows': None, 'index_col': 0}
 
     @classmethod
-    def from_csv(cls, folder: Path | str, csv: Path | str, meta: Dict = None, **kwargs) -> Repository:
+    def from_csv(cls, folder: Path | str, csv: Path | str, PCA: bool = False, meta: Dict = None, **kwargs) -> Repository:
         """ Create a Repository from a csv file.
 
         Args:
             folder: The location (folder) of the target Repository.
             csv: The file containing the data to record in [Return].csv.
+            PSA: Whether to create a single fold in which Principal Component Analysis (PCA) has been performed on the inputs.
             meta: The metadata to record in [Return].meta.json.
             kwargs: Updates Repository.CSV_OPTIONS for reading the csv file, as detailed in
                 https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pd.read_csv.html.
@@ -316,7 +317,30 @@ class Repository:
         data = Frame(csv, **origin_csv_kwargs)
         meta = cls.META if meta is None else cls.META | meta
         meta['origin'] = {'csv': str(csv.absolute()), 'origin_csv_kwargs': origin_csv_kwargs}
-        return cls.from_df(folder, data.df, meta)
+        repo = cls.from_df(folder, data.df, meta)
+        if PCA:
+            repo = repo.into_K_folds(-1)
+            fold = Repository(repo.fold_folder(0))
+            X = fold.X.values
+            print(f'pre mean = {np.mean(fold.X.values, axis=0)}')  # DEBUG:
+            cov = np.cov(X, rowvar=False)
+            eigenvalues, eigenvectors = np.linalg.eigh(cov)
+            idx = eigenvalues.argsort()[::-1]
+            eigenvalues = eigenvalues[idx]
+            eigenvectors = eigenvectors[:, idx]
+            cov = np.einsum('ij,ij->j', eigenvectors, eigenvectors)
+
+            repo = repo.rotate_folds(eigenvectors.T)
+            # Test Code
+            fold = Fold(repo,0)
+            fold.data.df.iloc[:, :fold.M] /= np.sqrt(eigenvalues)
+            fold.test_data.df.iloc[:, :fold.M] /= np.sqrt(eigenvalues)
+            print(f'post mean = {np.mean(fold.X.values, axis=0)}')  # DEBUG:
+            print(f'post cov = {np.cov(fold.X.values, rowvar=False)}')  # DEBUG:
+            #end of
+            folder = repo.fold_folder(0)
+            folder.rename(folder.parent / 'PCA')
+        return repo
 
 
 class Fold(Repository):
@@ -389,7 +413,7 @@ class Fold(Repository):
 
     @classmethod
     def from_dfs(cls, parent: Repository, k: int, data: pd.DataFrame, test_data: pd.DataFrame,
-                 normalization: Optional[Path | str] = None) -> Fold:
+                 normalization: Optional[Path | str] = None, is_normalization_applicable: bool = True) -> Fold:
         """ Create a Fold from a pd.DataFrame.
 
         Args:
@@ -398,15 +422,14 @@ class Fold(Repository):
             data: Training data.
             test_data: Test data.
             normalization: An optional normalization.csv file to use.
+            is_normalization_applicable: Whether normalization is applicable. ``False`` means that normalization whatsoever will be applied.
         Returns: The Fold created.
         """
 
         fold = cls(parent, k, init_mode=Repository._InitMode.CREATE)
         fold._meta = cls.META | parent.meta | {'k': k}
-        if normalization is None:
-            fold._normalization = Normalization(fold, data)
-        else:
-            fold._normalization = Normalization(fold)
+        fold._normalization = Normalization(fold, data, is_normalization_applicable)
+        if normalization is not None:
             shutil.copy(Path(normalization), fold._normalization.csv)
         fold._data = Frame(fold._csv, fold.normalization.apply_to(data))
         fold._test_data = Frame(fold._test_csv, fold.normalization.apply_to(test_data))
@@ -439,6 +462,10 @@ class Normalization:
         return (self.frame.df.iloc[self.frame.df.index.get_loc('min'), :self._fold.M], self.frame.df.iloc[self.frame.df.index.get_loc('rng'), :self._fold.M],
                 self.frame.df.iloc[self.frame.df.index.get_loc('mean'), self._fold.M:], self.frame.df.iloc[self.frame.df.index.get_loc('std'), self._fold.M:])
 
+    @property
+    def is_applicable(self) -> bool:
+        return self._is_applicable
+
     def apply_to(self, df: pd.DataFrame) -> pd.DataFrame:
         """ Apply this normalization.
 
@@ -446,13 +473,16 @@ class Normalization:
             df: The pd.DataFrame to Normalize.
         Returns: df, Normalized.
         """
-        X_min, X_rng, Y_mean, Y_std = self._relevant_stats
-        X = df.iloc[:, :self._fold.M].copy(deep=True)
-        Y = df.iloc[:, self._fold.M:].copy(deep=True)
-        X = X.sub(X_min, axis=1)[X_min.axes[0]].div(X_rng, axis=1)[X_rng.axes[0]].clip(lower=self.UNIFORM_MARGIN, upper=1 - self.UNIFORM_MARGIN)
-        X.iloc[:, :] = scipy.stats.norm.ppf(X, loc=0, scale=1)
-        Y = Y.sub(Y_mean, axis=1).div(Y_std, axis=1)
-        return pd.concat((X, Y), axis=1)
+        if self._is_applicable:
+            X_min, X_rng, Y_mean, Y_std = self._relevant_stats
+            X = df.iloc[:, :self._fold.M].copy(deep=True)
+            Y = df.iloc[:, self._fold.M:].copy(deep=True)
+            X = X.sub(X_min, axis=1)[X_min.axes[0]].div(X_rng, axis=1)[X_rng.axes[0]].clip(lower=self.UNIFORM_MARGIN, upper=1 - self.UNIFORM_MARGIN)
+            X.iloc[:, :] = scipy.stats.norm.ppf(X, loc=0, scale=1)
+            Y = Y.sub(Y_mean, axis=1).div(Y_std, axis=1)
+            return pd.concat((X, Y), axis=1)
+        else:
+            return df
 
     def undo_from(self, df: pd.DataFrame) -> pd.DataFrame:
         """ Undo this normalization.
@@ -461,13 +491,16 @@ class Normalization:
             df: The (Normalized) pd.DataFrame to UnNormalize.
         Returns: df, UnNormalized.
         """
-        X_min, X_rng, Y_mean, Y_std = self._relevant_stats
-        X = df.iloc[:, :self._fold.M].copy(deep=True)
-        Y = df.iloc[:, self._fold.M:].copy(deep=True)
-        X.iloc[:, :] = scipy.stats.norm.cdf(X, loc=0, scale=1)
-        X = X.mul(X_rng, axis=1)[X_rng.axes[0]].add(X_min, axis=1)[X_min.axes[0]]
-        Y = Y.mul(Y_std, axis=1)[Y_std.axes[0]].add(Y_mean, axis=1)[Y_mean.axes[0]]
-        return pd.concat((X, Y), axis=1)
+        if self._is_applicable:
+            X_min, X_rng, Y_mean, Y_std = self._relevant_stats
+            X = df.iloc[:, :self._fold.M].copy(deep=True)
+            Y = df.iloc[:, self._fold.M:].copy(deep=True)
+            X.iloc[:, :] = scipy.stats.norm.cdf(X, loc=0, scale=1)
+            X = X.mul(X_rng, axis=1)[X_rng.axes[0]].add(X_min, axis=1)[X_min.axes[0]]
+            Y = Y.mul(Y_std, axis=1)[Y_std.axes[0]].add(Y_mean, axis=1)[Y_mean.axes[0]]
+            return pd.concat((X, Y), axis=1)
+        else:
+            return df
 
     def unscale_Y(self, dfY: pd.DataFrame) -> pd.DataFrame:
         """ Undo the Y-scaling of this normalization, without adding the Y-Mean. Suitable treatment for unNormalizing SD, for example.
@@ -477,7 +510,7 @@ class Normalization:
         Returns: dfY, UnNormalized.
         """
         X_min, X_rng, Y_mean, Y_std = self._relevant_stats
-        return dfY.copy(deep=True).mul(Y_std, axis=1)[Y_std.axes[0]]
+        return dfY.copy(deep=True).mul(Y_std, axis=1)[Y_std.axes[0]] if self._is_applicable else dfY
 
     def X_gradient(self, X: NP.Matrix, m: int | List[int]):
         """ Computes the gradient of the unormalized inputs ``X[m]`` with respect to the normalized inputs ``Z[m]``.
@@ -488,7 +521,7 @@ class Normalization:
         Returns: An (N,len(m)) matrix of derivatives
         """
         X_rng = self._relevant_stats[1].values[m]
-        return X_rng * scipy.stats.norm.pdf(X[..., m], loc=0, scale=1)
+        return X_rng * scipy.stats.norm.pdf(X[..., m], loc=0, scale=1) if self._is_applicable else m / m
 
     def __repr__(self) -> str:
         return str(self.csv)
@@ -496,14 +529,16 @@ class Normalization:
     def __str__(self) -> str:
         return self.csv.name
 
-    def __init__(self, fold: Repository, data: Optional[pd.DataFrame] = None):
+    def __init__(self, fold: Repository, data: Optional[pd.DataFrame] = None, is_applicable: bool = True):
         """ Initialize this Normalization. If the fold has already been Normalized, that Normalization is returned.
 
         Args:
             fold: The fold to Normalize.
             data: The data from which to calculate Normalization.
+            is_applicable: Whether this Normalization should be applied to the data or not.
         """
         self._fold = fold
+        self._is_applicable = is_applicable
         if self.csv.exists():
             self._frame = Frame(self.csv)
         elif data is None:
