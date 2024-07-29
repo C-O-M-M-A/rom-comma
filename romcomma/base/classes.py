@@ -21,8 +21,6 @@
 
 """ Base classes for romcomma Models."""
 
-from __future__ import annotations
-
 import pandas as pd
 
 from romcomma.base.definitions import *
@@ -34,7 +32,14 @@ from abc import ABC
 class Frame:
     """ Encapsulates a pandas DataFrame backed by a source file."""
 
-    csv: Path   #: The csv file path, without ``.csv``.
+    @property
+    def csv(self) -> NP.Matrix:
+        return self._csv
+
+    @csv.setter
+    def csv(self, value: Path | str):
+        self._csv = Path(value)
+        self.write()
 
     @property
     def df(self) -> pd.DataFrame:
@@ -42,7 +47,7 @@ class Frame:
 
     @property
     def np(self) -> NP.Matrix:
-        return self._df.values
+        return self._df.to_numpy()
 
     @np.setter
     def np(self, value: NP.Matrix):
@@ -58,7 +63,7 @@ class Frame:
         self._df.iloc[:, :] = value.numpy()
         self.write()
 
-    def write(self, **kwargs: Any) -> Frame:
+    def write(self, **kwargs: Any) -> Self:
         """ Write to csv. This is called whenever the data in the Frame changes.
 
         Args:
@@ -66,10 +71,10 @@ class Frame:
         Returns: ``self``, for call chaining.
         """
         self._write_options = self._write_options | kwargs
-        self._df.to_csv(self.csv.with_suffix(f'{self.csv.suffix}.csv'), **self._write_options)
+        self._df.to_csv(self._csv, **self._write_options)
         return self
 
-    def broadcast_value(self, target_shape: Tuple[int, int], is_diagonal: bool = True) -> Frame:
+    def broadcast_value(self, target_shape: Tuple[int, int], is_diagonal: bool = True) -> Self:
         """ Broadcast a frame
 
         Args:
@@ -100,7 +105,7 @@ class Frame:
 
     # noinspection PyDefaultArgument
     def __init__(self, csv: Path | str, data: pd.DataFrame | NP.Array | Iterable | Dict = None, index: pd.Index | NP.ArrayLike = None,
-                 columns: pd.Index | NP.ArrayLike = None, dtype: np.dtype | None = None, copy: bool | None = None, **kwargs):
+                 columns: pd.Index | NP.ArrayLike = None, dtype: NP.DType | None = None, copy: bool | None = None, **kwargs):
         """ Construct a Frame, from csv or pd.DataFrame. If ``data is None``, the Frame is read from csv. Otherwise the Frame is written to csv.
 
         Args:
@@ -114,7 +119,7 @@ class Frame:
             **kwargs: Passed straight to `pd.read_csv <https://pandas.pydata.org/pandas-docs/stable/generated/pandas.read_csv.html>`_
                 or `DataFrame.to_csv <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html>`_.
         """
-        self.csv = Path(csv)
+        self._csv = Path(csv)
         self._write_options = {}
         if data is None:
             self._df = (pd.read_csv(self.csv.with_suffix(f'{self.csv.suffix}.csv'), **({'index_col': 0} | kwargs)))
@@ -129,11 +134,11 @@ class Data(ABC):
     Most Data methods are simple wrappers for annoyingly underscored methods of `NamedTuple
     <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_."""
 
-    Matrix: Type = Frame | pd.DataFrame | NP.Matrix | TF.Matrix
+    Matrix: Type = pd.DataFrame | NP.Matrix | TF.Matrix
 
     class NamedTuple(NamedTuple):
         """ A NamedTuple of data. Must be overridden."""
-        NotImplemented: Data.Matrix = np.atleast_2d('NotImplemented')   #: NamedTuple can have any number of members.
+        NotImplemented: NP.Matrix = np.atleast_2d('NotImplemented')   #: NamedTuple can have any number of members.
 
     @classmethod
     def make(cls, iterable: Iterable) -> NamedTuple:
@@ -152,7 +157,7 @@ class Data(ABC):
     def asdict(self) -> Dict[str, Any]:
         return self._frames._asdict()
 
-    def replace(self, **kwargs: Data.Matrix) -> Data:
+    def replace(self, **kwargs: Matrix) -> Self:
         for key, value in kwargs.items():
             value = value.numpy() if isinstance(value, TF.Tensor) else value
             kwargs[key] = value if isinstance(value, Frame) else Frame(self._folder / key, np.atleast_2d(value))
@@ -167,7 +172,7 @@ class Data(ABC):
     def frames(self) -> NamedTuple:
         return self._frames
 
-    def move(self, dst_folder: Path | str) -> Data:
+    def move(self, dst_folder: Path | str) -> Self:
         """  Move ``self`` to ``dst_folder``.
 
         Args:
@@ -187,7 +192,7 @@ class Data(ABC):
     def __str__(self) -> str:
         return self._folder.name
 
-    def __init__(self, folder: Path | str, **kwargs: Data.Matrix):
+    def __init__(self, folder: Path | str, **kwargs: Matrix):
         """ Data Constructor.
 
         Args:
@@ -201,7 +206,7 @@ class Data(ABC):
         self.replace(**kwargs)
 
     @classmethod
-    def read(cls, folder: Path | str, **kwargs: Data.Matrix) -> Data:
+    def read(cls, folder: Path | str, **kwargs: Matrix) -> Self:
         """ Read ``Data`` from ``folder``.
 
         Args:

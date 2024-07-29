@@ -19,9 +19,8 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 #  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Type and constant definitions. """
-
-from __future__ import annotations
+""" Type and constant definitions. All modules of romcomma ``import *`` from this module, so all types and constants in this module may be
+referenced without adornment throughout romcomma."""
 
 from typing import *
 from pathlib import Path
@@ -49,6 +48,7 @@ def FLOAT() -> Type:
 # noinspection PyPep8Naming
 class NP:
     """ Extended numpy types."""
+    DType = np.dtype
     Array = np.ndarray
     Tensor = np.ndarray  # Generic Tensor.
     Tensor1 = Tensor    # Second Order Tensor, tf.shape = (i,j)
@@ -71,6 +71,7 @@ class NP:
 # noinspection PyPep8Naming
 class TF:
     """ Extended tensorflow types, and constants."""
+    DType = np.dtype
     Array = tf.Tensor
     Tensor = tf.Tensor  # Generic Tensor.
     Tensor1 = Tensor    # Second Order Tensor, tf.shape = (i,j)
@@ -90,5 +91,5 @@ class TF:
     ArrayLike = TensorLike = MatrixLike | Sequence[MatrixLike] | Sequence[Sequence[MatrixLike]]
     Slice = PairOfInts = tf.Tensor      #: A slice, for indexing and marginalization.
 
-    NaN: TF.Tensor = tf.constant(np.NaN, dtype=FLOAT())     #: A constant Tensor representing NaN.
+    NaN: Tensor = tf.constant(np.NaN, dtype=FLOAT())     #: A constant Tensor representing NaN.
 

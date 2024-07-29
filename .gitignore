@@ -25,6 +25,9 @@ outputs/
 # Ignore all installation user data
 installation_test/
 
+# Ignore all test user data
+test/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
