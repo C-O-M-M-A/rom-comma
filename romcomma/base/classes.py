@@ -130,46 +130,41 @@ class Frame:
 
 # noinspection PyProtectedMember
 class Data(ABC):
-    """ Abstraction of Model Data. Essentially a NamedTuple of Frames in a folder.
-    Most Data methods are simple wrappers for annoyingly underscored methods of `NamedTuple
-    <https://docs.python.org/3/library/collections.html#collections.namedtuple>`_."""
+    """ Abstraction of Model Data. Essentially a NamedTuple of Frames in a folder."""
 
-    Matrix: Type = pd.DataFrame | NP.Matrix | TF.Matrix
+    class Frames(NamedTuple):
+        """ A NamedTuple of Matrices. Must be overridden."""
+        Matrix: Type = Frame | pd.DataFrame | NP.Matrix | TF.Matrix     #: Expected Types of Matrix.
+        NotImplemented: Matrix = np.atleast_2d('NotImplemented')        #: NamedTuple can have any number of members.
 
-    class NamedTuple(NamedTuple):
-        """ A NamedTuple of data. Must be overridden."""
-        NotImplemented: NP.Matrix = np.atleast_2d('NotImplemented')   #: NamedTuple can have any number of members.
+        @classmethod
+        def make(cls, iterable: Iterable) -> Self:
+            return cls._make(iterable)
 
-    @classmethod
-    def make(cls, iterable: Iterable) -> NamedTuple:
-        return cls.NamedTuple._make(iterable)
+        @classmethod
+        @property
+        def fields(cls) -> Tuple[str, ...]:
+            return cls._fields
 
-    @classmethod
-    @property
-    def fields(cls) -> Tuple[str, ...]:
-        return cls.NamedTuple._fields
+        @classmethod
+        @property
+        def field_defaults(cls) -> Dict[str, Any]:
+            return cls._field_defaults
 
-    @classmethod
-    @property
-    def field_defaults(cls) -> Dict[str, Any]:
-        return cls.NamedTuple._field_defaults
+        def asdict(self) -> Dict[str, Any]:
+            return self._asdict()
 
-    def asdict(self) -> Dict[str, Any]:
-        return self._frames._asdict()
-
-    def replace(self, **kwargs: Matrix) -> Self:
-        for key, value in kwargs.items():
-            value = value.numpy() if isinstance(value, TF.Tensor) else value
-            kwargs[key] = value if isinstance(value, Frame) else Frame(self._folder / key, np.atleast_2d(value))
-        self._frames = self.NamedTuple(**kwargs) if self._frames is None else self._frames._replace(**kwargs)
-        return self
+        def replace(self, **kwargs: Matrix) -> Self:
+            kwargs = {key: value.numpy() if isinstance(value, TF.Tensor) else value for key, value in kwargs.items()}
+            self._replace(**kwargs)
+            return self
 
     @property
     def folder(self) -> Path:
         return self._folder
 
     @property
-    def frames(self) -> NamedTuple:
+    def frames(self) -> Frames:
         return self._frames
 
     def move(self, dst_folder: Path | str) -> Self:
@@ -179,7 +174,7 @@ class Data(ABC):
             dst_folder: The folder to move to. If this exists, it will be emptied.
         Returns: ``self`` for chaining calls.
         """
-        self._folder = Data(self.empty(dst_folder), **self.asdict()).folder
+        self._folder = Data(self.empty(dst_folder), **self._frames.asdict()).folder
         return self
 
     def __call__(self, *args, **kwargs):
@@ -192,7 +187,7 @@ class Data(ABC):
     def __str__(self) -> str:
         return self._folder.name
 
-    def __init__(self, folder: Path | str, **kwargs: Matrix):
+    def __init__(self, folder: Path | str, **kwargs: Frames.Matrix):
         """ Data Constructor.
 
         Args:
@@ -201,7 +196,7 @@ class Data(ABC):
                 Missing fields receive their defaults, so ``Data(folder)`` is the default parameter set.
         """
         self._folder = folder if folder.exists() else self.empty(folder)
-        kwargs = self.NamedTuple(**kwargs)._asdict()
+        kwargs = self.Frames(**kwargs)._asdict()
         self._frames = None
         self.replace(**kwargs)
 
